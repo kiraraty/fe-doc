@@ -65,7 +65,7 @@ console.log(firstName); // Symbol(first name)
 console.log(lastName); // Symbol(last name)
 ```
 
-由于symbol为原始值，我们可以使用`typeof`去检查它的类型，同样ES6拓展了typeof关键字，在遇到symbol类型时会返回symbol
+由于symbol为原始值，我们**可以使用`typeof`去检查它的类型**，同样ES6拓展了typeof关键字，在遇到symbol类型时会返回symbol
 
 ```js
 console.log(typeof firstName); 
@@ -822,7 +822,7 @@ elelment.insertBefore(newNode,existingNode);
 
 #### 删除节点
 
-```
+```js
 //删除当前节点下指定的子节点，删除成功返回该被删除的节点，否则返回null
 element.removeChild(Node)
 ```
@@ -867,6 +867,8 @@ heading.appendChild(text);
 document.body.appendChild(heading)
 ```
 
+
+
 #### BOM
 
 浏览器对象模型（BOM，Browser Object Model），是使用 JavaScript 开发 Web 应用程序的核心。
@@ -909,7 +911,6 @@ window.screenTop  // 窗口相对于屏幕顶部的距离, number (单位 px)
 
 window.moveTo(x, y) // 移动到 (x, y) 坐标对应的新位置
 window.moveBy(x, y) // 相对当前位置在两个方向上分别移动 x/y 个像素的距离
-复制代码
 ```
 
 浏览器窗口大小不好确认，但是可以用 `document.documentElement.clientWidth` 和 `document.documentElement.clientHeight` 来确认可视窗口的大小。
@@ -1352,7 +1353,6 @@ copyWithin()方法会按照指定范围来浅复制数组中的部分内容，�
 
 ```javascript
 array.copyWithin(target, start, end)
-复制代码
 ```
 
 其参数如下：
@@ -2542,7 +2542,6 @@ $.getScript("outer.js",function(){//回调函数，成功获取文件后执行�
 setTimeout(function showName() { console.log('showName') }, 1000)
 setTimeout(function showName() { console.log('showName1') }, 1000) 
 console.log('martincai')
-
 ```
 
 1.从消息队列中取出宏任务进行执行(首次任务直接执行)
@@ -2884,11 +2883,159 @@ obj.address  = 'china';
 console.log(obj)     // {name: "haha", age: 30}
 ```
 
+### 14.Event 对象
 
+我们对元素进行点击操作时候，会产生一个 `Event` 的对象
 
+```javascript
+<button id="demo">event</button>
+<script>
+  let demo = document.getElementById('demo');
+  demo.addEventListener('click', function(event) {
+    console.log(event)
+  })
+</script>
 
+```
+
+#### clientX / clientY
+
+`clientX` 和 `clientY` 都是只读属性，提供发生事件时的客户端区域的水平坐标和垂直坐标。不管页面是否滚动，客户端区域的左上角的 `clientX` 和 `clientY` 都是 `0`。
+
+注意：以**可视区域（客户端）**的左上角位置为原点
+
+![clientX_clientY.png](https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/c1db75466c024ce78b0c0421fbee55df~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp?)
+
+#### offsetX / offsetY
+
+`offsetX` 和 `offsetY` 都是只读属性，规定了事件对象与目标节点的内填充边在 `X` 或 `Y` 轴上的偏移量。
+
+注意：以**目标元素**的（含 `padding` ）**左上角**位置为原点
+
+![offsetX_offsetY.png](https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/932b998707cb4997b11a4cd0dd9900ff~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp?)
+
+#### screenX / screenY
+
+`screenX` 和 `screenY` 都是只读属性，提供事件鼠标在全局（屏幕）中的水平和垂直距离。
+
+注意：以**屏幕**的左上角位置为原点
+
+点击的元素位置相对电脑屏幕的左上角为坐标原点计算。得到的数值感觉不是很准，了解一下就好...
+
+#### layerX / layerY
+
+`layerX` 和 `layerY` 都是只读属性。
+
+若目标元素自身有定位属性的话，就目标元素（包含 `padding` ）的左上角作为原点计算。 若目标元素自身没有定位属性的话，往上找有定位属性的父元素的左上角为原点计算距离。 若父元素都没有定位属性的话，那么就以 `body` 元素的左上角为原点计算。
+
+#### pageX / pageY
+
+`pageX` 和 `pageY` 都是只读属性，表示相对于整个文档的水平或者垂直坐标。这两个属性是基于文档边缘，考虑任何页面的水平或者垂直方向上的滚动。
+
+注意：以**文档**的左上角位置为原点
+
+![pageX_pageY.png](https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/156f748920964a5faae7a8625b178658~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp?)
 
 ------
+
+#### client部分
+
+**clientHeight**:内容可视区域的高度，也就是说页面浏览器中可以看到内容的这个区域的高度(不含边框，也不包含滚动条等边线，会随窗口的显示大小改变)
+
+**clientLeft,clientTop**: 这两个返回的是元素周围边框的厚度（border）,如果不指定一个边框或者不定位该元素,他的值就是0.
+
+#### offset部分
+
+`计算时都包括此对象的border，padding`
+
+offsetLeft：获取对象左侧与定位父级之间的距离
+
+offsetTop：获取对象上侧与定位父级之间的距离
+
+`PS：获取对象到父级的距离取决于最近的定位父级position`
+
+offsetWidth：获取元素自身的宽度（包含边框）
+
+offsetHeight：获取元素自身的高度（包含边框）
+
+
+
+
+
+clientX：当事件被触发时鼠标指针相对于窗口左边界的水平坐标,`参照点为浏览器内容区域的左上角，该参照点会随之滚动条的移动而移动`。
+
+offsetX：当事件被触发时鼠标指针相对于所触发的标签元素的左内边框的水平坐标。
+
+screenX:鼠标位置相对于用户屏幕水平偏移量，而screenY也就是垂直方向的，`此时的参照点也就是原点是屏幕的左上角`。
+
+pageX：`参照点是页面本身的body原点`，而不是浏览器内容区域左上角，`它计算的值不会随着滚动条而变动`，它在计算时其实是以body左上角原点（即页面本身的左上角，而不是浏览器可见区域的左上角）为参考点计算的，这个相当于已经把滚动条滚过的高或宽计算在内了，所以无论滚动条是否滚动，他都是一样的距离值。
+
+所以基本可以得出结论：
+
+**pageX > clientX, pageY > clientY**
+
+**pageX = clientX + ScrollLeft(滚动条滚过的水平距离)**
+
+**pageY = clientY + ScrollTop(滚动条滚过的垂直距离)**
+
+#### scroll部分
+
+scrollLeft：设置或获取当前左滚的距离，即左卷的距离；
+
+scrollTop：设置或获取当前上滚的距离，即上卷的距离；
+
+scrollHeight：获取对象可滚动的总高度；
+
+scrollWidth：获取对象可滚动的总宽度；
+
+`scrollHeight = content + padding；（即border之内的内容）`
+
+### 15. Node 和 Element
+
+[ELement](https://juejin.cn/post/7032218037746925581#heading-7)
+
+```js
+<div id="parent">
+    This is parent content.
+    <div id="child1">This is child1.</div>
+    <div id="child2">This is child2.</div>
+</div>
+```
+
+`document.getElementById()` 方法应该是我们最常使用的接口之一，那么它的返回值到底是 Node 还是 Element？
+
+我们使用以下代码验证一下：
+
+```js
+let parentEle = document.getElementById('parent');
+parentEle instanceof Node
+// true
+parentEle instanceof Element
+// true
+parentEle instanceof HTMLElement
+// true
+```
+
+可以看到，`document.getElementById()` 获取到的结果既是 Node 也是 Element
+
+![各层级关系](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/114633e51bb24e5586d14e0079aed4a9~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp)
+
+**Element 继承于 Node**。
+
+从而也可以得出一个结论：**Element 一定是 Node，但 Node 不一定是 Element**。
+
+所以：**Element 可以使用 Node 的所有方法**
+
+`Element.children` 获取到的只是父元素点下的所有 div，而 `Element.childNodes` 获取到的却是父节点下的所有节点（包含文本内容、元素）
+
+-   单个的 HTML 标签算是一个单独的 Node；
+-   针对非 HTML标签（比如文本、空格等），从一个 HTML 标签开始，到碰到的第一个 HTML 标签为止，如果中间有内容（文本、空格等），那这部分内容算是一个 Node。注意：这里的 HTML 标签不分起始和结束
+-   比如，`<div> 1 2 3 <span> 4 5 6 </span> 7 8 9 </div>`，针对这段代码来说：
+    -   div 是一个 Node；
+    -   span 是一个 Node；
+    -   “ 1 2 3 ”、“ 4 5 6 ”和 “ 7 8 9 ”全都是单独的 Node
+
+
 
 ## 模块化
 
@@ -2923,6 +3070,12 @@ node使用的是commonjs 在使用模块的时候是运行时同步加载的 拷
 导出模块使用：exports.xxx 或 module.exports.xxx 或 module.exports=xxx 或 this.xxx
 
 ！！不管是使用 exports 还是 this ，都需要用点语法的形式导出，因为 他们两个是module.exports的指针 重新赋值将会切断关联
+
+本质上还是module.exports进行导出
+
+一般情况下 node内部会进行 module.exports=exports的操作
+
+如果使用了module.exports， 会使用优先使用module.exports, exports的修改无效  相当于不使用exports
 
 #### Es6 模块
 
@@ -3022,13 +3175,31 @@ console.log(b);
 
 区别：
 
+`CommonJS `模块同步加载并执行模块文件，ES6 模块提前加载并执行模块文件，ES6 模块在预处理阶段分析模块依赖，在执行阶段执行模块，两个阶段都采用深度优先遍历
+
 AMD 和 CMD 同样都是异步加载模块，两者加载的机制不同，前者为依赖前置、后者为依赖就近。
 
 CommonJS 为同步加载模块，NodeJS 内部的模块管理规范，不适合浏览器端。
 
 ES6 模块化编译时加载，通过 export,import 静态输出输入代码，效率高，同时适用于服务端与浏览器端。
 
+#### `Commonjs` 的特性如下：
 
+-   CommonJS 模块由 JS 运行时实现。
+-   CommonJs 是单个值导出，本质上导出的就是 exports 属性。
+-   CommonJS 是可以动态加载的，对每一个加载都存在缓存，可以有效的解决循环引用问题。
+-   CommonJS 模块同步加载并执行模块文件。
+
+#### es module 总结
+
+`Es module` 的特性如下：
+
+-   ES6 Module 静态的，不能放在块级作用域内，代码发生在编译时。
+-   ES6 Module 的值是动态绑定的，可以通过导出方法修改，可以直接访问修改结果。
+-   ES6 Module 可以导出多个属性和方法，可以单个导入导出，混合导入导出。
+-   ES6 模块提前加载并执行模块文件，
+-   ES6 Module 导入模块在严格模式下。
+-   ES6 Module 的特性可以很容易实现 Tree Shaking 和 Code Splitting。
 
 ### 4.export 是什么?
 
@@ -3168,8 +3339,6 @@ import用于引入外部模块， 其他脚本等的函数， 对象或者基本
 ## ECMAScript 6+
 
 ### 1.let const var区别
-
-###  let、const、var的区别
 
 **（1）块级作用域：** 块作用域由 `{ }`包括，let和const具有块级作用域，var不存在块级作用域。块级作用域解决了ES5中的两个问题：
 
@@ -5051,7 +5220,10 @@ Promise 是异步编程的一种解决方案： 从语法上讲，promise是一�
 
 必须等所有`await` 函数执行完毕后，才会告诉`promise`我成功了还是失败了，执行`then`或者`catch`
 
-**很多人以为`await`会一直等待之后的表达式执行完之后才会继续执行后面的代码，实际上`await`是一个让出线程的标志。`await`后面的函数会先执行一遍(比如await Fn()的Fn ,并非是下一行代码)，然后就会跳出整个`async`函数来执行后面js栈的代码。等本轮事件循环执行完了之后又会跳回到`async`函数中等待await后面表达式的返回值，如果返回值为非`promise`则继续执行`async`函数后面的代码，否则将返回的`promise`放入`Promise`队列（Promise的Job Queue）**
+>  
+>    **很多人以为`await`会一直等待之后的表达式执行完之后才会继续执行后面的代码，实际上`await`是一个让出线程的标志。`await`后面的函数会先执行一遍(比如await Fn()的Fn ,并非是下一行代码)，然后就会跳出整个`async`函数来执行后面js栈的代码。等本轮事件循环执行完了之后又会跳回到`async`函数中等待await后面表达式的返回值，如果返回值为非`promise`则继续执行`async`函数后面的代码，否则将返回的`promise`放入`Promise`队列（Promise的Job Queue）**
+
+
 
 ### 4.async/await 用法，如何捕获异常
 
@@ -5065,7 +5237,7 @@ JavaScript 中的 thunk 函数（译为转换程序）简单来说就是把带�
 
 `async` 函数返回的是一个`Promise`对象，如果函数中有返回值。则通过`Promise.resole()`封装成`Promise`对象，当然我们就可以使用`then()`就可以取出这个值。`async`只能配套和`await`使用，单独使用就会报错。
 
-```
+```js
 async function foo(){
   let bar = await test()
 }
@@ -5086,6 +5258,84 @@ async function fn(){
     }
 }
 ```
+
+实现
+
+```js
+function asyncToGenerator(generatorFunc) {
+  // 返回的是一个新的函数
+  return function() {
+  
+    // 先调用generator函数 生成迭代器
+    // 对应 var gen = testG()
+    const gen = generatorFunc.apply(this, arguments)
+
+    // 返回一个promise 因为外部是用.then的方式 或者await的方式去使用这个函数的返回值的
+    // var test = asyncToGenerator(testG)
+    // test().then(res => console.log(res))
+    return new Promise((resolve, reject) => {
+    
+      // 内部定义一个step函数 用来一步一步的跨过yield的阻碍
+      // key有next和throw两种取值，分别对应了gen的next和throw方法
+      // arg参数则是用来把promise resolve出来的值交给下一个yield
+      function step(key, arg) {
+        let generatorResult
+        
+        // 这个方法需要包裹在try catch中
+        // 如果报错了 就把promise给reject掉 外部通过.catch可以获取到错误
+        try {
+          generatorResult = gen[key](arg)
+        } catch (error) {
+          return reject(error)
+        }
+
+        // gen.next() 得到的结果是一个 { value, done } 的结构
+        const { value, done } = generatorResult
+
+        if (done) {
+          // 如果已经完成了 就直接resolve这个promise
+          // 这个done是在最后一次调用next后才会为true
+          // 以本文的例子来说 此时的结果是 { done: true, value: 'success' }
+          // 这个value也就是generator函数最后的返回值
+          return resolve(value)
+        } else {
+          // 除了最后结束的时候外，每次调用gen.next()
+          // 其实是返回 { value: Promise, done: false } 的结构，
+          // 这里要注意的是Promise.resolve可以接受一个promise为参数
+          // 并且这个promise参数被resolve的时候，这个then才会被调用
+          return Promise.resolve(
+            // 这个value对应的是yield后面的promise
+            value
+          ).then(
+            // value这个promise被resove的时候，就会执行next
+            // 并且只要done不是true的时候 就会递归的往下解开promise
+            // 对应gen.next().value.then(value => {
+            //    gen.next(value).value.then(value2 => {
+            //       gen.next() 
+            //
+            //      // 此时done为true了 整个promise被resolve了 
+            //      // 最外部的test().then(res => console.log(res))的then就开始执行了
+            //    })
+            // })
+            function onResolve(val) {
+              step("next", val)
+            },
+            // 如果promise被reject了 就再次进入step函数
+            // 不同的是，这次的try catch中调用的是gen.throw(err)
+            // 那么自然就被catch到 然后把promise给reject掉啦
+            function onReject(err) {
+              step("throw", err)
+            },
+          )
+        }
+      }
+      step("next")
+    })
+  }
+}
+```
+
+
 
 ### 5.promisify实现
 
@@ -5248,6 +5498,18 @@ JavaScript 运行时，除了一个正在运行的主线程，引擎还提供一
 
 - 并发是宏观概念，我分别有任务 A 和任务 B，在一段时间内通过任务间的切换完成了这两个任务，这种情况就可以称之为并发。
 - 并行是微观概念，假设 CPU 中存在两个核心，那么我就可以同时完成任务 A、B。同时完成多个任务的情况就可以称之为并行。
+
+多核CPU可以同时执行多个进程。
+扩展了说，单核CPU就可以“同时”执行多个进程。
+
+并发
+当有多个线程在操作时,如果系统只有一个CPU,则它根本不可能真正同时进行一个以上的线程，它只能把CPU运行时间划分成若干个时间段,再将时间 段分配给各个线程执行，在一个时间段的线程代码运行时，其它线程处于挂起状。.这种方式我们称之为并发(Concurrent)。
+
+并行
+当系统有一个以上CPU时,则线程的操作有可能非并发。当一个CPU执行一个线程时，另一个CPU可以执行另一个线程，两个线程互不抢占CPU资源，可以同时进行，这种方式我们称之为并行(Parallel)。
+
+区别
+并发和并行是即相似又有区别的两个概念，并行是指两个或者多个事件在同一时刻发生；而并发是指两个或多个事件在同一时间间隔内发生。在多道程序环境下，并发性是指在一段时间内宏观上有多个程序在同时运行，但在单处理机系统中，每一时刻却仅能有一道程序执行，故微观上这些程序只能是分时地交替执行。倘若在计算机系统中有多个处理机，则这些可以并发执行的程序便可被分配到多个处理机上，实现并行执行，即利用每个处理机来处理一个可并发执行的程序，这样，多个程序便可以同时执行。所以微观上说，多核CPU可以同时执行多个进程，进程数与CPU核数相当。但宏观上说，由于CPU会分时间片执行多个进程，所以实际执行进程个数会远多于CPU核数。
 
 ### 8.setTimeOut setInterval有什么区别
 
@@ -5827,7 +6089,7 @@ fun.call(thisArg[, arg1[, arg2[, ...]]])复制代码
 
 ### 2.this解决了什么问题
 
-his 是执行上下文中的一个属性，它指向最后一次调用这个方法的对象。在实际开发中，this 的指向可以通过四种调用模式来判断。
+this 是执行上下文中的一个属性，它指向最后一次调用这个方法的对象。在实际开发中，this 的指向可以通过四种调用模式来判断。
 
 - 第一种是**函数调用模式**，当一个函数不是一个对象的属性时，直接作为函数来调用时，this 指向全局对象。
 - 第二种是**方法调用模式**，如果一个函数作为一个对象的方法来调用时，this 指向这个对象。

@@ -84,7 +84,6 @@ webpack 4.x || 5.x | babel-loader 8.x | babel 7.x
 
 # 安装依赖包:
 npm install -D babel-loader @babel/core @babel/preset-env webpack
-复制代码
 ```
 
 然后，我们需要建立一个Babel配置文件来指定编译的规则。
@@ -159,7 +158,6 @@ module.exports = (api) => {
     };
 };
 
-复制代码
 ```
 
 ***\*推荐阅读：\****
@@ -413,8 +411,6 @@ module.exports = {
     ]
   }
 }
-
-复制代码
 ```
 
 原理：利用 svg 的 symbol 元素，将每个 icon 包裹在 symbol 中，通过 use 使用该 symbol。
@@ -509,6 +505,52 @@ module.exports = {
 ##### 11. less-loader
 
 解析less，转换为css
+
+##### 12.vue-loader
+
+[学习文章](https://juejin.cn/post/6994468137584295973)
+
+作为 `webpack` 中一个为解析 `.vue` 文件的 `loader`。主要的作用是是将单文件组件(`SFC`) 解析为 `vue runtime`是可识别的组件模块
+
+
+
+对 `.vue` 文件转换大致分为三个阶段
+
+第一个阶段：通过 `vue-loader` 将 `.vue` 文件转化为中间产物
+
+`vue-lodaer` 现将读取的源文件，然后通过 `@vue/component-compiler-utils`中的 `parse` 解析器将得到源文件的描述符。对每个 `block` 进行处理，生成对应的模块请求。由 `normalizer` 函数把每个 `block` 拼接到一起，形成一个 `vue` 组件
+
+![vue-loader1.png](https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/051b3536a7904de9a2554d19ce8a0aa8~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp)
+
+第二个阶段：通过 `pitcher-loader`(这个`loader`是通过 `vueloaderplugin`注入到`webpack`中的) 将第一阶段中间产物转化为另一阶段产物
+
+![vue-loader2.png](https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/1e400262d8b64b849038488ce41396df~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp)
+
+通过 `pitcher-loader`(这个`loader`是通过 `vueloaderplugin`注入到`webpack`中的) 将第一阶段中间产物转化为另一阶段产物。 就以 `import { render, staticRenderFns } from "./test.vue?vue&type=template&id=13429420&scoped=true&"` 为例，会被转化为 `-!./lib/vue-loader/loaders/templateLoader.js??vue-loader-options!./lib/vue-loader/index.js??vue-loader-options!./test.vue?vue&type=template&id=13429420&scoped=true&`
+
+在 `webpack`生成`compiler`之后，注入 `pitcher-loader`，我们主要这个`loader`的命中规则 `resourceQuery`。我们常用的是使用方式 `test: /\.vue$/`，在 `webpack` 内部会被 `RuleSet` 这个类标准化。所以上述 `request` 会先经由 `pitcher-loader`中的 `pitch`函数处理
+
+这里面主要是要找到当前处理的 `module` 匹配中的 `loaders`，给他们排序，并在其中加入对应 `block` 块的处理 `loader`，比如这里的 `templateLoader`，然后通过 `genRequest` 生成我们最新的`request`， `-!./lib/vue-loader/loaders/templateLoader.js??vue-loader-options!./lib/vue-loader/index.js??vue-loader-options!./test.vue?vue&type=template&id=13429420&scoped=true&`
+
+第三个阶段：第二阶段转化 `request` 请求，通过对应的 `loader` 进行处理
+
+![vue-loader3.png](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/db9b19c085b9457e8defbc68671a158e~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp)
+
+在得到上述的`request` 之后，`webpack`会先使用`vue-loader`处理，然后再使用`template-loader`来处理，然后得到最后模块
+
+`vue-loader`的第二个出口，通过代码的注释我们知道，当 `vue-loader`在处理 `.vue` 文件中的一个 `block` 请求时，通过 `qs.parse` 序列化快请求参数 `?vue&type=template&id=13429420&scoped=true&`，如果有 `type` 则返回 `selectBlock` 函数的执行结果
+
+`electBlock` 依据传入的 `query.type`，将 `descriptor` 中对应的部分通过 `loaderContext.callback` 传递给下一个`loader`(这里是`template-loader`) 处理
+
+`template-loader` 将 `.vue` 文件中的 `template` 部分通过自定义或者是内置 `compileTemplate` 编译为函数，其实就是 `vue`中 **模块解析** 的过程，这样可以提供 `vue runtime` 时的性能，毕竟模板解析是个耗性能的过程
+
+
+render函数的执行结果就是 vNode
+
+
+生成的这个 `render` 函数就是对 `template` 模板解析的结果，`render`函数的执行结果就是其对应的 `vNode`，也就是 `vue patch` 阶段的入口参数。
+
+
 
 #### Plugin特点
 
@@ -771,6 +813,8 @@ module.exports = {
 }
 ```
 
+
+
 ### 2.Webpack构建流程
 
 1. 初始化参数。获取用户在webpack.config.js文件配置的参数
@@ -902,7 +946,7 @@ if(process.env.NODE_ENV === 'development'){
   require('./bar');
   exports.foo = 'foo';
 }
-复制代码
+
 ```
 
 而 ESM 方案则从规范层面规避这一行为，它要求所有的导入导出语句只能出现在模块顶层，且导入导出的模块名必须为字符串常量，这意味着下述代码在 ESM 方案下是非法的：
@@ -912,7 +956,6 @@ if(process.env.NODE_ENV === 'development'){
   import bar from 'bar';
   export const foo = 'foo';
 }
-复制代码
 ```
 
 所以，ESM 下模块之间的依赖关系是高度确定的，与运行状态无关，编译工具只需要对 ESM 模块做静态分析，就可以从代码字面量中推断出哪些模块值未曾被其它模块使用，这是实现 Tree Shaking 技术的必要条件。
@@ -1018,7 +1061,237 @@ module.exports = {
 - 传给每个插件的 `compiler` 和 `compilation` 对象都是同一个引用，若在一个插件中修改了它们身上的属性，会影响后面的插件;
 - 异步的事件需要在插件处理完任务时调用回调函数通知 `Webpack` 进入下一个流程，不然会卡住;
 
-### 11.Babel原理
+### 11.Babel使用和原理
+
+#### 常见`plugin`和`Preset`
+
+**`Preset`就是一些`Plugin`组成的合集**,你可以将`Preset`理解称为就是一些的`Plugin`整合称为的一个包
+
+##### `babel-preset-env`
+
+`@babel/preset-env`是一个智能预设，它可以将我们的高版本`JavaScript`代码进行转译根据内置的规则转译成为低版本的`javascript`代码。
+
+`preset-env`内部集成了绝大多数`plugin`（`State > 3`）的转译插件，它会根据对应的参数进行代码转译。
+
+**额外注意的是`babel-preset-env`仅仅针对语法阶段的转译，比如转译箭头函数，`const/let`语法。针对一些`Api`或者`ES 6`内置模块的`polyfill`，`preset-env`是无法进行转译的**
+
+##### `babel-preset-react`
+
+通常我们在使用`React`中的`jsx`时，相信大家都明白实质上`jsx`最终会被编译称为`React.createElement()`方法。
+
+`babel-preset-react`这个预设起到的就是将`jsx`进行转译的作用。
+
+##### `babel-preset-typescript`
+
+对于`TypeScript`代码，我们有两种方式去编译`TypeScript`代码成为`JavaScript`代码。
+
+1.  使用`tsc`命令，结合`cli`命令行参数方式或者`tsconfig`配置文件进行编译`ts`代码。
+2.  使用`babel`，通过`babel-preset-typescript`代码进行编译`ts`代码。
+
+
+
+#### Babel的相关配置
+
+关于`WebPack`中我们日常使用的`babel`相关配置主要涉及以下三个相关插件:
+
+-   `babel-loader`
+-   `babel-core`
+-   `babel-preset-env`
+
+**`webpack`中`loader`的本质就是一个函数，接受我们的源代码作为入参同时返回新的内容**
+
+
+babel-loader`的本质就是一个函数，我们匹配到对应的`jsx?/tsx?`的文件交给`babel-loader
+
+
+```js
+function babelLoader (sourceCode,options) {
+  // ..
+  return targetCode
+}
+```
+
+关于`options`，`babel-loader`支持直接通过`loader`的参数形式注入，同时也在`loader`函数内部通过读取`.babelrc/babel.config.js/`babel.config.json``等文件注入配置
+
+
+
+**`babel-loader`仅仅是识别匹配文件和接受对应参数的函数，那么`babel`在编译代码过程中核心的库就是`@babel/core`这个库**
+
+
+
+`babel-core`是`babel`最核心的一个编译库，他可以将我们的代码进行**词法分析--语法分析--语义分析**过程从而生成`AST`抽象语法树，从而对于“这棵树”的操作之后再通过编译称为新的代码
+
+>`babel-core`其实相当于`@babel/parse`和`@babel/generator`这两个包的合体，接触过`js`编译的同学可能有了解`esprima`和`escodegen`这两个库，你可以将`babel-core`的作用理解称为这两个库的合体。
+
+`babel-preset-env`在这里充当的就是这个作用：**告诉`babel`我需要以为什么样的规则进行代码转移**
+
+
+
+#### `Babel`相关`polyfill`内容
+
+关于`polyfill`，我们先来解释下何谓`polyfill`。
+
+首先我们来理清楚这三个概念:
+
+-   最新`ES`语法，比如：箭头函数，`let/const`。
+-   最新`ES Api`，比如`Promise`
+-   最新`ES`实例/静态方法，比如`String.prototype.include`
+
+`babel-prest-env`仅仅只会转化最新的`es`语法，并不会转化对应的`Api`和实例方法,比如说`ES 6`中的`Array.from`静态方法。`babel`是不会转译这个方法的，如果想在低版本浏览器中识别并且运行`Array.from`方法达到我们的预期就需要额外引入`polyfill`进行在`Array`上添加实现这个方法
+
+**语法层面的转化`preset-env`完全可以胜任。但是一些内置方法模块，仅仅通过`preset-env`的语法转化是无法进行识别转化的，所以就需要一系列类似”垫片“的工具进行补充实现这部分内容的低版本代码实现。这就是所谓的`polyfill`的作用**
+
+针对于`polyfill`方法的内容，`babel`中涉及两个方面来解决：
+
+-   `@babel/polyfill`
+-   `@babel/runtime`
+-   `@babel/plugin-transform-runtime`
+
+##### `@babel/polyfill`
+
+通过[babelPolyfill](https://link.juejin.cn?target=https%3A%2F%2Fbabeljs.io%2Fdocs%2Fen%2Fbabel-polyfill)通过往全局对象上添加属性以及直接修改内置对象的`Prototype`上添加方法实现`polyfill`。
+
+比如说我们需要支持`String.prototype.include`，在引入`babelPolyfill`这个包之后，它会在全局`String`的原型对象上添加`include`方法从而支持我们的`Js Api`
+
+我们说到这种方式本质上是往全局对象/内置对象上挂载属性，所以这种方式难免会造成全局污染
+
+在`babel-preset-env`中存在一个`useBuiltIns`参数，这个参数决定了如何在`preset-env`中使用`@babel/polyfill`。
+
+```json
+{
+    "presets": [
+        ["@babel/preset-env", {
+            "useBuiltIns": false
+        }]
+    ]
+}
+
+```
+
+-   `useBuiltIns`--`"usage"`| `"entry"`| `false`
+
+###### `false`
+
+当我们使用`preset-env`传入`useBuiltIns`参数时候，默认为`false`。它表示仅仅会转化最新的`ES`语法，并不会转化任何`Api`和方法
+
+###### `entry`
+
+当传入`entry`时，需要我们在项目入口文件中手动引入一次`core-js`，它会根据我们配置的浏览器兼容性列表(`browserList`)然后**全量**引入不兼容的`polyfill`
+
+>在我们使用`useBuiltIns:entry/usage`时，需要额外指定`core-js`这个参数。默认为使用`core-js 2.0`，所谓的`core-js`就是我们上文讲到的“垫片”的实现。它会实现一系列内置方法或者`Promise`等`Api`
+
+###### `usage`
+
+上边我们说到配置为`entry`时，`perset-env`会基于我们的浏览器兼容列表进行全量引入`polyfill`。所谓的全量引入比如说我们代码中仅仅使用了`Array.from`这个方法。但是`polyfill`并不仅仅会引入`Array.from`，同时也会引入`Promise`、`Array.prototype.include`等其他并未使用到的方法。这就会造成包中引入的体积太大了。
+
+此时就引入出了我们的`useBuintIns:usage`配置。
+
+当我们配置`useBuintIns:usage`时，会根据配置的浏览器兼容，以及代码中 **使用到的`Api` 进行引入`polyfill`按需添加。**
+
+当使用`usage`时，我们不需要额外在项目入口中引入`polyfill`了，它会根据我们项目中使用到的进行按需引入。
+
+#### `@babel/runtime`
+
+上边我们讲到`@babel/polyfill`是存在污染全局变量的副作用，在实现`polyfill`时`Babel`还提供了另外一种方式去让我们实现这功能，那就是`@babel/runtime`。
+
+简单来讲，`@babel/runtime`更像是一种**按需加载的解决方案**，比如哪里需要使用到`Promise`，`@babel/runtime`就会在他的文件顶部添加`import promise from 'babel-runtime/core-js/promise'`。
+
+同时上边我们讲到对于`preset-env`的`useBuintIns`配置项，我们的`polyfill`是`preset-env`帮我们智能引入。
+
+而`babel-runtime`则会将引入方式由智能完全交由我们自己，我们需要什么自己引入什么。
+
+它的用法很简单，只要我们去安装`npm install --save @babel/runtime`后，在需要使用对应的`polyfill`的地方去单独引入就可以了
+
+```js
+// a.js 中需要使用Promise 我们需要手动引入对应的运行时polyfill
+import Promise from 'babel-runtime/core-js/promise'
+
+const promsies = new Promise()
+```
+
+`babel/runtime`你可以理解称为就是一个运行时“哪里需要引哪里”的工具库。
+
+>   针对`babel/runtime`绝大多数情况下我们都会配合`@babel/plugin-transfrom-runtime`进行使用达到智能化`runtime`的`polyfill`引入
+
+#### `@babel/plugin-transform-runtime`
+
+##### `babel-runtime`存在的问题
+
+`babel-runtime`在我们手动引入一些`polyfill`的时候，它会给我们的代码中注入一些类似`_extend()， classCallCheck()`之类的工具函数，这些工具函数的代码会包含在编译后的每个文件中，比如：
+
+```js
+class Circle {}
+// babel-runtime 编译Class需要借助_classCallCheck这个工具函数
+function _classCallCheck(instance, Constructor) { //... } 
+var Circle = function Circle() { _classCallCheck(this, Circle); };
+复制代码
+```
+
+如果我们项目中存在多个文件使用了`class`，那么无疑在每个文件中注入这样一段冗余重复的工具函数将是一种灾难。
+
+所以针对上述提到的两个问题:
+
+-   `babel-runtime`无法做到智能化分析，需要我们手动引入。
+-   `babel-runtime`编译过程中会重复生成冗余代码。
+
+我们就要引入我们的主角`@babel/plugin-transform-runtime`。
+
+##### `@babel/plugin-transform-runtime`作用
+
+`@babel/plugin-transform-runtime`插件的作用恰恰就是为了解决上述我们提到的`run-time`存在的问题而提出的插件。
+
+-   `babel-runtime`无法做到智能化分析，需要我们手动引入。
+
+`@babel/plugin-transform-runtime`插件会智能化的分析我们的项目中所使用到需要转译的`js`代码，从而实现模块化从`babel-runtime`中引入所需的`polyfill`实现。
+
+-   `babel-runtime`编译过程中会重复生成冗余代码。
+
+`@babel/plugin-transform-runtime`插件提供了一个`helpers`参数。具体你可以在[这里查阅它的所有配置参数](https://link.juejin.cn?target=https%3A%2F%2Fbabeljs.io%2Fdocs%2Fen%2Fbabel-plugin-transform-runtime%23helpers)。
+
+这个`helpers`参数开启后可以将上边提到编译阶段重复的工具函数，比如`classCallCheck, extends`等代码转化称为`require`语句。此时，这些工具函数就不会重复的出现在使用中的模块中了。比如这样：
+
+```js
+// @babel/plugin-transform-runtime会将工具函数转化为require语句进行引入
+// 而非runtime那样直接将工具模块代码注入到模块中
+var _classCallCheck = require("@babel/runtime/helpers/classCallCheck"); 
+var Circle = function Circle() { _classCallCheck(this, Circle); };
+```
+
+```js
+{
+  "plugins": [
+    [
+      "@babel/plugin-transform-runtime",
+      {
+        "absoluteRuntime": false,
+        "corejs": false,
+        "helpers": true,
+        "regenerator": true,
+        "version": "7.0.0-beta.0"
+      }
+    ]
+  ]
+}
+
+```
+
+在`babel`中实现`polyfill`主要有两种方式：
+
+-   一种是通过`@babel/polyfill`配合`preset-env`去使用，这种方式可能会存在污染全局作用域。
+-   一种是通过`@babel/runtime`配合`@babel/plugin-transform-runtime`去使用，这种方式并不会污染作用域。
+-   全局引入会污染全局作用域，但是相对于局部引入来说。它会增加很多额外的引入语句，增加包体积
+
+在开发类库时遵守不污染全局为首先使用`@babel/plugin-transform-runtime`而在业务开发中使用`@babel/polyfill`
+
+babel-runtime 是为了减少重复代码而生的。 babel生成的代码，可能会用到一些_extend()， classCallCheck() 之类的工具函数，默认情况下，这些工具函数的代码会包含在编译后的文件中。如果存在多个文件，那每个文件都有可能含有一份重复的代码。
+
+babel-runtime插件能够将这些工具函数的代码转换成require语句，指向为对babel-runtime的引用，如 require('babel-runtime/helpers/classCallCheck'). 这样， classCallCheck的代码就不需要在每个文件中都存在了。
+
+
+
+
+
+
 
 大多数JavaScript Parser遵循 `estree` 规范，Babel 最初基于 `acorn` 项目(轻量级现代 JavaScript 解析器) Babel大概分为三大部分：
 
@@ -1152,4 +1425,412 @@ Vite 将会使用 esbuild 预构建依赖。Esbuild 使用 Go 编写，并且比
 #### vite缺点3
 
 1.还没有被大规模使用,很多问题或者诉求没有真正暴露出来，vite真正崛起那一天，是跟vue3有关系的,当vue3广泛开始使用在生产环境的时候，vite也就大概率意味着被大家慢慢开始接受了
+
+### 13.如何进行css的抽离
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20210218161436641.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM5MjA3OTQ4,size_16,color_FFFFFF,t_70)
+
+**直接引用样式文件，没有使用任何相关插件时，会出现`css in js`的情况，即打包到了一块**
+
+**css代码进行分割和压缩**
+
+-   `mini-css-extract-plugin`：分割
+-   `optimize-css-assets-webpack-plugin`： 压缩
+
+plugins:
+
+```js
+// 抽离 css 文件
+        new MiniCssExtractPlugin({
+            filename: 'css/main.[contentHash:8].css'
+        })
+```
+
+style-loader的作用是将css挂载到页面上，而MiniCssExtractPlugin.loader是为了将css从页面上抽取出来作为文件。
+注意loader的调用顺序： 从下往上，从右往左
+注意tree shaking配置需要忽略掉.css文件，否则有可能打包不到样式文件
+“sideEffects”: [
+“*.css”
+],
+
+```js
+ // 抽离 css
+            {
+                test: /\.css$/,
+                loader: [
+                    MiniCssExtractPlugin.loader,  // 注意，这里不再用 style-loader
+                    'css-loader',
+                    'postcss-loader'
+                ]
+            },
+            // 抽离 less --> css
+            {
+                test: /\.less$/,
+                loader: [
+                    MiniCssExtractPlugin.loader,  // 注意，这里不再用 style-loader
+                    'css-loader',
+                    'less-loader',
+                    'postcss-loader'
+                ]
+            }
+```
+
+
+
+`optimize-css-assets-webpack-plugin`可以对css进行压缩
+
+```js
+optimization: {
+		// css样式的代码合并
+		minimizer: [new OptimizeCSSAssetsPlugin({})],
+		usedExports: true, // tree shaking
+		splitChunks: {
+	      chunks: 'all'
+	    }
+	},
+```
+
+### 14.如何实现多入口
+
+设置path.js文件  
+
+```js
+const path = require('path')
+
+const srcPath = path.join(__dirname, '..', 'src')
+const distPath = path.join(__dirname, '..', 'dist')
+
+module.exports = {
+    srcPath,
+    distPath
+}
+```
+
+
+
+设置多个entry
+
+```javascript
+entry: {
+        index: path.join(srcPath, 'index.js'),
+        other: path.join(srcPath, 'other.js')
+    },
+```
+
+
+
+```js
+
+        // 多入口 - 生成 index.html
+        new HtmlWebpackPlugin({
+            template: path.join(srcPath, 'index.html'),
+            filename: 'index.html',
+            // chunks 表示该页面要引用哪些 chunk （即上面的 index 和 other），默认全部引用
+            chunks: ['index']  // 只引用 index.js
+        }),
+        // 多入口 - 生成 other.html
+        new HtmlWebpackPlugin({
+            template: path.join(srcPath, 'other.html'),
+            filename: 'other.html',
+            chunks: ['other']  // 只引用 other.js
+        })
+```
+
+chunks 表示该页面要引用哪些 chunk （即上面的 index 和 other），默认全部引用
+
+​     `chunks: ['index', 'vendor', 'common']`     要考虑代码分割
+
+每个页面css抽离也可以
+
+到了多页程序，因为存在多个入口文件以及对应的多个页面，每个页面都有自己的 `css`样式，所以需要为每个页面各自配置
+
+```js
+plugins: [
+	new ExtractTextPlugin('index/[name].[contenthash].css'),
+	new ExtractTextPlugin('other/[name].[contenthash].css')
+]
+```
+
+### 15.加速打包速度
+
+#### happyPack 开启多进程打包
+
+```js
+// happyPack 开启多进程打包
+        new HappyPack({
+            // 用唯一的标识符 id 来代表当前的 HappyPack 是用来处理一类特定的文件
+            id: 'babel',
+            // 如何处理 .js 文件，用法和 Loader 配置中一样
+            loaders: ['babel-loader?cacheDirectory']
+        }),
+```
+
+#### 使用 ParallelUglifyPlugin 并行压缩输出的 JS 代码
+
+```javascript
+// 使用 ParallelUglifyPlugin 并行压缩输出的 JS 代码
+        new ParallelUglifyPlugin({
+            // 传递给 UglifyJS 的参数
+            // （还是使用 UglifyJS 压缩，只不过帮助开启了多进程）
+            uglifyJS: {
+                output: {
+                    beautify: false, // 最紧凑的输出
+                    comments: false, // 删除所有的注释
+                },
+                compress: {
+                    // 删除所有的 `console` 语句，可以兼容ie浏览器
+                    drop_console: true,
+                    // 内嵌定义了但是只用到一次的变量
+                    collapse_vars: true,
+                    // 提取出出现多次但是没有定义成变量去引用的静态值
+                    reduce_vars: true,
+                }
+            }
+        })
+```
+
+#### `IgnorePlugin`避免引入无用模块
+
+以时间处理库`moment`的使用为例进行学习和理解
+
+默认会引入所有语言的js代码，代码会过大，只引入中文
+
+在插件中使用`webpack.IgnorePlugin`匹配到`moment`下的`locale`语言包，进行忽略处理，即不引入所有的`locale`下的语言包。
+
+在需要使用到具体的语言时，在代码中引入具体的语言包即可
+
+#### noParse的使用
+
+一般使用`.min.js`结尾的文件，都是已经经过模块化处理的，那么这个时候就没必要在进行loder或者webpack分析了，noParer的字面意思也是不再解析。
+
+##### ignorePlugin和noParse的对比
+
+-   `IgnorePlugin` 直接就将符合匹配条件的模块，不再进行引入，代码中没有。
+-   `noParse` 该引入还是会引入，只是不参与loader或webpack的解析及打包
+
+### 使用DllPlugin
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/3dce44d09e6d463788476a5951eecf8a.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA56Wl5ZOl55qE6K-0,size_20,color_FFFFFF,t_70,g_se,x_16)
+
+就是通过将引入的模块，打到一个dll文件下，生成模块包和整体包产物文件的对应关系，再次打包时，如果能在映射关系中找到该模块，便直接使用产物中的包，不在进行模块分割打包，以此来提高Webpack的打包速度。
+
+开发环境使用webpack-dev-server，不会生成dist目录，而是会把产物放到内存之中
+
+#### **优化打包构建速度 - 开发体验和效率**
+
+#### **优化babel-loader**
+
+在babel-loader后加一个?cacheDirectory，开启babel-loader的缓存。这样如果es6代码没有改，就不会再重新编译
+
+还有就是通过include确定babel编译范围，通常为src。（排除node_modules）
+
+#### **IgnorePlugin**
+
+这个plugin作用是避免引入无用模块。比如我们通常会使用moment.js，但默认会引入所有语言的js代码，代码过大。可能只需要引入中文和英文的模块，这个插件就可以帮助。
+
+那么就可以在业务代码中手动引入中文和英文的语言包，然后再webpack配置中写入
+
+```text
+new webpack.IgnorePlugin(/\.\/locale/, /moment/),
+```
+
+忽略掉moment里的locale语言包，这样就能减少无用的模块引入。
+
+#### **noParse**
+
+避免重复打包。社区中常有的min.js通常都是已经打包了的，因此没必要再次打包，在module.noParse中配置不需要打包的文件即可。只是react.min.js不能这么搞，这个没有采用模块化，还是需要打包的。
+
+和Ignore的区别是，Ignore直接不引入，代码中没有。但noParse会引入，但不打包。都能够提升构建速度，Ignore还能够优化线上的性能。
+
+#### **happyPack多进程打包**
+
+因为js是单线程的，所以webpack实际上也是进行的单线程打包。所以如果我们能够开启多进程进行打包，那么就能够大幅提高构建速度，happyPack就能够做到这个
+
+注：这是个plugin
+
+比如要将babel的解析放在新进程中，那么module.rule中对js的解析需要改成：
+
+```text
+            {
+                test: /\.js$/,
+                // 把对 .js 文件的处理转交给 id 为 babel 的 HappyPack 实例
+                use: ['happypack/loader?id=babel'],
+                include: srcPath,
+                // exclude: /node_modules/
+            },
+```
+
+然后需要在plugin中配置babel的happyPack实例：
+
+```text
+        new HappyPack({
+            // 用唯一的标识符 id 来代表当前的 HappyPack 是用来处理一类特定的文件
+            id: 'babel',
+            // 如何处理 .js 文件，用法和 Loader 配置中一样
+            loaders: ['babel-loader?cacheDirectory']
+        }),
+```
+
+#### **ParallelUglifyPlugin多进程压缩JS**
+
+webpack本身内置了uglify压缩JS，但压缩JS本身是比较高成本的，这里也可以进行多进程开启。
+直接在Plugin中实例化就行。根据配置要求进行配置。
+
+当然，关于开启多进程是否需要，并不是一定需要的。
+
+如果项目较大，打包较慢，开启多进程能够提高速度；但开启多进程本身就需要成本和时间，小项目没必要配置，反而会造成打包时间增加。
+
+#### **热更新HotModuleReplacementPlugin**
+
+自动刷新是速度比较慢，且状态会丢失。
+热更新的话，则不会刷新，状态不丢失，且新代码能够立刻生效。
+
+主要引入HotModuleReplacementPlugin即可。
+首先entry需要修改：
+
+```text
+entry: {
+    // index: path.join(srcPath, 'index.js'),
+    index: [
+        'webpack-dev-server/client?http://localhost:8080/',
+        'webpack/hot/dev-server',
+        path.join(srcPath, 'index.js')
+    ],
+    other: path.join(srcPath, 'other.js')
+},
+```
+
+Plugin中实例化即可，并在devServer中设置hot为true即可。
+
+最后，JS代码需要还需要判断一下是否是热更新，注册监听范围
+
+```text
+if (module.hot) {
+    module.hot.accept(['./math'), () => {});
+}
+```
+
+所以热更新有成本，需要手动注册。
+
+实际使用中没有遇见需要这样的，通常只用了css的逻辑（默认支持热更新）。
+
+#### **DllPlugin动态链接库插件**
+
+前端框架通常会使用vue、React，体积大，构建慢。但是比较稳定，开发情况下不会经常升级版本。
+
+因此，这种内容同一个版本只需要构建一次就可以了，没必要每次都重新构建。
+
+webpack已经内置了DllPlugin,主要包含两个插件：
+
+DllPlugin：打包出dll文件，先进行一遍预打包，生成dll文件
+
+DllReferencePlugin：在开发环境使用dll文件。
+
+一般需要单独定义一个dll.config.js
+
+```text
+output: {
+    path: path.join(__dirname, '../build'), // 放在项目的/build目录下面
+    filename: '[name].dll.js', // 打包文件的名字
+    library: '[name]_library' // 可选 暴露出的全局变量名
+    // vendor.dll.js中暴露出的全局变量名。
+    // 主要是给DllPlugin中的name使用，
+    // 故这里需要和webpack.DllPlugin中的`name: '[name]_library',`保持一致。
+},
+
+plugin
+
+    new webpack.DllPlugin({
+      path: path.join(__dirname, '../build', '[name]_manifest.json'), // 生成上文说到清单文件，放在当前build文件下面，这个看你自己想放哪里了。
+      name: '[name]_library',
+      context: __dirname,
+    }),
+```
+
+然后定义dll的命令，进行dll打包
+
+最后输出了dll和manifest文件。dll文件就是所有打包的文件内容，而manifest的作用就是索引，负责引导实际对于dll里模块的引用。
+
+实际应用的话，就是需要在dev的html中去进行script进行引用。这里就可以用dllReferencePlugin插件去引用manifest文件，用AddAssetHtmlPlugin引用dll文件即可
+
+### 16.如何优化产出代码
+
+[webpack性能优化](https://zhuanlan.zhihu.com/p/403182979)
+
+核心：让代码体积更小、合理分包，不重复加载、速度更快，内存使用更少
+
+#### **小图片用base64的编码**
+
+使用url-loader，对小于xkb的图片做base64格式进行产出，没有必要再做一次网络请求
+
+#### **bundle需要加hash**
+
+根据文件内容算hash值，客户端可以实现缓存管理使用。js代码如果没有变化，那么即便再次上线也能复用没变的bundle块
+
+#### **懒加载**
+
+import() 使用时，webpack会自动进行单独打包，生成0.js这样的打包文件。
+
+#### **提取公共代码**
+
+一些通用代码和第三方应该被抽离。在optimization里的splitChunks进行设置
+
+#### **IngorePlugin**
+
+减少打包代码内容
+
+#### **使用cdn加速**
+
+使用cdn加速，修改output里的publicPath，能够修改所有静态文件url的前缀
+当然需要在部署上线脚本里加上上传到cdn的操作
+
+图片则在图片的url-loader里加上publicPath就行
+
+#### **使用production**
+
+在mode中使用production，会自动开启代码压缩，减少代码体积
+
+Vue\React等成熟的库会自动删掉调试代码比如开发环境的warning
+
+其次production还会开启Tree Shaking：可以移除 JavaScript 上下文中的未引用代码，删掉用不着的代码，能够有效减少 JS 代码文件的大小。
+
+假设我们不使用 production mode，而是用 development mode，那么我们需要在配置文件中新增：
+
+```text
+module.exports = {
+  mode: 'development',
+  //...
+  optimization: { 
+    useExports: true, // 模块内未使用的部分不进行导出
+  },
+}
+```
+
+必须用ES6 module才能让tree shaking生效，commonjs不行
+
+仅仅因为 Webpack 看不到一段正在使用的代码，并不意味着它可以安全地进行 tree-shaking。有些模块导入，只要被引入，就会对应用程序产生重要的影响。一个很好的例子就是全局样式表，或者设置全局配置的JavaScript 文件。
+Webpack 认为这样的文件有“副作用”。具有副作用的文件不应该做 tree-shaking，因为这将破坏整个应用程序。Webpack 的设计者清楚地认识到不知道哪些文件有副作用的情况下打包代码的风险，因此默认地将所有代码视为有副作用。这可以保护你免于删除必要的文件，但这意味着 Webpack 的默认行为实际上是不进行 tree-shaking。
+幸运的是，我们可以配置我们的项目，告诉 Webpack 它是没有副作用的，可以进行 tree-shaking。
+
+package.json 有一个特殊的属性 sideEffects，就是为此而存在的。它有三个可能的值：
+true 是默认值，如果不指定其他值的话。这意味着所有的文件都有副作用，也就是没有一个文件可以 tree-shaking。
+false 告诉 Webpack 没有文件有副作用，所有文件都可以 tree-shaking。
+第三个值 […] 是文件路径数组。它告诉 webpack，除了数组中包含的文件外，你的任何文件都没有副作用。因此，除了指定的文件之外，其他文件都可以安全地进行 tree-shaking。
+
+#### **使用Scope Hosting**
+
+当存在多个文件时，实际上在webpack中会打包成多个函数。但文件越多，函数越多，函数越多占用内存越多（作用域）。
+是否可以把打包后的函数进行合并？这就是Scope Hosting的作用：代码体积更小、创建函数作用域更少、代码可读性更少
+
+引用ModuleConcatenationPlugin插件并使用，代价是必须要用ES6模块化组织代码才能用这个效果，所以针对NPM中的第三方模块优先采用 jsnext:main 中指向ES6模块化语法的文件
+
+配置resolve：
+
+```text
+resolve: {
+    mainFields: ['jsnext:main', 'browser', 'main']
+}
+```
+
+
 

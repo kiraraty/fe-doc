@@ -52,6 +52,32 @@ let c:Color=Color.Green;
 永不存在的值的类型
 never类型是那些总是会抛出异常或根本就不会有返回值的函数表达式或箭头函数表达式的返回值类型； 变量也可能是 never类型，当它们被永不为真的类型保护所约束时
 
+### unknown
+
+可以把任何值赋值给 unknown ，但是不能调用属性和方法，
+
+如果需要调用属性和方法，那么你可能需要类型断言
+
+```ts
+let value:unknown;
+value = 'hello';
+(value as string).length
+```
+
+使用类型保护
+
+```ts
+let value:unknown;
+value = 'hello';
+if (typeof value === 'string') {
+  value.length
+}
+```
+
+联合类型中的 unknown定义
+
+如果联合类型中有unknown，那么最终得到的都是unknown类型
+
 ### object
 
 object表示非原始类型，也就是除number，string，boolean，symbol，null或undefined之外的类型
@@ -1614,3 +1640,7 @@ logParam1
 logClass2
 logClass1
 ```
+
+## 总结
+
+![ts](https://s2.loli.net/2022/04/10/79bEyc3j8ZMY4dr.jpg)
