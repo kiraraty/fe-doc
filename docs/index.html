@@ -9,6 +9,8 @@
   <meta name="description" content="Description" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0" />
   <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify/themes/vue.css" />
+  <!-- <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-simple.css"> -->
+
   <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify-darklight-theme@latest/dist/style.min.css">
 </head>
 
@@ -23,10 +25,15 @@
       subMaxLevel: 4,
       search: {
         paths: "auto",
-        placeholder: "请输入要搜索的关键字",
+        placeholder: "输入搜索的关键字",
         noData: "没有结果",
         depth: 6,
       },
+    copyCode: {
+    buttonText : 'Copy',
+    errorText  : 'Error',
+    successText: 'Copied'
+  },
       pagination: {
             previousText: "上一篇",
             nextText: "下一篇",
@@ -35,9 +42,11 @@
         },
       count: {
         countable: true,
-        fontsize: "0.9em",
+        fontsize: "1em",
         color: "rgb(90,90,90)",
         language: "chinese",
+        margin:"50px",
+        float:"left"
       },
       darklightTheme: {
         defaultTheme: 'light',
