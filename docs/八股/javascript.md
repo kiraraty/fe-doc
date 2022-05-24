@@ -4,7 +4,7 @@
 
 ### 1.数据类型有哪几种
 
-JavaScript共有八种数据类型，分别是 Undefined、Null、Boolean、Number、String、Object、Symbol、BigInt。
+JavaScript共有八种数据类型，分别是 **Undefined、Null、Boolean、Number、String、Object、Symbol、BigInt**。
 
 其中 Symbol 和 BigInt 是ES6 中新增的数据类型：
 
@@ -137,6 +137,12 @@ task.setStatus(statuses.COMPLETED);
 使用`Symbol`作为属性名称
 
 ```javascript
+let statuses = {
+    OPEN: Symbol('已下单'),
+    IN_PROGRESS: Symbol('配送中'),
+    COMPLETED: Symbol('订单完成'),
+    CANCELED: Symbol('订单取消')
+};
 let status = Symbol('status');
 
 let task = {
@@ -613,10 +619,7 @@ console.log(str);//这个结果需要花费大量时间来显示，因为需要�
 //所以不要大量地对字符串重新赋值或者拼接字符串
 ```
 
-
-
-
-#### 常用方法
+**常用方法**
 
 字符串所有方法，都不会修改字符串本身，操作完成会返回一个新的字符串。
 
@@ -636,7 +639,52 @@ console.log(str);//这个结果需要花费大量时间来显示，因为需要�
 | replace('被替换的字符','替换为的字符') | 只会替换第一个字符 |
 | split('分隔符')                        | 字符转换为数组     |
 
+#### 正则对象
 
+ [`RegExp 参考`](https://www.w3school.com.cn/jsref/jsref_obj_regexp.asp)
+
+RegExp 对象表示正则表达式，它是对字符串执行模式匹配的强大工具
+
+RegExp 对象表示正则表达式，它是对字符串执行模式匹配的强大工具。
+
+直接量语法
+
+```
+/pattern/attributes
+```
+
+ 创建 RegExp 对象的语法：
+
+```
+new RegExp(pattern, attributes)
+```
+
+**参数 *pattern*** 是一个字符串，指定了正则表达式的模式或其他正则表达式。
+
+参数 *attributes* 是一个可选的字符串，包含属性 "g"、"i" 和 "m"，分别用于指定全局匹配、区分大小写的匹配和多行匹配。ECMAScript 标准化之前，不支持 m 属性。如果 *pattern* 是正则表达式，而不是字符串，则必须省略该参数
+
+**返回值**一个新的 RegExp 对象，具有指定的模式和标志。如果参数 *pattern* 是正则表达式而不是字符串，那么 RegExp() 构造函数将用与指定的 RegExp 相同的模式和标志创建一个新的 RegExp 对象。
+
+如果不用 new 运算符，而将 RegExp() 作为函数调用，那么它的行为与用 new 运算符调用时一样，只是当 *pattern* 是正则表达式时，它只返回 *pattern*，而不再创建一个新的 RegExp 对象
+
+##### RegExp 对象方法
+
+| 方法                                                         | 描述                                                         |
+| :----------------------------------------------------------- | :----------------------------------------------------------- |
+| [compile](https://www.w3school.com.cn/jsref/jsref_regexp_compile.asp) | 编译正则表达式。                                             |
+| [exec](https://www.w3school.com.cn/jsref/jsref_exec_regexp.asp) | 检索字符串中指定的值。返回找到的值，并确定其位置。 ans=reg.exec(str)   ans[0]为匹配的全部字符串   ans[1]...ans[n]为分组捕获的字符 |
+| [test](https://www.w3school.com.cn/jsref/jsref_test_regexp.asp) | 检索字符串中指定的值。返回 true 或 false。     reg.test(str) |
+
+
+
+##### 支持正则表达式的 String 对象的方法
+
+| 方法                                                         | 描述                             |
+| :----------------------------------------------------------- | :------------------------------- |
+| [search](https://www.w3school.com.cn/jsref/jsref_search.asp) | 检索与正则表达式相匹配的值。     |
+| [match](https://www.w3school.com.cn/jsref/jsref_match.asp)   | 找到一个或多个正则表达式的匹配。 |
+| [replace](https://www.w3school.com.cn/jsref/jsref_replace.asp) | 替换与正则表达式匹配的子串。     |
+| [split](https://www.w3school.com.cn/jsref/jsref_split.asp)   | 把字符串分割为字符串数组。       |
 
 #### 基本包装类型（基本类型的包装对象）
 
@@ -2005,7 +2053,649 @@ for (let a of arr) {
 [1, [2, [3, 4]]].flat(2)   // [1, 2, 3, 4]
 ```
 
-### 8.类数组是什么，怎么转数组 ，arguments的应用
+### 8.字符串方法
+
+
+
+![js字符串方法](https://s2.loli.net/2022/05/23/DESIaFZQtyH3viU.jpg)
+
+#### 1. 获取字符串长度
+
+JavaScript中的字符串有一个length属性，该属性可以用来获取字符串的长度：
+
+```javascript
+const str = 'hello';
+str.length   // 输出结果：5
+```
+
+#### 2. 获取字符串指定位置的值
+
+charAt()和charCodeAt()方法都可以通过索引来获取指定位置的值：
+
+-   charAt() 方法获取到的是指定位置的字符；
+-   charCodeAt()方法获取的是指定位置字符的Unicode值。
+
+##### （1）charAt()
+
+charAt() 方法可以返回指定位置的字符。其语法如下：
+
+```javascript
+string.charAt(index)
+```
+
+index表示字符在字符串中的索引值：
+
+```javascript
+const str = 'hello';
+str.charAt(1)  // 输出结果：e 
+```
+
+我们知道，字符串也可以通过索引值来直接获取对应字符，那它和charAt()有什么区别呢？来看例子：
+
+```javascript
+const str = 'hello';
+str.charAt(1)  // 输出结果：e 
+str[1]         // 输出结果：e 
+str.charAt(5)  // 输出结果：'' 
+str[5]         // 输出结果：undefined
+```
+
+可以看到，当index的取值不在str的长度范围内时，str[index]会返回undefined，而charAt(index)会返回空字符串；除此之外，str[index]不兼容ie6-ie8，charAt(index)可以兼容。
+
+##### （2）charCodeAt()
+
+ASCII 编码    0->48     A->65    a->97
+
+`charCodeAt()`：该方法会返回指定索引位置字符的 Unicode 值 ，返回值是 0 - 65535 之间的整数，表示给定索引处的 UTF-16 代码单元，如果指定位置没有字符，将返回 **NaN**：
+
+```javascript
+let str = "abcdefg";
+console.log(str.charCodeAt(1)); // "b" --> 98
+```
+
+通过这个方法，可以获取字符串中指定Unicode编码值范围的字符。比如，数字0～9的Unicode编码范围是: 48～57，可以通过这个方法来筛选字符串中的数字，当然如果你更熟悉正则表达式，会更方便
+
+#### 3. 检索字符串是否包含特定序列
+
+这5个方法都可以用来检索一个字符串中是否包含特定的序列。其中前两个方法得到的指定元素的索引值，并且只会返回第一次匹配到的值的位置。后三个方法返回的是布尔值，表示是否匹配到指定的值。
+
+**注意：这5个方法都对大小写敏感！**
+
+##### （1）indexOf()
+
+`indexOf()`：查找某个字符，**有则返回第一次匹配到的位置**，否则返回-1，其语法如下：
+
+```javascript
+string.indexOf(searchvalue,fromindex)
+```
+
+该方法有两个参数：
+
+-   searchvalue：必需，规定需检索的字符串值；
+-   fromindex：可选的整数参数，规定在字符串中开始检索的位置。它的合法取值是 0 到 string.length - 1。如省略该，则从字符串的首字符开始检索。
+
+```javascript
+let str = "abcdefgabc";
+console.log(str.indexOf("a"));   // 输出结果：0
+console.log(str.indexOf("z"));   // 输出结果：-1
+console.log(str.indexOf("c", 4)) // 输出结果：9
+```
+
+##### （2）lastIndexOf()
+
+`lastIndexOf()`：查找某个字符，有则返回最后一次匹配到的位置，否则返回-1
+
+```javascript
+let str = "abcabc";
+console.log(str.lastIndexOf("a"));  // 输出结果：3
+console.log(str.lastIndexOf("z"));  // 输出结果：-1
+```
+
+该方法和indexOf()类似，只是查找的顺序不一样，indexOf()是正序查找，lastIndexOf()是逆序查找。
+
+##### （3）includes()
+
+`includes()`：该方法用于判断字符串是否包含指定的子字符串。如果找到匹配的字符串则返回 true，否则返回 false。该方法的语法如下：
+
+```javascript
+string.includes(searchvalue, start)
+```
+
+该方法有两个参数：
+
+-   searchvalue：必需，要查找的字符串；
+-   start：可选，设置从那个位置开始查找，默认为 0。
+
+```javascript
+let str = 'Hello world!';
+
+str.includes('o')  // 输出结果：true
+str.includes('z')  // 输出结果：false
+str.includes('e', 2)  // 输出结果：false
+```
+
+##### （4）startsWith()
+
+`startsWith()`：该方法用于检测字符串**是否以指定的子字符串开始**。如果是以指定的子字符串开头返回 true，否则 false。其语法和上面的includes()方法一样。
+
+```javascript
+let str = 'Hello world!';
+
+str.startsWith('Hello') // 输出结果：true
+str.startsWith('Helle') // 输出结果：false
+str.startsWith('wo', 6) // 输出结果：true
+```
+
+##### （5）endsWith()
+
+`endsWith()`：该方法用来判断当前字符串**是否是以指定的子字符串结尾**。如果传入的子字符串在搜索字符串的末尾则返回 true，否则将返回 false。其语法如下：
+
+```javascript
+string.endsWith(searchvalue, length)
+```
+
+该方法有两个参数：
+
+-   searchvalue：必需，要搜索的子字符串；
+-   length： 设置字符串的长度，默认值为原始字符串长度 string.length。
+
+```javascript
+let str = 'Hello world!';
+
+str.endsWith('!')       // 输出结果：true
+str.endsWith('llo')     // 输出结果：false
+str.endsWith('llo', 5)  // 输出结果：true
+```
+
+可以看到，当第二个参数设置为5时，就会从字符串的前5个字符中进行检索，所以会返回true
+
+#### 4. 连接多个字符串
+
+concat() 方法用于连接两个或多个字符串。该方法不会改变原有字符串，会返回连接两个或多个字符串的新字符串。其语法如下：
+
+```javascript
+string.concat(string1, string2, ..., stringX)
+```
+
+其中参数 string1, string2, ..., stringX 是必须的，他们将被连接为一个字符串的一个或多个字符串对象。
+
+```javascript
+let str = "abc";
+console.log(str.concat("efg"));          //输出结果："abcefg"
+console.log(str.concat("efg","hijk")); //输出结果："abcefghijk"
+```
+
+虽然concat()方法是专门用来拼接字符串的，但是在开发中使用最多的还是加**操作符+**，因为其更加简单。
+
+#### 5. 字符串分割成数组
+
+split() 方法用于把一个字符串分割成字符串数组。该方法不会改变原始字符串。其语法如下：
+
+```javascript
+string.split(separator,limit)
+```
+
+该方法有两个参数：
+
+-   separator：必需。字符串或正则表达式，从该参数指定的地方分割 string。
+-   limit：可选。该参数可指定返回的数组的最大长度。如果设置了该参数，返回的子串不会多于这个参数指定的数组。如果没有设置该参数，整个字符串都会被分割，不考虑它的长度。
+
+```javascript
+let str = "abcdef";
+str.split("c");    // 输出结果：["ab", "def"]
+str.split("", 4)   // 输出结果：['a', 'b', 'c', 'd'] 
+```
+
+如果把空字符串用作 separator，那么字符串中的每个字符之间都会被分割。
+
+```javascript
+str.split("");     // 输出结果：["a", "b", "c", "d", "e", "f"]
+```
+
+其实在将字符串分割成数组时，可以同时拆分多个分割符，使用正则表达式即可实现：
+
+```javascript
+const list = "apples,bananas;cherries"
+const fruits = list.split(/[,;]/)
+console.log(fruits);  // 输出结果：["apples", "bananas", "cherries"]
+```
+
+#### 6. 截取字符串
+
+substr()、substring()和 slice() 方法都可以用来截取字符串。
+
+##### （1） slice()
+
+slice() 方法用于提取字符串的某个部分，并以新的字符串返回被提取的部分。其语法如下：
+
+```javascript
+string.slice(start,end)
+```
+
+该方法有两个参数：
+
+-   start：必须。 要截取的片断的起始下标，第一个字符位置为 0。如果为负数，则从尾部开始截取。
+-   end：可选。 要截取的片段结尾的下标。若未指定此参数，则要提取的子串包括 start 到原字符串结尾的字符串。如果该参数是负数，那么它规定的是从字符串的尾部开始算起的位置。
+
+上面说了，如果start是负数，则该参数规定的是从字符串的尾部开始算起的位置。也就是说，-1 指字符串的最后一个字符，-2 指倒数第二个字符，以此类推：
+
+```javascript
+let str = "abcdefg";
+str.slice(1,6);   // 输出结果："bcdef" 
+str.slice(1);     // 输出结果："bcdefg" 
+str.slice();      // 输出结果："abcdefg" 
+str.slice(-2);    // 输出结果："fg"
+str.slice(6, 1);  // 输出结果：""
+```
+
+注意，该方法返回的子串**包括开始处的字符**，但**不包括结束处的字符**。
+
+##### （2） substr()
+
+substr() 方法用于在字符串中抽取从开始下标开始的指定数目的字符。其语法如下：
+
+```javascript
+string.substr(start,length)
+```
+
+该方法有两个参数：
+
+-   start 必需。要抽取的子串的起始下标。必须是数值。如果是负数，那么该参数声明从字符串的尾部开始算起的位置。也就是说，-1 指字符串中最后一个字符，-2 指倒数第二个字符，以此类推。
+-   length：可选。子串中的字符数。必须是数值。如果省略了该参数，那么返回从 stringObject 的开始位置到结尾的字串。
+
+```javascript
+let str = "abcdefg";
+str.substr(1,6); // 输出结果："bcdefg" 
+str.substr(1);   // 输出结果："bcdefg" 相当于截取[1,str.length-1]
+str.substr();    // 输出结果："abcdefg" 相当于截取[0,str.length-1]
+str.substr(-1);  // 输出结果："g"
+```
+
+##### （3） substring()
+
+substring() 方法用于提取字符串中介于两个指定下标之间的字符。其语法如下：
+
+```javascript
+string.substring(from, to)
+```
+
+该方法有两个参数：
+
+-   from：必需。一个非负的整数，规定要提取的子串的第一个字符在 string 中的位置。
+-   to：可选。一个非负的整数，比要提取的子串的最后一个字符在 string 中的位置多 1。如果省略该参数，那么返回的子串会一直到字符串的结尾。
+
+**注意：** 如果参数 from 和 to 相等，那么该方法返回的就是一个空串（即长度为 0 的字符串）。如果 from 比 to 大，那么该方法在提取子串之前会先交换这两个参数。并且该方法不接受负的参数，如果参数是个负数，就会返回这个字符串。
+
+```javascript
+let str = "abcdefg";
+str.substring(1,6); // 输出结果："bcdef" [1,6)
+str.substring(1);   // 输出结果："bcdefg" [1,str.length-1]
+str.substring();    // 输出结果："abcdefg" [0,str.length-1]
+str.substring(6,1); // 输出结果 "bcdef" [1,6)
+str.substring(-1);  // 输出结果："abcdefg"
+```
+
+注意，该方法返回的子串**包括开始处的字符**，但**不包括结束处的字符**。
+
+#### 7. 字符串大小写转换
+
+toLowerCase() 和 toUpperCase()方法可以用于字符串的大小写转换。
+
+##### （1）toLowerCase()
+
+`toLowerCase()`：该方法用于把字符串转换为小写。
+
+```javascript
+let str = "adABDndj";
+str.toLowerCase(); // 输出结果："adabdndj"
+```
+
+##### （2）toUpperCase()
+
+`toUpperCase()`：该方法用于把字符串转换为大写。
+
+```javascript
+let str = "adABDndj";
+str.toUpperCase(); // 输出结果："ADABDNDJ"
+```
+
+我们可以用这个方法来将字符串中第一个字母变成大写：
+
+```javascript
+let word = 'apple'
+word = word[0].toUpperCase() + word.substr(1)
+console.log(word) // 输出结果："Apple"
+```
+
+#### 8. 字符串模式匹配
+
+replace()、match()和search()方法可以用来匹配或者替换字符。
+
+##### （1）replace()
+
+`replace()`：该方法用于在字符串中用一些字符替换另一些字符，或替换一个与正则表达式匹配的子串。其语法如下：
+
+```javascript
+string.replace(searchvalue, newvalue)
+```
+
+该方法有两个参数：
+
+-   searchvalue：必需。规定子字符串或要替换的模式的 RegExp 对象。如果该值是一个字符串，则将它作为要检索的直接量文本模式，而不是首先被转换为 RegExp 对象。
+-   newvalue：必需。一个字符串值。规定了替换文本或生成替换文本的函数。
+
+```javascript
+let str = "abcdef";
+str.replace("c", "z") // 输出结果：abzdef
+```
+
+执行一个全局替换, 忽略大小写:
+
+```javascript
+let str="Mr Blue has a blue house and a blue car";
+str.replace(/blue/gi, "red");    // 输出结果：'Mr red has a red house and a red car'
+```
+
+**注意：** 如果 regexp 具有全局标志 g，那么 replace() 方法将替换所有匹配的子串。否则，它只替换第一个匹配子串。
+
+##### （2）match()
+
+`match()`：该方法用于在字符串内检索指定的值，或找到一个或多个正则表达式的匹配。该方法类似 indexOf() 和 lastIndexOf()，但是它返回指定的值，而不是字符串的位置。其语法如下：
+
+```javascript
+string.match(regexp)
+```
+
+该方法的参数 regexp 是必需的，规定要匹配的模式的 RegExp 对象。如果该参数不是 RegExp 对象，则需要首先把它传递给 RegExp 构造函数，将其转换为 RegExp 对象。
+
+**注意：** 该方法返回存放匹配结果的数组。该数组的内容依赖于 regexp 是否具有全局标志 g。
+
+```javascript
+let str = "abcdef";
+console.log(str.match("c")) // ["c", index: 2, input: "abcdef", groups: undefined]
+复制代码
+```
+
+##### （3）search()
+
+`search()`方法用于检索字符串中指定的子字符串，或检索与正则表达式相匹配的子字符串。其语法如下：
+
+```javascript
+string.search(searchvalue)
+```
+
+该方法的参数 regex 可以是需要在 string 中检索的子串，也可以是需要检索的 RegExp 对象。
+
+**注意：** 要执行忽略大小写的检索，请追加标志 i。该方法不执行全局匹配，它将忽略标志 g，也就是只会返回第一次匹配成功的结果。如果没有找到任何匹配的子串，则返回 -1。
+
+**返回值：** 返回 str 中第一个与 regexp 相匹配的子串的起始位置。
+
+```javascript
+let str = "abcdef";
+str.search(/bcd/)   // 输出结果：1
+```
+
+#### 9. 移除字符串收尾空白符
+
+trim()、trimStart()和trimEnd()这三个方法可以用于移除字符串首尾的头尾空白符，空白符包括：空格、制表符 tab、换行符等其他空白符等。
+
+##### （1）trim()
+
+trim() 方法用于移除字符串首尾空白符，该方法不会改变原始字符串：
+
+```javascript
+let str = "  abcdef  "
+str.trim()    // 输出结果："abcdef"
+```
+
+注意，该方法不适用于null、undefined、Number类型。
+
+##### （2）trimStart()
+
+trimStart() 方法的的行为与`trim()`一致，不过会返回一个**从原始字符串的开头删除了空白的新字符串**，不会修改原始字符串：
+
+```javascript
+const s = '  abc  ';
+
+s.trimStart()   // "abc  "
+```
+
+##### （3）trimEnd()
+
+trimEnd() 方法的的行为与`trim()`一致，不过会返回一个**从原始字符串的结尾删除了空白的新字符串**，不会修改原始字符串：
+
+```javascript
+const s = '  abc  ';
+
+s.trimEnd()   // "  abc"
+```
+
+#### 10. 获取字符串本身
+
+valueOf()和toString()方法都会返回字符串本身的值，感觉用处不大。
+
+##### （1）valueOf()
+
+`valueOf()`：返回某个字符串对象的原始值，该方法通常由 JavaScript 自动进行调用，而不是显式地处于代码中。
+
+```javascript
+let str = "abcdef"
+console.log(str.valueOf()) // "abcdef"
+```
+
+##### （2）toString()
+
+`toString()`：返回字符串对象本身
+
+```javascript
+let str = "abcdef"
+console.log(str.toString()) // "abcdef"
+```
+
+#### 11. 重复一个字符串
+
+repeat() 方法返回一个新字符串，表示将原字符串重复n次：
+
+```javascript
+'x'.repeat(3)     // 输出结果："xxx"
+'hello'.repeat(2) // 输出结果："hellohello"
+'na'.repeat(0)    // 输出结果：""
+```
+
+如果参数是小数，会向下取整：
+
+```javascript
+'na'.repeat(2.9) // 输出结果："nana"
+```
+
+如果参数是负数或者Infinity，会报错：
+
+```javascript
+'na'.repeat(Infinity)   // RangeError
+'na'.repeat(-1)         // RangeError
+```
+
+如果参数是 0 到-1 之间的小数，则等同于 0，这是因为会先进行取整运算。0 到-1 之间的小数，取整以后等于-0，repeat视同为 0。
+
+```javascript
+'na'.repeat(-0.9)   // 输出结果：""
+```
+
+如果参数是NaN，就等同于 0：
+
+```javascript
+'na'.repeat(NaN)    // 输出结果：""
+```
+
+如果repeat的参数是字符串，则会先转换成数字。
+
+```javascript
+'na'.repeat('na')   // 输出结果：""
+'na'.repeat('3')    // 输出结果："nanana"
+```
+
+#### 12. 补齐字符串长度
+
+padStart()和padEnd()方法用于补齐字符串的长度。如果某个字符串不够指定长度，会在头部或尾部补全。
+
+##### （1）padStart()
+
+`padStart()`用于头部补全。该方法有两个参数，其中第一个参数是一个数字，表示字符串补齐之后的长度；第二个参数是用来补全的字符串。
+
+如果原字符串的长度，等于或大于指定的最小长度，则返回原字符串：
+
+```javascript
+'x'.padStart(1, 'ab') // 'x'
+
+```
+
+如果用来补全的字符串与原字符串，两者的长度之和超过了指定的最小长度，则会截去超出位数的补全字符串：
+
+```javascript
+'x'.padStart(5, 'ab') // 'ababx'
+'x'.padStart(4, 'ab') // 'abax'
+
+```
+
+如果省略第二个参数，默认使用空格补全长度：
+
+```javascript
+'x'.padStart(4) // '   x'
+
+```
+
+padStart()的常见用途是为数值补全指定位数，笔者最近做的一个需求就是将返回的页数补齐为三位，比如第1页就显示为001，就可以使用该方法来操作：
+
+```javascript
+"1".padStart(3, '0')   // 输出结果： '001'
+"15".padStart(3, '0')  // 输出结果： '015'
+
+```
+
+##### （2）padEnd()
+
+`padEnd()`用于尾部补全。该方法也是接收两个参数，第一个参数是字符串补全生效的最大长度，第二个参数是用来补全的字符串：
+
+```javascript
+'x'.padEnd(5, 'ab') // 'xabab'
+'x'.padEnd(4, 'ab') // 'xaba'
+```
+
+#### 13. 字符串转为数字
+
+parseInt()和parseFloat()方法都用于将字符串转为数字。
+
+##### （1）parseInt()
+
+parseInt() 方法用于可解析一个字符串，并返回一个整数。其语法如下：
+
+```javascript
+parseInt(string, radix)
+
+```
+
+该方法有两个参数：
+
+-   string：必需。要被解析的字符串。
+-   radix：可选。表示要解析的数字的基数。该值介于 2 ~ 36 之间。
+
+
+
+当参数 radix 的值为 0，或没有设置该参数时，parseInt() 会根据 string 来判断数字的基数。
+
+```javascript
+parseInt("10");			  // 输出结果：10
+parseInt("17",8);		  // 输出结果：15 (8+7)
+parseInt("010");		  // 输出结果：10 或 8
+
+```
+
+当参数 radix 的值以 “0x” 或 “0X” 开头，将以 16 为基数：
+
+```javascript
+parseInt("0x10")      // 输出结果：16
+
+```
+
+如果该参数小于 2 或者大于 36，则 parseInt() 将返回 NaN：
+
+```javascript
+parseInt("50", 1)      // 输出结果：NaN
+parseInt("50", 40)     // 输出结果：NaN
+
+```
+
+只有字符串中的第一个数字会被返回，当遇到第一个不是数字的字符为止:
+
+```javascript
+parseInt("40 4years")   // 输出结果：40
+
+```
+
+如果字符串的第一个字符不能被转换为数字，就会返回 NaN：
+
+```javascript
+parseInt("new100")     // 输出结果：NaN
+
+```
+
+字符串开头和结尾的空格是允许的：
+
+```javascript
+parseInt("  60  ")    // 输出结果： 60
+
+```
+
+##### （2）parseFloat()
+
+parseFloat() 方法可解析一个字符串，并返回一个浮点数。该方法指定字符串中的首个字符是否是数字。如果是，则对字符串进行解析，直到到达数字的末端为止，然后以数字返回该数字，而不是作为字符串。其语法如下：
+
+```javascript
+parseFloat(string)
+
+```
+
+parseFloat 将它的字符串参数解析成为浮点数并返回。如果在解析过程中遇到了正负号（+ 或 -）、数字 (0-9)、小数点，或者科学记数法中的指数（e 或 E）以外的字符，则它会忽略该字符以及之后的所有字符，返回当前已经解析到的浮点数。同时参数字符串首位的空白符会被忽略。
+
+```javascript
+parseFloat("10.00")      // 输出结果：10.00
+parseFloat("10.01")      // 输出结果：10.01
+parseFloat("-10.01")     // 输出结果：-10.01
+parseFloat("40.5 years") // 输出结果：40.5
+
+```
+
+如果参数字符串的第一个字符不能被解析成为数字，则 parseFloat 返回 NaN。
+
+```javascript
+parseFloat("new40.5")    // 输出结果：NaN
+```
+
+#### 14.编码生成字符
+
+fromCharCode() 可接受一个指定的 Unicode 值，然后返回一个字符串
+
+ASCII 编码    0->48     A->65    a->97
+
+生成字符返回
+
+`str=String.fromCharCode(64 + parseInt(m))`
+
+**生成生成A~Z字母**
+
+```js
+getEN () {
+      const arr = []
+      for (let i = 65; i < 91; i++) {
+        arr.push(String.fromCharCode(i))
+      }
+      return arr
+}
+```
+
+
+
+### 9.类数组是什么，怎么转数组 ，arguments的应用
 
 JavaScript 中一直存在一种类数组的对象，它们不能直接调用数组的方法，但是又和数组比较类似
 
@@ -2213,7 +2903,7 @@ sum(1, 2);    // 3
 
 
 
-### 9.ajax axios fetch各有什么特点
+### 10.ajax axios fetch各有什么特点
 
 **1.jQuery ajax**
 
@@ -2307,7 +2997,7 @@ fetch号称是AJAX的替代品，是在ES6出现的，使用了ES6中的promise�
 
 **总结：axios既提供了并发的封装，也没有fetch的各种问题，而且体积也较小，当之无愧现在最应该选用的请求的方式。**
 
-### 10.new一个箭头函数会发生什么
+### 11.new一个箭头函数会发生什么
 
 #### 1.面向对象中的new关键字
 
@@ -2424,7 +3114,7 @@ console.log(Foo.prototype); // undefined
 
 ##### 6.箭头函数不能当做Generator函数,不能使用yield关键字
 
-### 11.js延迟加载
+### 12.js延迟加载
 
 JS延迟加载：也就是**等页面加载完成之后再加载 JavaScript 文件。**  
 
@@ -2532,7 +3222,7 @@ $.getScript("outer.js",function(){//回调函数，成功获取文件后执行�
 
 把js外部引入的文件的标签放到页面底部，来让js最后引入，从而加快页面加载速度
 
-### 12.setTimeout()与setInterval()
+### 13.setTimeout()与setInterval()
 
 #### setTimeout()细节
 
@@ -2614,7 +3304,7 @@ setInterval(function, N)
 
 因而我们一般用 setTimeout 模拟 setInterval，来规避掉上面的缺点。
 
-### 13.Object方法
+### 14.Object方法
 
 Object常用方法总结：
 
@@ -2883,7 +3573,7 @@ obj.address  = 'china';
 console.log(obj)     // {name: "haha", age: 30}
 ```
 
-### 14.Event 对象
+### 15.Event 对象
 
 我们对元素进行点击操作时候，会产生一个 `Event` 的对象
 
@@ -2990,7 +3680,7 @@ scrollWidth：获取对象可滚动的总宽度；
 
 `scrollHeight = content + padding；（即border之内的内容）`
 
-### 15. Node 和 Element
+### 16. Node 和 Element
 
 [ELement](https://juejin.cn/post/7032218037746925581#heading-7)
 
@@ -3369,7 +4059,196 @@ import用于引入外部模块， 其他脚本等的函数， 对象或者基本
 
 
 
-### 2.变量提升和暂时性死区
+### 2.作用域和作用域链
+
+#### 作用域
+
+**概念**：作用域是在程序运行时代码中的某些特定部分中变量、函数和对象的**可访问性**。
+
+从使用方面来**解释**，作用域就是变量的使用范围，也就是在代码的哪些部分可以访问这个变量，哪些部分无法访问到这个变量，换句话说就是这个变量在程序的哪些区域可见。
+
+```js
+function Fun() {
+    var inVariable = "内部变量";
+}
+Fun();
+console.log(inVariable);  // Uncaught ReferenceError: inVariable is not defined
+//inVariable是在Fun函数内部被定义的，属于局部变量，在外部无法访问，于是会报错
+```
+
+从存储上来**解释**的话，作用域**本质**上是一个**对象，** 作用域中的变量可以理解为是该对象的成员
+
+**总结**：作用域就是代码的执行环境，全局作用域就是全局执行环境，局部作用域就是函数的执行环境，它们都是栈内存
+
+#### **作用域分类**
+
+作用域又分为**全局作用域**和**局部作用域**。在ES6之前，局部作用域只包含了函数作用域，ES6的到来为我们提供了 **‘块级作用域’**（由一对花括号包裹），可以通过新增命令let和const来实现；而对于全局作用域这里有一个小细节需要注意一下：
+
+>   -   在 Web 浏览器中，全局作用域被认为是 **`window`** 对象，因此所有全局变量和函数都是作为 **`window`** 对象的属性和方法创建的。
+>   -   在 Node环境中，全局作用域是 **`global`** 对象。
+
+全局作用域很好理解，现在我们再来解释一下局部作用域吧，先来看看**函数作用域**，所谓函数作用域，顾名思义就是由函数定义产生出来的作用域
+
+```js
+function fun1(){
+    var variable = 'abc'
+}
+function fun2(){
+    var variable = 'cba'
+}
+fun1();
+fun2();
+//这里有两个函数，他们分别都有一个同名变量variable，在严格模式下，程序不会报错，
+//这是因为这两个同名变量位于不同的函数内，也就是位于不同的作用域中，所以他们不会产生冲突。
+```
+
+最外层函数 和在最外层函数外面定义的变量拥有全局作用域
+```js
+var outVariable = "我是最外层变量"; //最外层变量
+function outFun() { //最外层函数
+    var inVariable = "内层变量";
+    function innerFun() { //内层函数
+        console.log(inVariable);
+    }
+    innerFun();
+}
+console.log(outVariable); //我是最外层变量
+outFun(); //内层变量
+console.log(inVariable); //inVariable is not defined
+innerFun(); //innerFun is not defined
+
+```
+
+-   所有末定义直接赋值的变量自动声明为拥有全局作用域
+
+```js
+function outFun2() {
+    variable = "未定义直接赋值的变量";
+    var inVariable2 = "内层变量2";
+}
+outFun2();//要先执行这个函数，否则根本不知道里面是啥
+console.log(variable); //未定义直接赋值的变量
+console.log(inVariable2); //inVariable2 is not defined
+```
+
+-   所有window对象的属性拥有全局作用域
+
+一般情况下，window对象的内置属性都拥有全局作用域，例如window.name、window.location、window.top等等。
+
+
+
+let 声明的语法与 var 的语法一致。基本上可以用 let 来代替 var 进行变量声明，但会将变量的作用域限制在当前代码块中 **（注意：块级作用域并不影响var声明的变量）。** 但是使用let时有几点需要**注意**：
+
+>   -   **声明变量不会提升到代码块顶部，即不存在变量提升**
+>   -   **禁止重复声明同一变量**
+>   -   **for循环语句中（）内部，即圆括号之内会建立一个隐藏的作用域，该作用域不属于for后边的{}中，并且只有for后边的{}产生的块作用域能够访问这个隐藏的作用域，这就使循环中** **绑定块作用域有了妙用**
+
+ES5和ES6版本的代码，ES5：
+
+```js
+if(true) {
+    var a = 1
+}
+for(var i = 0; i < 10; i++) {
+    ...
+}
+console.log(a) // 1
+console.log(i) // 9
+
+```
+
+ES6：
+
+```js
+for (let i = 0; i < 10; i++) {
+            console.log(i);//0,1,2,3,4,5,6,7,8,9
+ }
+console.log(i);// Uncaught ReferenceError: i is not defined
+```
+
+
+
+```js
+if (true) {
+     let i = 9;
+}
+console.log(i);// Uncaught ReferenceError: i is not defined
+```
+
+#### 作用域链(scope chain)
+
+**概念**：多个作用域对象连续引用形成的链式结构。
+
+**使用**方面**解释**：当在Javascript中使用一个变量的时候，首先Javascript引擎会尝试在当前作用域下去寻找该变量，如果没找到，再到它的上层作用域寻找，以此类推直到找到该变量或是已经到了全局作用域，如果在全局作用域里仍然找不到该变量，它就会直接报错。
+
+**存储**方面**解释**：作用域链在JS内部中是以数组的形式存储的，数组的第一个索引对应的是函数本身的执行期上下文，也就是当前执行的代码所在环境的变量对象，下一个索引对应的空间存储的是该对象的外部执行环境，依次类推，一直到全局执行环境
+
+```js
+var a = 100
+function fun() {
+    var b = 200
+    console.log(a) //100
+// fun函数局部作用域中没有变量a，于是从它的上一级，也就是全局作用域中找，
+//在全局中a被赋值为100，于是输出100
+    console.log(b)//200 fun函数局部作用域中有变量b，并且它被赋值为了200，输出200
+}
+fun()
+```
+
+```js
+var a = 10
+function fun() {
+   console.log(a)
+}
+function show(f) {
+   var a = 20
+   (function() {
+      f()   //10，而不是20; 函数的作用域是在函数定义的时候就被决定了，与函数在哪里被调用无关
+   })()
+}
+show(fun)
+```
+
+由于变量的查找是沿着作用域链来实现的，所以也称作用域链为**变量查找的机制**。是不是很好理解，这里再来补充一点作用域的作用
+
+>   1.  作用域最为重要的一点是安全。**变量只能在特定的区域内才能被访问，外部环境不能访问内部环境的任何变量和函数，即可以向上搜索，但不可以向下搜索，** 有了作用域我们就可以避免在程序其它位置意外对某个变量做出修改导致程序发生事故。
+>   2.  作用域能够减轻命名的压力。我们可以在不同的作用域内定义相同的变量名，并且这些变量名不会产生冲突。
+
+ **作用域中取值,这里强调的是“创建”，而不是“调用”**，切记切记——其实这就是所谓的"静态作用域"
+
+
+
+```js
+var a = 10
+function fn() {
+  var b = 20
+  function bar() {
+    console.log(a + b) //30
+  }
+  return bar
+}
+var x = fn(),
+  //b = 200
+x() //bar()
+```
+
+fn()返回的是bar函数，赋值给x。执行x()，即执行bar函数代码。取b的值时，直接在fn作用域取出。取a的值时，试图在fn作用域取，但是取不到，只能转向创建fn的那个作用域中去查找，结果找到了,所以最后的结果是30
+
+```js
+var a = 10
+function fn() {
+  var b = 20
+  function bar() {
+    console.log(a + b) //30
+  }
+  bar()
+}
+fn()
+```
+
+
+
+#### 变量提升和暂时性死区
 
 在当前上下文代码自上而下执行之前，会把所有带var/function关键字的进行提前的声明或者定义
 
@@ -3380,6 +4259,8 @@ typeof 检测一个未被声明的变量不会报错，结果是`undefined`
 
 1.var声明的变量在词法分析阶段(执行上下文创建阶段)就会完成创建和初始化(undefined)，因此在代码执行阶段，就可以在声明前使用
 2.let声明的变量在词法分析阶段(执行上下文创建阶段)会完成创建但不会初始化，如果在其定义之前使用，就是使用了未被初始化的变量，会报怎么样的错误我上面也已经贴出来了并进行了翻译。
+
+
 
 ### 3.箭头函数特性
 
@@ -4305,6 +5186,8 @@ function *createIterator(items) {
 
 ### 1.原型链
 
+![JavaScript原型关系图](https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2018/11/4/166dee0c1854fab5~tplv-t2oaga2asx-zoom-in-crop-mark:1304:0:0:0.awebp)
+
 在JavaScript中是使用**构造函数来新建一个对象**的，每一个**构造函数的内部都有一个 prototype 属性**，它的**属性值是一个对象**，这个对象包含了可以由该构造函数的**所有实例共享的属性和方法**。
 
 当使用构造函数新建一个对象后，在这个**新建对象的内部将包含一个指针**，这个**指针指向构造函数的 prototype 属性对应的值,即原型对象**，在 ES5 中这个**指针被称为对象的原型**。一般来说不应该能够获取到这个值的，但是现在浏览器中都实现了 __proto__ 属性来访问这个属性，但是最好不要使用这个属性，因为它不是规范中规定的。ES5 中新增了一个 Object.getPrototypeOf() 方法，可以通过这个方法来获取对象的原型。
@@ -5175,6 +6058,10 @@ Promise 是异步编程的一种解决方案： 从语法上讲，promise是一�
 -   Promise.prototype.then
 
 >   实例方法，为 Promise 注册回调函数，函数形式：fn(vlaue){}，value 是上一个任务的返回结果，then 中的函数一定要 return 一个结果或者一个新的 Promise 对象，才可以让之后的then 回调接收。
+>
+>   console.log(Promise.resolve().then())
+>
+>   then内部默认  return Promise.resolve(undefined)；
 
 -   Promise.prototype.catch
 
@@ -5222,6 +6109,111 @@ Promise 是异步编程的一种解决方案： 从语法上讲，promise是一�
 
 >  
 >    **很多人以为`await`会一直等待之后的表达式执行完之后才会继续执行后面的代码，实际上`await`是一个让出线程的标志。`await`后面的函数会先执行一遍(比如await Fn()的Fn ,并非是下一行代码)，然后就会跳出整个`async`函数来执行后面js栈的代码。等本轮事件循环执行完了之后又会跳回到`async`函数中等待await后面表达式的返回值，如果返回值为非`promise`则继续执行`async`函数后面的代码，否则将返回的`promise`放入`Promise`队列（Promise的Job Queue）**
+
+#### async 做了什么
+
+带 async 关键字的函数，它使得函数的返回值必是promise对象
+如果 async 关键字函数返回的不是promise，会自动用Promise.resolve() 包装
+如果 async 关键字函数显式的返回 promise，以你返回的promise为准
+
+```js
+async function fn1(){
+    return 123
+}
+
+function fn2(){
+    return 123
+}
+
+console.log(fn1())   // Promise {<resolved>: 123}
+console.log(fn2())   // 123
+```
+
+#### await 等的是右侧 [表达式] 的结果
+
+```js
+async function async1() {
+    await async2()
+    console.log( 'async1 end' )
+}
+async function async2() {
+    console.log( 'async2' )
+}
+async1()
+console.log( 'script start' )
+
+ async2
+ script start
+ async1 end
+ 
+```
+
+也就是遇到await后，阻塞的是await当前行之后的代码
+
+#### await等到之后，做了什么事情
+
+右侧表达式的结果，就是await要等的东西
+等到之后，对await来说，分2种情况
+
+- 不是promise对象
+- 是 promise 对象
+
+如果不是promise，await会阻塞后面的代码，先执行async外面的同步代码，同步代码执行完，再回到async内部，把这个非promise的东西，作为 await表达式的结果
+
+如果它等到的是一个 promise 对象，await 也会暂停async后面的代码，先执行async外面的同步代码，等着 Promise 对象 fulfilled，然后把 resolve 的参数作为 await 表达式的运算结果
+
+```javascript
+    async function async1() {
+        console.log( 'async1 start' )
+        await async2()
+        console.log( 'async1 end' )
+    }
+    
+    async function async2() {
+        console.log( 'async2' )
+    }
+    
+    console.log( 'script start' )
+    
+    setTimeout( function () {
+        console.log( 'setTimeout' )
+    }, 0 )
+    
+    async1();
+    
+    new Promise( function ( resolve ) {
+        console.log( 'promise1' )
+        resolve();
+    } ).then( function () {
+        console.log( 'promise2' )
+    } )
+    
+    console.log( 'script end' )
+
+```
+
+执行顺序：
+
+同步代码 **console.log( ‘script start’ )**
+将 setTimeout 放入宏任务队列
+执行 async1() 函数 **console.log( ‘async1 start’ )**
+分析下 await async2()
+先得到 await 右侧表达式的结果. 执行 async2() ，打印同步代码
+
+ **console.log( ‘async2’ )**，并且 return Promise.resolve(undefined)；
+await 后，中断async函数，先执行async外的同步代码
+被阻塞后，执行async之外的代码
+执行 new Promise()， **console.log( ‘promise1’ )**
+promise.then()，发现这个是微任务，所以暂时不打印，只是推入当前宏任务的微任务队列中。
+打印同步代码 **console.log( ‘script end’ )**
+执行完同步代码后，执行 await Promise.resolve(undefined) 了，类似于Promise.resolve(undefined) .then((undefined) => { })
+微任务队列，先进先出原则：
+
+任务1， console.log( ‘promise2’ )
+任务2 ，Promise.resolve(undefined)，语句结束后，后面的代码不再被阻塞，所以打印 console.log( ‘async1 end’ )
+宏任务队列，console.log(‘setTimeout’)
+
+
 
 
 
