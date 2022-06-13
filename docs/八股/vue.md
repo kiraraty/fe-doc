@@ -37,22 +37,80 @@ Vue.js 是采用**数据劫持**结合**发布者-订阅者模式**的方式，�
 
 ![img](https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2018/4/10/162ad3d5be3e5105~tplv-t2oaga2asx-zoom-in-crop-mark:1304:0:0:0.awebp)
 
-自己的话解释
 
-**第一步：**
-需要observer的数据对象进行递归遍历，包括子属性对象的属性，都加上setter和getter这样的话，给这个对象的某个值赋值，就会触发setter，那么久能监听到了数据变化
 
-**第二步：**
-compile解析模板令，将模板中的变量替换成数据.然后初始化渲染页面视图，并将每个令对应的节点绑定更新函数，添加监听数据的订阅者，一旦数据有变动，收到通知，更新视图
+[双向绑定原理](https://juejin.cn/post/7065967379095748638#heading-9)
 
-**第三步：**
-Watcher订阅名是 observer和 Compile之间通信的桥梁，主要做的事情是：
-1.在自身实例化时往属性订阅器(dep)里面添加自己
-2.自身必须有一个 update()方法
-3.待属性变动dep.notice()通知时，能调用自身的update()方法，并触发Compile中定的回调，则功成身退
+vue接收一个模板和data参数。
 
-**第四步:**
-MVVM作为数据绑定的入口，集成observer、 Compile和 Watcher三者，通过 Observer来监听自己的model数据変化，通过 Compile来解析编译模板指令，最终利用 Watcher搭起 Observer和 Compile之间的通信标梁，达到数据变化-＞视图更新新:视图交互变化(Input)-＞数据mode变更的双向绑定效果。
+1，首先将data中的数据进行递归遍历，对每个属性执行Object.defineProperty，定义get和set函数。**并为每个属性添加一个dep数组**。当get执行时，会为调用的dom节点创建一个watcher存放在该数组中。当set执行时，重新赋值，并调用dep数组的notify方法，通知所有使用了该属性watcher，并更新对应dom的内容。
+
+2，将模板加载到内存中，递归模板中的元素，检测到元素有v-开头的命令或者双大括号的指令，就会从data中取对应的值去修改模板内容，这个时候就将该dom元素添加到了该属性的dep数组中。这就实现了数据驱动视图。在处理v-model指令的时候，为该dom添加input事件（或change），输入时就去修改对应的属性的值，实现了页面驱动数据。
+
+3，将模板与数据进行绑定后，将模板添加到真实dom树中
+
+#### 收集依赖具体过程
+
+-   Dep：`用于收集某个data属性依赖的dom节点集合，并提供更新方法`
+-   Watcher：`每个dom节点的包裹对象`
+    -   attr：该dom使用的data属性
+    -   cb：修改该dom内容的回调函数，在对象创建的时候会接收
+
+-   为data的每个属性添加一个dep数组，用来收集依赖的dom节点。
+-   因为vue实例初始化的时候会解析模板，会触发data数据的getter，所以在此收集dom
+
+-   在CompilerUtil类解析v-model，{{}}等命令时，会触发getter。
+-   我们在触发之前创建Wather对象，该对象在初始化的时候调用getOldValue，首先为Dep添加一个静态属性target，值为该dom节点。
+-   再调用CompilerUtil.getValue，获取该data的当前值，此时就以及触发了getter。然后我们在getter函数里面获取该静态变量Dep.target，并添加到对应的依赖数组dep中了，就完成了一次收集。
+-   因为每次触发getter之前都对该静态变量赋值，所以不存在收集错依赖的情况。
+
+#### 实现视图驱动数据
+
+监听输入框的input、change事件。修改CompilerUtil的model方法
+
+```js
+model: function (node, value, vm) {
+    new Watcher(vm, value, (newValue, oldValue)=>{
+        node.value = newValue;
+    });
+    let val = this.getValue(vm, value);
+    node.value = val;
+	// 看这里
+    node.addEventListener('input', (e)=>{
+        let newValue = e.target.value;
+        this.setValue(vm, value, newValue);
+    })
+},
+
+```
+
+
+
+#### 如何将watcher放在dep数组中？
+
+在解析模板的时候，会根据v-指令获取对应data属性值，这个时候就会调用属性的get方法，我们先创建Watcher实例，并在其内部获取该属性值，作为旧值存放在watcher内部，我们在获取该值之前，在Watcher原型对象上添加属性Watcher.target = this;然后取值，将讲Watcher.target = null；这样get在被调用的时候就可以根据Watcher.target获取到watcher实例对象。
+
+#### methods的原理
+
+创建vue实例的时候，接收methods参数
+
+在解析模板的时候遇到v-on的指令。会对**该dom元素添加对应事件的监听**，并使用call方法将vue绑定为该方法的this：`vm.$methods[value].call(vm, e);`
+
+#### computed的原理
+
+创建vue实例的时候，接收computed参数
+
+初始化vue实例的时候，为computed的key进行Object.defineProperty处理，并添加get属性。
+
+#### 更新时候发生了什么
+
+属性set方法被触发 执行dep.notify()
+
+通知所有使用了该属性watcher，执行watcher的update()方法  执行传过来的callback
+
+并更新对应dom的内容
+
+
 
 ![img](https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2019/12/7/16ede2ff5a75589d~tplv-t2oaga2asx-zoom-in-crop-mark:1304:0:0:0.awebp)
 
@@ -354,7 +412,7 @@ JavaScript中的对象是引用类型的数据，当多个实例引用同一个�
 
 单页面应用程序将所有的活动局限于一个Web页面中，在该Web页面初始化时加载相应的HTML、JavaScript 和 CSS。一旦页面加载完成，单页面应用不会因为用户的操作而进行页面的重新加载或跳转。取而代之的是利用 JavaScript 动态的变换HTML的内容，从而实现UI与用户的交互。由于避免了页面的重新加载，单页面应用可以提供较为流畅的用户体验。
 
-###### 1，单页面应用的优点
+###### 1.单页面应用的优点
 
 - 良好的交互体验
 
@@ -368,7 +426,7 @@ JavaScript中的对象是引用类型的数据，当多个实例引用同一个�
 
 单页应用相对服务器压力小，服务器只用出数据就可以，不用管展示逻辑和页面合成，吞吐能力会提高几倍
 
-###### 2， 缺点
+###### 2.缺点
 
 - 首屏加载慢
 
@@ -436,9 +494,9 @@ child.vue
 
 顾名思义就是slot 是带有name的 定义， 或者使用简单缩写的定义 #header 使用：要用一个 template标签包裹
 
-父组件 v-slot:myName
+父组件 `v-slot:myName`
 
-子组件 <slot name="myName">
+子组件 `<slot name="myName">`
 
 father.vue
 
@@ -1033,6 +1091,24 @@ Scope CSS 的本质是基于 HTML 和 CSS 选择器的属性，通过分别给 H
 vue-loader 的底层使用了 Vue 官方提供的包（package） [@vue/component-compiler-utils](https://link.juejin.cn/?target=https%3A%2F%2Fgithub.com%2Fvuejs%2Fcomponent-compiler-utils)，其提供了解析组件（.vue 文件）、编译模版 `template`、编译 `style`等 3 种能力
 
 `template` 会被编译成 `render` 函数，然后会根据 `render` 函数创建对应的 VNode，最后再由 VNode 渲染成真实的 DOM 在页面上：
+
+### 21.vue-cli实现原理
+
+[精简版](https://juejin.cn/post/6844904041823240205)
+
+### 22.render函数触发过程
+
+[第一次挂载和每次数据更新都会触发render函数](https://www.zhihu.com/question/406811368)
+
+在vue内部的$mount方法里（$mount为Vue处理mount相关的方法），调用了mountComponent方法
+
+在mountComponent内，可以发现两点：
+
+**1.定义了updateComponent函数**，updateComponent调用了vm._render()。vm._render()内会调用this.$options.render。
+
+2.**将updateComponent函数传给实例化的Watcher。**
+
+传给了watcher之后，只要有任何数据等变化，那么watcher就会调用updateComponent函数，之后render就会被调用。
 
 ## 生命周期
 
@@ -3369,7 +3445,6 @@ function vue3Diff(prevChildren, nextChildren, parent) {
      
   }
 }
-复制代码
 ```
 
 那么这个`source`数组，是要做什么的呢？他就是来做新旧节点的对应关系的，我们将**新节点**在**旧列表**的位置存储在该数组中，我们在根据`source`计算出它的`最长递增子序列`用于移动DOM节点。为此，我们先建立一个对象存储当前**新列表**中的`节点`与`index`的关系，再去**旧列表**中去找位置。
@@ -3421,7 +3496,6 @@ function vue3Diff(prevChildren, nextChildren, parent) {
     }
   }
 }
-复制代码
 ```
 
 ![img](https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/01f5d145e4a84e3f922b4d39f80bcb6a~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp)
@@ -3497,6 +3571,10 @@ function vue3Diff(prevChildren, nextChildren, parent) {
 
 然而在`vue3.0`中，我们需要的是最长递增子序列在原本数组中的索引。所以我们还需要在创建一个数组用于保存每个值的最长子序列所对应在数组中的`index`
 
+在 vue2 中是通过对旧节点列表建立一个 `{ key, oldVnode }`的映射表，然后遍历新节点列表的剩余节点，根据`newVnode.key`在旧映射表中寻找可复用的节点，然后打补丁并且移动到正确的位置。
+
+而在 vue3 中是**建立一个存储新节点数组中的剩余节点在旧节点数组上的索引的映射关系数组**，建立完成这个数组后也即找到了**可复用的节点**，然后通过这个**数组计算得到最长递增子序列**，这个序列中的节点保持不动，然后将**新节点数组中的剩余节点移动到正确的位置**。
+
 ### 3. DOM如何移动
 
 判断完是否需要移动后，我们就需要考虑如何移动了。一旦需要进行DOM移动，我们首先要做的就是找到`source`的**最长递增子序列**。
@@ -3569,6 +3647,8 @@ key 是为 Vue 中 vnode 的唯一标记，通过这个 key，diff 操作可以�
 
 ## vue源码分析
 
+ [深入理解Vue完整版和runtime版](https://juejin.cn/post/6844904029877698568)
+
 [一步一步实现一个VUe](https://www.cnblogs.com/kidney/p/8018226.html)
 
 核心功能：响应式的数据绑定、虚拟 DOM、diff 算法、patch 方法（用于更新真实 DOM）
@@ -3626,3 +3706,280 @@ diff 算法的逻辑比较复杂，可以单独摘出来研究，由于我们的
 data 中的每一个属性都会被处理为存取器属性，同时每一个属性都会在闭包中维护一个属于自己的 dep 对象，用于存放该属性的依赖项。当属性被赋予新的值时，就会触发 set 方法，并通知所有依赖项进行更新。
 
 [完整代码](https://github.com/bison1994/vue-for-learning/blob/master/stage-4/vue-0.4.js)
+
+### 初始化、更新流程分析
+
+[vue更新流程](https://segmentfault.com/a/1190000041560503)
+
+```js
+<div id="demo">
+    <child :list="list"></child>
+    <button @click="handleAdd">add</button>
+</div>
+<script>
+    Vue.component('child', {
+        props: {
+            list: {
+                type: Array,
+                default: () => []
+            }
+        },
+        template: '<p>{{ list }}</p>'
+    })
+
+    new Vue({
+        el: "#demo",
+        data() {
+          return {
+              list: [1,2]
+          }
+        },
+        methods: {
+            handleAdd() {
+                this.list.push(Math.random())
+            }
+        }
+    })
+</script>
+```
+
+很简单的例子，一个父组件一个子组件，子组件接受一个list，父组件有个按钮，可以往list里push数据改变list
+
+#### 初始化流程：
+
+1.  首先从 `new Vue({el: "#app"})` 开始，会执行 `_init` 方法。
+
+    ```javascript
+    function Vue (options) {
+       // 省略...
+       this._init(options)
+    }
+    ```
+
+2.  `_init` 方法的最后执行了 `vm.$mount` 挂载实例。
+
+    ```javascript
+    Vue.prototype._init = function (options) {
+       var vm = this;
+       // 省略...
+       if (vm.$options.el) {
+           vm.$mount(vm.$options.el);
+       }
+    }
+    ```
+
+3.  如果此时运行的版本是 `runtime with compiler` 版本，这个版本的 `$mount` 会被进行重写，增加了把template模板转成render渲染函数的操作，但最终都会走到 `mountComponent` 方法。
+
+    ```javascript
+    Vue.prototype.$mount = function (el, hydrating) {
+         el = el && inBrowser ? query(el) : undefined;
+         return mountComponent(this,el,hydrating);
+    };
+    
+    var mount = Vue.prototype.$mount; //缓存上一次的Vue.prototype.$mount
+    
+    Vue.prototype.$mount = function (el, hydrating) { //重写Vue.prototype.$mount
+         // 省略，将template转化为render渲染函数
+         return mount.call(
+           this,
+           el,
+           hydrating
+         )
+    };
+    ```
+
+4.  `mountComponent` 里触发了 `beforeMount` 和 `mounted` 生命周期，更重要的是创建了 `Watcher`，传入的 `updateComponent` 就是Watcher的 `getter`。
+
+    ```javascript
+    function mountComponent(vm, el, hydrating) {
+         // 执行生命周期函数 beforeMount
+         callHook(vm, 'beforeMount');
+    
+         var updateComponent;
+         //如果开发环境
+         if ("development" !== 'production' && config.performance && mark) {
+                // 省略...
+         } else {
+             updateComponent = function () {
+                 vm._update(
+                     vm._render(), // 先执行_render,返回vnode
+                     hydrating
+                 );
+             };
+         }
+    
+         new Watcher(
+             vm,
+             updateComponent,
+             noop,
+             null,
+             true // 是否渲染过得观察者
+         );
+        
+         if (vm.$vnode == null) {
+             vm._isMounted = true;
+             // 执行生命周期函数mounted
+             callHook(vm, 'mounted');
+         }
+         return vm
+     }
+    ```
+
+5.  在创建 `Watcher` 时会触发 `get()` 方法，`pushTarget(this)` 将 `Dep.target` 设置为当前 Watcher 实例。
+
+    ```javascript
+    function Watcher(vm, expOrFn, cb, options, isRenderWatcher) {
+       if (typeof expOrFn === 'function') {
+           this.getter = expOrFn;
+       }
+       this.value = this.lazy ?  // 这个有是组件才为真
+           undefined :
+           this.get(); //计算getter，并重新收集依赖项。 获取值
+    };
+    
+     Watcher.prototype.get = function get() {
+         pushTarget(this);
+         var value;
+         var vm = this.vm;
+         try {
+             value = this.getter.call(vm, vm);
+         } catch (e) {
+    
+         } finally {
+             popTarget();
+         }
+         return value
+     };
+    ```
+
+6.  `Watcher` 的 `get()` 里会去读取数据，触发 `initData` 时使用 `Object.defineProperty` 为数据设置的 `get`，在这里进行依赖收集。我们知道Vue中每个响应式属性都有一个 `__ob__` 属性，存放的是一个Observe实例，这里的 `childOb` 就是这个 `__ob__`，通过 `childOb.dep.depend()` 往这个属性的`__ob__`中的dep里收集依赖，如下图。
+    ![WX20220315-161349@2x.png](https://segmentfault.com/img/bVcYvAZ)
+
+    ```javascript
+    export function defineReactive (
+      obj: Object,
+      key: string,
+      val: any,
+      customSetter?: Function
+    ) {
+      /*在闭包中定义一个dep对象*/
+      const dep = new Dep()
+    
+      let childOb = observe(val)
+      Object.defineProperty(obj, key, {
+       enumerable: true,
+       configurable: true,
+       get: function reactiveGetter () {
+         /*如果原本对象拥有getter方法则执行*/
+         const value = getter ? getter.call(obj) : val
+         if (Dep.target) {
+           /*进行依赖收集*/
+           dep.depend()
+           if (childOb) {
+             childOb.dep.depend()
+           }
+           if (Array.isArray(value)) {
+             dependArray(value)
+           }
+         }
+         return value
+       },
+       set: function reactiveSetter (newVal) {
+       }
+      })
+    }
+    ```
+
+7.  在我们的例子中，这个list会收集两次依赖，所以它 `__ob__` 的subs里会有 `两个Watcher`，第一次是在父组件 `data` 中的 list，第二次是在创建组件时调用 `createComponent` ，然后又会走到 `_init` => `initState` => `initProps` ，在 `initProps` 内对 `props` 传入的属性进行依赖收集。有两个Watcher就说明list改变时要通知两个地方，这很好理解。
+    .
+
+8.  最后，触发 `getter`，上面说过 `getter` 就是 `updateComponent`，里面执行 `_update` 更新视图。
+
+#### 下面来说说更新的流程：
+
+1.  点击按钮往数组中添加一个数字，在Vue中，为了监听数组变化，对数组的常用方法做了重写，所以先会走到 `ob.dep.notify()` 这里，`ob` 就是 list 的 `__ob__` 属性，上面保存着Observe实例，里面的dep中有两个 `Watcher`，调用 `notify` 去通知所有Watcher对象更新视图。
+
+    ```javascript
+    [
+      'push',
+      'pop',
+      'shift',
+      'unshift',
+      'splice',
+      'sort',
+      'reverse'
+    ]
+    .forEach(function (method) {
+     const original = arrayProto[method]
+     def(arrayMethods, method, function mutator () {
+       let i = arguments.length
+       const args = new Array(i)
+       while (i--) {
+         args[i] = arguments[i]
+       }
+       /*调用原生的数组方法*/
+       const result = original.apply(this, args)
+    
+       const ob = this.__ob__
+       let inserted
+       switch (method) {
+         case 'push':
+           inserted = args
+           break
+         case 'unshift':
+           inserted = args
+           break
+         case 'splice':
+           inserted = args.slice(2)
+           break
+       }
+       if (inserted) ob.observeArray(inserted)
+    
+       /*dep通知所有注册的观察者进行响应式处理*/
+       ob.dep.notify()
+       return result
+     })
+    })
+    ```
+
+2.  `notify` 方法里去通知所有 `Watcher` 更新，执行 `Watcher` 的 `update` 方法，`update` 里的 `queueWatcher` 过滤了一些重复的 `Watcher`, 但最终会走到 `Watcher` 的 `run()` 方法。
+
+    ```javascript
+    Dep.prototype.notify = function notify() {
+       var subs = this.subs.slice();
+       for (var i = 0, l = subs.length; i < l; i++) {
+           subs[i].update();
+       }
+    };
+    
+    Watcher.prototype.update = function update() {
+     if (this.lazy) {
+         this.dirty = true;
+    
+     } else if (this.sync) {
+         this.run();
+     } else {
+         queueWatcher(this);
+     }
+    };
+    ```
+
+3.  `run` 方法里会调用 `get()`, `get` 方法里回去触发Watcher的 `getter`，上面说过，`getter` 就是 `updateComponent`。
+
+    ```javascript
+    Watcher.prototype.run = function run() {
+      if (this.active) {
+     /* get操作在获取value本身也会执行getter从而调用update更新视图 */
+     const value = this.get()
+      }
+    }
+    
+    updateComponent = function () {
+      vm._update(
+          vm._render(),
+          hydrating
+      );
+     };
+    ```
+
+4.  最后在 `_update` 方法中，进行 `patch` 操作
