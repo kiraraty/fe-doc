@@ -63,6 +63,11 @@
           highlightColor: '#e96900',
         }
       },
+    timeUpdater: {
+    text: ">last update time: {docsify-updated}",
+    formatUpdated: "{YYYY}/{MM}/{DD}/{HH}/{mm}",
+    whereToPlace: "top",  // "top" or "bottom", default to "bottom"
+  },
     }
 
   </script>
@@ -74,6 +79,7 @@
   <script src="//unpkg.com/docsify-count/dist/countable.js"></script>
   <script src="//cdn.jsdelivr.net/npm/docsify-darklight-theme@latest/dist/index.min.js"></script>
   <script src="//cdn.jsdelivr.net/npm/docsify-catalog@1.0.0/dist/catalog.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify-updated/src/time-updater.min.js"></script>
 </body>
 
 </html>
