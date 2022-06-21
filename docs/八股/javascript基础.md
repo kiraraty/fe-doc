@@ -1,3 +1,7 @@
+# javascript基础
+
+## 数据类型
+
 ### 1.数据类型有哪几种
 
 JavaScript共有八种数据类型，分别是 **Undefined、Null、Boolean、Number、String、Object、Symbol、BigInt**。
