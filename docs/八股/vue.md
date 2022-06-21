@@ -81,7 +81,6 @@ model: function (node, value, vm) {
         this.setValue(vm, value, newValue);
     })
 },
-
 ```
 
 
@@ -185,7 +184,228 @@ methods:{
 
 默认情况下，一个组件上的v-model 会把 value 用作 prop且把 input 用作 event。但是一些输入类型比如单选框和复选框按钮可能想使用 value prop 来达到不同的目的。使用 model 选项可以回避这些情况产生的冲突。js 监听input 输入框输入数据改变，用oninput，数据改变以后就会立刻出发这个事件。通过input事件把数据$emit 出去，在父组件接受。父组件设置v-model的值为input `$emit`过来的值。
 
-### 4.Object.defineproperty和Proxy特点对比分析  属性描述符有哪些 ？
+### 4.Object.defineProperty和Proxy特点对比分析？
+
+#### Object.defineProperty()
+
+作用：在一个对象上定义一个新属性，或者修改一个对象的现有属性，并返回这个对象。
+
+##### 1.基本使用
+
+语法：`Object.defineProperty(obj, prop, descriptor)`
+
+参数：
+
+1.  要添加属性的对象
+2.  要定义或修改的属性的名称或 [`Symbol`]
+3.  要定义或修改的属性描述符
+
+看一个简单的例子
+
+```js
+let person = {}
+let personName = 'lihua'
+
+//在person对象上添加属性namep,值为personName
+Object.defineProperty(person, 'namep', {
+    //但是默认是不可枚举的(for in打印打印不出来)，可：enumerable: true
+    //默认不可以修改，可：wirtable：true
+    //默认不可以删除，可：configurable：true
+    get: function () {
+        console.log('触发了get方法')
+        return personName
+    },
+    set: function (val) {
+        console.log('触发了set方法')
+        personName = val
+    }
+})
+
+//当读取person对象的namp属性时，触发get方法
+console.log(person.namep)
+
+//当修改personName时，重新访问person.namep发现修改成功
+personName = 'liming'
+console.log(person.namep)
+
+// 对person.namep进行修改，触发set方法
+person.namep = 'huahua'
+console.log(person.namep)
+```
+
+通过这种方法，我们成功监听了person上的name属性的变化。
+
+##### 2.监听对象上的多个属性
+
+一个错误的版本
+
+```js
+Object.keys(person).forEach(function (key) {
+    Object.defineProperty(person, key, {
+        enumerable: true,
+        configurable: true,
+        // 默认会传入this
+        get() {
+            return person[key]
+        },
+        set(val) {
+            console.log(`对person中的${key}属性进行了修改`)
+            person[key] = val
+            // 修改之后可以执行渲染操作
+        }
+    })
+})
+console.log(person.age)
+```
+
+栈溢出问题：我们在访问person身上的属性时，就会触发get方法，返回person[key]，但是访问person[key]也会触发get方法，导致递归调用，最终栈溢出
+
+我们需要设置一个中转Obsever，来让get中return的值并不是直接访问obj[key]
+
+```js
+let person = {
+    name: '',
+    age: 0
+}
+// 实现一个响应式函数
+function defineProperty(obj, key, val) {
+    Object.defineProperty(obj, key, {
+        get() {
+            console.log(`访问了${key}属性`)
+            return val
+        },
+        set(newVal) {
+            console.log(`${key}属性被修改为${newVal}了`)
+            val = newVal
+        }
+    })
+}
+// 实现一个遍历函数Observer
+function Observer(obj) {
+    Object.keys(obj).forEach((key) => {
+        defineProperty(obj, key, obj[key])
+    })
+}
+Observer(person)
+console.log(person.age)
+person.age = 18
+console.log(person.age)
+```
+
+##### 3.深度监听一个对象
+
+只要把对象传入其中，就可以实现对这个对象的属性监视，即使该对象的属性也是一个对象。
+我们在defineProperty()函数中，添加一个递归的情况：
+
+```js
+function defineProperty(obj, key, val) {
+    //如果某对象的属性也是一个对象，递归进入该对象，进行监听
+    if(typeof val === 'object'){
+    observer(val)
+    }
+    Object.defineProperty(obj, key, {
+        get() {
+            console.log(`访问了${key}属性`)
+            return val
+        },
+        set(newVal) {
+            console.log(`${key}属性被修改为${newVal}了`)
+            val = newVal
+        }
+    })
+}
+```
+
+##### 4.监听数组
+
+对象的属性是一个数组  如何实现监听
+
+```js
+let arr = [1, 2, 3]
+let obj = {}
+//把arr作为obj的属性监听
+Object.defineProperty(obj, 'arr', {
+    get() {
+        console.log('get arr')
+        return arr
+    },
+    set(newVal) {
+        console.log('set', newVal)
+        arr = newVal
+    }
+})
+console.log(obj.arr)//输出get arr [1,2,3]  正常
+obj.arr = [1, 2, 3, 4] //输出set [1,2,3,4] 正常
+obj.arr.push(3) //输出get arr 不正常，监听不到push
+```
+
+通过`push`方法给数组增加的元素，set方法是监听不到的
+
+通过索引访问或者修改数组中已经存在的元素，是可以出发get和set的，但是对于通过push、unshift增加的元素，会增加一个索引，这种情况需要手动初始化，新增加的元素才能被监听到。另外， 通过 pop 或 shift 删除元素，会删除并更新索引，也会触发 setter 和 getter 方法
+
+通过重写Array原型上的方法解决了这个问题
+
+#### Proxy
+
+当我们要给对象新增加一个属性时，也需要手动去监听这个新增属性
+
+使用vue给 data 中的数组或对象新增属性时，需要使用 vm.$set 才能保证新增的属性也是响应式的
+
+##### 1.基本使用
+
+语法：`const p = new Proxy(target, handler)` 参数:
+
+1.  target:要使用 `Proxy` 包装的目标对象（可以是任何类型的对象，包括原生数组，函数，甚至另一个代理）
+2.  handler:一个通常以函数作为属性的对象，各属性中的函数分别定义了在执行各种操作时代理 `p` 的行为。
+
+通过Proxy，我们可以对`设置代理的对象`上的一些操作进行拦截，外界对这个对象的各种操作，都要先通过这层拦截。（和defineProperty差不多）
+
+例子
+
+```js
+//定义一个需要代理的对象
+let person = {
+    age: 0,
+    school: 'upc'
+}
+//定义handler对象
+let hander = {
+    get(obj, key) {
+        // 如果对象里有这个属性，就返回属性值，如果没有，就返回默认值66
+        return key in obj ? obj[key] : 66
+    },
+    set(obj, key, val) {
+        obj[key] = val
+        return true
+    }
+}
+//把handler对象传入Proxy
+let proxyObj = new Proxy(person, hander)
+
+// 测试get能否拦截成功
+console.log(proxyObj.age)//输出0
+console.log(proxyObj.school)//输出西电
+console.log(proxyObj.name)//输出默认值66
+
+// 测试set能否拦截成功
+proxyObj.age = 18
+console.log(proxyObj.age)//输出18 修改成功
+```
+
+Proxy代理的是整个对象，而不是对象的某个特定属性，不需要我们通过遍历来逐个进行数据绑定。
+
+>   值得注意的是:之前我们在使用Object.defineProperty()给对象添加一个属性之后，我们对对象属性的读写操作仍然在对象本身。
+>   但是一旦使用Proxy，如果想要读写操作生效，我们就要对Proxy的实例对象`proxyObj`进行操作
+
+##### 2.解决Object.defineProperty中遇到的问题
+
+使用Object.defineProperty的时候，我们遇到的问题有：
+
+1.一次只能对一个属性进行监听，需要遍历来对所有属性监听。这个我们在上面已经解决了。
+
+2.在遇到一个对象的属性还是一个对象的情况下，需要递归监听。
+3.对于对象的新增属性，需要手动监听
+4.对于数组通过push、unshift方法增加的元素，也无法监听
 
 
 
@@ -209,6 +429,70 @@ methods:{
 - method 调用总会执行该函数。
 
 #### Computed 和 Watch 的区别
+
+[源码学习](https://juejin.cn/post/6974293549135167495)
+
+watch用法
+
+```js
+<body>
+    <div id="app">
+        姓： <input type="text" v-model=firstName> 名：
+        <input type="text" v-model=lastName> 姓名：
+        <span>{{fullname}}</span>
+    </div>
+</body>
+<script type="text/javascript">
+    var app = new Vue({
+        el: "#app",
+        data: {
+            firstName: 'z',
+            lastName: 's',
+            fullname: 'zs'
+        },
+        watch: {
+            firstName(newval) {
+​
+                this.fullname = newval + this.lastName
+            },
+            lastName(newval) {
+                this.fullname = this.firstName + newval
+            }
+​
+        }
+    })
+​
+</script>
+```
+
+computed用法
+
+```js
+<body>
+    <div id="app">
+        姓： <input type="text" v-model=firstName> 名：
+        <input type="text" v-model=lastName> 姓名：
+        <span>{{fullname}}</span>
+    </div>
+</body>
+<script type="text/javascript">
+    var app = new Vue({
+        el: "#app",
+        data: {
+            firstName: 'z',
+            lastName: 's'
+        },
+        computed: {
+            fullname() {
+                return this.firstName + this.lastName
+            }
+        }
+    })
+​
+</script>
+```
+
+
 
 **对于Computed：**
 
@@ -239,6 +523,309 @@ methods:{
 
 - 当需要进行数值计算,并且依赖于其它数据时，应该使用 computed，因为可以利用 computed 的缓存特性，避免每次获取值时都要重新计算。
 - 当需要在数据变化时执行异步或开销较大的操作时，应该使用 watch，使用 watch 选项允许执行异步操作 ( 访问一个 API )，限制执行该操作的频率，并在得到最终结果前，设置中间状态。这些都是计算属性无法做到的。
+
+#### 源码实现
+
+##### Watcher的种类
+
+`name`变量被三处地方所依赖，分别是`html里，computed里，watch里`。只要`name`一改变，html里就会重新渲染，computed里就会重新计算，watch里就会重新执行。那么是谁去通知这三个地方`name`修改了呢？那就是`Watcher`了
+
+```js
+<div>{{name}}</div>
+
+data() {
+        return {
+            name: '林三心'
+        }
+    },
+    computed: {
+        info () {
+            return this.name
+        }
+    },
+    watch: {
+        name(newVal) {
+            console.log(newVal)
+        }
+    }
+```
+
+-   `渲染Watcher`：变量修改时，负责通知HTML里的重新渲染
+-   `computed Watcher`：变量修改时，负责通知computed里依赖此变量的computed属性变量的修改
+-   `user Watcher`：变量修改时，负责通知watch属性里所对应的变量函数的执行
+
+##### computed的本质 —— computed watch
+
+我们知道new Vue()的时候会调用_init方法，该方法会初始化生命周期，初始化事件，初始化render，初始化data，computed，methods，wacther等等。[Vue.js源码角度：剖析模版和数据渲染成最终的DOM的过程](https://juejin.cn/post/6844903664998416392)。今天主要来看以下初始化watch(initWatch)的实现，我加上了注释方便理解，定义在src/core/instance/state.js中：
+
+```JS
+// 用于传入Watcher实例的一个对象，即computed watcher
+const computedWatcherOptions = { computed: true }
+
+function initComputed (vm: Component, computed: Object) {
+  // $flow-disable-line
+  // 声明一个watchers且同时挂载到vm实例上
+  const watchers = vm._computedWatchers = Object.create(null)
+  // 在SSR模式下computed属性只能触发getter方法
+  const isSSR = isServerRendering()
+
+  // 遍历传入的computed方法
+  for (const key in computed) {
+    // 取出computed对象中的每个方法并赋值给userDef
+    const userDef = computed[key]
+    const getter = typeof userDef === 'function' ? userDef : userDef.get
+    if (process.env.NODE_ENV !== 'production' && getter == null) {
+      warn(
+        `Getter is missing for computed property "${key}".`,
+        vm
+      )
+    }
+
+    // 如果不是SSR服务端渲染，则创建一个watcher实例
+    if (!isSSR) {
+      // create internal watcher for the computed property.
+      watchers[key] = new Watcher(
+        vm,
+        getter || noop,
+        noop,
+        computedWatcherOptions
+      )
+    }
+
+    // component-defined computed properties are already defined on the
+    // component prototype. We only need to define computed properties defined
+    // at instantiation here.
+    if (!(key in vm)) {
+      // 如果computed中的key没有设置到vm中，通过defineComputed函数挂载上去 
+      defineComputed(vm, key, userDef)
+    } else if (process.env.NODE_ENV !== 'production') {
+      // 如果data和props有和computed中的key重名的，会产生warning
+      if (key in vm.$data) {
+        warn(`The computed property "${key}" is already defined in data.`, vm)
+      } else if (vm.$options.props && key in vm.$options.props) {
+        warn(`The computed property "${key}" is already defined as a prop.`, vm)
+      }
+    }
+  }
+}
+```
+
+通过源码我们可以发现它先声明了一个名为watchers的空对象，同时在vm上也挂载了这个空对象。之后**遍历计算属性，并把每个属性的方法赋给userDef**，如果userDef是function的话就赋给getter，接着判断是否是服务端渲染，如果不是的话就创建一个Watcher实例。
+
+这里**新建的Watcher实例中我们传入了第四个参数computedWatcherOptions**。
+
+const computedWatcherOptions = { computed: true }，这个对象是实现computed watcher的关键。这时，Watcher中的逻辑就有变化了：
+
+```JS
+    // 源码定义在src/core/observer/watcher.js中
+    // options
+    if (options) {
+      this.deep = !!options.deep
+      this.user = !!options.user
+      this.computed = !!options.computed
+      this.sync = !!options.sync
+      this.before = options.before
+    } else {
+      this.deep = this.user = this.computed = this.sync = false
+    }
+    // 其他的代码......
+    this.dirty = this.computed // for computed watchers
+```
+
+这里传入的**options**就是上边定义的computedWatcherOptions，当走initData方法的时候，options并不存在，但当走到**initComputed**的时候，computedWatcherOptions中的computed为true，注意上边的一行代码**this.dirty = this.computed**，将this.computed赋值给this.dirty。接着看下边的代码：
+
+```JS
+  evaluate () {
+    if (this.dirty) {
+      this.value = this.get()
+      this.dirty = false
+    }
+    return this.value
+  }
+```
+
+只有this.dirty为true的时候才能通过 this.get() 求值，然后把 this.dirty 设置为 false。在求值过程中，会执行 value = this.getter.call(vm, vm)，**这实际上就是执行了计算属性定义的 getter 函数**，否则直接返回value。
+
+当对**计算属性依赖的数据做修改**的时候，会触发 setter 过程，通知所有订阅它变化的 watcher 更新，**执行 watcher.update() 方法**：
+
+```JS
+  /**
+   * Subscriber interface.
+   * Will be called when a dependency changes.
+   */
+  update () {
+    /* istanbul ignore else */
+    if (this.computed) {
+      // A computed property watcher has two modes: lazy and activated.
+      // It initializes as lazy by default, and only becomes activated when
+      // it is depended on by at least one subscriber, which is typically
+      // another computed property or a component's render function.
+      if (this.dep.subs.length === 0) {
+        // In lazy mode, we don't want to perform computations until necessary,
+        // so we simply mark the watcher as dirty. The actual computation is
+        // performed just-in-time in this.evaluate() when the computed property
+        // is accessed.
+        this.dirty = true
+      } else {
+        // In activated mode, we want to proactively perform the computation
+        // but only notify our subscribers when the value has indeed changed.
+        this.getAndInvoke(() => {
+          this.dep.notify()
+        })
+      }
+    } else if (this.sync) {
+      this.run()
+    } else {
+      queueWatcher(this)
+    }
+  }
+```
+
+那么对于计算属性这样的 computed watcher，它实际上是有 2 种模式，lazy 和 active。如果 this.dep.subs.length === 0 成立，则说明没有人去订阅这个 computed watcher 的变化，就把 this.dirty = true，只有当下次再访问这个计算属性的时候才会重新求值。否则会执行getAndInvoke方法：
+
+```JS
+  getAndInvoke (cb: Function) {
+    const value = this.get()
+    if (
+      value !== this.value ||
+      // Deep watchers and watchers on Object/Arrays should fire even
+      // when the value is the same, because the value may
+      // have mutated.
+      isObject(value) ||
+      this.deep
+    ) {
+      // set new value
+      const oldValue = this.value
+      this.value = value
+      this.dirty = false
+      if (this.user) {
+        try {
+          cb.call(this.vm, value, oldValue)
+        } catch (e) {
+          handleError(e, this.vm, `callback for watcher "${this.expression}"`)
+        }
+      } else {
+        cb.call(this.vm, value, oldValue)
+      }
+    }
+  }
+```
+
+getAndInvoke 函数会重新计算，然后对比新旧值，在三种情况下(1.新旧值不相等的情况2.value是对象或数组的时候3.设置deep属性的时候)会执行回调函数，那么这里这个回调函数是 this.dep.notify()，在我们这个场景下就是触发了渲染 watcher 重新渲染。这就能解释官网中所说的**计算属性是基于它们的依赖进行缓存的**。
+
+##### Computed源码总结
+
+基于Watcher类，有一个lazy属性，可以进行缓存作用，如果lazy是true证明是计算属性，直接返回数据，不用继续求值，这就是缓存值的原理
+
+![image-20220621085011422](https://s2.loli.net/2022/06/21/FSHsPfdICcehav7.png)
+
+1.遍历计算属性，并把每个属性的方法赋给userDef
+
+2.新建的Watcher实例中我们传入了第四个参数computedWatcherOptions
+
+3.**initComputed**的时候，computedWatcherOptions中的computed为true
+
+4.evaluate () 中 只有this.dirty为true的时候才能通过 this.get() 求值，然后把 this.dirty 设置为 false
+
+5.求值过程中，会执行 value = this.getter.call(vm, vm)，**这实际上就是执行了计算属性定义的 getter 函数**，如果dirty为false直接返回value
+
+6.**计算属性依赖的数据做修改**的时候，会触发 setter 过程，通知所有订阅它变化的 watcher 更新，**执行 watcher.update() 方法**
+
+7.computed watcher是有 2 种模式，lazy 和 active。如果 this.dep.subs.length === 0 成立，则说明没有人去订阅这个 computed watcher 的变化，就把 this.dirty = true只有当下次再访问这个计算属性的时候才会重新求值
+
+8.getAndInvoke 函数会重新计算，然后对比新旧值，在三种情况下(1.新旧值不相等的情况2.value是对象或数组的时候3.设置deep属性的时候)会执行回调函数
+
+##### watch底层是如何工作的？
+
+上边提到了在new Vue()的时候调用了_init方法完成了初始化。在这当中有调用了initWatch方法，定义在src/core/instance/state.js中：
+
+```JS
+function initWatch (vm: Component, watch: Object) {
+  for (const key in watch) {
+    const handler = watch[key]
+    if (Array.isArray(handler)) {
+      for (let i = 0; i < handler.length; i++) {
+        createWatcher(vm, key, handler[i])
+      }
+    } else {
+      createWatcher(vm, key, handler)
+    }
+  }
+}
+```
+
+遍历watch对象，并将每个watch[key]赋值给handler，如果是数组则遍历createWatcher方法，否则直接调用createWatcher方法。接下来看一下createWatcher方法的定义：
+
+```JS
+function createWatcher (
+  vm: Component,
+  expOrFn: string | Function,
+  handler: any,
+  options?: Object
+) {
+  if (isPlainObject(handler)) {
+    options = handler
+    handler = handler.handler
+  }
+  if (typeof handler === 'string') {
+    handler = vm[handler]
+  }
+  return vm.$watch(expOrFn, handler, options)
+}
+```
+
+通过代码可以发现，createWatcher方法vm.?watch(keyOrFn, handler, options) 函数，调用了Vue.prototype.$watch方法，定义在src/core/instance/state.js中：
+
+```JS
+  Vue.prototype.$watch = function (
+    expOrFn: string | Function,
+    cb: any,
+    options?: Object
+  ): Function {
+    const vm: Component = this
+    if (isPlainObject(cb)) {
+      return createWatcher(vm, expOrFn, cb, options)
+    }
+    options = options || {}
+    options.user = true
+    const watcher = new Watcher(vm, expOrFn, cb, options)
+    if (options.immediate) {
+      cb.call(vm, watcher.value)
+    }
+    return function unwatchFn () {
+      watcher.teardown()
+    }
+  }
+}
+```
+
+通过代码我们可以发现， watch 最终会调用Vue.prototype.watch 方法，
+
+这个方法首先判断 cb 如果是一个对象，则调用 createWatcher 方法，这是因为*w**a**t**c**h*方法，这个方法首先判断*cb*如果是一个对象，则调用***createWatcher***方法，
+
+接着执行 const watcher = new Watcher(vm, expOrFn, cb, options) 实例化了一个 watcher，这里需要注意一点这是一个 user watcher，因为 options.user = true。
+
+通过实例化 watcher 的方式，一旦我们 watch 的数据发送变化，它最终会执行 watcher 的 run 方法，执行回调函数 cb，并且如果我们设置了 immediate 为 true，则直接会执行回调函数 cb。即设置immediate属性为true的时候，第一次watch绑定的时候就可以执行。
+
+最后返回了一个 unwatchFn 方法，它会调用 teardown 方法去移除这个 watcher。
+
+所以watcher是如何工作的？本质上也是基于 Watcher 实现的，它是一个 user watcher。前面提到了计算属性computed本质上是一个computed watcher
+
+##### Watch源码总结
+
+双向数据绑定有一个Watcher类，只是普通的watch实例化，有没有deep参数只需要加上判断，即可。
+
+还有可以监听函数，将当前函数赋值给getter,监听的函数里面涉及到的状态都会被监听到，发生了变化就会触发watch。
+
+还要新增一个取消观察函数的函数
+
+watch中deep:true实现：当用户指定了 watch 中的deep属性为 true 时，如果当前监控的值是数组或者对象。 在watch类里面有get方法对deep，和复杂对象处理方法，**会对对象中的每一项进行求值**，此时会将当前 watcher 存入到对应属性的依赖中(将当前依赖放到 Dep.target上)，这样数组中对象发生变化时也会通知数据更新
+
+_traverse()方法里面
+
+不是数组也不是对象返回，冰冻对象返回，Vnode实例返回
+
+对数组和对象进行递归判断
 
 ### 7.nextTick有什么应用场景？原理是什么？
 
@@ -480,11 +1067,11 @@ seo 本质是一个服务器向另一个服务器发起请求，解析请求内�
 
 father.vue
 
-![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/1b5551cd66a641a0b820a19b64843bd4~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp)
+![image-20220621091100389](https://s2.loli.net/2022/06/21/2aHchKi93d7uADY.png)
 
 child.vue
 
-![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/86bfb664e726408795fea99b1b31f94c~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp)
+![image-20220621091115897](https://s2.loli.net/2022/06/21/6AZtGqxIcYzTF7S.png)
 
 匿名插槽，name的属性对应的是 default 也可以不写就是默认的意思啦；
 
@@ -500,21 +1087,21 @@ child.vue
 
 father.vue
 
-![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/6b958f0c39ba49199f1ca07a40acfab0~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp)
+![image-20220621091140171](https://s2.loli.net/2022/06/21/FuYa7PyUZ9EHipx.png)
 
 child.vue
 
-![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/6f9351d528ba46fab189c25c72ec4d2e~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp)
+![image-20220621091151645](https://s2.loli.net/2022/06/21/XKOCJqS7DVU1GhM.png)
 
 多个具名插槽的使用 多个具名插槽，插槽的位置不是使用插槽的位置而定的，是在定义的时候的位置来替换的(子组件里面确定)
 
 father.vue
 
-![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/3170af0fc9734742ba7e267bd8dc5a7d~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp)
+![image-20220621091208254](https://s2.loli.net/2022/06/21/CSzm39cRM2WVQ4q.png)
 
 child.vue
 
-![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/87ea2bab1e924d7cb07d930ea84d8237~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp)
+![image-20220621091217351](C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/image-20220621091217351.png)
 
 #### 作用域插槽
 
@@ -534,11 +1121,11 @@ v-solt可以解构接收 解构接收的字段要和传的字段一样才可以
 
 子组件`<slot name="footer" v-bind:users='user1'>`对应父组件里面  `v-slot:footer="slotProps"`   父组件可以通过slotProps.users来取值user1
 
-![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/673251ec449244c9b117815e942def8d~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp)
+![image-20220621091229483](https://s2.loli.net/2022/06/21/qgjwZ1r2EcJOsmC.png)
 
 效果图
 
-![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/91f07516db4a4831b28a019275172349~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp)
+![image-20220621091246267](https://s2.loli.net/2022/06/21/UAzp31qG6lXSrhn.png)
 
 ### 11.如何保存当前页面状态，(keep-alive)原理是什么？
 
@@ -1068,6 +1655,8 @@ v-cloak 指令设置样式，样式会在 Vue 实例编译结束时，从 HTML �
 
 ### 17.执行命令后浏览器渲染显示出页面的过程
 
+[vue渲染过程](https://segmentfault.com/a/1190000018495383)
+
 ### 18.修改后页面保存渲染的原理
 
 ### 19.Vue data 中某一个属性的值发生改变后，视图会立即同步执行重新渲染吗？
@@ -1110,7 +1699,185 @@ vue-loader 的底层使用了 Vue 官方提供的包（package） [@vue/componen
 
 传给了watcher之后，只要有任何数据等变化，那么watcher就会调用updateComponent函数，之后render就会被调用。
 
+### 23.new Vue发生了什么
+
+[原理](https://juejin.cn/post/6997776616294187015)
+
+![5f17cedf4e974df89fb807ff961ae00b](https://s2.loli.net/2022/06/20/75EQRtOALMcUkC2.png)
+
+#### 初始化及挂载
+
+![img](https://img.kancloud.cn/c4/dd/c4dd695d1c4423aeb8ea55e67fff486d_828x336.gif)
+
+在 `new Vue()` 之后。 Vue 会调用 `_init` 函数进行初始化，也就是这里的 `init` 过程，它会初始化生命周期、事件、 props、 methods、 data、 computed 与 watch 等。其中最重要的是通过 `Object.defineProperty` 设置 `setter` 与 `getter` 函数，用来实现「**响应式**」以及「**依赖收集**」，后面会详细讲到，这里只要有一个印象即可。
+
+初始化之后调用 `$mount` 会挂载组件，如果是运行时编译，即不存在 render function 但是存在 template 的情况，需要进行「**编译**」步骤。
+
+```js
+new Vue({
+    el:'#app',
+    store,
+    router,
+    render: h => h(App)
+})
+```
+
+new Vue()是创建Vue实例，而Vue是一个类，当执行 new Vue()的时候，它的内部主要是执行了一个`_init`私有函数
+
+```jsx
+// 从源码可以看到vue类中非常干净，只是执行了一个_init私有函数, 并且只能通过new关键字初始化
+function Vue (options) {
+  if (process.env.NODE_ENV !== 'production' &&
+    !(this instanceof Vue)
+  ) {
+    warn('Vue is a constructor and should be called with the `new` keyword')
+  }
+  this._init(options)
+}
+```
+
+ 看下 `_init`私有函数内部，这个函数主要是做了一堆初始化工作，比如对options进行合并，初始化生命周期，初始化事件中心，初始化渲染，初始化data,props,computed,watcher等，最后调用 vm.$mount做挂载
+
+```tsx
+export function initMixin (Vue: Class<Component>) {
+  Vue.prototype._init = function (options?: Object) {
+    const vm: Component = this
+    // a uid
+    vm._uid = uid++
+
+    let startTag, endTag
+    /* istanbul ignore if */
+    if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
+      startTag = `vue-perf-start:${vm._uid}`
+      endTag = `vue-perf-end:${vm._uid}`
+      mark(startTag)
+    }
+
+    // a flag to avoid this being observed
+    vm._isVue = true
+    // merge options
+    if (options && options._isComponent) {
+      // optimize internal component instantiation
+      // since dynamic options merging is pretty slow, and none of the
+      // internal component options needs special treatment.
+      initInternalComponent(vm, options)
+    } else {
+      vm.$options = mergeOptions(
+        resolveConstructorOptions(vm.constructor),
+        options || {},
+        vm
+      )
+    }
+    /* istanbul ignore else */
+    if (process.env.NODE_ENV !== 'production') {
+      initProxy(vm)
+    } else {
+      vm._renderProxy = vm
+    }
+    // expose real self
+    vm._self = vm
+    initLifecycle(vm)
+    initEvents(vm)
+    initRender(vm)
+    callHook(vm, 'beforeCreate')
+    initInjections(vm) // resolve injections before data/props
+    initState(vm)
+    initProvide(vm) // resolve provide after data/props
+    callHook(vm, 'created')
+
+    /* istanbul ignore if */
+    if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
+      vm._name = formatComponentName(vm, false)
+      mark(endTag)
+      measure(`vue ${vm._name} init`, startTag, endTag)
+    }
+
+    if (vm.$options.el) {
+      vm.$mount(vm.$options.el)
+    }
+  }
+}
+```
+
+#### 编译
+
+compile编译可以分成 `parse`、`optimize` 与 `generate` 三个阶段，最终需要得到 render function。
+
+![img](https://img.kancloud.cn/7e/80/7e80fcd4e490557058f4e19af76e5795_824x496.gif)
+
+##### parse
+
+`parse` 会用正则等方式解析 template 模板中的指令、class、style等数据，形成AST。
+
+##### optimize
+
+`optimize` 的主要作用是标记 static 静态节点，这是 Vue 在编译过程中的一处优化，后面当 `update` 更新界面时，会有一个 `patch` 的过程， diff 算法会直接跳过静态节点，从而减少了比较的过程，优化了 `patch` 的性能。
+
+##### generate
+
+`generate` 是将 AST 转化成 render function 字符串的过程，得到结果是 render 的字符串以及 staticRenderFns 字符串。
+
+在经历过 `parse`、`optimize` 与 `generate` 这三个阶段以后，组件中就会存在渲染 VNode 所需的 render function 了。
+
+#### 响应式
+
+接下来也就是 Vue.js 响应式核心部分。
+
+![img](https://img.kancloud.cn/3f/32/3f32fe9400f1f726e6d10eadd342b277_1460x728.gif)
+
+这里的 `getter` 跟 `setter` 已经在之前介绍过了，在 `init` 的时候通过 `Object.defineProperty` 进行了绑定，它使得当被设置的对象被读取的时候会执行 `getter` 函数，而在当被赋值的时候会执行 `setter` 函数。
+
+当 render function 被渲染的时候，因为会读取所需对象的值，所以会触发 `getter` 函数进行「**依赖收集**」，「**依赖收集**」的目的是将观察者 Watcher 对象存放到当前闭包中的订阅者 Dep 的 subs 中。形成如下所示的这样一个关系。
+
+![img](https://img.kancloud.cn/43/c8/43c84091dc595cdf3eb9db090b7aec13_520x245.gif)
+
+在修改对象的值的时候，会触发对应的 `setter`， `setter` 通知之前「**依赖收集**」得到的 Dep 中的每一个 Watcher，告诉它们自己的值改变了，需要重新渲染视图。这时候这些 Watcher 就会开始调用 `update` 来更新视图，当然这中间还有一个 `patch` 的过程以及使用队列来异步更新的策略，这个我们后面再讲。
+
+#### Virtual DOM
+
+我们知道，render function 会被转化成 VNode 节点。Virtual DOM 其实就是一棵以 JavaScript 对象（ VNode 节点）作为基础的树，用对象属性来描述节点，实际上它只是一层对真实 DOM 的抽象。最终可以通过一系列操作使这棵树映射到真实环境上。由于 Virtual DOM 是以 JavaScript 对象为基础而不依赖真实平台环境，所以使它具有了跨平台的能力，比如说浏览器平台、Weex、Node 等。
+
+比如说下面这样一个例子：
+
+```
+{
+    tag: 'div',                 /*说明这是一个div标签*/
+    children: [                 /*存放该标签的子节点*/
+        {
+            tag: 'a',           /*说明这是一个a标签*/
+            text: 'click me'    /*标签的内容*/
+        }
+    ]
+}
+```
+
+渲染后可以得到
+
+```
+<div>
+    <a>click me</a>
+</div>
+```
+
+这只是一个简单的例子，实际上的节点有更多的属性来标志节点，比如 isStatic （代表是否为静态节点）、 isComment （代表是否为注释节点）等。
+
+#### 更新视图
+
+![img](https://img.kancloud.cn/d1/dc/d1dc77e6aec6a13caa86bc32afd24509_731x339.gif)
+
+前面我们说到，在修改一个对象值的时候，会通过 `setter -> Watcher -> update` 的流程来修改对应的视图，那么最终是如何更新视图的呢？
+
+当数据变化后，执行 render function 就可以得到一个新的 VNode 节点，我们如果想要得到新的视图，最简单粗暴的方法就是直接解析这个新的 VNode 节点，然后用 `innerHTML` 直接全部渲染到真实 DOM 中。但是其实我们只对其中的一小块内容进行了修改，这样做似乎有些「**浪费**」。
+
+那么我们为什么不能只修改那些「改变了的地方」呢？这个时候就要介绍我们的「**`patch`**」了。我们会将新的 VNode 与旧的 VNode 一起传入 `patch` 进行比较，经过 diff 算法得出它们的「**差异**」。最后我们只需要将这些「**差异**」的对应 DOM 进行修改即可。
+
+#### 再看全局
+
+<img src="https://img.kancloud.cn/01/db/01db136b4380b1804c072899e92daa3d_1752x1216.gif" alt="img" style="zoom:50%;" />
+
 ## 生命周期
+
+![image.png](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/b1493c640d7e4cf2bd7785cea7c86789~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp?)
 
 ### 1.生命周期有哪些，vue2和vue3有什么区别
 
@@ -1121,7 +1888,7 @@ Vue 实例有⼀个完整的⽣命周期，也就是从开始创建、初始化�
 1. **beforeCreate（创建前）**：数据观测和初始化事件还未开始，此时 data 的响应式追踪、event/watcher 都还没有被设置，也就是说不能访问到data、computed、watch、methods上的方法和数据。
 2. **created（创建后）** ：实例创建完成，实例上配置的 options 包括 data、computed、watch、methods 等都配置完成，但是此时渲染得节点还未挂载到 DOM，所以不能访问到 `$el` 属性。
 3. **beforeMount（挂载前）**：在挂载开始之前被调用，相关的render函数首次被调用。实例已完成以下的配置：编译模板，把data里面的数据和模板生成html。此时还没有挂载html到页面上。
-4. **mounted（挂载后）**：在el被新创建的 vm.$el 替换，并挂载到实例上去之后调用。实例已完成以下的配置：用上面编译好的html内容替换el属性指向的DOM对象。完成模板中的html渲染到html 页面中。此过程中进行ajax交互。
+4. **mounted（挂载后）**：在el被新创建的 vm.$el 替换，并挂载到实例上去之后调用。实例已完成以下的配置：用上面编译好的html内容替换el属性指向的DOM对象。完成模板中的html渲染到html 页面中。mounted以后可以进行dom操作
 5. **beforeUpdate（更新前）**：响应式数据更新时调用，此时虽然响应式数据更新了，但是对应的真实 DOM 还没有被渲染。
 6. **updated（更新后）** ：在由于数据更改导致的虚拟DOM重新渲染和打补丁之后调用。此时 DOM 已经根据响应式数据的变化更新了。调用时，组件 DOM已经更新，所以可以执行依赖于DOM的操作。然而在大多数情况下，应该避免在此期间更改状态，因为这可能会导致更新无限循环。该钩子在服务器端渲染期间不被调用。
 7. **beforeDestroy（销毁前）**：实例销毁之前调用。这一步，实例仍然完全可用，`this` 仍能获取到实例。
@@ -1135,6 +1902,13 @@ Vue 实例有⼀个完整的⽣命周期，也就是从开始创建、初始化�
 
 
 #### Vue3生命周期
+
+组件中setup的执行顺序
+
+创建组件，先初始化props，再依次执行setup、beforeCreate、created
+
+setup() 内部(组合式api)调用的生命周期钩子里是没有`beforeCreate` 和 `Create`函数的。
+官方解释： 因为 `setup` 是围绕 `beforeCreate` 和 `created` 生命周期钩子运行的，所以不需要显式地定义它们。换句话说，在这些钩子中编写的任何代码都应该直接在 `setup` 函数中编写
 
  beforeMount => onBeforeMount
 
@@ -1202,6 +1976,273 @@ keep-alive是 Vue 提供的一个内置组件，用来对组件进行缓存—�
 2. 子组件 beforeDestroy
 3. 子组件 destroyed
 4. 父组件 destoryed
+
+### 6.生命周期源码分析
+
+[Vue 的完整生命周期源码流程详解](https://juejin.cn/post/7017712966485147678)
+
+[Vue 的生命周期之间到底做了什么事清？](https://juejin.cn/post/6844904114879463437)
+
+#### 初始化流程
+
+```js
+export function initMixin (Vue: Class<Component>) {
+  // 在原型上添加 _init 方法
+  Vue.prototype._init = function (options?: Object) {
+    // 保存当前实例
+    const vm: Component = this
+    // 合并配置
+    if (options && options._isComponent) {
+      // 把子组件依赖父组件的 props、listeners 挂载到 options 上，并指定组件的$options
+      initInternalComponent(vm, options)
+    } else {
+      // 把我们传进来的 options 和当前构造函数和父级的 options 进行合并，并挂载到原型上
+      vm.$options = mergeOptions(
+        resolveConstructorOptions(vm.constructor),
+        options || {},
+        vm
+      )
+    }
+    vm._self = vm
+    initLifecycle(vm) // 初始化实例的属性、数据：$parent, $children, $refs, $root, _watcher...等
+    initEvents(vm) // 初始化事件：$on, $off, $emit, $once
+    initRender(vm) // 初始化渲染： render, mixin
+    callHook(vm, 'beforeCreate') // 调用生命周期钩子函数
+    initInjections(vm) // 初始化 inject
+    initState(vm) // 初始化组件数据：props, data, methods, watch, computed
+    initProvide(vm) // 初始化 provide
+    callHook(vm, 'created') // 调用生命周期钩子函数
+
+    if (vm.$options.el) {
+      // 如果传了 el 就会调用 $mount 进入模板编译和挂载阶段
+      // 如果没有传就需要手动执行 $mount 才会进入下一阶段
+      vm.$mount(vm.$options.el)
+    }
+  }
+}
+```
+
+#### new Vue
+
+从 `new Vue(options)` 开始作为入口，`Vue` 只是一个简单的构造函数，内部是这样的：
+
+```js
+function Vue (options) {
+  this._init(options)
+}
+```
+
+进入了 `_init` 函数之后，先初始化了一些属性。
+
+1.  `initLifecycle`：初始化一些属性如`$parent`，`$children`。根实例没有 `$parent`，`$children` 开始是空数组，直到它的 `子组件` 实例进入到 `initLifecycle` 时，才会往父组件的 `$children` 里把自身放进去。所以 `$children` 里的一定是组件的实例。
+2.  `initEvents`：初始化事件相关的属性，如 `_events` 等。
+3.  `initRender`：初始化渲染相关如 `$createElement`，并且定义了 `$attrs` 和 `$listeners` 为`浅层`响应式属性。具体可以查看`细节`章节。并且还定义了`$slots`、`$scopedSlots`，其中 `$slots` 是立刻赋值的，但是 `$scopedSlots` 初始化的时候是一个 `emptyObject`，直到组件的 `vm._render` 过程中才会通过 `normalizeScopedSlots` 去把真正的 `$scopedSlots` 整合后挂到 `vm` 上。
+
+然后开始第一个生命周期：
+
+```js
+callHook(vm, 'beforeCreate')
+```
+
+#### beforeCreate被调用完成
+
+`beforeCreate` 之后
+
+1.  初始化 `inject`
+2.  初始化  `state`
+    -   初始化 `props`
+    -   初始化 `methods`
+    -   初始化 `data`
+    -   初始化 `computed`
+    -   初始化 `watch`
+3.  初始化 `provide`
+
+所以在 `data` 中可以使用 `props` 上的值，反过来则不行
+
+然后进入 `created` 阶段：
+
+```js
+callHook(vm, 'created')
+```
+
+#### created被调用完成
+
+调用 `$mount` 方法，开始挂载组件到 `dom` 上。
+
+如果使用了 `runtime-with-compile` 版本，则会把你传入的 `template` 选项，或者 `html` 文本，通过一系列的编译生成 `render` 函数。
+
+-   编译这个 `template`，生成 `ast` 抽象语法树。
+-   优化这个 `ast`，标记静态节点。（渲染过程中不会变的那些节点，优化性能）。
+-   根据 `ast`，生成 `render` 函数。
+
+对应具体的代码就是：
+
+```js
+const ast = parse(template.trim(), options)
+if (options.optimize !== false) {
+  optimize(ast, options)
+}
+const code = generate(ast, options)
+```
+
+如果是脚手架搭建的项目的话，这一步 `vue-cli` 已经帮你做好了，所以就直接进入 `mountComponent` 函数。
+
+那么，确保有了 `render` 函数后，我们就可以往`渲染`的步骤继续进行了
+
+#### beforeMount被调用完成
+
+把 `渲染组件的函数` 定义好，具体代码是：
+
+```js
+updateComponent = () => {
+  vm._update(vm._render(), hydrating)
+}
+```
+
+拆解来看，`vm._render` 其实就是调用我们上一步拿到的 `render` 函数生成一个 `vnode`，而 `vm._update` 方法则会对这个 `vnode` 进行 `patch` 操作，帮我们把 `vnode` 通过 `createElm`函数创建新节点并且渲染到 `dom节点` 中
+
+接下来就是执行这段代码了，是由 `响应式原理` 的一个核心类 `Watcher` 负责执行这个函数，为什么要它来代理执行呢？因为我们需要在这段过程中去 `观察` 这个函数读取了哪些响应式数据，将来这些**响应式数据更新**的时候，我们需要重新执行 `updateComponent` 函数
+
+如果是更新后调用 `updateComponent` 函数的话，`updateComponent` 内部的 `patch` 就不再是初始化时候的创建节点，而是对新旧 `vnode` 进行 `diff`，最小化的更新到 `dom节点` 上去
+
+这一切交给 `Watcher` 完成：
+
+```js
+new Watcher(vm, updateComponent, noop, {
+  before () {
+    if (vm._isMounted) {
+      callHook(vm, 'beforeUpdate')
+    }
+  }
+}, true /* isRenderWatcher */)
+```
+
+注意这里在`before` 属性上定义了`beforeUpdate` 函数，也就是说在 `Watcher` 被响应式属性的更新触发之后，重新渲染新视图之前，会先调用 `beforeUpdate` 生命周期。
+
+注意，在 `render` 的过程中，如果遇到了 `子组件`，则会调用 `createComponent` 函数。
+
+`createComponent` 函数内部，会为子组件生成一个属于自己的`构造函数`，可以理解为子组件自己的 `Vue` 函数：
+
+```js
+Ctor = baseCtor.extend(Ctor)
+```
+
+在普通的场景下，其实这就是 `Vue.extend` 生成的构造函数，它继承自 `Vue` 函数，拥有它的很多全局属性。
+
+这里插播一个知识点，除了组件有自己的`生命周期`外，其实 `vnode` 也是有自己的 `生命周期的`，只不过我们平常开发的时候是接触不到的。
+
+那么`子组件的 vnode` 会有自己的 `init` 周期，这个周期内部会做这样的事情：
+
+```js
+// 创建子组件
+const child = createComponentInstanceForVnode(vnode)
+// 挂载到 dom 上
+child.$mount(vnode.elm)
+```
+
+而 `createComponentInstanceForVnode` 内部又做了什么事呢？它会去调用 `子组件` 的构造函数。
+
+```js
+new vnode.componentOptions.Ctor(options)
+```
+
+构造函数的内部是这样的：
+
+```js
+const Sub = function VueComponent (options) {
+  this._init(options)
+}
+```
+
+这个 `_init` 其实就是我们文章开头的那个函数，也就是说，如果遇到 `子组件`，那么就会优先开始`子组件`的构建过程，也就是说，从 `beforeCreated` 重新开始。这是一个递归的构建过程。
+
+也就是说，如果我们有 `父 -> 子 -> 孙` 这三个组件，那么它们的初始化生命周期顺序是这样的：
+
+```
+父 beforeCreate 
+父 create 
+父 beforeMount 
+子 beforeCreate 
+子 create 
+子 beforeMount 
+孙 beforeCreate 
+孙 create 
+孙 beforeMount 
+孙 mounted 
+子 mounted 
+父 mounted 
+```
+
+然后，`mounted` 生命周期被触发
+
+#### mounted被调用完成
+
+到此为止，组件的挂载就完成了，初始化的生命周期结束
+
+#### 更新流程
+
+当一个响应式属性被更新后，触发了 `Watcher` 的回调函数，也就是 `vm._update(vm._render())`，在更新之前，会先调用刚才在 `before` 属性上定义的函数，也就是
+
+```js
+callHook(vm, 'beforeUpdate')
+```
+
+注意，由于 Vue 的异步更新机制，`beforeUpdate` 的调用已经是在 `nextTick` 中了。 具体代码如下：
+
+```js
+nextTick(flushSchedulerQueue)
+
+function flushSchedulerQueue {
+  for (index = 0; index < queue.length; index++) {
+    watcher = queue[index]
+    if (watcher.before) {
+     // callHook(vm, 'beforeUpdate')
+      watcher.before()
+    }
+ }
+}
+```
+
+#### beforeUpdate被调用完成
+
+然后经历了一系列的 `patch`、`diff` 流程后，组件重新渲染完毕，调用 `updated` 钩子。
+
+注意，这里是对 `watcher` 倒序 `updated` 调用的。
+
+也就是说，假如同一个属性通过 `props` 分别流向 `父 -> 子 -> 孙` 这个路径，那么收集到依赖的先后也是这个顺序，但是触发 `updated` 钩子确是 `孙 -> 子 -> 父` 这个顺序去触发的。
+
+```js
+function callUpdatedHooks (queue) {
+  let i = queue.length
+  while (i--) {
+    const watcher = queue[i]
+    const vm = watcher.vm
+    if (vm._watcher === watcher && vm._isMounted) {
+      callHook(vm, 'updated')
+    }
+  }
+}
+```
+
+#### updated被调用完成
+
+至此，渲染更新流程完毕
+
+#### 销毁流程
+
+在刚刚所说的更新后的 `patch` 过程中，如果发现有组件在下一轮渲染中消失了，比如 `v-for` 对应的数组中少了一个数据。那么就会调用 `removeVnodes` 进入组件的销毁流程。
+
+`removeVnodes` 会调用 `vnode` 的 `destroy` 生命周期，而 `destroy` 内部则会调用我们相对比较熟悉的 `vm.$destroy()`。（keep-alive 包裹的子组件除外）
+
+这时，就会调用 `callHook(vm, 'beforeDestroy')`
+
+#### beforeDestroy被调用完成
+
+之后就会经历一系列的`清理`逻辑，清除父子关系、`watcher` 关闭等逻辑。但是注意，`$destroy` 并不会把组件从视图上移除，如果想要手动销毁一个组件，则需要我们自己去完成这个逻辑。
+
+然后，调用最后的 `callHook(vm, 'destroyed')`
+
+#### destroyed被调用完成
 
 ## 组件间通信
 
@@ -2217,6 +3258,8 @@ localhost:8080?queryId='20180822'&queryName='query'
 
 ### 6.动态路由怎么定义
 
+什么是动态路由 
+
 **（1）param方式**
 
 - 配置路由格式：`/router/:id`
@@ -2927,6 +3970,8 @@ Object.defineProperty 是 ES5 中一个无法 shim 的特性，这也就是 Vue 
 1. 添加或删除对象的属性时，Vue 检测不到。因为添加或删除的对象没有在初始化进行响应式处理，只能通过`$set` 来调用`Object.defineProperty()`处理。
 2. 无法监控到数组下标和长度的变化。
 
+
+
 Vue3 使用 Proxy 来监控数据的变化。Proxy 是 ES6 中提供的功能，其作用为：用于定义基本操作的自定义行为（如属性查找，赋值，枚举，函数调用等）。相对于`Object.defineProperty()`，其有以下特点：
 
 1. Proxy 直接代理整个对象而非对象属性，这样只需做一层代理就可以监听同级结构下的所有属性变化，包括新增属性和删除属性。
@@ -2944,6 +3989,70 @@ Proxy 实现的响应式原理与 Vue2的实现原理相同，实现方式大同
 - Set、delete 等触发依赖
 - 对于集合类型，就是对集合对象的方法做一层包装：原方法执行后执行依赖相关的收集或触发逻辑。
 
+-   vue3使用 [proxy](https://link.juejin.cn/?target=https%3A%2F%2Fdeveloper.mozilla.org%2Fzh-CN%2Fdocs%2FWeb%2FJavaScript%2FReference%2FGlobal_Objects%2FProxy) 监听对象的变化
+
+>   -   针对对象：针对整个对象，而不是对象的某个属性，所以也就不需要对 keys 进行遍历。
+>   -   支持数组：Proxy 不需要对数组的方法进行重载，省去了众多 hack，减少代码量等于减少了维护成本，而且标准的就是最好的。
+>   -   Proxy 的第二个参数可以有 13 种拦截方法，这比起 Object.defineProperty() 要更加丰富
+>   -   Proxy 作为新标准受到浏览器厂商的重点关注和性能优化，相比之下 Object.defineProperty() 是一个已有的老方法。
+
+每当我们改变代理对象(vue2对象)的时候，比如我们新增一个`age`属性，即使`change`函数里面没有使用到`age`, 我们也会触发`change`函数。 所以我们要正确收集依赖，怎样正确收集依赖呢
+
+-   不同的对象单独存储
+-   同一个对象不同属性也要单独存储
+
+-   存储对象我们可以使用 [WeakMap](https://link.juejin.cn/?target=https%3A%2F%2Fdeveloper.mozilla.org%2Fzh-CN%2Fdocs%2FWeb%2FJavaScript%2FReference%2FGlobal_Objects%2FWeakMap)
+
+>   **`WeakMap`** 对象是一组键/值对的集合，其中的键是弱引用(原对象销毁的时候可以被垃圾回收)的。其键必须是`对象`，而值可以是任意的。
+
+-   存储对象不同属性可以使用 [Map](https://link.juejin.cn/?target=https%3A%2F%2Fdeveloper.mozilla.org%2Fzh-CN%2Fdocs%2FWeb%2FJavaScript%2FReference%2FGlobal_Objects%2FMap)
+
+>   **`Map`** 对象保存键值对，并且能够记住键的原始插入顺序。任何值(对象或者[原始值](https://link.juejin.cn/?target=https%3A%2F%2Fdeveloper.mozilla.org%2Fzh-CN%2Fdocs%2FGlossary%2FPrimitive)) 都可以作为一个键或一个值。
+
+![image-20220621090916477](https://s2.loli.net/2022/06/21/Ax1qQjgT6EJYzoU.png)
+
+```js
+const targetMap = new WeakMap()
+const getDepend = (target, key) => {
+  // 根据target对象获取Map
+  let desMap = targetMap.get(target)
+  if (!desMap) {
+    desMap = new Map()
+    targetMap.set(target, desMap)
+  }
+  // 根据key获取 depend类
+  let depend = desMap.get(key)
+  if (!depend) {
+    depend = new Depend()
+    desMap.set(key, depend)
+  }
+  return depend
+}
+
+
+```
+
+
+
+```js
+const reactive = (obj) => {
+  return new Proxy(obj, {
+    get: (target, key) => {
+      // 收集依赖
+      const depend = getDepend(target, key)
+      depend.addDepend()
+      return Reflect.get(target, key)
+    },
+    set: (target, key, value) => {
+      const depend = getDepend(target, key)
+      Reflect.set(target, key, value)
+      // 当值发生改变时 触发
+      depend.notify()
+    }
+  })
+}
+```
+
 ### 3.如何理解composition API
 
 在 Vue2 中，代码是 Options API 风格的，也就是通过填充 (option) data、methods、computed 等属性来完成一个 Vue 组件。这种风格使得 Vue 相对于 React极为容易上手，同时也造成了几个问题：
@@ -2951,7 +4060,37 @@ Proxy 实现的响应式原理与 Vue2的实现原理相同，实现方式大同
 1. 由于 Options API 不够灵活的开发方式，使得Vue开发缺乏优雅的方法来在组件间共用代码。
 2. Vue 组件过于依赖`this`上下文，Vue 背后的一些小技巧使得 Vue 组件的开发看起来与 JavaScript 的开发原则相悖，比如在`methods` 中的`this`竟然指向组件实例来不指向`methods`所在的对象。这也使得 TypeScript 在Vue2 中很不好用。
 
+Options Api可以理解为就是组件的各个选项，data、methods、computed、watch等等就像是组件的一个个选项，在对应的选项里做对应的事情。
+
+不在data中定义的数据，是无法做到响应式的，那是因为Object.definePropety只会对data选项中的数据进行递归拦截
+
+因为所有的数据都是挂载在this下面，typescript的类型推导也很麻烦，代码的复用、公共组件的导入导出也都很困难
+
+```js
+export default {
+    data () {
+        return {
+            // 定义响应式数据的选项
+        }
+    },
+    methods: {
+        // 定义相关方法的选项
+    },
+    computed: {
+        // 计算属性的选项
+    },
+    watch: {
+        // 监听数据的选项
+    }
+    ...
+}
+```
+
+
+
 于是在 Vue3 中，舍弃了 Options API，转而投向 Composition API。Composition API本质上是将 Options API 背后的机制暴露给用户直接使用，这样用户就拥有了更多的灵活性，也使得 Vue3 更适合于 TypeScript 结合。
+
+Composition Api，我们也从名字来看，Composition表示组合，在Compostion Api的写法中，没有选项的概念了，设计指向的是组合，各种功能模块的组合。Composition Api支持将相同的功能模块代码写在一起，甚至可以将某个功能单独的封装成函数，随意导入引用；也可以**将任意的数据定义成响应式，再也不用局限于data中，我们只需要将每个实现的功能组合起来就可以了**。
 
 如下，是一个使用了 Vue Composition API 的 Vue3 组件：
 
@@ -2989,13 +4128,384 @@ export default {
 
 显而易见，Vue Composition API 使得 Vue3 的开发风格更接近于原生 JavaScript，带给开发者更多地灵活性
 
+例子
+
+```js
+<template>
+    <div @click="add">{{count}}</div>
+</template>
+<script setup>
+    import { ref } from "vue";
+    let count = ref(0);
+    function add () {
+        count.value++;
+    };
+</script>
+```
+
+功能单独封装成一个函数，供其他地方引用
+
+定义一个新的count.js文件。
+
+```js
+import { ref } from "vue";
+export default function Count () {
+    let count = ref(0);
+    function add () {
+        count.value++;
+    };
+    return {count, add};
+}
+```
+
+在我们的源代码里，只需要引入一下。
+
+```js
+<template>
+    <div @click="add">{{count}}</div>
+</template>
+<script setup>
+    import Count from "./count.js";
+    const { count, add } = Count();
+</script>
+```
+
+添加一个计算属性，每当count的值改变的时候，就计算出count * 2的值，大家应该马上就想到了computed，而在Compostion Api中，computed需要通过import导入使用。
+
+```vue
+<template>
+    <div @click="add">{{count}}</div>
+    <div>{{doubleCount}}</div>
+</template>
+<script setup>
+    import { computed } from "vue";
+    import Count from "./count.js";
+    const { count, add } = Count();
+    let doubleCount = computed(() => count.value * 2);
+</script>
+
+```
+
+现在给count加点颜色，如果count是偶数，想让文字显示红色，如果是奇数，让文字显示绿色，这次我们使用watch来实现，在Composition Api中对应的是watchEffect。
+
+```vue
+<style scope>
+    .count{
+        color: v-bind(color)
+    }
+</style>
+<template>
+    <div @click="add" class="count">{{count}}</div>
+    <div>{{doubleCount}}</div>
+</template>
+<script setup>
+    import { computed, ref, watchEffect } from "vue";
+    ...
+    let color = ref('red');
+    const watchEffectStop = watchEffect(() => {
+        if (count.value % 2) {
+            color.value = 'green';
+        } else {
+            color.value = 'red';
+        }
+    })
+</script>
+```
+
+我们已经添加了一个watchEffect来监听count值的变化，相对于Vue2中的watch方法，watchEffect的使用还是有一些差别的。
+
+1.  watchEffect是立即执行的，不需要添加immediate属性。
+
+1.  watchEffect不需要指定对某个具体的数据监听，watchEffect会根据内容自动去感知，所以我们也可以在一个watchEffect中添加多个数据的监听处理（如果watchEffect中没有任何响应式数据，会不会执行呢？大家可以试一下）。
+
+1.  watchEffect不能获取数据改变之前的值。
+
+同时，watchEffect会返回一个对象watchEffectStop，通过执行watchEffectStop，我们可以控制监听在什么时候结束
+
 ### 4.reactive和ref
 
 ![image-20220316213837203](https://s2.loli.net/2022/04/03/298TSq6sEyKnQIX.png)
 
-5.setup
+`toRefs`会将我们一个`响应式`的对象转变为一个`普通`对象，然后将这个`普通对象`里的每一个属性变为一个响应式的数据
+
+
+
+### 5.setup
+
+`setup` 选项是一个接收 `props` 和 `context` 的函数
+
+```js
+export default{
+    name: 'test',
+    setup(props,context){
+
+     return {}   // 这里返回的任何内容都可以用于组件的其余部分
+    }
+    // 组件的“其余部分”
+}
+
+```
+
+接收一个`props`和`context`函数并且将`setup`内的内容通过`return`暴露给组件的其余部分
+
+-   由于在执行 setup函数的时候，还没有执行 Created 生命周期方法，所以在 setup 函数中，无法使用 data 和 methods 的变量和方法
+-   由于我们不能在 setup函数中使用 data 和 methods，所以 Vue 为了避免我们错误的使用，直接将 setup函数中的this 修改成了 undefined
 
 ![image-20220316213946552](https://s2.loli.net/2022/04/03/aJAiv7qclpgNeyS.png)
+
+
+
+#### setup script优势
+
+##### 1.自动注册子组件
+
+vue3语法
+
+在引入Child组件后，需要在components中注册对应的组件才可使用
+
+```js
+<template>
+  <div>
+    <h2>我是父组件!</h2>
+    <Child />
+  </div>
+</template>
+
+<script>
+import { defineComponent, ref } from 'vue';
+import Child from './Child.vue'
+
+export default defineComponent({
+  components: {
+      Child
+  },
+  setup() {
+
+    return {
+      
+    }
+  }
+});
+</script>
+```
+
+setup script写法
+
+直接省略了子组件注册的过程
+
+```js
+<template>
+  <div>
+    <h2>我是父组件!-setup script</h2>
+    <Child />
+  </div>
+</template>
+
+<script setup>
+import Child from './Child.vue'
+
+</script>
+```
+
+##### 2.属性和方法无需返回
+
+composition API写起来有点繁琐的原因在于需要手动返回模板需要使用的属性和方法。
+
+而在setup script中可以省略这一步
+
+vue3语法
+
+```js
+<template>
+  <div>
+    <h2 @click="ageInc">{{ name }} is {{ age }}</h2>
+  </div>
+</template>
+
+<script>
+import { defineComponent, ref } from 'vue';
+
+export default defineComponent({
+  setup() {
+    const name = ref('CoCoyY1')
+    const age = ref(18)
+
+    const ageInc = () => {
+      age.value++
+    }
+
+    return {
+      name,
+      age,
+
+      ageInc
+    }
+  }
+})
+</script>
+```
+
+setup script语法
+
+```js
+<template>
+  <div>
+    <h2 @click="ageInc">{{ name }} is {{ age }}</h2>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue';
+
+const name = ref('CoCoyY1')
+const age = ref(18)
+
+const ageInc = () => {
+  age.value++
+}
+
+</script>
+```
+
+##### 3.支持props、emit和context
+
+vue3语法
+
+```js
+//Father.vue
+<template>
+  <div >
+    <h2 >我是父组件！</h2>
+    <Child msg="hello" @child-click="childCtx" />
+  </div>
+</template>
+
+<script>
+import { defineComponent, ref } from 'vue';
+import Child from './Child.vue';
+
+export default defineComponent({
+  components: {
+    Child
+  },
+  setup(props, context) {
+    const childCtx = (ctx) => {
+      console.log(ctx);
+    }
+
+    return {
+      childCtx
+    }
+  }
+})
+</script>
+
+
+//Child.vue
+<template>
+  <span @click="handleClick">我是子组件! -- msg: {{ props.msg }}</span>
+</template>
+
+<script>
+import { defineComponent, ref } from 'vue'
+
+export default defineComponent({
+  emits: [
+    'child-click'
+  ],
+  props: {
+    msg: String
+  },
+  setup(props, context) {
+    const handleClick = () => {
+      context.emit('child-click', context)
+    }
+
+    return {
+      props,
+      handleClick
+    }
+  },
+})
+</script>
+```
+
+setup script写法
+
+```js
+//Father.vue
+<template>
+  <div >
+    <h2 >我是父组件！</h2>
+    <Child msg="hello" @child-click="childCtx" />
+  </div>
+</template>
+
+<script setup>
+import Child from './Child.vue';
+
+const childCtx = (ctx) => {
+  console.log(ctx);
+}
+</script>
+
+
+//Child.vue
+<template>
+  <span @click="handleClick">我是子组件! -- msg: {{ props.msg }}</span>
+</template>
+
+<script setup>
+import { useContext, defineProps, defineEmit } from 'vue'
+
+const emit = defineEmit(['child-click'])
+const ctx = useContext()
+const props = defineProps({
+  msg: String
+})
+
+const handleClick = () => {
+  emit('child-click', ctx)
+}
+</script>
+
+```
+
+setup script语法糖提供了三个新的API来供我们使用：`defineProps`、`defineEmit`和`useContext`。
+
+其中`defineProps`用来接收父组件传来的值props。`defineEmit`用来声明触发的事件表。`useContext`用来获取组件上下文context
+
+
+
+### 6.Vue3 中 watch 与 watchEffect 有什么区别？
+
+同一个功能的两种不同形态，底层的实现是一样的。
+
+-   `watch`- 显式指定依赖源，依赖源更新时执行回调函数
+-   `watchEffect` - 自动收集依赖源，依赖源更新时重新执行自身
+
+Watch
+
+这里的依赖源函数只会执行一次，回调函数会在每次依赖源改变的时候触发，但是并不对回调函数进行依赖收集。也就是说，依赖源和回调函数之间并不一定要有直接关系
+
+```js
+watch(
+  () => { /* 依赖源收集函数 */ },
+  () => { /* 依赖源改变时的回调函数 */ }
+)
+```
+
+WatchEffect
+
+`watchEffect` 相当于将 `watch` 的依赖源和回调函数合并，当任何你有用到的响应式依赖更新时，该回调函数便会重新执行。不同于 `watch`，`watchEffect` 的回调函数会被立即执行（即 `{ immediate: true }`）
+
+简单理解watchEffect会在第一次运行时创建副作用函数并执行一次，如果存在响应式变量，取值会触发get函数，这个时候收集依赖存储起来，当其他地方给响应式变量重新赋值的时候，set函数中会触发方法派发更新，执行收集到的副作用函数，如果不存在响应式变量，就不会被收集触发
+
+```js
+watchEffect(
+  () => { /* 依赖源同时是回调函数 */ }
+)
+```
 
 ## Virtual DOM
 
@@ -3647,6 +5157,8 @@ key 是为 Vue 中 vnode 的唯一标记，通过这个 key，diff 操作可以�
 
 ## vue源码分析
 
+### 基本实现
+
  [深入理解Vue完整版和runtime版](https://juejin.cn/post/6844904029877698568)
 
 [一步一步实现一个VUe](https://www.cnblogs.com/kidney/p/8018226.html)
@@ -3983,3 +5495,5 @@ data 中的每一个属性都会被处理为存取器属性，同时每一个属
     ```
 
 4.  最后在 `_update` 方法中，进行 `patch` 操作
+
+### 如何设计vue的生命周期
