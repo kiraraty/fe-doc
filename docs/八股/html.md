@@ -109,7 +109,11 @@ href是指向⽹络资源所在位置（的超链接），⽤来建⽴和当前�
 
 如果没有defer或async属性，浏览器会立即加载并执行相应的脚本。它不会等待后续加载的文档元素，读取到就会开始加载和执行，这样就阻塞了后续文档的加载。
 
-下图可以直观的看出三者之间的区别: ![image.png](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/b0a8a139519f46dfa2d1992c58eb5397~tplv-k3u1fbpfcp-watermark.awebp) 其中蓝色代表js脚本网络加载时间，红色代表js脚本执行时间，绿色代表html解析。
+下图可以直观的看出三者之间的区别:
+
+![](https://s2.loli.net/2022/04/06/esdfD6zRcFYknxX.png)
+
+其中蓝色代表js脚本网络加载时间，红色代表js脚本执行时间，绿色代表html解析。
 
 **defer 和 async属性都是去异步加载外部的JS脚本文件，它们都不会阻塞页面的解析**，其区别如下：
 
@@ -117,6 +121,67 @@ href是指向⽹络资源所在位置（的超链接），⽤来建⽴和当前�
 - **脚本是否并行执行：async属性，表示后续文档的加载和执行与js脚本的加载和执行是并行进行的**，即异步执行；defer属性，加载后续文档的过程和js脚本的加载(此时仅加载不执行)是并行进行的(异步)，js脚本需要等到文档所有元素解析完成之后才执行，DOMContentLoaded事件触发执行之前。
 
 ### 7.Webworker特性
+
+由于JAVASCRIPT语言采用的是单线程模型,所有任务只能再一个线程上执行。早期得计算机是单核心所以没有问题。但是随着计算机能力得增强，特别是多核CPU的出现。单线程就带来很大的不便，无法充分发挥计算机的计算能力。
+
+所以在HTML5的规范中提供了一个多线程的解决方案，这就是WEB-WORKER
+
+WEB-WORKER允许JAVASCRIPT创造多线程环境,允许主线程创建WORKER线程,将任务分配在后台运行。这样高延迟，密集型的任务可以由WORKER线程负担，主线程负责UI交互就会很流畅,不会会阻塞或拖慢
+
+主线程使用new命令调用Worker()构造函数创建一个Worker线程
+
+- `var worker = new Worker('xxxxx.js')`
+- Worker构造函数接收参数为脚本文件路径
+-  worker 的两个限制：
+  1. **分配给 Worker 线程运行的脚本文件，必须与主线程的脚本文件同源**。
+  2. **worker 不能读取本地的文件**(不能打开本机的文件系统`file://`)，它所加载的脚本必须来自网络
+
+主线程指定监听函数监听Worker线程的返回消息
+
+- `worker.onmessage = function (event) {console.log(event.data)}`
+- `data`为Worker发来的数据
+
+由于主线程与Worker线程存在通信限制,不再同一个上下文中,所以只能通过消息完成
+
+- `worker.postMessage("hello world")`
+- `worker.postMessage({action: "ajax", url: "xxxxx", method: "post"})`
+
+当使用完成后，如果不需要再使用可以在主线程中关闭Worker
+
+- `worker.terminate()`
+- Worker也可以关闭自身,在Worker的脚本中执行 `self.close()`
+
+- 如果需要引用其他脚本可以使用
+
+  importScripts
+
+  - `importScripts('scripts1.js')`
+  - 该方法可以同时加载多个脚本 `importScripts('scripts1.js'，'scripts2.js')`
+
+主线程与Worker之间通信时拷贝的方式进行,即是传值而不是传址。Worker中对通信数据的修改并不会影响到主线程。
+
+> 事实上，浏览器内部的运行机制是，先将通信内容串行化，然后把串行化后的字符串发给 Worker，后者再将它还原
+
+但是拷贝的形式做数据传输会造成性能问题，比如主线程向Worker发送几百MB的数据,默认情况下,浏览器会生成一份拷贝。为了解决这个问题,JAVASCRIPT允许主线程将二进制数据直接转移给Worker,但是转移控制权后，主线程就不再能使用这些数据。这是为了防止多个线程同时修改数据的情况发生
+
+**用途**
+
+前端会定期检测后端服务的可用情况,一般情况下处理都是通过开启定时轮询发送ajax检测。这就会占用主线程资源
+
+所以可以放在Worker中进行处理.出现异常再通知主线程渲染UI给予提示等操作
+
+> ### 优点与缺点
+
+- 优点
+  - 独立于主线程,不造成阻塞
+  - 非常适合处理高频、高延时的任务
+  - 可以内部做队列机制,做为延时任务的缓冲层
+- 缺点
+  - 无法操作DOM,无法获取window, document, parent等对象
+  - 遵守同源限制, Worker线程的脚本文件，必须于主线程同源。并且加载脚本文件是阻塞的
+  - 不当的操作或者疏忽容易引起性能问题
+
+
 
 Web Worker (工作线程) 是 HTML5 中提出的概念，分为两种类型，专用线程（Dedicated Web Worker） 和共享线程（Shared Web Worker）。专用线程仅能被创建它的脚本所使用（一个专用线程对应一个主线程），而共享线程能够在不同的脚本中使用（一个共享线程对应多个主线程）。
 
