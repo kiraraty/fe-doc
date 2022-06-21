@@ -829,6 +829,12 @@ _traverse()方法里面
 
 ### 7.nextTick有什么应用场景？原理是什么？
 
+![12c574e8b85e729b0d9905959cc281ab.png](https://img-blog.csdnimg.cn/img_convert/12c574e8b85e729b0d9905959cc281ab.png)
+
+**打印的结果是begin, 而不是我们设置的end。**这个结果足以说明Vue中DOM的更新并非同步
+
+ue异步执行DOM更新。只要观察到数据变化，Vue将开启一个队列，并缓冲在同一事件循环中发生的所有数据改变。如果同一个watcher被多次触发，只会被推入到队列中一次。这种在缓冲时去除重复数据对于避免不必要的计算和DOM操作上非常重要。然后，在下一个的事件循环“tick”中，Vue刷新队列并执行实际 (已去重的) 工作
+
 Vue 的 nextTick 其本质是对 JavaScript 执行原理 EventLoop 的一种应用。
 
 nextTick 的核心是利用了如 Promise 、MutationObserver、setImmediate、setTimeout的原生 JavaScript 方法来模拟对应的微/宏任务的实现，本质是为了利用 JavaScript 的这些异步回调任务队列来实现 Vue 框架中自己的异步回调队列。
@@ -1874,6 +1880,76 @@ compile编译可以分成 `parse`、`optimize` 与 `generate` 三个阶段，最
 #### 再看全局
 
 <img src="https://img.kancloud.cn/01/db/01db136b4380b1804c072899e92daa3d_1752x1216.gif" alt="img" style="zoom:50%;" />
+
+### 24.框架对比分析
+
+#### 说说vue和react的异同
+
+相同点:
+
+-   核心库都只关注ui层面的问题解决，路由/状态管理都由其他库处理。
+
+-   都使用了虚拟dom来提高重渲染效率。
+
+-   都采用了组件化思想，将应用中不同功能抽象成一个组件，提高了代码复用性。
+
+-   都能进行跨平台，react使用react native，vue使用weex
+
+-   都有自己的构建工具:
+
+    vue: vue-cli
+
+    react: create-react-app
+
+不同点:
+
+-   最大的不同是组件的编写方式
+
+    vue推荐使用类似于常规html模板的方式来编写组件, 基于vue强大的指令系统来进行数据的绑定和添加事件监听。在vue中，一个组件就是一个.vue文件。
+
+    而react中采用jsx语法，每一个jsx表达式都是一个react元素. 在react中，一个组件本质就是一个函数或者一个类。
+
+-   虚拟dom渲染效率方面
+
+    由于vue对数据进行了劫持，因此每一个响应式数据都能进行依赖跟踪。当组件重新渲染时，不必重新渲染它的整个子组件树，而是只渲染应该重渲染的子组件。
+
+    在react中，一旦组件状态变化导致重渲染后，其整个子组件树都会默认重新渲染。可以通过pureComponent或者shouldComponentUpdate来进行优化。
+
+-   响应式方面
+
+    vue由于使用defineProperty或者proxy, 能对数据进行劫持。因此只要修改了响应式数据本身就能导致组件的重渲染。
+
+    而在react中，并没有对数据本身进行劫持，需要手动调用setState才能触发组件的重渲染。并且react强调使用不可变数据，即每次更改状态时，新状态的引用必须和旧状态不同。如果说没有使用不可变数据并且又在组件内使用了pureComponent或者shouldComponentUpdate进行优化，可能会导致状态变化组件没有重新渲染。
+
+-   高阶组件
+
+    react中存在HOC(高阶组件)的概念，因为react中的每一个组件本质都是一个函数或者类，都是编写在js代码中。因此可以轻松的实现高阶组件来对组件进行扩展。而vue采用模板编译的方式编写组件，无法使用HOC, 通常通过mixin来扩展组件.
+
+-   指令系统
+
+    vue有一套强大的指令系统并且支持自定义指令来封装一些功能。
+
+    react则更偏向底层，使用javascript原生代码进行封装功能。
+
+#### 说说vue3的composition api 和 react hook的区别？
+
+react:
+
+ 由于react没有实现真正的数据双向绑定即没有对数据进行劫持，react是依靠hook的调用顺序来知道重渲染时，本次的state对应于哪一个useState hook。因此在react中使用hook有如下要求:
+
+-   不能在循环/判断/嵌套函数内使用hook 
+-   总是确保hook出现在函数组件的最顶部 
+-   对于一些hook如useEffect, useMemo, useCallBack, 必须手动注册依赖项。 
+
+而在vue中, 基于vue的响应式系统，composiiton api在调用时可以不用考虑顺序并且能使用在判断/循环/内部函数中。并且由于vue的响应式数据会自动收集依赖，因此使用一些composiiton api如computed以及watchEffect时无需手动注册依赖。
+
+后面基本是一些小的问题比如:
+
+-   vue中的scoped style是如何实现作用域样式以及为什么vue不使用css module来实现作用域？ 
+
+-   为什么vue要将传递给子组件的属性分为props和attrs?(这个不会,把props和attrs?  (这个不会, 把props和attrs?(这个不会,把props和attrs的区别说了一下) 
+
+
 
 ## 生命周期
 
@@ -5497,3 +5573,915 @@ data 中的每一个属性都会被处理为存取器属性，同时每一个属
 4.  最后在 `_update` 方法中，进行 `patch` 操作
 
 ### 如何设计vue的生命周期
+
+## Demo实现
+
+
+
+### 1.实现一个modal框
+
+```js
+<template>
+  <div class="container">
+    <transition name="modal-fade">
+      <div class="modal-container" v-show="visible" :style="{ width: width }">
+        <!-- 头部标题 -->
+        <div class="modal-header">
+          <div class="modal-title">{{ title }}</div>
+          <i class="iconfont close-icon" @click="close">&#xe7fc;</i>
+        </div>
+        <!-- 内容区域 -->
+        <div class="modal-content">
+          <slot></slot>
+        </div>
+        <!-- 底部按钮 -->
+        <div class="modal-footer" v-show="showOperation">
+          <div class="modal-btn">
+            <button class="cancel" ref="cancelBtn" @click="close" @mousedown="cancelMouseDown" @mouseup="cancelMouseUp">取消</button>
+            <button class="ok" @click="ok">确认</button>
+          </div>
+        </div>
+      </div>
+    </transition>
+    <!-- 遮罩层 -->
+    <div class="mask" v-show="visible" @click="close"></div>
+  </div>
+</template>
+ 
+<script>
+export default {
+  data() {
+    return {}
+  },
+  props: {
+    // 模态框标题
+    title: {
+      type: String,
+      default: () => {
+        return '模态框标题'
+      },
+    },
+    // 显示隐藏控件
+    visible: {
+      type: Boolean,
+      default: () => {
+        return false
+      },
+    },
+    // 隐藏底部区域
+    showOperation: {
+      type: Boolean,
+      dafault: () => {
+        return true
+      },
+    },
+    // 宽度
+    width: {
+      type: String,
+      default: '250px',
+    },
+  },
+  methods: {
+    // 取消
+    close() {
+      this.$emit('cancel')
+      this.$emit('update:visible', false)
+    },
+    // 确认
+    ok() {
+      this.$emit('submit')
+      this.$emit('update:visible', false)
+    },
+    // 取消按钮 鼠标按下事件
+    cancelMouseDown() {
+      this.$refs.cancelBtn.style.color = '#096dd9'
+      this.$refs.cancelBtn.style.border = '1px solid #096dd9'
+    },
+    // 取消按钮 鼠标松开事件
+    cancelMouseUp() {
+      this.$refs.cancelBtn.style.color = '#595959'
+      this.$refs.cancelBtn.style.border = '1px solid #d9d9d9'
+    },
+  },
+  watch: {
+    // 操作遮罩层的展示/隐藏
+    visible() {
+      if (this.visible == true) {
+        document.querySelector('body').setAttribute('style', 'overflow:hidden !important;')
+      } else {
+        document.querySelector('body').removeAttribute('style')
+      }
+    },
+  },
+}
+</script>
+ 
+<style scoped>
+.modal-container {
+  z-index: 999;
+  background-color: #fff;
+  min-width: 250px;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: none;
+  border-radius: 4px;
+  transition: 0.5s;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.modal-header {
+  width: 100%;
+  height: 50px;
+  border: none;
+  border-bottom: 1px solid #e8e8e8;
+  padding: 20px 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.modal-title {
+  color: #262626;
+  font-weight: 600;
+  font-size: 17px;
+}
+.close-icon {
+  color: #4d4d4d;
+  cursor: pointer;
+  width: 80px;
+  text-align: right;
+}
+.modal-content {
+  width: 100%;
+  min-height: 100px;
+  border: none;
+  border-radius: none;
+  padding: 20px 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.modal-footer {
+  width: 100%;
+  height: 60px;
+  border: none;
+  border-top: 1px solid #e8e8e8;
+  padding: 0 30px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+.modal-btn {
+  width: 150px;
+  display: flex;
+  justify-content: space-between;
+}
+.cancel {
+  border: 1px solid #d9d9d9;
+  background-color: #fff;
+  color: #595959;
+  width: 70px;
+  height: 32px;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: 0.5s;
+}
+.cancel :hover {
+  border: 1px solid #40a9ff;
+  color: #40a9ff;
+}
+.ok {
+  border: 1px solid #1890ff;
+  background-color: #1890ff;
+  color: #ffffff;
+  width: 70px;
+  height: 32px;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: 0.5s;
+}
+.ok :hover {
+  border: 1px solid #40a9ff;
+  background-color: #40a9ff;
+}
+.mask {
+  z-index: 998;
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.3);
+}
+.modal-fade-enter-active {
+  transition: all 0.3s ease;
+}
+.modal-fade-leave-active {
+  transition: all 0.3s ease;
+}
+.modal-fade-enter-from,
+.modal-fade-leave-to {
+  transform: translateX(-400px);
+  opacity: 0;
+}
+</style>
+```
+
+
+
+### 2.实现一个Confirm框
+
+```vue
+<template>
+		<div class="content-pop" v-if="bool_show">
+			<div class="result" v-html="content"></div>
+			<div class="bottom">
+				<div class="cancel" @click="cancel">取消</div>
+				<div class="confirm" @click="confirm">确定</div>
+			</div>
+		</div>
+</template>
+ 
+<script>
+export default {
+	name: 'msgConfirmPro',
+	data() {
+		return {
+			bool_show: false,
+			content: '',
+			cancelBack:undefined,
+			confirmBack:undefined,
+		}
+	},
+	methods: {
+		// 打开弹窗
+		show(content,confirm,cancel) {
+			if(confirm){
+				this.confirmBack = confirm;
+			}
+			if(cancel){
+				this.cancelBack = cancel;
+			}
+			this.content = content;
+			this.bool_show = true;
+		},
+		cancel() {
+			this.bool_show = false;
+			if(this.cancelBack){
+			this.cancelBack();	
+			}
+			
+		},
+		confirm() {
+			this.bool_show = false;
+			if(this.confirmBack){
+				this.confirmBack();
+			}
+			
+		}
+	}
+};
+</script>
+ 
+<style scoped="">
+.content-pop {
+    width: 250px;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+    /* padding: 0.04rem 0 0 0; */
+    box-sizing: border-box;
+	background: #ffffff;
+	    height: 149px;
+	    border-radius: 24px;
+}
+ 
+.result {
+overflow: auto;
+    padding: 20px 30px;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* bottom: 87px; */
+    font-size: 16px;
+    position: absolute;
+    text-align: center;
+    color: #333;
+    box-sizing: border-box;
+    -webkit-overflow-scrolling: touch;
+}
+.content-pop .bottom {
+font-size: 16px;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid #f5f5f5;
+}
+ 
+.content-pop .bottom .cancel {
+color: #666666;
+    width: 50%;
+    height: 100%;
+    line-height: 48px;
+    text-align: center;
+    border-right: 01px solid #f5f5f5;
+}
+ 
+.content-pop .bottom .confirm {
+    color: #2283e2;
+    width: 50%;
+    height: 100%;
+    text-align: center;
+    line-height: 48px;
+}
+ 
+.content-pop .title {
+	box-sizing: border-box;
+	padding: 40px 0;
+	width: 100%;
+	margin: 0 auto;
+	text-align: center;
+	color: #333;
+	border-bottom: 0.003rem solid #f5f5f5;
+}
+</style>
+```
+
+使用
+
+```vue
+<template>
+  <div id="app" style="background-color: #ff0000;height: 100vh;">
+    
+	<div @click="show()">点击出现弹窗</div>
+	
+	<ylConfirm ref="MSGCONFIRMPRO"></ylConfirm>
+	
+  </div>
+</template>
+ 
+<script>
+import HelloWorld from './components/HelloWorld.vue'
+import ylConfirm from './components/yl-confirm.vue'
+ 
+export default {
+  name: 'app',
+  components: {
+    HelloWorld,ylConfirm
+  },methods:{
+	  show() {
+		  this.$refs.MSGCONFIRMPRO.show('我是弹窗里面的内容，我可以随便定义哦',
+		  () => {
+		  	// 确定的回调
+			alert("点击了确认");
+		  },
+		  () => {
+			  // 取消的回调
+		  	alert("点击了取消");
+		  })
+	  }
+	  
+  }
+}
+</script>
+ 
+<style>
+#app {
+  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: #2c3e50;
+  margin-top: 60px;
+}
+</style>
+```
+
+
+
+### 3.实现一个通用alert组件
+
+[vue封装通用的通知组件alert](https://juejin.cn/post/6844904081085956109)
+
+### 4.封装通用table组件
+
+ [Vue封装通用table组件](https://juejin.cn/post/6990593017874743310)
+
+```vue
+<!-- src/components/table-slot/table.vue -->
+<template>
+  <table>
+    <thead>
+      <tr>
+        <th v-for="col in columns">{{ col.title }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-for="(row, rowIndex) in data">
+        <td v-for="col in columns">
+          <template v-if="'render' in col">
+            <Render :row="row" :column="col" :index="rowIndex" :render="col.render"></Render>
+          </template>
+          <template v-else-if="'slot' in col">
+            <slot :row="row" :column="col" :index="rowIndex" :name="col.slot"></slot>
+          </template>
+          <template v-else>{{ row[col.key] }}</template>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</template>
+```
+
+示例中在 `<table-slot>` 内的每一个 `<template>` 就对应某一列的 slot-scope 模板，通过配置的 `slot` 字段，指定具名的 slot-scope。可以看到，基本是把 Render 函数还原成了 html 的写法，这样看起来直接多了，渲染效果是完全一样的。在 slot-scope 中，平时怎么写组件，这里就怎么写，Vue.js 所有的 API 都是可以直接使用的。
+
+````vue
+<!-- src/views/table-slot.vue -->
+<template>
+  <div>
+    <table-slot :columns="columns" :data="data">
+      <template slot-scope="{ row, index }" slot="name">
+        <input type="text" v-model="editName" v-if="editIndex === index" />
+        <span v-else>{{ row.name }}</span>
+      </template>
+
+      <template slot-scope="{ row, index }" slot="age">
+        <input type="text" v-model="editAge" v-if="editIndex === index" />
+        <span v-else>{{ row.age }}</span>
+      </template>
+
+      <template slot-scope="{ row, index }" slot="birthday">
+        <input type="text" v-model="editBirthday" v-if="editIndex === index" />
+        <span v-else>{{ getBirthday(row.birthday) }}</span>
+      </template>
+
+      <template slot-scope="{ row, index }" slot="address">
+        <input type="text" v-model="editAddress" v-if="editIndex === index" />
+        <span v-else>{{ row.address }}</span>
+      </template>
+
+      <template slot-scope="{ row, index }" slot="action">
+        <div v-if="editIndex === index">
+          <button @click="handleSave(index)">保存</button>
+          <button @click="editIndex = -1">取消</button>
+        </div>
+        <div v-else>
+          <button @click="handleEdit(row, index)">操作</button>
+        </div>
+      </template>
+    </table-slot>
+  </div>
+</template>
+<script>
+  import TableSlot from '../components/table-slot/table.vue';
+
+  export default {
+    components: { TableSlot },
+    data () {
+      return {
+        columns: [
+          {
+            title: '姓名',
+            slot: 'name'
+          },
+          {
+            title: '年龄',
+            slot: 'age'
+          },
+          {
+            title: '出生日期',
+            slot: 'birthday'
+          },
+          {
+            title: '地址',
+            slot: 'address'
+          },
+          {
+            title: '操作',
+            slot: 'action'
+          }
+        ],
+        data: [
+          {
+            name: '王小明',
+            age: 18,
+            birthday: '919526400000',
+            address: '北京市朝阳区芍药居'
+          },
+          {
+            name: '张小刚',
+            age: 25,
+            birthday: '696096000000',
+            address: '北京市海淀区西二旗'
+          },
+          {
+            name: '李小红',
+            age: 30,
+            birthday: '563472000000',
+            address: '上海市浦东新区世纪大道'
+          },
+          {
+            name: '周小伟',
+            age: 26,
+            birthday: '687024000000',
+            address: '深圳市南山区深南大道'
+          }
+        ],
+        editIndex: -1,  // 当前聚焦的输入框的行数
+        editName: '',  // 第一列输入框，当然聚焦的输入框的输入内容，与 data 分离避免重构的闪烁
+        editAge: '',  // 第二列输入框
+        editBirthday: '',  // 第三列输入框
+        editAddress: '',  // 第四列输入框
+      }
+    },
+    methods: {
+      handleEdit (row, index) {
+        this.editName = row.name;
+        this.editAge = row.age;
+        this.editAddress = row.address;
+        this.editBirthday = row.birthday;
+        this.editIndex = index;
+      },
+      handleSave (index) {
+        this.data[index].name = this.editName;
+        this.data[index].age = this.editAge;
+        this.data[index].birthday = this.editBirthday;
+        this.data[index].address = this.editAddress;
+        this.editIndex = -1;
+      },
+      getBirthday (birthday) {
+        const date = new Date(parseInt(birthday));
+        const year = date.getFullYear();
+        const month = date.getMonth() + 1;
+        const day = date.getDate();
+
+        return `${year}-${month}-${day}`;
+      }
+    }
+  }
+</script>
+````
+
+
+
+### 5.实现checkbox
+
+```vue
+<template>
+  <div>
+    <span>全选</span>
+    <input type="checkbox" v-model="checkAll" />
+    <div v-for="(item,index) in test" :key="index">
+      <span>{{item.name}}</span>
+	  <input type="checkbox" v-model="item.isSelected" />
+    </div>
+  </div>
+</template>
+<script>
+  export default {
+  data() {
+    return {
+      test: [
+        { name: "测试1", isSelected: true },
+        { name: "测试2", isSelected: true },
+        { name: "测试3", isSelected: true },
+        { name: "测试4", isSelected: true },
+        { name: "测试5", isSelected: true }
+      ]
+    };
+  },
+  computed: {
+    checkAll: {
+      get() {
+        // 返回什么结果接赋予给 checkAll 属性
+        return this.test.every(item => item.isSelected);
+      },
+      set(val) {
+        // val 是给 checkAll 赋予值的时候传递过来的
+        return this.test.forEach(item => (item.isSelected = val));
+      }
+    }
+  }
+}
+</script>
+```
+
+### 6.实现内容绑定
+
+```js
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title></title>
+		<script src="js/vue.js" type="text/javascript" charset="utf-8"></script>
+	</head>
+	<body>
+		<div id="app">
+			<h2>{{username}}</h2>
+			<h1>单行文本输入框</h1>
+			<input type="text" name="username" v-model.lazy.trim="username" value="" />
+			<h1>多行文本输入框</h1>
+			<textarea rows="" cols="" v-model="username"></textarea>
+			
+			<h1>复选框:选择喜欢的水果</h1>
+			<span v-for="item in fruits">
+				{{item}}
+				<input  type="checkbox" name="fruit" v-model="checkFruits" :value="item" />
+			</span>
+			<h2>{{checkFruits}}</h2>
+			
+			
+			<h1>单选框:选择最喜欢的水果</h1>
+			<span v-for="item in fruits">
+				{{item}}
+				<input  type="radio" name="zfruit" v-model="radioFruits" :value="item" />
+			</span>
+			<h2>{{radioFruits}}</h2>
+			
+			
+			<h1>选项框：选择你居住的城市</h1>
+			<select v-model="chooseCity">
+				<option disabled value="">请选择</option>
+				<option v-for="item in citys" :value="item">{{item}}</option>
+			</select>
+			<h3>{{chooseCity}}</h3>
+			
+			
+			<h1>选项框：选择你喜欢的城市</h1>
+			<select v-model="moreCity" multiple="multiple">
+				<option v-for="item in citys" :value="item">{{item}}</option>
+			</select>
+			<h3>{{moreCity}}</h3>
+			
+			<h1>将字符串变为数字获取</h1>
+			<input type="text" name="age" v-model.number="age" value="" />
+			
+		</div>
+		
+		<script type="text/javascript">
+			let app = new Vue({
+				el:"#app",
+				data:{
+					username:"小明",
+					fruits:['苹果','雪梨',"香蕉","葡萄"],
+					checkFruits:[],
+					radioFruits:"",
+					citys:['北京',"上海","深圳","广州"],
+					chooseCity:"",
+					moreCity:[],
+					age:16
+				},
+				watch:{
+					age:function(val){
+						console.log(val)
+					}
+				}
+			})
+		</script>
+	</body>
+</html>
+
+```
+
+### 7.实现todolist
+
+```vue
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link rel="stylesheet" type="text/css" href="css/style.css"/>
+		<link rel="stylesheet" type="text/css" href="css/animate.min.css"/>
+		<script src="js/lcXys.js" type="text/javascript" charset="utf-8"></script>
+		<script src="js/vue.js" type="text/javascript" charset="utf-8"></script>
+		
+	</head>
+	<body>
+		<div id="app">
+			<div class="main">
+				<div class="header">
+					<div class="logo">LcTodo</div>
+					<!-- 绑定回车事件,v-model绑定输入框的value值 -->
+					<input type="text" v-model="inputValue" id="input" @keydown.enter="enterEvent" placeholder="请输入待办事项" />
+				</div>
+				<div class="doing todo">
+					<h3><span class="title">正在进行</span><span class="num">0</span></h3>
+					<div class="list">
+						<transition-group name="slide" mode="out-in" enter-active-class="animated bounceInLeft" leave-active-class="animated bounceOutRight">
+						<div class="todoItem" v-for="item,index in doingList" :key="'doing'+index">
+							<input @click.prevent="checkDone(item.id)" :data-id="item.id" type="checkbox">
+							<div class="content">{{item.content}}</div>
+							<div class="del" @click="deleteItem(item.id)">删除</div>
+						</div>
+						</transition-group>
+					</div>
+				</div>
+				<div class="done todo">
+					<h3><span class="title">正在进行</span><span class="num">0</span></h3>
+					<div class="list">
+						<transition-group name="slide" enter-active-class="animated bounceInLeft" leave-active-class="animated bounceOutRight">
+						<div class="todoItem" v-for="item,index in doneList" :key="'done'+index">
+							<input @click.prevent="checkDone(item.id)" :data-id="item.id" type="checkbox" checked="checked">
+							<div class="content">{{item.content}}</div>
+							<div class="del" @click="deleteItem(item.id)">删除</div>
+						</div>
+						</transition-group>
+					</div>
+				</div>
+			</div>
+		</div>
+		<script type="text/javascript">
+			var app = new Vue({
+				el:"#app",
+				data:{
+					todoList:[],
+					inputValue:""
+				},
+				computed:{
+					//通过过滤todolist数据，得到未做好的列表和已做好的列表
+					doingList:function(){
+						let arr = this.todoList.filter(function(item,index){
+							return !item.isDone
+						})
+						return arr;
+					},
+					doneList:function(){
+						let arr = this.todoList.filter(function(item,index){
+							return item.isDone
+						})
+						return arr;
+					}
+				},
+				methods:{
+					enterEvent:function(event){
+						//将数据添加至todolist
+						this.todoList.push({
+							content:this.inputValue,
+							isDone:false,
+							id:this.todoList.length
+						})
+						//保存
+						this.saveData()
+						//清除输入框的值
+						this.inputValue = "";
+					},
+					// 将数据保存到本地存储
+					saveData:function(){
+						localStorage.todoList = JSON.stringify(this.todoList)
+					},
+					checkDone:function(id){
+						//console.log(id)
+						this.todoList[id].isDone = !this.todoList[id].isDone;
+						//每次修改都必须保存
+						this.saveData()
+					},
+					deleteItem:function(id){
+						this.todoList.splice(id,1)
+						this.todoList.forEach(function(item,i){
+							item.id = i;
+						})
+						this.saveData()
+					}
+					
+					
+				},
+				mounted:function(){
+					this.todoList = localStorage.todoList?JSON.parse(localStorage.todoList):[];
+				}
+			})
+		</script>
+	</body>
+</html>
+```
+
+css
+
+```css
+*{
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+body{
+	background-color: #efefef;
+	font-size: 16px;
+}
+#app{
+	width: 3.75rem;
+}
+.main{
+	width: 3.75rem;
+	/* height: 10vh; */
+}
+
+.header{
+	width: 3.75rem;
+	height: 0.5rem;
+	background: deepskyblue;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.header>.logo{
+	width: 1.2rem;
+	height: 0.5rem;
+	text-align: center;
+	line-height: 0.5rem;
+	font-size: 0.25rem;
+	font-weight: 900;
+}
+.header>input{
+	width: 2.2rem;
+	height: 0.3rem;
+	margin: 0 0.2rem;
+	border-radius: 0.05rem;
+	border: none;
+	outline: none;
+	padding: 0 0.1rem;
+}
+
+.todo h3{
+	height: 0.6rem;
+	line-height: 0.6rem;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0  0.15rem;
+}
+
+.todo .list{
+	padding: 0 0.15rem;
+}
+.todo .todoItem{
+	display: flex;
+	height: 0.38rem;
+	line-height: 0.38rem;
+	align-items: center;
+	background: lightcyan;
+	border-radius: 0.05rem;
+	overflow: hidden;
+	margin-bottom: 0.1rem;
+}
+.todo .todoItem:before{
+	width: 0.04rem;
+	height: 0.38rem;
+	background: deepskyblue;
+	content: "";
+}
+.todo .todoItem>input{
+	width: 0.25rem;
+	height: 0.25rem;
+	margin: 0 0.1rem;
+	
+}
+.todo .todoItem .content{
+	width: 2.65rem;
+	color:#333;
+}
+.todo .todoItem .del{
+	background: orangered;
+	width: 0.4rem;
+	height: 0.2rem;
+	font-size: 0.12rem;
+	text-align: center;
+	line-height: 0.2rem;
+	border-radius: 0.05rem;
+	margin: 0 0.1rem;
+	color: #fff;
+}
+
+.done.todo .todoItem{
+	opacity: 0.3;
+	-webkit-filter:grayscale(1);
+}
+
+.pc{
+	font-size: 200px !important;
+	
+}
+
+.pc .main{
+	margin:  0 auto;
+}
+```
+
