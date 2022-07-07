@@ -1,5 +1,3 @@
-# javascript进阶
-
 ## ECMAScript 6+
 
 ### 1.let const var区别
@@ -1994,6 +1992,8 @@ person1.say() //hanmeimei
 
 ## 异步编程
 
+
+
 ### 1.什么是回调地狱，promise的出现解决了什么问题
 
 Promise 是异步编程的一种解决方案： 从语法上讲，promise是一个对象，从它可以获取异步操作的消息；从本意上讲，它是承诺，承诺它过一段时间会给你一个结果。 promise有三种状态：**pending(等待态)，fulfiled(成功态)，rejected(失败态)**；状态一旦改变，就不会再变。创造promise实例后，它会立即执行。
@@ -2529,6 +2529,10 @@ JavaScript 运行时，除了一个正在运行的主线程，引擎还提供一
 通常来说不建议使用 `setInterval`。第一，它和 `setTimeout` 一样，不能保证在预期的时间执行任务。第二，它存在执行累积的问题
 
 有循环定时器的需求，其实完全可以通过 `requestAnimationFrame` 来实现
+
+### 9.promise错误捕获
+
+
 
 ------
 

@@ -1881,73 +1881,11 @@ compile编译可以分成 `parse`、`optimize` 与 `generate` 三个阶段，最
 
 <img src="https://img.kancloud.cn/01/db/01db136b4380b1804c072899e92daa3d_1752x1216.gif" alt="img" style="zoom:50%;" />
 
-### 24.框架对比分析
+### 24.Vue自定义指令
 
-#### 说说vue和react的异同
 
-相同点:
 
--   核心库都只关注ui层面的问题解决，路由/状态管理都由其他库处理。
 
--   都使用了虚拟dom来提高重渲染效率。
-
--   都采用了组件化思想，将应用中不同功能抽象成一个组件，提高了代码复用性。
-
--   都能进行跨平台，react使用react native，vue使用weex
-
--   都有自己的构建工具:
-
-    vue: vue-cli
-
-    react: create-react-app
-
-不同点:
-
--   最大的不同是组件的编写方式
-
-    vue推荐使用类似于常规html模板的方式来编写组件, 基于vue强大的指令系统来进行数据的绑定和添加事件监听。在vue中，一个组件就是一个.vue文件。
-
-    而react中采用jsx语法，每一个jsx表达式都是一个react元素. 在react中，一个组件本质就是一个函数或者一个类。
-
--   虚拟dom渲染效率方面
-
-    由于vue对数据进行了劫持，因此每一个响应式数据都能进行依赖跟踪。当组件重新渲染时，不必重新渲染它的整个子组件树，而是只渲染应该重渲染的子组件。
-
-    在react中，一旦组件状态变化导致重渲染后，其整个子组件树都会默认重新渲染。可以通过pureComponent或者shouldComponentUpdate来进行优化。
-
--   响应式方面
-
-    vue由于使用defineProperty或者proxy, 能对数据进行劫持。因此只要修改了响应式数据本身就能导致组件的重渲染。
-
-    而在react中，并没有对数据本身进行劫持，需要手动调用setState才能触发组件的重渲染。并且react强调使用不可变数据，即每次更改状态时，新状态的引用必须和旧状态不同。如果说没有使用不可变数据并且又在组件内使用了pureComponent或者shouldComponentUpdate进行优化，可能会导致状态变化组件没有重新渲染。
-
--   高阶组件
-
-    react中存在HOC(高阶组件)的概念，因为react中的每一个组件本质都是一个函数或者类，都是编写在js代码中。因此可以轻松的实现高阶组件来对组件进行扩展。而vue采用模板编译的方式编写组件，无法使用HOC, 通常通过mixin来扩展组件.
-
--   指令系统
-
-    vue有一套强大的指令系统并且支持自定义指令来封装一些功能。
-
-    react则更偏向底层，使用javascript原生代码进行封装功能。
-
-#### 说说vue3的composition api 和 react hook的区别？
-
-react:
-
- 由于react没有实现真正的数据双向绑定即没有对数据进行劫持，react是依靠hook的调用顺序来知道重渲染时，本次的state对应于哪一个useState hook。因此在react中使用hook有如下要求:
-
--   不能在循环/判断/嵌套函数内使用hook 
--   总是确保hook出现在函数组件的最顶部 
--   对于一些hook如useEffect, useMemo, useCallBack, 必须手动注册依赖项。 
-
-而在vue中, 基于vue的响应式系统，composiiton api在调用时可以不用考虑顺序并且能使用在判断/循环/内部函数中。并且由于vue的响应式数据会自动收集依赖，因此使用一些composiiton api如computed以及watchEffect时无需手动注册依赖。
-
-后面基本是一些小的问题比如:
-
--   vue中的scoped style是如何实现作用域样式以及为什么vue不使用css module来实现作用域？ 
-
--   为什么vue要将传递给子组件的属性分为props和attrs?(这个不会,把props和attrs?  (这个不会, 把props和attrs?(这个不会,把props和attrs的区别说了一下) 
 
 
 
@@ -5573,6 +5511,215 @@ data 中的每一个属性都会被处理为存取器属性，同时每一个属
 4.  最后在 `_update` 方法中，进行 `patch` 操作
 
 ### 如何设计vue的生命周期
+
+
+
+## 框架对比
+
+### vue2和vue3
+
+1.vue2.0和3.0的初始化就存在着⼀定区别，⽐如vue3.0可以在安装脚⼿架同时提前安装好⼀些项⽬开发必备的插件，并且3.0提供了可视 化创建脚⼿架，可以更加⽅便的对插件和依赖进⾏管理和配置，同时两个版本的⽬录结构也是有些许差别的。
+
+2.在开发过程中两个版本的使⽤⽅法虽然在表⾯上没有太⼤的⼀个区别，但是在他的底层⽅⾯去看的话区别还是很⼤的，其中就包括渲染⽅ 式，数据监听，双向绑定，⽣命周期，vue3更精准变更通知，
+
+这⾥着重说⼀下关于**双向绑定**的更新，
+
+**vue2** 的双向数据绑定是利⽤ES5 的⼀个 API ，Object.definePropert()对数据进⾏劫持 结合 发布订阅模式的⽅式来实现的。
+
+**vue3** 中使⽤了 es6 的 ProxyAPI 对数据代理，通过 reactive() 函数给每⼀个对象都包⼀层 Proxy，通过 Proxy 监听属性的变化，从⽽ 实现对数据的监控。
+
+```
+这⾥是引相⽐于vue2版本，使⽤proxy的优势如下
+1.defineProperty只能监听某个属性，不能对全对象监听
+可以省去for in、闭包等内容来提升效率（直接绑定整个对象即可）
+2.可以监听数组，不⽤再去单独的对数组做特异性操作,通过Proxy可以直接拦截所有对象类型数据的操作，完美⽀持对数组的监听。
+```
+
+3.另外vue3还新增了⼀些内置组件和⽅法，⽐如vue3可以默认进⾏懒观察，使⽤Function-based API，setup函数，对与插件或对象的⼀ 个按需引⼊，Computed Value ，新加⼊了 TypeScript 以及 PWA 的⽀持等等… 这⾥着重说⼀下vue3的⼀个**按需引⼊**
+
+Vue2.x中new出的实例对象，所有的东西都在这个vue对象上，这样其实⽆论你⽤到还是没⽤到，都会跑⼀遍，这样不仅提⾼了性能消耗，
+ 也⽆疑增加了⽤户加载时间。
+
+⽽vue3.0中可以⽤ES module imports按需引⼊，如：keep-alive内置组件、v-model指令，等等，不仅我们开发起来更加的便捷，减少 了内存消耗，也同时减少了⽤户加载时间，优化⽤户体验。
+
+#### 创建vue2和vue3项目的文件发生的变化
+
+1.main.js中
+
+![image.png](https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/ffef785ed9724c4fb0fc0e2f05927a4f~tplv-k3u1fbpfcp-zoom-in-crop-mark:3024:0:0:0.awebp?)
+ **核心代码**：
+ createApp(App).mount('#app') = createApp(根组件).mount('public/index.html中的div容器')
+
+1.vue2.0中是直接创建了一个vue实例
+ 2.vue3.0中按需导出了一个createApp （ceateApp做了什么）
+ 3.vue3中的app单文件不再强制要求必须有根元素 也就是说 在vue2.0中必须要有一个根元素，在vue3中没这个要求
+
+```
+<template>
+  <img alt="Vue logo" src="./assets/logo.png">
+  <HelloWorld msg="Welcome to Your Vue.js App"/>
+</template>
+```
+
+#### 数据双向绑定原理
+
+**Vue2**使⽤的是Object.defineProperty()进⾏数据劫持，结合发布订阅的⽅式实现。
+
+**Vue3**使⽤的是Proxy代理，使⽤ref或者reactive将数据转化为响应式数据
+
+#### 数据和方法的定义
+
+Vue2使⽤的是选项类型API（Options API），Vue3使⽤的是合成型API（Composition API）
+
+Vue2：
+
+```
+data() { return {}; }, methods:{ }
+```
+
+Vue3：
+
+数据和⽅法都定义在setup中，并统⼀进⾏return{}
+
+#### 生命周期
+
+![image.png](https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/51aa6a3fda5f428185fb1739c4fbdbc1~tplv-k3u1fbpfcp-zoom-in-crop-mark:3024:0:0:0.awebp?)
+
+#### 获取props
+
+vue2：console.log(‘props’,this.xxx)
+ vue3：setup(props,context){ console.log(‘props’,props) }
+
+#### 给父组件传值emit
+
+vue2：this.$emit()
+ vue3：setup(props,context){context.emit()}
+
+
+
+
+### vue和react
+
+相似之处：
+
+-   都将注意力集中保持在核心库，而将其他功能如路由和全局状态管理交给相关的库
+-   都有自己的构建工具，能让你得到一个根据最佳实践设置的项目模板。
+-   都使用了Virtual DOM（虚拟DOM）提高重绘性能
+-   都有props的概念，允许组件间的数据传递
+-   都鼓励组件化应用，将应用分拆成一个个功能明确的模块，提高复用性
+
+**不同之处：**
+
+**1）数据流**
+
+Vue默认支持数据双向绑定，而React一直提倡单向数据流
+
+**2）虚拟DOM**
+
+Vue2.x开始引入"Virtual DOM"，消除了和React在这方面的差异，但是在具体的细节还是有各自的特点。
+
+-   Vue宣称可以更快地计算出Virtual DOM的差异，这是由于它在渲染过程中，会跟踪每一个组件的依赖关系，不需要重新渲染整个组件树。
+-   对于React而言，每当应用的状态被改变时，全部子组件都会重新渲染。当然，这可以通过 PureComponent/shouldComponentUpdate这个生命周期方法来进行控制，但Vue将此视为默认的优化。
+
+**3）组件化**
+
+React与Vue最大的不同是模板的编写。
+
+-   Vue鼓励写近似常规HTML的模板。写起来很接近标准 HTML元素，只是多了一些属性。
+-   React推荐你所有的模板通用JavaScript的语法扩展——JSX书写。
+
+具体来讲：React中render函数是支持闭包特性的，所以我们import的组件在render中可以直接调用。但是在Vue中，由于模板中使用的数据都必须挂在 this 上进行一次中转，所以 import 完组件之后，还需要在 components 中再声明下。
+
+**4）监听数据变化的实现原理不同**
+
+-   Vue 通过 getter/setter 以及一些函数的劫持，能精确知道数据变化，不需要特别的优化就能达到很好的性能
+-   React 默认是通过比较引用的方式进行的，如果不优化（PureComponent/shouldComponentUpdate）可能导致大量不必要的vDOM的重新渲染。这是因为 Vue 使用的是可变数据，而React更强调数据的不可变。
+
+**5）高阶组件**
+
+react可以通过高阶组件（Higher Order Components-- HOC）来扩展，而vue需要通过mixins来扩展。
+
+原因高阶组件就是高阶函数，而React的组件本身就是纯粹的函数，所以高阶函数对React来说易如反掌。相反Vue.js使用HTML模板创建视图组件，这时模板无法有效的编译，因此Vue不采用HOC来实现。
+
+**6）构建工具**
+
+两者都有自己的构建工具
+
+-   React ==> Create React APP
+-   Vue ==> vue-cli
+
+**7）跨平台**
+
+-   React ==> React Native
+-   Vue ==> Weex
+
+
+
+#### 
+
+相同点:
+
+- 核心库都只关注ui层面的问题解决，路由/状态管理都由其他库处理。
+
+- 都使用了虚拟dom来提高重渲染效率。
+
+- 都采用了组件化思想，将应用中不同功能抽象成一个组件，提高了代码复用性。
+
+- 都能进行跨平台，react使用react native，vue使用weex
+
+- 都有自己的构建工具:
+
+  vue: vue-cli
+
+  react: create-react-app
+
+不同点:
+
+- 最大的不同是组件的编写方式
+
+  vue推荐使用类似于常规html模板的方式来编写组件, 基于vue强大的指令系统来进行数据的绑定和添加事件监听。在vue中，一个组件就是一个.vue文件。
+
+  而react中采用jsx语法，每一个jsx表达式都是一个react元素. 在react中，一个组件本质就是一个函数或者一个类。
+
+- 虚拟dom渲染效率方面
+
+  由于vue对数据进行了劫持，因此每一个响应式数据都能进行依赖跟踪。当组件重新渲染时，不必重新渲染它的整个子组件树，而是只渲染应该重渲染的子组件。
+
+  在react中，一旦组件状态变化导致重渲染后，其整个子组件树都会默认重新渲染。可以通过pureComponent或者shouldComponentUpdate来进行优化。
+
+- 响应式方面
+
+  vue由于使用defineProperty或者proxy, 能对数据进行劫持。因此只要修改了响应式数据本身就能导致组件的重渲染。
+
+  而在react中，并没有对数据本身进行劫持，需要手动调用setState才能触发组件的重渲染。并且react强调使用不可变数据，即每次更改状态时，新状态的引用必须和旧状态不同。如果说没有使用不可变数据并且又在组件内使用了pureComponent或者shouldComponentUpdate进行优化，可能会导致状态变化组件没有重新渲染。
+
+- 高阶组件
+
+  react中存在HOC(高阶组件)的概念，因为react中的每一个组件本质都是一个函数或者类，都是编写在js代码中。因此可以轻松的实现高阶组件来对组件进行扩展。而vue采用模板编译的方式编写组件，无法使用HOC, 通常通过mixin来扩展组件.
+
+- 指令系统
+
+  vue有一套强大的指令系统并且支持自定义指令来封装一些功能。
+
+  react则更偏向底层，使用javascript原生代码进行封装功能。
+
+### vue3的composition api 和 react hook的区别？
+
+react:
+
+ 由于react没有实现真正的数据双向绑定即没有对数据进行劫持，react是依靠hook的调用顺序来知道重渲染时，本次的state对应于哪一个useState hook。因此在react中使用hook有如下要求:
+
+-   不能在循环/判断/嵌套函数内使用hook 
+-   总是确保hook出现在函数组件的最顶部 
+-   对于一些hook如useEffect, useMemo, useCallBack, 必须手动注册依赖项。 
+
+而在vue中, 基于vue的响应式系统，composiiton api在调用时可以不用考虑顺序并且能使用在判断/循环/内部函数中。并且由于vue的响应式数据会自动收集依赖，因此使用一些composiiton api如computed以及watchEffect时无需手动注册依赖。
+
+后面基本是一些小的问题比如:
+
+-   vue中的scoped style是如何实现作用域样式以及为什么vue不使用css module来实现作用域？ 
+
+-   为什么vue要将传递给子组件的属性分为props和attrs?(这个不会,把props和attrs?  (这个不会, 把props和attrs?(这个不会,把props和attrs的区别说了一下) 
 
 ## Demo实现
 
