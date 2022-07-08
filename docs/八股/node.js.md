@@ -1,52 +1,54 @@
-## node.js基础
+# Node.js面试题
+
+## Node.js基础
 
 
 
-# fs文件系统模块
+### fs文件系统模块
 
 **是什么？**
 
 ![img](https://cdn.nlark.com/yuque/0/2022/png/23076793/1642769419188-9dfdf3fd-8dce-41a9-b009-0ca446356fb6.png)
 
-### 读取文件
+#### 读取文件
 
 ![img](https://cdn.nlark.com/yuque/0/2022/png/23076793/1642769486290-ebcb0a60-68cd-487a-b59f-71e83085190a.png)
 
-### 写入文件
+#### 写入文件
 
 ![img](https://cdn.nlark.com/yuque/0/2022/png/23076793/1642770075183-ab24706c-b292-4a07-8255-0caca8b9bdef.png)
 
-### 拼接路径错误问题
+#### 拼接路径错误问题
 
 ![img](https://cdn.nlark.com/yuque/0/2022/png/23076793/1642771449309-72b0609f-6d69-4bdb-9fb1-c8c2e1df0b9b.png)
 
-# 路径模块path
+### 路径模块path
 
 ![img](https://cdn.nlark.com/yuque/0/2022/png/23076793/1642771985339-76551412-137d-46ec-b3a7-8329bd708472.png)
 
 ![img](https://cdn.nlark.com/yuque/0/2022/png/23076793/1642771997778-c37616ab-6026-4ba6-b49e-ef5a938f5547.png)
 
-### 路径拼接
+#### 路径拼接
 
 ![img](https://cdn.nlark.com/yuque/0/2022/png/23076793/1642772031154-4df76436-8cc8-4fce-bac9-4872c4f9a555.png)
 
 ![img](https://cdn.nlark.com/yuque/0/2022/png/23076793/1642772772407-40622d8f-c934-415a-9d52-73bd7f190a98.png)
 
-### 获取文件名
+#### 获取文件名
 
 ![img](https://cdn.nlark.com/yuque/0/2022/png/23076793/1642772728181-797442cb-2ccd-4052-8913-a771ccf6e33f.png)
 
 ![img](https://cdn.nlark.com/yuque/0/2022/png/23076793/1642772791349-572d412a-cbea-41cb-8642-021e886c82aa.png)
 
-### 获取拓展名
+#### 获取拓展名
 
 ![img](https://cdn.nlark.com/yuque/0/2022/png/23076793/1642773006127-0536479a-afcf-467a-94a8-68db9e732c66.png)
 
-# http模块
+### http模块
 
 ![img](https://cdn.nlark.com/yuque/0/2022/png/23076793/1642863290838-b32f749f-84d4-47fb-bd5e-827a375968ea.png)
 
-## 创建web服务器步骤
+#### 创建web服务器步骤
 
 ![img](https://cdn.nlark.com/yuque/0/2022/png/23076793/1642863705127-a5d02c97-a504-4dd4-97fe-291210afcc70.png)
 
@@ -58,19 +60,19 @@
 
 ![img](https://cdn.nlark.com/yuque/0/2022/png/23076793/1642863761275-cebcbb0f-bd2b-4156-b647-c7c8309f20aa.png)
 
-## req请求对象
+#### req请求对象
 
 ![img](https://cdn.nlark.com/yuque/0/2022/png/23076793/1642863785275-027e3bb0-3948-4fa3-a666-e50465d31acd.png)
 
-## res响应对象
+#### res响应对象
 
 ![img](https://cdn.nlark.com/yuque/0/2022/png/23076793/1642863812528-2dcb5ab0-d594-4a18-a435-9b7df9da2c5a.png)
 
-## 解决中文乱码问题
+#### 解决中文乱码问题
 
 ![img](https://cdn.nlark.com/yuque/0/2022/png/23076793/1642863832699-b95df7d5-5ae1-4ba6-93de-b3a3fa3a1462.png)
 
-## 根据不同url响应不同的html内容(核心)
+#### 根据不同url响应不同的html内容(核心)
 
 ![img](https://cdn.nlark.com/yuque/0/2022/png/23076793/1642863992611-1a48ff59-376b-428d-ab37-312674e643cb.png)
 
@@ -80,15 +82,15 @@
 
 ![img](https://cdn.nlark.com/yuque/0/2022/png/23076793/1642868962004-f7960f12-7a17-44e9-a12b-a7cac51afc6d.png)
 
-# node模块化
+### node模块化
 
 ![img](https://cdn.nlark.com/yuque/0/2022/png/23076793/1642869014410-0b94e93b-dbaf-457d-9b98-dfce73124e8b.png)
 
-## 加载模块
+#### 加载模块
 
 ![img](https://cdn.nlark.com/yuque/0/2022/png/23076793/1642869036333-bbe20051-a94f-41bc-9136-adaf69cd61ff.png)
 
-## 模块作用域
+#### 模块作用域
 
 ![img](https://cdn.nlark.com/yuque/0/2022/png/23076793/1642869056811-48067876-79d5-4352-8b89-e622797373e6.png)
 
@@ -96,13 +98,17 @@
 
 ![img](https://cdn.nlark.com/yuque/0/2022/png/23076793/1642869099212-e75140f3-d4a7-44eb-8699-2b73bd4c5a40.png)
 
-# nodemon
+### nodemon
 
 npm i --save nodemon
 
 ![img](https://cdn.nlark.com/yuque/0/2022/png/23076793/1643267937500-cff294d1-7223-48c5-b72f-1d4485d5cc18.png)
 
 ![img](https://cdn.nlark.com/yuque/0/2022/png/23076793/1643267946860-09d66c4a-0a07-4b3d-a2b0-c0f30725f1f1.png)
+
+## Express
+
+
 
 ## Koa
 
