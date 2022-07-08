@@ -11,7 +11,7 @@
 | 属性选择器     | a[ref=“eee”]  | 10             |
 | 伪类选择器     | li:last-child | 10             |
 | 标签选择器     | div           | 1              |
-| 伪元素选择器   | li:after      | 1              |
+| 伪元素选择器   | li::after     | 1              |
 | 相邻兄弟选择器 | h1+p          | 0              |
 | 子选择器       | ul>li         | 0              |
 | 后代选择器     | li a          | 0              |
@@ -49,7 +49,9 @@ CSS中，有很多**非布局样式**，这些样式（属性）和与布局无�
 - background
 - clip-path
 
-### 2.盒子模型      margin和padding的使用场景     box-sizing
+
+
+### 2.盒子模型      
 
 ![box](https://s2.loli.net/2022/04/06/3kwqH9GXt7IiglR.png)
 
@@ -65,7 +67,9 @@ CSS中，有很多**非布局样式**，这些样式（属性）和与布局无�
 - `box-sizeing: content-box`表示标准盒模型（默认值）
 - `box-sizeing: border-box`表示IE盒模型（怪异盒模型）
 
+需要在border外侧添加空白，且空白处不需要背景（色）时，使用 margin；
 
+需要在border内测添加空白，且空白处需要背景（色）时，使用 padding。
 
 ### 3.伪类和伪元素的作用(原理)
 
@@ -123,22 +127,268 @@ p:nth-last-child(3){
 
 `selection，placeholder`，分别表示被选中部分以及占位的文本
 
-### 4.flex特点和应用
-
-flex是flexible Box的缩写，意为：“弹性布局”，用来为盒状模型提供最大的灵活性，任何一个容器都可以指定为flex布局。
-当我们为父盒子设为flex布局以后，子元素的float，子元素的float、clear和vertical-align属性将失效。
-
-特性： 给父亲添加了 `display: flex;` 所有的子盒子（弹性盒子）都会在一行显示，不会自动换行。
-
-**弹性盒子换行显示 :给父元素添加**  `flex-wrap: wrap;`
-
-说来也不难，flex 的核心的概念就是 **容器** 和 **轴**。容器包括外层的 **父容器** 和内层的 **子容器**，轴包括 **主轴** 和 **交叉轴**，可以说 flex 布局的全部特性都构建在这两个概念上。flex 布局涉及到 12 个 CSS 属性（不含 `display: flex`），其中父容器、子容器各 6 个。不过常用的属性只有 4 个，父容器、子容器各 2 个，我们就先从常用的说起吧。
-
->   容器具有这样的特点：父容器可以统一设置子容器的排列方式，子容器也可以单独设置自身的排列方式，如果两者同时设置，以子容器的设置为准。
 
 
+### 4.css函数
 
-![image-20220406151643610](https://s2.loli.net/2022/04/06/BqzWXUcKoNeg9rE.png)
+#### 1. attr()
+
+> 用来选择元素的属性值，用法：attr(html元素的属性名)，正常搭配css content一起使用
+
+```css
+html:
+    
+<p><a href="http://a.b.c" name="attr">十</a></p>
+<p><a href="http://d.f.e" name="我是谁">九</a></p>
+
+css:
+
+a:after{content:'('attr(href) '/' attr(name) ')'}
+
+
+结果：
+    
+十(http://a.b.c / attr)
+九(http://d.f.e / 我是谁)
+```
+
+#### 2. calc()
+
+> 用于动态计算长度值 calc(数学表达式)
+
+```css
+- 运算符前后需要有空格
+- 不管什么长度都可以用calc计算
+- calc() 支持 '+','-','*','/' 等运算
+- calc() 使用标准的数学运算优先级规则
+
+// 语法：
+
+width: calc(70% - 60px) 
+height: calc(70% / 2 * 12 + 66px)
+```
+
+##### 水平垂直居中
+
+步骤如下：
+
+1. 使子元素相对于容器元素定位
+2. 子元素开启绝对定位
+3. 设置该元素的偏移量，值为`50% 减去宽度/高度的一半`
+
+实现CSS代码如下：
+
+```css
+.parent {
+  /* 1. 使子元素相对于本元素定位 */
+  position: relative;
+}
+.child {
+  /* 2. 开启绝对定位 */
+  position: absolute;
+  /* 3. 设置该元素的偏移量，值为 50%减去宽度/高度的一半 */
+  left: calc(50% - 150px);
+  top: calc(50% - 150px);
+}
+```
+
+##### 两列布局
+
+步骤如下：
+
+1. 左边列开启浮动
+2. 右边列开启浮动
+3. 右边列宽度为父级 100%减去左列的宽度
+
+实现CSS代码如下：
+
+```css
+.left {
+  /* 左边列开启浮动 */
+  float: left;
+}
+.right {
+  /* 右边列开启浮动 */
+  float: left;
+  /* 宽度减去左列的宽度 */
+  width: calc(100% - 200px);
+}
+```
+
+##### sticky footer布局
+
+使用`calc`函数实现sticky footer布局比较简单，中间的容器最少高度为`视口宽度的100% - 头部和底部两部分的高度`即可完成该功能。
+
+实现CSS代码如下：
+
+```css
+.container {
+    /* 这里的 中间 部分的容器最少为视口宽度的 100% - 头部和底部两部分的高度即可完成该功能 */
+    min-height: calc(100vh - 200px);
+}
+```
+
+##### 全屏布局
+
+实现步骤如下：
+
+1. 通过`calc`函数计算出中间容器的高度。
+2. 中间出现滚动条的容器设置`overflow: auto`即出现滚动条的时候出现滚动条。
+
+实现CSS代码如下：
+
+```css
+.content {
+    overflow: hidden;
+    /* 通过 calc 计算容器的高度 */
+    height: calc(100vh - 200px);
+}
+.left {
+    height: 100%;
+}
+.right {
+    /* 如果超出出现滚动条 */
+    overflow: auto;
+    height: 100%;
+}
+.right-in {
+    /* 假设容器内有500px的元素 */
+    height: 500px;
+}
+```
+
+
+
+#### 3. linear-gradient()
+
+> 用于 创建一个线性渐变的 图像，需要设置一个起点一个方向，还可以定义角度起始颜色等。
+
+```css
+// 语法：
+
+background: linear-gradient(direction, color-stop1, color-stop2, ...);
+
+direction: 指定渐变方向的角度 （可以省略）
+color-stop1： 指定渐变的起止颜色
+```
+
+###### 示例：
+
+> background: linear-gradient(red,yellow,blue,green);
+
+结果如下，在未设置渐变角度是自上而下的
+
+![img](https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/7/18/173620b1f0685f16~tplv-t2oaga2asx-zoom-in-crop-mark:3024:0:0:0.awebp)
+
+###### 示例：
+
+> background: linear-gradient(12deg,red,yellow,blue,green);
+
+结果如下，设置渐变角度后
+
+![img](https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/7/18/173620b1e0ad1b3d~tplv-t2oaga2asx-zoom-in-crop-mark:3024:0:0:0.awebp)
+
+###### 示例：
+
+> background: linear-gradient(to left top,red,yellow,blue,green);
+
+结果如下，渐变角度可以从某个方向到另外一个方向
+
+![img](https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/7/18/173620b1df61729f~tplv-t2oaga2asx-zoom-in-crop-mark:3024:0:0:0.awebp)
+
+#### 4. radial-gradient()
+
+> 用法和linear-gradient()差不多，只不过它是用径向渐变创建图像，渐变由中心点定义，必须设置两个终止色（区别）
+
+```css
+语法：
+
+background: radial-gradient(shape size at position, start-color, ..., last-color);
+
+shape: 确定圆的类型（选填）
+    
+    - ellispe(默认): 指定椭圆形的径向渐变
+    - circle： 指定圆形的径向渐变
+
+size: 指定径向渐变的大小（选填）
+
+    - farthest-corner(默认)： 指定径向渐变的半径长度为从圆心到离圆心最远的角 
+    - closest-side： 指定径向渐变的半径长度为从圆心到离圆心最近的边
+    - closest-corner： 指定径向渐变的半径长度为从圆心到离圆心最近的角
+    - farthest-side：指定径向渐变的半径长度为从圆心到离圆心最远的边
+
+position: 定义渐变的位置（选填）
+    
+    - center(默认)：设置中间为径向渐变圆心的纵坐标值
+    - top：设置顶部为径向渐变圆心的纵坐标值
+    - bottom：设置底部为径向渐变圆心的纵坐标值
+
+start-color, ..., last-color：定义渐变的起止色
+```
+
+###### 示例：
+
+> background: radial-gradient(red, green, blue, yellow);
+
+结果如下，渐变从中心往外扩散
+
+![img](https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/7/18/173620b1de0c7d01~tplv-t2oaga2asx-zoom-in-crop-mark:3024:0:0:0.awebp)
+
+###### 示例：
+
+> background: radial-gradient( red 5%, green 10%, blue 15%,yellow 20%);
+
+结果如下，可以单独设置每个颜色的占比
+
+![img](https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/7/18/173620b1f1a47810~tplv-t2oaga2asx-zoom-in-crop-mark:3024:0:0:0.awebp)
+
+###### 示例：
+
+> background: radial-gradient(circle, red, green, blue, yellow);
+
+结果如下，径向渐变设置为圆形，默认为椭圆形
+
+![img](https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/7/18/173620b1e96e8500~tplv-t2oaga2asx-zoom-in-crop-mark:3024:0:0:0.awebp)
+
+#### 5. repeating-linear-gradient()
+
+> 创建重复的线性渐变图像
+
+```css
+语法：
+
+background: repeating-linear-gradient(angle | to side-or-corner, color-stop1, color-stop2, ...);
+
+angle: 定义渐变角度（0deg-360deg，默认180deg）
+    
+side-or-corner: 指定线性渐变起始位置（顺序随意）
+
+    - 关键字一： 水平位置（left,right）
+    - 关键字而： 垂直位置（top,bottom）
+
+color-stop1, color-stop2,... 
+    
+    - 指定渐变的起止颜色，由颜色值、停止位置（可选，使用百分比指定）组成
+```
+
+###### 示例：
+
+> background: repeating-linear-gradient(red, yellow 10%, green 20%);
+
+结果如下，默认自上而下，以及设置颜色的占比
+
+![img](https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/7/18/173620b20af87055~tplv-t2oaga2asx-zoom-in-crop-mark:3024:0:0:0.awebp)
+
+###### 示例：
+
+> background: repeating-linear-gradient(30deg, red 5%, yellow 10%, green 20%);
+
+结果如下，设置角度后的效果
+
+![img](https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/7/18/173620b20fdad7fa~tplv-t2oaga2asx-zoom-in-crop-mark:3024:0:0:0.awebp)
+
+
+
 
 ### 5.css中哪些属性是可继承的和不可继承的
 
@@ -450,6 +700,11 @@ flex是flexible Box的缩写，意为：“弹性布局”，用来为盒状模�
 - link支持使用Javascript控制DOM去改变样式；而@import不支持。
 
 ### 9.css动画
+
+#### transition和animation的区别
+
+- **transition是过度属性**，强调过度，它的实现需要触发一个事件（比如鼠标移动上去，焦点，点击等）才执行动画。它类似于flash的补间动画，设置一个开始关键帧，一个结束关键帧。
+- **animation是动画属性**，它的实现不需要触发事件，设定好时间之后可以自己执行，且可以循环一个动画。它也类似于flash的补间动画，但是它可以设置多个关键帧（用@keyframe定义）完成动画。
 
 #### transition 语法
 
@@ -1072,7 +1327,96 @@ img{
 
 但是现在我们只是学会了过渡和动画，我们现在还不能对图形进行一系列的不规则操作，而`transform（变形）`就是来操作改变成特殊图形的，我将在接下来的文章继续为你讲解`translate（移动）`以及`transform（变形）`
 
-### 10.精灵图的应用和常见图片格式
+### 10.css动画性能优化
+
+ [GPU加速原理 动画实现](https://blog.csdn.net/weixin_41017246/article/details/80365121)
+
+提高动画的优化不得不提及浏览器是如何渲染一个页面。在从服务器中拿到数据后，浏览器会先做解析三类东西：
+
+-   解析html,xhtml,svg这三类文档，形成dom树。
+-   解析css，产生css rule tree。
+-   解析js，js会通过api来操作dom tree和css rule tree。
+
+解析完成之后，浏览器引擎会通过dom tree和css rule tree来构建rendering tree：
+
+-   rendering tree和dom tree并不完全相同，例如：`<head></head>`或display:none的东西就不会放在渲染树中。
+-   css rule tree主要是完成匹配，并把css rule附加给rendering tree的每个element。
+
+在渲染树构建完成后，
+
+-   浏览器会对这些元素进行定位和布局，这一步也叫做reflow或者layout。
+-   浏览器绘制这些元素的样式，颜色，背景，大小及边框等，这一步也叫做repaint。
+-   然后浏览器会将各层的信息发送给GPU，GPU会将各层合成；显示在屏幕上。
+
+reflow => repaint => composite
+
+reflow和repaint都是耗费浏览器性能的操作,为了仅发生composite，我们做动画的css property必须满足以下三个条件：
+
+-   不影响文档流。
+-   不依赖文档流。
+-   不会造成重绘。
+
+满足以上以上条件的css property只有transform和opacity
+
+这样做有两个优势：
+
+-   动画将会非常流畅
+-   动画不在绑定到CPU，即使js执行大量的工作；动画依然流畅
+
+GPU有2个问题：
+
+一个或多个没有自己复合层的元素要出现在有复合层元素的上方，它就会拥有自己的复合层；这种情况被称为隐式合成。
+
+使用GPU动画需要发送多张渲染层的图像给GPU，GPU也需要缓存它们以便于后续动画的使用
+
+-   保持动画的对象的z-index尽可能的高。理想的，这些元素应该是body元素的直接子元素。当然，这不是总可能的。所以你可以克隆一个元素，把它放在body元素下仅仅是为了做动画。
+-   将元素上设置will-change CSS属性，元素上有了这个属性，浏览器会提升这个元素成为一个复合层（不是总是）。这样动画就可以平滑的开始和结束。但是不要滥用这个属性，否则会大大增加内存消耗。
+
+css动画有一个重要的特性，它是完全工作在GPU上。因为你声明了一个动画如何开始和如何结束，浏览器会在动画开始前准备好所有需要的指令；并把它们发送给GPU。而如果使用js动画，浏览器必须计算每一帧的状态；为了保证平滑的动画，我们必须在浏览器主线程计算新状态；把它们发送给GPU至少60次每秒。除了计算和发送数据比css动画要慢，主线程的负载也会影响动画； 当主线程的计算任务过多时，会造成动画的延迟、卡顿。
+
+所以尽可能地使用基于css的动画，不仅仅更快；也不会被大量的js计算所阻塞。
+
+浏览器中用css开启硬件加速，使GPU (Graphics Processing Unit) 发挥功能，从而提升性能
+
+**虽然我们可能不想对元素应用3D变换，可我们一样可以开启3D引擎。例如我们可以用transform: translateZ(0); 来开启硬件加速**
+
+
+
+这个问题是因为使用transform和opacity做CSS动画的时候，会将元素提升为一个复合层；而使用js操作css属性做动画时，必须使用translateZ或will-change才能将元素强行提升至一个复合层。
+
+元素本身使用transform和opacity做CSS动画的时候，会提前告诉GPU动画如何开始和结束及所需要的指令；所以会创建一个复合层（渲染层），并把页面所有的复合层发送给GPU；作为图像缓存，然后动画的发生仅仅是复合层间相对移动。
+
+而使用js做动画，js必须在动画的每一帧计算元素的状态；发送给GPU，但不会将元素提升至一个复合层；所以想让元素提升至一个复合层，必须使用translateZ或will-change: transform, opacity。
+
+使用 translate3D 会让浏览器开启硬件加速，性能当然就提高了。translateZ变成3d效果，走GPU渲染。这样也有缺点就是耗电和发热问题。同样的canvas也会开启gpu渲染。
+
+### 11.对requestAnimationframe的理解
+
+实现动画效果的方法比较多，Javascript 中可以通过定时器 setTimeout 来实现，CSS3 中可以使用 transition 和 animation 来实现，HTML5 中的 canvas 也可以实现。除此之外，HTML5 提供一个专门用于请求动画的API，那就是 requestAnimationFrame，顾名思义就是**请求动画帧**。
+
+MDN对该方法的描述：
+
+> window.requestAnimationFrame() 告诉浏览器——你希望执行一个动画，并且要求浏览器在下次重绘之前调用指定的回调函数更新动画。该方法需要传入一个回调函数作为参数，该回调函数会在浏览器下一次重绘之前执行。
+
+**语法：** `window.requestAnimationFrame(callback);`  其中，callback是**下一次重绘之前更新动画帧所调用的函数**(即上面所说的回调函数)。该回调函数会被传入DOMHighResTimeStamp参数，它表示requestAnimationFrame() 开始去执行回调函数的时刻。该方法属于**宏任务**，所以会在执行完微任务之后再去执行。
+
+**取消动画：** 使用cancelAnimationFrame()来取消执行动画，该方法接收一个参数——requestAnimationFrame默认返回的id，只需要传入这个id就可以取消动画了。
+
+**优势：**
+
+- **CPU节能**：使用SetTinterval 实现的动画，当页面被隐藏或最小化时，SetTinterval 仍然在后台执行动画任务，由于此时页面处于不可见或不可用状态，刷新动画是没有意义的，完全是浪费CPU资源。而RequestAnimationFrame则完全不同，当页面处理未激活的状态下，该页面的屏幕刷新任务也会被系统暂停，因此跟着系统走的RequestAnimationFrame也会停止渲染，当页面被激活时，动画就从上次停留的地方继续执行，有效节省了CPU开销。
+- **函数节流**：在高频率事件( resize, scroll 等)中，为了防止在一个刷新间隔内发生多次函数执行，RequestAnimationFrame可保证每个刷新间隔内，函数只被执行一次，这样既能保证流畅性，也能更好的节省函数执行的开销，一个刷新间隔内函数执行多次时没有意义的，因为多数显示器每16.7ms刷新一次，多次绘制并不会在屏幕上体现出来。
+- **减少DOM操作**：requestAnimationFrame 会把每一帧中的所有DOM操作集中起来，在一次重绘或回流中就完成，并且重绘或回流的时间间隔紧紧跟随浏览器的刷新频率，一般来说，这个频率为每秒60帧。
+
+**setTimeout执行动画的缺点**：它通过设定间隔时间来不断改变图像位置，达到动画效果。但是容易出现卡顿、抖动的现象；原因是：
+
+- settimeout任务被放入异步队列，只有当主线程任务执行完后才会执行队列中的任务，因此实际执行时间总是比设定时间要晚；
+- settimeout的固定时间间隔不一定与屏幕刷新间隔时间相同，会引起丢帧。
+
+
+
+
+### 12.精灵图的应用和常见图片格式
 
 CSSSprites（精灵图），将一个页面涉及到的所有图片都包含到一张大图中去，然后利用CSS的 background-image，background-repeat，background-position属性的组合进行背景定位。
 
@@ -1107,7 +1451,7 @@ CSSSprites（精灵图），将一个页面涉及到的所有图片都包含到�
 - 在有损压缩的情况下，具有相同图片精度的WebP图片，文件大小要比JPEG小25%~34%；
 - WebP图片格式支持图片透明度，一个无损压缩的WebP图片，如果要支持透明度只需要22%的格外文件大小。
 
-### 11.什么是css预处理器，如何看待css工程化
+### 13.什么是css预处理器，如何看待css工程化
 
 ####  CSS预处理器/后处理器
 
@@ -1153,9 +1497,11 @@ CSSSprites（精灵图），将一个页面涉及到的所有图片都包含到�
 
 由于css-loader仅提供了将css转换为字符串导出的能力，剩余的事情要交给其他loader或plugin来处理。style-loader可以将css-loader转换后的代码进一步处理，将css-loader导出的字符串加入到页面的style元素中
 
+### 14.为什么有时候⽤**translate**来改变位置⽽不是定位？
 
+translate 是 transform 属性的⼀个值。改变transform或opacity不会触发浏览器重新布局（reflow）或重绘（repaint），只会触发复合（compositions）。⽽改变绝对定位会触发重新布局，进⽽触发重绘和复合。transform使浏览器为元素创建⼀个 GPU 图层，但改变绝对定位会使⽤到 CPU。 因此translate()更⾼效，可以缩短平滑动画的绘制时间。 ⽽translate改变位置时，元素依然会占据其原始空间，绝对定位就不会发⽣这种情况。
 
-### 12.什么是媒体查询
+### 15.什么是媒体查询
 
 使用 `@media`，可以指定一个媒体查询和一个 CSS 块，当且仅当该媒体查询与正在使用其内容的设备匹配时，该 CSS 块才能应用于该文档。
 
@@ -1171,6 +1517,19 @@ CSSSprites（精灵图），将一个页面涉及到的所有图片都包含到�
 @media 可以针对不同的屏幕尺寸设置不同的样式，特别是如果你需要设置设计响应式的页面，@media 是非常有用的。
 
 当你重置浏览器大小的过程中，页面也会根据浏览器的宽度和高度重新渲染页面。
+
+例如
+
+使用 CSS 媒体查询来判断不同的像素密度，从而选择不同的图片:
+
+```javascript
+my-image { background: (low.png); }
+@media only screen and (min-device-pixel-ratio: 1.5) {
+  #my-image { background: (high.png); }
+}
+```
+
+
 
 #### 媒体功能
 
@@ -1210,7 +1569,23 @@ CSSSprites（精灵图），将一个页面涉及到的所有图片都包含到�
 | scan                    | 定义电视类设备的扫描工序。                                   |
 | width                   | 定义输出设备中的页面可见区域宽度。                           |
 
-### 13.回流和重绘
+### 16.li与li之间有看不见的空白间隔是什么原因引起的？如何解决？
+
+浏览器会把inline内联元素间的空白字符（空格、换行、Tab等）渲染成一个空格。为了美观，通常是一个`<li>`放在一行，这导致`<li>`换行后产生换行字符，它变成一个空格，占用了一个字符的宽度。
+
+**解决办法：**
+
+（1）为`<li>`设置float:left。不足：有些容器是不能设置浮动，如左右切换的焦点图等。
+
+（2）将所有`<li>`写在同一行。不足：代码不美观。
+
+（3）将`<ul>`内的字符尺寸直接设为0，即font-size:0。不足：`<ul>`中的其他字符尺寸也被设为0，需要额外重新设定其他字符尺寸，且在Safari浏览器依然会出现空白间隔。
+
+（4）消除`<ul>`的字符间隔letter-spacing:-8px，不足：这也设置了`<li>`内的字符间隔，因此需要将`<li>`内的字符间隔设为默认letter-spacing:normal。
+
+
+
+### 17.回流和重绘
 
 #### 回流 (Reflow)
 
@@ -1278,7 +1653,7 @@ CSSSprites（精灵图），将一个页面涉及到的所有图片都包含到�
 - 避免频繁读取会引发回流/重绘的属性，如果确实需要多次使用，就用一个变量缓存起来。
 - 对具有复杂动画的元素使用绝对定位，使它脱离文档流，否则会引起父元素及后续元素频繁回流。
 
-### 14.溢出
+### 18.溢出
 
 **CSS overflow 属性控制对太大而区域无法容纳的内容的处理方式。**
 
@@ -1316,84 +1691,176 @@ overflow-x 和 overflow-y 属性规定是仅水平还是垂直地（或同时）
 -   overflow-x 指定如何处理内容的左/右边缘。
 -   overflow-y 指定如何处理内容的上/下边缘。
 
-------
+### 19.CSS3中有哪些新特性
 
-### 15.css模块化
+- 新增各种CSS选择器 （: not(.input)：所有 class 不是“input”的节点）
+- 圆角 （border-radius:8px）
+- 多列布局 （multi-column layout）
+- 阴影和反射 （Shadoweflect）
+- 文字特效 （text-shadow）
+- 文字渲染 （Text-decoration）
+- 线性渐变 （gradient）
+- 旋转 （transform）
+- 增加了旋转,缩放,定位,倾斜,动画,多背景
 
- [深入浅出 CSS Modules](https://juejin.cn/post/6952665769209495566)
+### 20.css模块化
 
- [前端工程化系列——CSS模块化](https://juejin.cn/post/6999187718777503774)
+### 21.对CSS工程化的理解
 
-### 16.css动画性能优化
+CSS 工程化是为了解决以下问题：
 
- [GPU加速原理 动画实现](https://blog.csdn.net/weixin_41017246/article/details/80365121)
+1. **宏观设计**：CSS 代码如何组织、如何拆分、模块结构怎样设计？
+2. **编码优化**：怎样写出更好的 CSS？
+3. **构建**：如何处理我的 CSS，才能让它的打包结果最优？
+4. **可维护性**：代码写完了，如何最小化它后续的变更成本？如何确保任何一个同事都能轻松接手？
 
-提高动画的优化不得不提及浏览器是如何渲染一个页面。在从服务器中拿到数据后，浏览器会先做解析三类东西：
+以下三个方向都是时下比较流行的、普适性非常好的 CSS 工程化实践：
 
--   解析html,xhtml,svg这三类文档，形成dom树。
--   解析css，产生css rule tree。
--   解析js，js会通过api来操作dom tree和css rule tree。
+- 预处理器：Less、 Sass 等；
+- 重要的工程化插件： PostCss；
+- Webpack loader 等 。
 
-解析完成之后，浏览器引擎会通过dom tree和css rule tree来构建rendering tree：
+基于这三个方向，可以衍生出一些具有典型意义的子问题，这里我们逐个来看：
 
--   rendering tree和dom tree并不完全相同，例如：`<head></head>`或display:none的东西就不会放在渲染树中。
--   css rule tree主要是完成匹配，并把css rule附加给rendering tree的每个element。
+**（1）预处理器：为什么要用预处理器？它的出现是为了解决什么问题？**
 
-在渲染树构建完成后，
+预处理器，其实就是 CSS 世界的“轮子”。预处理器支持我们写一种类似 CSS、但实际并不是 CSS 的语言，然后把它编译成 CSS 代码： ![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/3d58c5313e884e38b1545a5896613250~tplv-k3u1fbpfcp-zoom-in-crop-mark:3024:0:0:0.awebp) 那为什么写 CSS 代码写得好好的，偏偏要转去写“类 CSS”呢？这就和本来用 JS 也可以实现所有功能，但最后却写 React 的 jsx 或者 Vue 的模板语法一样——为了爽！要想知道有了预处理器有多爽，首先要知道的是传统 CSS 有多不爽。随着前端业务复杂度的提高，前端工程中对 CSS 提出了以下的诉求：
 
--   浏览器会对这些元素进行定位和布局，这一步也叫做reflow或者layout。
--   浏览器绘制这些元素的样式，颜色，背景，大小及边框等，这一步也叫做repaint。
--   然后浏览器会将各层的信息发送给GPU，GPU会将各层合成；显示在屏幕上。
+1. 宏观设计上：我们希望能优化 CSS 文件的目录结构，对现有的 CSS 文件实现复用；
+2. 编码优化上：我们希望能写出结构清晰、简明易懂的 CSS，需要它具有一目了然的嵌套层级关系，而不是无差别的一铺到底写法；我们希望它具有变量特征、计算能力、循环能力等等更强的可编程性，这样我们可以少写一些无用的代码；
+3. 可维护性上：更强的可编程性意味着更优质的代码结构，实现复用意味着更简单的目录结构和更强的拓展能力，这两点如果能做到，自然会带来更强的可维护性。
 
-reflow => repaint => composite
+这三点是传统 CSS 所做不到的，也正是预处理器所解决掉的问题。预处理器普遍会具备这样的特性：
 
-reflow和repaint都是耗费浏览器性能的操作,为了仅发生composite，我们做动画的css property必须满足以下三个条件：
+- 嵌套代码的能力，通过嵌套来反映不同 css 属性之间的层级关系 ；
+- 支持定义 css 变量；
+- 提供计算函数；
+- 允许对代码片段进行 extend 和 mixin；
+- 支持循环语句的使用；
+- 支持将 CSS 文件模块化，实现复用。
 
--   不影响文档流。
--   不依赖文档流。
--   不会造成重绘。
+**（2）PostCss：PostCss 是如何工作的？我们在什么场景下会使用 PostCss？**
 
-满足以上以上条件的css property只有transform和opacity
+![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/2911f98bbacf4b1cbffbb9e1527a4977~tplv-k3u1fbpfcp-zoom-in-crop-mark:3024:0:0:0.awebp) 它和预处理器的不同就在于，预处理器处理的是 类CSS，而 PostCss 处理的就是 CSS 本身。Babel 可以将高版本的 JS 代码转换为低版本的 JS 代码。PostCss 做的是类似的事情：它可以编译尚未被浏览器广泛支持的先进的 CSS 语法，还可以自动为一些需要额外兼容的语法增加前缀。更强的是，由于 PostCss 有着强大的插件机制，支持各种各样的扩展，极大地强化了 CSS 的能力。
 
-这样做有两个优势：
+PostCss 在业务中的使用场景非常多：
 
--   动画将会非常流畅
--   动画不在绑定到CPU，即使js执行大量的工作；动画依然流畅
+- 提高 CSS 代码的可读性：PostCss 其实可以做类似预处理器能做的工作；
+- 当我们的 CSS 代码需要适配低版本浏览器时，PostCss 的 [Autoprefixer](https://link.juejin.cn?target=https%3A%2F%2Fgithub.com%2Fpostcss%2Fautoprefixer) 插件可以帮助我们自动增加浏览器前缀；
+- 允许我们编写面向未来的 CSS：PostCss 能够帮助我们编译 CSS next 代码；
 
-GPU有2个问题：
+**（3）Webpack 能处理 CSS 吗？如何实现？** Webpack 能处理 CSS 吗：
 
-一个或多个没有自己复合层的元素要出现在有复合层元素的上方，它就会拥有自己的复合层；这种情况被称为隐式合成。
+- **Webpack 在裸奔的状态下，是不能处理 CSS 的**，Webpack 本身是一个面向 JavaScript 且只能处理 JavaScript 代码的模块化打包工具；
+- Webpack 在 loader 的辅助下，是可以处理 CSS 的。
 
-使用GPU动画需要发送多张渲染层的图像给GPU，GPU也需要缓存它们以便于后续动画的使用
+如何用 Webpack 实现对 CSS 的处理：
 
--   保持动画的对象的z-index尽可能的高。理想的，这些元素应该是body元素的直接子元素。当然，这不是总可能的。所以你可以克隆一个元素，把它放在body元素下仅仅是为了做动画。
--   将元素上设置will-change CSS属性，元素上有了这个属性，浏览器会提升这个元素成为一个复合层（不是总是）。这样动画就可以平滑的开始和结束。但是不要滥用这个属性，否则会大大增加内存消耗。
+- Webpack 中操作 CSS 需要使用的两个关键的 loader：css-loader 和 style-loader
+- 注意，答出“用什么”有时候可能还不够，面试官会怀疑你是不是在背答案，所以你还需要了解每个 loader 都做了什么事情：
+  - css-loader：导入 CSS 模块，对 CSS 代码进行编译处理；
+  - style-loader：创建style标签，把 CSS 内容写入标签。
 
-css动画有一个重要的特性，它是完全工作在GPU上。因为你声明了一个动画如何开始和如何结束，浏览器会在动画开始前准备好所有需要的指令；并把它们发送给GPU。而如果使用js动画，浏览器必须计算每一帧的状态；为了保证平滑的动画，我们必须在浏览器主线程计算新状态；把它们发送给GPU至少60次每秒。除了计算和发送数据比css动画要慢，主线程的负载也会影响动画； 当主线程的计算任务过多时，会造成动画的延迟、卡顿。
+在实际使用中，**css-loader 的执行顺序一定要安排在 style-loader 的前面**。因为只有完成了编译过程，才可以对 css 代码进行插入；若提前插入了未编译的代码，那么 webpack 是无法理解这坨东西的，它会无情报错。
 
-所以尽可能地使用基于css的动画，不仅仅更快；也不会被大量的js计算所阻塞。
+### 22.css性能优化
 
-浏览器中用css开启硬件加速，使GPU (Graphics Processing Unit) 发挥功能，从而提升性能
+**加载性能：**
 
-**虽然我们可能不想对元素应用3D变换，可我们一样可以开启3D引擎。例如我们可以用transform: translateZ(0); 来开启硬件加速**
+（1）css压缩：将写好的css进行打包压缩，可以减小文件体积。
 
+（2）css单一样式：当需要下边距和左边距的时候，很多时候会选择使用 margin:top 0 bottom 0；但margin-bottom:bottom;margin-left:left;执行效率会更高。
 
+（3）减少使用@import，建议使用link，因为后者在页面加载时一起加载，前者是等待页面加载完成之后再进行加载。
 
-这个问题是因为使用transform和opacity做CSS动画的时候，会将元素提升为一个复合层；而使用js操作css属性做动画时，必须使用translateZ或will-change才能将元素强行提升至一个复合层。
+**选择器性能：**
 
-元素本身使用transform和opacity做CSS动画的时候，会提前告诉GPU动画如何开始和结束及所需要的指令；所以会创建一个复合层（渲染层），并把页面所有的复合层发送给GPU；作为图像缓存，然后动画的发生仅仅是复合层间相对移动。
+（1）关键选择器（key selector）。选择器的最后面的部分为关键选择器（即用来匹配目标元素的部分）。CSS选择符是从右到左进行匹配的。当使用后代选择器的时候，浏览器会遍历所有子元素来确定是否是指定的元素等等；
 
-而使用js做动画，js必须在动画的每一帧计算元素的状态；发送给GPU，但不会将元素提升至一个复合层；所以想让元素提升至一个复合层，必须使用translateZ或will-change: transform, opacity。
+（2）如果规则拥有ID选择器作为其关键选择器，则不要为规则增加标签。过滤掉无关的规则（这样样式系统就不会浪费时间去匹配它们了）。
 
-使用 translate3D 会让浏览器开启硬件加速，性能当然就提高了。translateZ变成3d效果，走GPU渲染。这样也有缺点就是耗电和发热问题。同样的canvas也会开启gpu渲染。
+（3）避免使用通配规则，如*{}计算次数惊人，只对需要用到的元素进行选择。
 
+（4）尽量少的去对标签进行选择，而是用class。
 
+（5）尽量少的去使用后代选择器，降低选择器的权重值。后代选择器的开销是最高的，尽量将选择器的深度降到最低，最高不要超过三层，更多的使用类来关联每一个标签元素。
 
+（6）了解哪些属性是可以通过继承而来的，然后避免对这些属性重复指定规则。
 
+**渲染性能：**
 
+（1）慎重使用高性能属性：浮动、定位。
 
+（2）尽量减少页面重排、重绘。
 
+（3）去除空规则：｛｝。空规则的产生原因一般来说是为了预留样式。去除这些空规则无疑能减少css文档体积。
 
+（4）属性值为0时，不加单位。
+
+（5）属性值为浮动小数0.**，可以省略小数点之前的0。
+
+（6）标准化各种浏览器前缀：带浏览器前缀的在前。标准属性在后。
+
+（7）不使用@import前缀，它会影响css的加载速度。
+
+（8）选择器优化嵌套，尽量避免层级过深。
+
+（9）css雪碧图，同一页面相近部分的小图标，方便使用，减少页面的请求次数，但是同时图片本身会变大，使用时，优劣考虑清楚，再使用。
+
+（10）正确使用display的属性，由于display的作用，某些样式组合会无效，徒增样式体积的同时也影响解析性能。
+
+（11）不滥用web字体。对于中文网站来说WebFonts可能很陌生，国外却很流行。web fonts通常体积庞大，而且一些浏览器在下载web fonts时会阻塞页面渲染损伤性能。
+
+**可维护性、健壮性：**
+
+（1）将具有相同属性的样式抽离出来，整合并通过class在页面中进行使用，提高css的可维护性。
+
+（2）样式与内容分离：将css代码定义到外部css中。
+
+### 23.单行、多行文本溢出隐藏
+
+- 单行文本溢出
+
+```css
+overflow: hidden;            // 溢出隐藏
+text-overflow: ellipsis;      // 溢出用省略号显示
+white-space: nowrap;         // 规定段落中的文本不进行换行
+```
+
+- 多行文本溢出
+
+```css
+overflow: hidden;            // 溢出隐藏
+text-overflow: ellipsis;     // 溢出用省略号显示
+display:-webkit-box;         // 作为弹性伸缩盒子模型显示。
+-webkit-box-orient:vertical; // 设置伸缩盒子的子元素排列方式：从上到下垂直排列
+-webkit-line-clamp:3;        // 显示的行数
+```
+
+注意：由于上面的三个属性都是 CSS3 的属性，没有浏览器可以兼容，所以要在前面加一个`-webkit-` 来兼容一部分浏览器。
+
+### 24.如何判断元素是否到达可视区域
+
+以图片显示为例：
+
+- `window.innerHeight` 是浏览器可视区的高度；
+- `document.body.scrollTop || document.documentElement.scrollTop` 是浏览器滚动的过的距离；
+- `imgs.offsetTop` 是元素顶部距离文档顶部的高度（包括滚动条的距离）；
+- 内容达到显示区域的：`img.offsetTop < window.innerHeight + document.body.scrollTop;`
+
+![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/c57fc165a4ce4d5b9a2885867d4f1cab~tplv-k3u1fbpfcp-zoom-in-crop-mark:3024:0:0:0.awebp)
+
+### 25.z-index属性在什么情况下会失效
+
+通常 z-index 的使用是在有两个重叠的标签，在一定的情况下控制其中一个在另一个的上方或者下方出现。z-index值越大就越是在上层。z-index元素的position属性需要是relative，absolute或是fixed。
+
+z-index属性在下列情况下会失效：
+
+- 父元素position为relative时，子元素的z-index失效。解决：父元素position改为absolute或static；
+- 元素没有设置position属性为非static属性。解决：设置该元素的position属性为relative，absolute或是fixed中的一种；
+- 元素在设置z-index的同时还设置了float浮动。解决：float去除，改为display：inline-block；
+
+## 浮动和定位
 
 ### 1.什么是BFC，如何创建
 
@@ -2137,6 +2604,10 @@ position有以下属性值：
 
 #### 一、flex弹性的概念：
 
+布局的传统解决方案，基于盒子模型，依赖 display，position，float 等属性。它对于那些特殊布局非常不方便。
+
+比如，垂直居中就不容易实现。我们可能要 position + transform 才能配合完成。
+
 弹性盒子是一种用于按行或按列布局元素的一维布局方法，元素可以膨胀以填充额外的空间，收缩以适应更小的空间，适用于任何元素上，如果一个元素使用了flex弹性布局（以下都会简称为：flex布局），则会在内部形成[BFC](https://link.juejin.cn/?target=https%3A%2F%2Fdeveloper.mozilla.org%2Fzh-CN%2Fdocs%2FWeb%2FGuide%2FCSS%2FBlock_formatting_context)，flex布局已经得到了所有浏览器的支持，这意味着，现在就能放心，安全的使用这项技术。
 
 ![image-20220406152950382](https://s2.loli.net/2022/04/06/CPmyExc9Yj3BwuG.png)
@@ -2370,7 +2841,7 @@ flex属性是`flex-grow`, `flex-shrink` 和 `flex-basis`的简写, 默认值是`
 `flex-shrink`是如果剩余空间不够，是否缩小，`1`为缩小
 `flex-basis`为项目本身的大小，默认值是`auto`
 
-#### 简写属性
+#### 五、简写属性
 
 下面来分别讲讲 `flex:1` `flex:auto`, `flex:0`, `flex:none`的区别
 
@@ -2819,7 +3290,7 @@ img {
 - 图片的适配（图片的响应式）
 - 结合flex，grid，BFC，栅格系统等已经成型的方案
 
-### 9.div 高度永远是宽度的一半
+### 9.div高度永远是宽度的一半
 
 ```html
 	<style>
@@ -2949,6 +3420,24 @@ font-size 属性可设置字体的尺寸  该属性设置元素的字体大小�
 
 #### line-height
 
+**（1）line-height的概念：**
+
+- line-height 指一行文本的高度，包含了字间距，实际上是下一行基线到上一行基线距离；
+- 如果一个标签没有定义 height 属性，那么其最终表现的高度由 line-height 决定；
+- 一个容器没有设置高度，那么撑开容器高度的是 line-height，而不是容器内的文本内容；
+- 把 line-height 值设置为 height 一样大小的值可以实现单行文字的垂直居中；
+- line-height 和 height 都能撑开一个高度；
+
+**（2）line-height 的赋值方式：**
+
+- 带单位：px 是固定值，而 em 会参考父元素 font-size 值计算自身的行高
+- 纯数字：会把比例传递给后代。例如，父级行高为 1.5，子元素字体为 18px，则子元素行高为 1.5 * 18 = 27px
+- 百分比：将计算后的值传递给后代
+
+
+
+
+
 `行高`，顾名思义指的就是一行文字的高度。**按照定义来解释，就是两行文字之间基线之间的距离**
 
 **行高就是两条基线的之间的距离**，如下图所示。
@@ -3034,6 +3523,357 @@ line-height的默认值是normal，同时还支持数值、百分比值、长度
 -   middle 这个属性值用得比较多。
 
 >   对于内联元素指的是元素的垂直中心点与行框盒子基线往上 1/2x-height 处对齐，简单点说就是字母 X 的中心位置对齐；对于 table-cell 元素，指的是单元格填充盒子相对于外面的表格行居中对齐。
+
+### 12.grid布局
+
+`Grid` 布局即网格布局，是一种新的 `CSS` 布局模型，比较擅长将一个页面划分为几个主要区域，以及定义这些区域的大小、位置、层次等关系。号称是最强大的的 `CSS` 布局方案，是目前唯一一种 `CSS` 二维布局。
+
+特点：
+
+1. 固定和灵活的轨道尺寸；
+2. 可以使用行号，名称或通过定位网格区域将项目放置在网格上的精确位置；
+3. 可以将多个项目放入网格单元格或区域中，它们可以彼此部分重叠。
+
+`Grid Layout`唯一涉及到自定义方向的属性是`grid-auto-flow`，它的意思是当格子没有显式声明位置的时候，排列顺序的方向如何确定，是按列排呢还是按行排。
+
+#### 基本概念
+
+##### 容器与项目
+
+`Grid Layout`有栅格容器(grid container)，它负责划分领地，容器之内的元素才会臣服于栅格模型；`Grid Layout`也有栅格项目(grid item)，它们是需要被栅格模型约束的对象。
+
+##### 栅格线
+
+栅格线可以理解为栅格的边框，水平和垂直的栅格线交叉形成了栅格单元。栅格线有什么作用呢？有些栅格项目可能不止占用一个栅格单元，声明的时候就可以说`我从第几条栅格线开始，到第几条栅格线结束，这块区域是老子的`。
+
+你可以为栅格线命名。
+
+##### 栅格单元
+
+四条栅格线合围成的最小区域就是栅格单元。它就是我们常说的格子。
+
+> 需要特别区分`栅格单元`与`栅格项目`。
+>
+> 把栅格模型类比成养猪场的话，栅格单元就是猪圈，栅格项目就是猪。但是这里的猪比较金贵，一个猪圈最多只能养一头猪。就是一个萝卜一个坑吧。
+>
+> 但有些猪比较肥，或者比较霸道，它可能占用不止一个猪圈。
+>
+> 栅格单元是格子，栅格项目是元素，有时候一个元素只需要一个格子约束它，有时候一个元素需要多个格子约束它。
+
+##### 编外栅格单元
+
+栅格单元的数量是需要显式声明的。如果栅格项目的数量超过了声明的栅格单元的数量，`Grid Layout`就会自动创建若干栅格单元来包裹那些超出的栅格项目。
+
+我们称它为编外栅格单元。
+
+编外栅格单元有自己的特性，可以通过`grid-auto-columns`、`grid-auto-rows`和`grid-auto-flow`自定义。
+
+##### 栅格系统
+
+栅格系统就是栅格单元的总和。
+
+栅格系统和栅格容器不是一个概念，正如栅格单元和栅格项目不是一个概念一样。
+
+栅格系统有可能溢出栅格容器，也可能偏居栅格容器的一隅，也可能充满栅格容器。
+
+##### 栅格轨道
+
+还是回到二维布局模型，虽然我们说它有行也有列，但区分行与列的收益并不大，所以就统一叫它们栅格轨道。
+
+两条相邻的栅格线与栅格容器合围成的区域就是栅格轨道。
+
+##### 栅格区域
+
+任意四条栅格线合围成的区域都可以成为栅格区域。当一个元素需要多个格子约束它的时候，我们说这个元素需要一个栅格区域约束它。
+
+> 栅格区域可以由一个栅格单元组成，也可以有若干个栅格单元组成，但它必须是一个长方体。
+>
+> 或者说，你用两条水平线和两条垂直线组成一个非长方体给我看看？
+
+栅格区域最终是要被栅格项目使用的。你可以给栅格区域命名，栅格项目用名字声明区域，或者栅格项目直接用四条栅格线确定一个区域。
+
+
+
+#### 容器属性
+
+display: grid
+
+- 设为网格布局以后，容器子元素（项目）的float、display: inline-block、display: table-cell、vertical-align和column-*等设置都将失效。
+
+```css
+display: grid;
+// grid 块级元素(默认值)
+// inline-grid 行级块元素
+```
+
+rid-template-columns
+
+- 定义每一列的列宽
+
+```css
+grid-template-columns: 100px 100px 100px; // 三个值代表设置三列并且值为100px
+```
+
+grid-template-rows
+
+- 定义每一行的行高
+
+```css
+grid-template-rows: 100px 100px 100px; // 三个值代表设置三行并且值为100px
+```
+
+repeat() & auto-fill 关键字 & fr 关键字 & minmax() & auto 关键字 & 网格线的名称
+
+> grid-template-columns、grid-template-rows设置的行或者列比较多的时候，可以使用repeat()这个函数简化重复的值
+
+```css
+// 如上面代码可以改写成这样
+// repeat()接受两个参数，第一个参数是重复的次数（上例是3），第二个参数是所要重复的值。
+grid-template-columns: repeat(3, 100px);
+grid-template-rows: repeat(3, 100px);
+
+// repeat()重复某种模式也是可以的。
+grid-template-columns: repeat(2, 100px 20px 80px);
+
+// 表示自动填充，直到容器放不下为止，auto-fill关键字
+grid-template-columns: repeat(auto-fill, 100px);
+
+// 为了方便表示比例关系，网格布局提供了fr关键字（fraction 的缩写，意为"片段"）。如果两列的宽度分别为1fr和2fr，就表示后者是前者的两倍。
+grid-template-columns: 1fr 1fr;
+
+// minmax()函数产生一个长度范围，表示长度就在这个范围之中。它接受两个参数，分别为最小值和最大值。
+grid-template-columns: 1fr 1fr minmax(100px, 1fr);
+
+// auto关键字表示由浏览器自己决定长度。
+grid-template-columns: 100px auto 100px;
+
+// grid-template-columns属性和grid-template-rows属性里面，还可以使用方括号，指定每一根网格线的名字，方便以后的引用。
+grid-template-columns: [c1] 100px [c2] 100px [c3] auto [c4];
+grid-template-rows: [r1] 100px [r2] 100px [r3] auto [r4];
+```
+
+grid-row-gap
+
+- 设置行与行的间隔（行间距）
+
+```css
+grid-row-gap: 20px;
+```
+
+grid-column-gap
+
+- 设置列与列的间隔（列间距）
+
+```css
+grid-column-gap: 20px;
+```
+
+grid-gap
+
+- grid-gap属性是grid-column-gap和grid-row-gap的合并简写形式，语法如下。
+
+```css
+// 如果省略了第二个值就默认为第二个等于第一个值
+grid-gap: <grid-row-gap> <grid-column-gap>;
+grid-gap: 20px 20px;
+```
+
+grid-template-areas
+
+- 网格布局允许指定"区域"（area），一个区域由单个或多个单元格组成。grid-template-areas属性用于定义区域。
+
+```css
+grid-template-areas: 'a b c'
+                     'd e f'
+                     'g h i';
+
+// 多个单元格合并成一个区域的写法如下。
+grid-template-areas: 'a a a'
+                     'b b b'
+                     'c c c';
+
+// 实例
+grid-template-areas: "header header header"
+                     "main main sidebar"
+                     "footer footer footer";
+```
+
+grid-auto-flow
+
+- 划分网格以后，容器的子元素会按照顺序，自动放置在每一个网格。默认的放置顺序是"先行后列"，即先填满第一行，再开始放入第二行，即下图数字的顺序。
+
+```css
+// 这个顺序由grid-auto-flow属性决定，默认值是row，即"先行后列"。也可以将它设成column，变成"先列后行"。
+grid-auto-flow: column;
+```
+
+justify-items
+
+- justify-items属性设置单元格内容的水平位置（左中右）
+
+```css
+justify-items: start | end | center | stretch;
+// start：对齐单元格的起始边缘。
+// end：对齐单元格的结束边缘。
+// center：单元格内部居中。
+// stretch：拉伸，占满单元格的整个宽度（默认值）
+```
+
+align-items
+
+- align-items属性设置单元格内容的垂直位置（上中下）
+
+```css
+align-items: start | end | center | stretch;
+// start：对齐单元格的起始边缘。
+// end：对齐单元格的结束边缘。
+// center：单元格内部居中。
+// stretch：拉伸，占满单元格的整个宽度（默认值）
+```
+
+place-items
+
+- place-items属性是align-items属性和justify-items属性的合并简写形式。
+
+```css
+place-items: <align-items> <justify-items>;
+place-items: start end;
+```
+
+justify-content
+
+- justify-content属性是整个内容区域在容器里面的水平位置（左中右）
+
+```css
+justify-content: start | end | center | stretch | space-around | space-between | space-evenly;
+```
+
+align-content
+
+- align-content属性是整个内容区域的垂直位置（上中下）
+
+```css
+align-content: start | end | center | stretch | space-around | space-between | space-evenly;
+```
+
+place-content
+
+- place-content属性是align-content属性和justify-content属性的合并简写形式。
+
+```css
+place-content: <align-content> <justify-content>
+place-content: space-around space-evenly;
+```
+
+grid-auto-columns & grid-auto-rows
+
+- 用来设置，浏览器自动创建的多余网格的列宽和行高。
+
+```css
+grid-auto-columns: 50px;
+grid-auto-rows: 50px;
+```
+
+rid-template
+
+- grid-template属性是grid-template-columns、grid-template-rows和grid-template-areas这三个属性的合并简写形式。
+
+```css
+rid-template: <grid-template-columns> <grid-template-rows> <grid-template-areas>
+```
+
+grid
+
+- grid属性是grid-template-rows、grid-template-columns、grid-template-areas、 grid-auto-rows、grid-auto-columns、grid-auto-flow这六个属性的合并简写形式。
+
+```css
+grid: <grid-template-rows> <grid-template-columns> <grid-template-areas> <grid-auto-rows> <grid-auto-columns> <grid-auto-flow>
+```
+
+#### 项目属性
+
+grid-column-start
+
+- 项目左边框所在的垂直网格线
+
+```css
+grid-column-start: 1; // 1为左边框从第一根开始
+```
+
+grid-column-end
+
+- 项目右边框所在的垂直网格线
+
+```css
+grid-column-end: 2; // 2为右边框从在二根结束
+```
+
+grid-row-start
+
+- 项目上边框所在的水平网格线
+
+```css
+grid-row-start: 1; // 1为上边框从第一根开始
+```
+
+grid-row-end
+
+- 项目下边框所在的水平网格线
+
+```css
+grid-row-end: 2; // 2为下边框从在二根结束
+```
+
+![image-20220708110053635](https://s2.loli.net/2022/07/08/ZETbg5FBOzeSkm9.png) 上述四个项目属性值既可以为数字也可以为网格线名
+
+```css
+//如上图所示，1号项目就是从第二根垂直网格线开始第四根结束
+.item1{
+    grid-column-start: 2;
+    grid-column-end: 4;
+    background: red;
+}
+```
+
+grid-column
+
+- grid-column属性是grid-column-start和grid-column-end的合并简写形式
+
+```css
+grid-column: <start-line> / <end-line>;
+grid-column: 1 / 3;
+/* 等同于如下代码 */
+grid-column-start: 1;
+grid-column-end: 3;
+```
+
+grid-area
+
+- grid-area属性指定项目放在哪一个区域。
+
+```css
+grid-area: e; // e 为区域名称
+grid-area: <row-start> / <column-start> / <row-end> / <column-end>; // 也可以直接指定项目位置
+```
+
+justify-self & align-self & place-self
+
+- `justify-self`属性设置单元格内容的水平位置（左中右），跟`justify-items`属性的用法完全一致，但只作用于单个项目。
+- `align-self`属性设置单元格内容的垂直位置（上中下）， 跟`align-items`属性的用法完全一致，也是只作用于单个项目。
+- `place-self`属性是`align-self`属性和`justify-self`属性的合并简写形式。
+
+```css
+justify-self: start | end | center | stretch;
+align-self: start | end | center | stretch;
+place-self: <align-self> <justify-self>;
+
+//start：对齐单元格的起始边缘。
+//end：对齐单元格的结束边缘。
+//center：单元格内部居中。
+//stretch：拉伸，占满单元格的整个宽度（默认值）。
+```
+
+
 
 ## 场景应用
 
@@ -3177,8 +4017,6 @@ metaEl.setAttribute('content', `width=device-width,user-scalable=no,initial-scal
 
 ### 4.设置小于12px的字体
 
-### 如何让Chrome支持小于12px的文字？
-
 谷歌浏览器默认最小字体为12px，小于12px的字体它都以12px显示。
 
 解决方法大致如下：
@@ -3251,3 +4089,425 @@ metaEl.setAttribute('content', `width=device-width,user-scalable=no,initial-scal
 2.将图片display设置为block，并且指定width和height。
 
 3.设置图片所在的容器元素和width和height与图片一样。
+
+### 8.flex实现骰子布局
+
+#### HTML的结构
+
+1. 首先准备6个大盒子分别装点数1~6的圆点；
+2. 每个盒子里面分别使用span来装小圆点；
+3. 点数4和5的制作会比其他的要多一步；点数4大盒子里面需要左右两个盒子来分别装span，点数5大盒子里面需要左中右三个盒子来装span；
+4. 给span设置大小颜色圆角；
+5. 通过flex属性设置每个小圆点的位置；
+
+```html
+<body>
+    <section>
+        <div class="box-1">
+            <span></span>
+        </div>
+        <div class="box-2">
+            <span></span>
+            <span></span>
+        </div>
+        <div class="box-3">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <div class="box-4">
+            <div class="left">
+                <span></span>
+                <span></span>
+            </div>
+            <div class="right">
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        <div class="box-5">
+            <div class="left">
+                <span></span>
+                <span></span>
+            </div>
+            <div class="center">
+                <span></span>
+            </div>
+            <div class="right">
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+        <div class="box-6">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </section>
+</body>
+```
+
+#### css实现
+
+**骰子1**
+
+制作步骤图：
+![在这里插入图片描述](https://s2.loli.net/2022/07/08/72aTnVXixwPoSFO.png)
+
+代码如下（示例）：
+
+```css
+		span {
+            /* 设置每个骰子里面的小圆点 */
+            width: 30px;
+            height: 30px;
+            background-color: #000;
+            border-radius: 50% 50%;
+        }
+        
+        .box-1 {
+            /* 给骰子设置主轴居中，侧轴居中对齐 */
+            align-items: center;
+            justify-content: center;
+        }
+```
+
+**骰子2**
+
+制作步骤图：
+![在这里插入图片描述](https://s2.loli.net/2022/07/08/m27BjEUOt5sMK8i.png)
+
+代码如下（示例）：
+
+```css
+ 	.box-2 {
+            /* 设置Y轴为主轴，侧轴居中对齐，主轴平均分配 */
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-around;
+        }
+```
+
+**骰子3**
+
+制作步骤图：
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/271a0513802147d8a1219a17a0153a18.PNG#pic_center)
+
+代码如下（示例）：
+
+```css
+		.box-3 {
+            /* 设置Y轴为主轴，主轴平均分配 */
+            flex-direction: column;
+            justify-content: space-around;
+        }
+        
+        .box-3 span:nth-of-type(2) {
+            /* 第二个圆点侧轴居中对齐 */
+            align-self: center;
+        }
+        
+        .box-3 span:nth-of-type(3) {
+            /* 第三个圆点侧轴从右往左排列 */
+            align-self: flex-end;
+        }
+```
+
+**骰子4**
+
+制作步骤图：
+![在这里插入图片描述](https://s2.loli.net/2022/07/08/3TU9nkKcsM4SrZi.png)
+
+代码如下（示例）：
+
+```css
+		/* 设置装圆点的盒子宽高为100% */
+		.left,
+        .right,
+        .center {
+            width: 100%;
+            height: 100%;
+        }
+          /* 给4和5设置圆点大小颜色圆角 */
+        .box-4 span,
+        .box-5 span {
+            display: block;
+            width: 30px;
+            height: 30px;
+            background-color: #000;
+            border-radius: 50% 50%;
+        }
+        
+        .box-4 .left,
+        .box-4 .right {
+            /* 设置Y轴为主轴，给父盒子添加flex属性，主轴平均分配空间，侧轴居中对齐 */
+            flex-direction: column;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+```
+
+**骰子5**
+
+制作步骤图：
+![在这里插入图片描述](https://img-blog.csdnimg.cn/bf1a4b98677945aeb1b112175783442d.PNG#pic_center)
+
+代码如下（示例）：
+
+```css
+		.box-5 .left,
+        .box-5 .right {
+            /* 设置Y轴为主轴，给父盒子添加flex属性，主轴平均分配空间，侧轴居中对齐 */
+            flex-direction: column;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .box-5 .center {
+            /* 给中间的小圆点设置主轴和侧轴居中对齐 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+123456789101112131415
+```
+
+**骰子6**
+
+制作步骤图：
+![在这里插入图片描述](https://s2.loli.net/2022/07/08/1uCwdBztpSjG8vF.png)
+
+代码如下（示例）：
+
+```css
+.box-6 {
+            /* 设置Y轴为主轴，强制换行，主轴平均分配，侧轴平均分配 */
+            flex-direction: column;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            align-content: space-around;
+        }
+```
+
+### 9.实现九宫格
+
+#### 方法一：使用table
+
+> table布局能够实现的原因在于table的tr和td能够将元素形成行列显示。table布局中有一个是否合并边框的样式border-collapse: collapse;值得我们注意。
+
+##### HTML部分
+
+```html
+<table>
+    <tr>
+        <td>1</td>
+        <td>2</td>
+        <td>3</td>
+    </tr>
+    <tr>
+        <td>4</td>
+        <td>5</td>
+        <td>6</td>
+    </tr>
+    <tr>
+        <td>7</td>
+        <td>8</td>
+        <td>9</td>
+    </tr>
+</table>
+```
+
+##### CSS部分
+
+```css
+* {
+    margin: 0;
+    padding: 0;
+}
+table {
+    border-collapse: collapse;
+    margin: 0 auto;
+}
+table td {
+    width: 60px;
+    height: 60px;
+    background-color: blue;
+    border: 1px solid #000;
+    text-align: center;
+    line-height: 60px;;
+}
+```
+
+#### 方法二：使用flex布局
+
+> 使用flex布局的核心在于flex-wrap: wrap。
+
+##### HTML部分
+
+```html
+<ul>
+    <li>1</li>
+    <li>2</li>
+    <li>3</li>
+    <li>4</li>
+    <li>5</li>
+    <li>6</li>
+    <li>7</li>
+    <li>8</li>
+    <li>9</li>
+</ul>
+```
+
+##### CSS部分
+
+```css
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+li {
+    list-style: none;
+}
+ul {
+    display: flex;
+    flex-wrap: wrap;
+    width: 180px;
+    height: 180px;
+}
+ul > li {
+    background-color: blue;
+    width: calc(100% / 3);
+    height: 60px;
+    line-height: 60px;
+    border: 1px solid #000;
+    text-align: center;
+}
+```
+
+#### 其他实现方法
+
+1、小格子：
+
+我们首先初始化标签
+
+```
+*{
+    margin: 0;
+    padding: 0;
+
+}
+```
+
+然后，根据要求，写出一个小格子的属性：
+
+```
+{
+width: 50px;
+height: 50px;
+border: 5px solid rgb(0, 0, 255); 
+}
+```
+
+这个时候，我们需要有一个大框装住这些小格子，通过计算，合适边长可以为200px。
+
+```
+{
+    width: 200px;
+    height: 200px;
+    margin: 100px;
+}
+```
+
+同时，小格子里面的文本是在正中心，根据已学知识，加一个text-align:center;,这样，在左右方向文本已经居中。再计算一下，使文本的行高等于小格的高度，即line-height:50px;。 然而，我们注意到，当鼠标移动到小格上面时，原本蓝色的框变为红色，鼠标也变了个图标，这里我们就需要用到hover了。
+
+```
+ a:hover{   
+ border-color: rgb(255, 0, 0);  
+ cursor:pointer;/*cursor光标定位值、pointer变小手*/
+} 
+```
+
+2、排列：
+
+我们根据要求写html代码：
+
+```
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <link rel="stylesheet" type="text/css" href="lessonjgg.css">
+</head>
+<body>
+    <div class="waib">
+        <div class="neib">  
+            <a>1</a>
+            <a>2</a>
+            <a>3</a>
+            <a>4</a>
+            <a>5</a>
+            <a>6</a>
+            <a>7</a>
+            <a>8</a>
+            <a>9</a> 
+        </div>   
+    </div>
+    
+    
+</body>
+```
+
+再加上我们的已经写好的css代码，结果如下：
+
+![image-20220708110749592](https://s2.loli.net/2022/07/08/A1FOosXdQ7wlL2U.png) 
+
+（这里的鼠标图标已换） 我们发现还是有些不对劲，为什么大小没有改变呢，我们发现a标签是行级元素，不能通过css来改变宽高。接下来，我们加上display:block;,将其改变为块级元素。有于块级元素独占一行的特性，我们再加上float:left;，来使其好好站队。 
+
+ ![image-20220708110818431](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20220708110818431.png)
+
+这个时候，差不多是那个意思了，但是，我们发现，里面的小格的边框似乎有些重叠，这个时候，我们可以运用到定位的知识。由于绝对定位会使元素脱离原来的位置进行定位，会造成9个小格全部重叠在一起，所以我们用相对定位。加上position: relative; margin-left: -5px; margin-top: -5px;来使框与框部分重叠。 
+
+![image-20220708110840790](https://s2.loli.net/2022/07/08/dKNL1MaIbro9mzn.png)
+
+解决了一个问题，我们又发现一个新的问题，变色的部分会被覆盖。如果我们可以提高hover部分的层级，使它永远处于上层，就可以达到目的。所以，我们在设定边框颜色的代码块加上z-index: 1;在hover部分加上 z-index: 2;。
+
+![image-20220708110851237](https://s2.loli.net/2022/07/08/SlZ3isKwv6LXBAo.png)
+
+- ### 全部CSS代码：
+
+```
+*{
+    margin: 0;
+    padding: 0;
+}
+.waib{
+    width: 200px;
+    height: 200px;
+    margin:100px;
+}
+.neib  a{  
+ display:block;  /* 改变为块级元素 */
+ float: left;/* 使一行有多个块级元素 */
+ width: 50px;  /*一个框的宽高*/ 
+ height: 50px;
+ border: 5px solid rgb(0, 0, 255);   /* 边框  */ 
+ position: relative;  /*相对定位*/
+ margin-left: -5px;  /* 使框于框之间部分重叠   */ 
+ margin-top: -5px;  
+ line-height: 50px; /* 文本居中  */
+ text-align: center; 
+ z-index: 1; /*相当于在第一层*/
+}   
+ a:hover{   
+    cursor:pointer;    /* 变小手*/ 
+ border-color: rgb(255, 0, 0); /* 边框变化颜色 */ 
+ z-index: 2; /*相当于在第二层，会覆盖第一层*/
+} 
+```
+

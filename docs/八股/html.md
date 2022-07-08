@@ -197,6 +197,81 @@ Web Worker 的意义在于可以将一些耗时的数据处理操作从主线程
 
 ### 8.多个标签页怎么进行通信
 
+实现多个标签页之间的通信，本质上都是通过中介者模式来实现的。因为标签页之间没有办法直接通信，因此我们可以找一个中介者，让标签页和中介者进行通信，然后让这个中介者来进行消息的转发。通信方法如下：
+
+#### 使用 websocket 协议
+
+因为 websocket 协议可以实现服务器推送，所以服务器就可以用来当做这个中介者。标签页通过向服务器发送数据，然后由服务器向其他标签页推送转发。
+
+#### **使用 ShareWorker 的方式**
+
+shareWorker 会在页面存在的生命周期内创建一个唯一的线程，并且开启多个页面也只会使用同一个线程。这个时候共享线程就可以充当中介者的角色。标签页间通过共享一个线程，然后通过这个共享的线程来实现数据的交换。
+
+- SharedWorker可以被多个window共同使用，但必须保证这些标签页都是同源的(相同的协议，主机和端口号)
+- 首先新建一个js文件`worker.js`，具体代码如下：
+
+```
+// sharedWorker所要用到的js文件，不必打包到项目中，直接放到服务器即可
+let data = ''
+onconnect = function (e) {
+  let port = e.ports[0]
+
+  port.onmessage = function (e) {
+    if (e.data === 'get') {
+      port.postMessage(data)
+    } else {
+      data = e.data
+    }
+  }
+}
+```
+
+webworker端的代码就如上，只需注册一个onmessage监听信息的事件，客户端(即使用sharedWorker的标签页)发送message时就会触发。
+
+因为客户端和webworker端的通信不像websocket那样是全双工的，所以客户端发送数据和接收数据要分成两步来处理。示例中会有两个按钮，分别对应的向sharedWorker发送数据的请求以及获取数据的请求，但他们本质上都是相同的事件--发送消息。
+
+webworker端会进行判断，传递的数据为'get'时，就把变量data的值回传给客户端，其他情况，则把客户端传递过来的数据存储到data变量中。下面是客户端的代码：
+
+```
+// 这段代码是必须的，打开页面后注册SharedWorker，显示指定worker.port.start()方法建立与worker间的连接
+    if (typeof Worker === "undefined") {
+      alert('当前浏览器不支持webworker')
+    } else {
+      let worker = new SharedWorker('worker.js')
+      worker.port.addEventListener('message', (e) => {
+        console.log('来自worker的数据：', e.data)
+      }, false)
+      worker.port.start()
+      window.worker = worker
+    }
+// 获取和发送消息都是调用postMessage方法，我这里约定的是传递'get'表示获取数据。
+window.worker.port.postMessage('get')
+window.worker.port.postMessage('发送信息给worker')
+```
+
+页面A发送数据给worker，然后打开页面B，调用`window.worker.port.postMessage('get')`，即可收到页面A发送给worker的数据。
+
+
+
+#### **使用 localStorage 的方式**
+
+我们可以在一个标签页对 localStorage 的变化事件进行监听，然后当另一个标签页修改数据的时候，我们就可以通过这个监听事件来获取到数据。这个时候 localStorage 对象就是充当的中介者的角色。
+
+localstorage是浏览器多个标签共用的存储空间，所以可以用来实现多标签之间的通信(ps：session是会话级的存储空间，每个标签页都是单独的）。
+
+直接在window对象上添加监听即可：
+
+```
+window.onstorage = (e) => {console.log(e)}
+// 或者这样
+window.addEventListener('storage', (e) => console.log(e))
+```
+
+onstorage以及storage事件，针对都是**非当前页面**对localStorage进行修改时才会触发，当前页面修改localStorage不会触发监听函数。然后就是在对原有的数据的值进行修改时才会触发，比如原本已经有一个key会a值为b的localStorage，你再执行：`localStorage.setItem('a', 'b')`代码，同样是不会触发监听函数的。
+
+
+
+
 ### 9.canvas和svg有什么区别
 
 **（1）SVG：** SVG可缩放矢量图形（Scalable Vector Graphics）是基于可扩展标记语言XML描述的2D图形的语言，SVG基于XML就意味着SVG DOM中的每个元素都是可用的，可以为某个元素附加Javascript事件处理器。在 SVG 中，每个被绘制的图形均被视为对象。如果 SVG 对象的属性发生变化，那么浏览器能够自动重现图形。
@@ -270,7 +345,6 @@ CACHE MANIFEST
 - 让元素可拖拽
 - 让另一个元素支持可放置
 - 可拖拽和可放置元素之间的数据传递
-
 - dragstart：事件主体是被拖放元素，在开始拖放被拖放元素时触发。
 - darg：事件主体是被拖放元素，在正在拖放被拖放元素时触发。
 - dragenter：事件主体是目标元素，在被拖放元素进入某元素时触发。
@@ -278,6 +352,53 @@ CACHE MANIFEST
 - dragleave：事件主体是目标元素，在被拖放元素移出目标元素是触发。
 - drop：事件主体是目标元素，在目标元素完全接受被拖放元素时触发。
 - dragend：事件主体是被拖放元素，在整个拖放操作结束时触发。
+
+>选中 --->  拖动  ---> 释放
+
+拖动事件：dragstart、drag、dragend
+
+放置事件：dragenter、dragover、drop
+
+拖拽事件流：当拖动一个元素放置到目标元素上的时候将会按照如下顺序依次触发dragstart->drag->dragenter->dragover->drop->dragend
+
+#### 选中
+
+在HTML5标准中，为了使元素可拖动，把draggable属性设置为true。
+文本、图片和链接是默认可以拖放的，它们的draggable属性自动被设置成了true。
+图片和链接按住鼠标左键选中，就可以拖放。
+文本只有在被选中的情况下才能拖放。如果显示设置文本的draggable属性为true，按住鼠标左键也可以直接拖放。
+
+draggable属性：设置元素是否可拖动。语法：`<element draggable="true | false | auto" >`
+
+- true: 可以拖动  
+- false: 禁止拖动  
+- auto: 跟随浏览器定义是否可以拖动  
+
+#### 拖动
+
+每一个可拖动的元素，在拖动过程中，都会经历三个过程，`拖动开始`-->`拖动过程中`--> `拖动结束`。
+
+| 针对对象     | 事件名称  | 说明                                             |
+| ------------ | --------- | ------------------------------------------------ |
+| 被拖动的元素 | dragstart | 在元素开始被拖动时候触发                         |
+|              | drag      | 在元素被拖动时反复触发                           |
+|              | dragend   | 在拖动操作完成时触发                             |
+|              |           |                                                  |
+| 目的地对象   | dragenter | 当被拖动元素进入目的地元素所占据的屏幕空间时触发 |
+|              | dragover  | 当被拖动元素在目的地元素内时触发                 |
+|              | dragleave | 当被拖动元素没有放下就离开目的地元素时触发       |
+
+dragenter和dragover事件的默认行为是拒绝接受任何被拖放的元素。因此，我们必须阻止浏览器这种默认行为。e.preventDefault();
+
+#### 释放
+
+到达目的地之后，释放元素事件
+
+| 针对对象   | 事件名称 | 说明                                                         |
+| ---------- | -------- | ------------------------------------------------------------ |
+| 目的地对象 | drop     | 当被拖动元素在目的地元素里放下时触发，一般需要取消浏览器的默认行为。 |
+
+
 
 ### 12.H5有那些新特性
 
@@ -370,7 +491,7 @@ CACHE MANIFEST
 
 设置规则：min < low < high < max
 
-#### 5.DOM查询操作
+#### 5. DOM查询操作
 
 - document.querySelector()
 - document.querySelectorAll()
