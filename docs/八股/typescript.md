@@ -1,6 +1,55 @@
+# Typescript面试题
 
+## 特点
+
+##### 静态类型
+
+静态类型化是一种功能，可以在开发人员编写脚本是检测错误，有了这项功能，就会允许开发人员编写更健壮的代码并对其进行维护，以便使得代码质量更好、更清晰。
+
+函数fun接受两个类型的number的参数，传入非number的参数报错
+
+TypeScript能使用JavaScript 中的所有代码和编码概念
+
+TypeScript 从核心语言方面和类概念的模塑方面对 JavaScript 对象模型进行扩展
+
+JavaScript 代码可以在无需任何修改的情况下与 TypeScript 一同工作，同时可以使用编译器将 TypeScript 代码转换为 JavaScript
+
+TypeScript 通过类型注解提供编译时的静态类型检查
+
+TypeScript 中的数据要求带有明确的类型，JavaScript不要求
+
+TypeScript 为函数提供了缺省参数值
+
+TypeScript 引入了 JavaScript 中没有的“类”概念
+
+TypeScript 中引入了模块的概念，可以把声明、数据、函数和类封装在模块中
+
+类型具体点来说就是指 number、boolean、string 等基础类型和 Object、Function 等复合类型，它们是编程语言提供的对不同内容的抽象：
+
+- **不同类型变量占据的内存大小不同**：boolean 类型的变量会分配 4 个字节的内存，而 number 类型的变量则会分配 8 个字节的内存，给变量声明了不同的类型就代表了会占据不同的内存空间。
+- **不同类型变量可做的操作不同**：number 类型可以做加减乘除等运算，boolean 就不可以，复合类型中不同类型的对象可用的方法不同，比如 Date 和 RegExp，变量的类型不同代表可以对该变量做的操作就不同。
+
+我们知道了什么是类型，那自然可以想到类型和所做的操作要匹配才行，这就是为什么要做类型检查。
+
+**如果能保证对某种类型只做该类型允许的操作，这就叫做`类型安全`**。比如你对 boolean 做加减乘除，这就是类型不安全，你对 Date 对象调用 exec 方法，这就是类型不安全。反之，就是类型安全。
+
+类型检查可以在运行时做，也可以运行之前的编译期做。这是两种不同的类型，前者叫做动态类型检查，后者叫做静态类型检查。
+
+两种类型检查各有优缺点。`动态类型检查` 在源码中不保留类型信息，对某个变量赋什么值、做什么操作都是允许的，写代码很灵活。但这也埋下了类型不安全的隐患，比如对 string 做了乘除，对 Date 对象调用了 exec 方法，这些都是运行时才能检查出来的错误。
+
+其中，最常见的错误应该是 “null is not an object”、“undefined is not a function” 之类的了，写代码时没发现类型不匹配，到了运行的时候才发现，就会有很多这种报错。
+
+`静态类型检查`则是在源码中保留类型信息，声明变量要指定类型，对变量做的操作要和类型匹配，会有专门的编译器在编译期间做检查。
+
+静态类型给写代码增加了一些难度，因为你除了要考虑代码要表达的逻辑之外，还要考虑类型逻辑：变量是什么类型的、是不是匹配、要不要做类型转换等。
+
+不过，静态类型也消除了类型不安全的隐患，因为在编译期间就做了类型检查，就不会出现对 string 做了乘除，调用了 Date 的 exec 方法这类问题。
+
+![055d32fce2ee40bda9b0c617b9d4a645](https://s2.loli.net/2022/07/09/bvZ8lRuNa6cEthm.png)
 
 ## 基本类型
+
+![image-20220709112043012](https://s2.loli.net/2022/07/09/8ucorEPmivK49C7.png)
 
 ### 布尔值
 
@@ -89,591 +138,186 @@ typescript允许<>和as
 
 ## 接口
 
-TypeScript里，接口的作用就是为这些类型命名和为你的代码或第三方代码定义契约。
+当一个对象类型被多次使用时，有如下两种方式来来**描述对象**的类型，以达到复用的目的：
 
-我们传入的对象参数实际上会包含很多属性，但是编译器只会检查那些必需的属性是否存在，并且其类型是否匹配
+1. 类型别名，type
+2. 接口，interface
 
-使用接口来描述：必须包含一个`label`属性且类型为`string`
-
-```typescript
-interface LabelledValue {
-  label: string;
-}
-
-function printLabel(labelledObj: LabelledValue) {
-  console.log(labelledObj.label);
-}
-
-let myObj = {size: 10, label: "Size 10 Object"};
-printLabel(myObj);
-```
-
-### 可选属性
-
-带有可选属性的接口与普通的接口定义差不多，只是在可选属性名字定义的后面加一个`?`符号
-
-可选属性的好处之一是可以对可能存在的属性进行预定义，好处之二是可以捕获引用了不存在的属性时的错误。
-
-### 只读属性
-
-一些对象属性只能在对象刚刚创建的时候修改其值。 你可以在属性名前用 `readonly`来指定只读属性
+语法：
 
 ```typescript
-interface Point {
-    readonly x: number;
-    readonly y: number;
-}
-```
-
-TypeScript具有`ReadonlyArray<T>`类型，它与`Array<T>`相似，只是把所有可变方法去掉了，因此可以确保数组创建后再也不能被修改：
-
-```typescript
-let a: number[] = [1, 2, 3, 4];
-let ro: ReadonlyArray<number> = a;
-ro[0] = 12; // error!
-ro.push(5); // error!
-ro.length = 100; // error!
-a = ro; // error!
-```
-
- `readonly` vs `const`
-
-最简单判断该用`readonly`还是`const`的方法是看要把它做为变量使用还是做为一个属性。 做为变量使用的话用 `const`，若做为属性则使用`readonly`
-
-### 额外的属性检查
-
-如果一个对象字面量存在任何“目标类型”不包含的属性时，你会得到一个错误
-
-例如属性拼写错误导致报错
-
-绕开这些检查非常简单。 最简便的方法是使用类型断言
-
-最佳的方式是能够添加一个字符串索引签名，前提是你能够确定这个对象可能具有某些做为特殊用途使用的额外属性
-
-```typescript
-[propName: string]: any;
-```
-
-### 函数类型
-
-接口能够描述JavaScript中对象拥有的各种各样的外形。 除了描述带有属性的普通对象外，接口也可以描述函数类型
-
-为了使用接口表示函数类型，我们需要给接口定义一个调用签名。 它就像是一个只有参数列表和返回值类型的函数定义。参数列表里的每个参数都需要名字和类型
-
-```typescript
-interface SearchFunc {
-  (source: string, subString: string): boolean;
-}
-```
-对于函数类型的类型检查来说，函数的参数名不需要与接口里定义的名字相匹配
-```typescript
-let mySearch: SearchFunc;
-mySearch = function(source: string, subString: string) {
-  let result = source.search(subString);
-  return result > -1;
-}
-```
-
-### 可索引的类型
-
-与使用接口描述函数类型差不多，我们也可以描述那些能够“通过索引得到”的类型，比如`a[10]`或`ageMap["daniel"]`。 可索引类型具有一个 *索引签名*，它描述了对象索引的类型，还有相应的索引返回值类型。 让我们看一个例子：
-
-```typescript
-interface StringArray {
-  [index: number]: string;
+interface 接口名  {属性1: 类型1, 属性2: 类型2}
+// 这里用 interface 关键字来声明接口
+interface IGoodItem  {
+	// 接口名称(比如，此处的 IPerson)，可以是任意合法的变量名称，推荐以 `I` 开头
+   name: string, price: number, func: ()=>string
 }
 
-let myArray: StringArray;
-myArray = ["Bob", "Fred"];
-
-let myStr: string = myArray[0];
-```
-
-TypeScript支持两种索引签名：字符串和数字。 可以同时使用两种类型的索引，但是数字索引的返回值必须是字符串索引返回值类型的子类型。 这是因为当使用 `number`来索引时，JavaScript会将它转换成`string`然后再去索引对象。 也就是说用 `100`（一个`number`）去索引等同于使用`"100"`（一个`string`）去索引，因此两者需要保持一致
-
-```typescript
-class Animal {
-    name: string;
+// 声明接口后，直接使用接口名称作为变量的类型
+const good1: IGoodItem = {
+   name: '手表',
+   price: 200,
+   func: function() {
+       return '看时间'
+   }
 }
-class Dog extends Animal {
-    breed: string;
-}
-
-// 错误：使用数值型的字符串索引，有时会得到完全不同的Animal!
-interface NotOkay {
-    [x: number]: Animal;
-    [x: string]: Dog;
-}
-```
-
-字符串索引签名能够很好的描述`dictionary`模式，并且它们也会确保所有属性与其返回值类型相匹配。 因为字符串索引声明了 `obj.property`和`obj["property"]`两种形式都可以。 下面的例子里， `name`的类型与字符串索引类型不匹配，所以类型检查器给出一个错误提示：
-
-```typescript
-interface NumberDictionary {
-  [index: string]: number;
-  length: number;    // 可以，length是number类型
-  name: string       // 错误，`name`的类型与索引类型返回值的类型不匹配
-}
-```
-
-可以将索引签名设置为只读，这样就防止了给索引赋值：
-
-````typescript
-interface ReadonlyStringArray {
-    readonly [index: number]: string;
-}
-let myArray: ReadonlyStringArray = ["Alice", "Bob"];
-myArray[2] = "Mallory"; // error!
-````
-
-
-
-### 类类型
-
-#### 实现接口
-
-与C#或Java里接口的基本作用一样，TypeScript也能够用它来明确的强制一个类去符合某种契约
-
-```typescript
-interface ClockInterface {
-    currentTime: Date;
-}
-
-class Clock implements ClockInterface {
-    currentTime: Date;
-    constructor(h: number, m: number) { }
-}
-```
-
-也可以在接口中描述一个方法，在类里实现它
-
-```typescript
-interface ClockInterface {
-    currentTime: Date;
-    setTime(d: Date);
-}
-
-class Clock implements ClockInterface {
-    currentTime: Date;
-    setTime(d: Date) {
-        this.currentTime = d;
-    }
-    constructor(h: number, m: number) { }
-}
-```
-
-#### 类静态部分与实例部分
-
-类是具有两个类型的：静态部分的类型和实例的类型
-
-用构造器签名去定义一个接口并试图定义一个类去实现这个接口时会得到一个错误
-
-```typescript
-interface ClockConstructor {
-    new (hour: number, minute: number);
-}
-
-class Clock implements ClockConstructor {
-    currentTime: Date;
-    constructor(h: number, m: number) { }
-}
-```
-
-这里因为当一个类实现了一个接口时，只对其实例部分进行类型检查。 constructor存在于类的静态部分，所以不在检查的范围内。
-
-我们应该直接操作类的静态部分。 看下面的例子，我们定义了两个接口， `ClockConstructor`为构造函数所用和`ClockInterface`为实例方法所用。 为了方便我们定义一个构造函数 `createClock`，它用传入的类型创建实例。
-
-```typescript
-interface ClockConstructor {
-    new (hour: number, minute: number): ClockInterface;
-}
-interface ClockInterface {
-    tick();
-}
-
-function createClock(ctor: ClockConstructor, hour: number, minute: number): ClockInterface {
-    return new ctor(hour, minute);
-}
-
-class DigitalClock implements ClockInterface {
-    constructor(h: number, m: number) { }
-    tick() {
-        console.log("beep beep");
-    }
-}
-class AnalogClock implements ClockInterface {
-    constructor(h: number, m: number) { }
-    tick() {
-        console.log("tick tock");
-    }
-}
-
-let digital = createClock(DigitalClock, 12, 17);
-let analog = createClock(AnalogClock, 7, 32);
-```
-
-`createClock`的第一个参数是`ClockConstructor`类型，在`createClock(AnalogClock, 7, 32)`里，会检查`AnalogClock`是否符合构造函数签名
-
-### 继承接口
-
-和类一样，接口也可以相互继承。 这让我们能够从一个接口里复制成员到另一个接口里，可以更灵活地将接口分割到可重用的模块里。
-
-```typescript
-interface Shape {
-    color: string;
-}
-
-interface Square extends Shape {
-    sideLength: number;
-}
-
-let square = <Square>{};
-square.color = "blue";
-square.sideLength = 10;
-```
-
-一个接口可以继承多个接口，创建出多个接口的合成接口。
-
-```typescript
-interface Shape {
-    color: string;
-}
-
-interface PenStroke {
-    penWidth: number;
-}
-
-interface Square extends Shape, PenStroke {
-    sideLength: number;
-}
-
-let square = <Square>{};
-square.color = "blue";
-square.sideLength = 10;
-square.penWidth = 5.0;
-```
-
-### 混合类型
-
-一个对象可以同时做为函数和对象使用，并带有额外的属性
-
-```typescript
-interface Counter {
-    (start: number): string;
-    interval: number;
-    reset(): void;
-}
-
-function getCounter(): Counter {
-    let counter = <Counter>function (start: number) { };
-    counter.interval = 123;
-    counter.reset = function () { };
-    return counter;
-}
-
-let c = getCounter();
-c(10);
-c.reset();
-c.interval = 5.0;
-```
-
-### 接口继承类
-
-当接口继承了一个类类型时，它会继承类的成员但不包括其实现
-
-接口同样会继承到类的private和protected成员。 这意味着当你创建了一个接口继承了一个拥有私有或受保护的成员的类时，这个接口类型只能被这个类或其子类所实现（implement）
-
-```typescript
-class Control {
-    private state: any;
-}
-
-interface SelectableControl extends Control {
-    select(): void;
-}
-
-class Button extends Control implements SelectableControl {
-    select() { }
-}
-
-class TextBox extends Control {
-    select() { }
-}
-
-// 错误：“Image”类型缺少“state”属性。
-class Image implements SelectableControl {
-    select() { }
-}
-
-class Location {
-
-}
-```
-
-`SelectableControl`包含了`Control`的所有成员，包括私有成员`state`。 因为 `state`是私有成员，所以只能够是`Control`的子类们才能实现`SelectableControl`接口。 因为只有 `Control`的子类才能够拥有一个声明于`Control`的私有成员`state`，这对私有成员的兼容性是必需的。
-
-在`Control`类内部，是允许通过`SelectableControl`的实例来访问私有成员`state`的。 实际上， `SelectableControl`接口和拥有`select`方法的`Control`类是一样的。 `Button`和`TextBox`类是`SelectableControl`的子类（因为它们都继承自`Control`并有`select`方法），但`Image`和`Location`类并不是这样的
-
-## 类
-
-```typescript
-class Greeter {
-    greeting: string;
-    constructor(message: string) {
-        this.greeting = message;
-    }
-    greet() {
-        return "Hello, " + this.greeting;
-    }
-}
-
-let greeter = new Greeter("world");
-```
-
-我们声明一个 `Greeter`类。这个类有3个成员：一个叫做 `greeting`的属性，一个构造函数和一个 `greet`方法。
-
-你会注意到，我们在引用任何一个类成员的时候都用了 `this`。 它表示我们访问的是类的成员
-
-### 继承
-
-```typescript
-class Animal {
-    name: string;
-    constructor(theName: string) { this.name = theName; }
-    move(distanceInMeters: number = 0) {
-        console.log(`${this.name} moved ${distanceInMeters}m.`);
-    }
-}
-
-class Snake extends Animal {
-    constructor(name: string) { super(name); }
-    move(distanceInMeters = 5) {
-        console.log("Slithering...");
-        super.move(distanceInMeters);
-    }
-}
-
-class Horse extends Animal {
-    constructor(name: string) { super(name); }
-    move(distanceInMeters = 45) {
-        console.log("Galloping...");
-        super.move(distanceInMeters);
-    }
-}
-
-let sam = new Snake("Sammy the Python");
-let tom: Animal = new Horse("Tommy the Palomino");
-
-sam.move();
-tom.move(34);
-```
-
-使用 `extends`关键字创建了 `Animal`的两个子类： `Horse`和 `Snake`
-
-派生类包含了一个构造函数，它 *必须*调用 `super()`，它会执行基类的构造函数。 而且，在构造函数里访问 `this`的属性之前，我们 *一定*要调用 `super()`
-
-`Snake`类和 `Horse`类都创建了 `move`方法，它们重写了从 `Animal`继承来的 `move`方法，使得 `move`方法根据不同的类而具有不同的功能。 注意，即使 `tom`被声明为 `Animal`类型，但因为它的值是 `Horse`，调用 `tom.move(34)`时，它会调用 `Horse`里重写的方法
-
-### 修饰符
-
-默认为 `public`
-
-在TypeScript里，成员都默认为 `public`
-
-**private**
-
-当成员被标记成 `private`时，它就不能在声明它的类的外部访问
-
- 如果其中一个类型里包含一个 `private`成员，那么只有当另外一个类型中也存在这样一个 `private`成员， 并且它们都是来自同一处声明时，我们才认为这两个类型是兼容的。 对于 `protected`成员也使用这个规则
-
-**protected**
-
-`protected`修饰符与 `private`修饰符的行为很相似，但有一点不同， `protected`成员在派生类中仍然可以访问
-
-构造函数也可以被标记成 `protected`。 这意味着这个类不能在包含它的类外被实例化，但是能被继承
-
-使用 `readonly`关键字将属性设置为只读的。 只读属性必须在声明时或构造函数里被初始化
-
-**存取器**
-
-通过getters/setters来截取对对象成员的访问
-
-### 静态属性
-
- 我们也可以创建类的静态成员，这些属性存在于类本身上面而不是类的实例上。 在这个例子里，我们使用 `static`定义 `origin`，因为它是所有网格都会用到的属性。 每个实例想要访问这个属性的时候，都要在 `origin`前面加上类名。 如同在实例属性上使用 `this.`前缀来访问属性一样，这里我们使用 `Grid.`来访问静态属性。
-
-```typescript
-class Grid {
-    static origin = {x: 0, y: 0};
-    calculateDistanceFromOrigin(point: {x: number; y: number;}) {
-        let xDist = (point.x - Grid.origin.x);
-        let yDist = (point.y - Grid.origin.y);
-        return Math.sqrt(xDist * xDist + yDist * yDist) / this.scale;
-    }
-    constructor (public scale: number) { }
-}
-
-let grid1 = new Grid(1.0);  // 1x scale
-let grid2 = new Grid(5.0);  // 5x scale
-
-console.log(grid1.calculateDistanceFromOrigin({x: 10, y: 10}));
-console.log(grid2.calculateDistanceFromOrigin({x: 10, y: 10}));
-```
-
-### 抽象类
-
-抽象类做为其它派生类的基类使用。 它们一般不会直接被实例化。 不同于接口，抽象类可以包含成员的实现细节。 `abstract`关键字是用于定义抽象类和在抽象类内部定义抽象方法
-
-```typescript
-abstract class Animal {
-    abstract makeSound(): void;
-    move(): void {
-        console.log('roaming the earch...');
+const good2: IGoodItem = {
+    name: '手机',
+    price: 2000,
+    func: function() {
+        return '打电话'
     }
 }
 ```
 
-抽象类中的抽象方法不包含具体实现并且必须在派生类中实现。 抽象方法的语法与接口方法相似。 两者都是定义方法签名但不包含方法体。 然而，抽象方法必须包含 `abstract`关键字并且可以包含访问修饰符
 
-```typescript
-abstract class Department {
 
-    constructor(public name: string) {
-    }
+### interface和type的区别
 
-    printName(): void {
-        console.log('Department name: ' + this.name);
-    }
+#### 相同点
 
-    abstract printMeeting(): void; // 必须在派生类中实现
-}
+##### 都可以描述一个对象或者函数
 
-class AccountingDepartment extends Department {
+###### interface
 
-    constructor() {
-        super('Accounting and Auditing'); // 在派生类的构造函数中必须调用 super()
-    }
-
-    printMeeting(): void {
-        console.log('The Accounting Department meets each Monday at 10am.');
-    }
-
-    generateReports(): void {
-        console.log('Generating accounting reports...');
-    }
-}
-
-let department: Department; // 允许创建一个对抽象类型的引用
-department = new Department(); // 错误: 不能创建一个抽象类的实例
-department = new AccountingDepartment(); // 允许对一个抽象子类进行实例化和赋值
-department.printName();
-department.printMeeting();
-department.generateReports(); // 错误: 方法在声明的抽象类中不存在
 ```
-
-## 函数
-
-### 为函数定义类型
-
-让我们为上面那个函数添加类型：
-
-```ts
-function add(x: number, y: number): number {
-    return x + y;
+interface User {
+  name: string
+  age: number
 }
 
-let myAdd = function(x: number, y: number): number { return x + y; };
-```
-
-我们可以给每个参数添加类型之后再为函数本身添加返回值类型。 TypeScript能够根据返回语句自动推断出返回值类型，因此我们通常省略它。
-
-### 可选参数和默认参数
-
-TypeScript里的每个函数参数都是必须的。 这不是指不能传递 `null`或`undefined`作为参数，而是说编译器检查用户是否为每个参数都传入了值。 编译器还会假设只有这些参数会被传递进函数。 简短地说，传递给一个函数的参数个数必须与函数期望的参数个数一致。
-
-```ts
-function buildName(firstName: string, lastName: string) {
-    return firstName + " " + lastName;
-}
-
-let result1 = buildName("Bob");                  // error, too few parameters
-let result2 = buildName("Bob", "Adams", "Sr.");  // error, too many parameters
-let result3 = buildName("Bob", "Adams");         // ah, just right
-```
-
-JavaScript里，每个参数都是可选的，可传可不传。 没传参的时候，它的值就是undefined。 在TypeScript里我们可以在参数名旁使用 `?`实现可选参数的功能。 比如，我们想让last name是可选的：
-
-```ts
-function buildName(firstName: string, lastName?: string) {
-    if (lastName)
-        return firstName + " " + lastName;
-    else
-        return firstName;
-}
-
-let result1 = buildName("Bob");  // works correctly now
-let result2 = buildName("Bob", "Adams", "Sr.");  // error, too many parameters
-let result3 = buildName("Bob", "Adams");  // ah, just right
-```
-
-可选参数必须跟在必须参数后面。 如果上例我们想让first name是可选的，那么就必须调整它们的位置，把first name放在后面。
-
-在TypeScript里，我们也可以为参数提供一个默认值当用户没有传递这个参数或传递的值是`undefined`时。 它们叫做有默认初始化值的参数。 让我们修改上例，把last name的默认值设置为`"Smith"`。
-
-```ts
-function buildName(firstName: string, lastName = "Smith") {
-    return firstName + " " + lastName;
-}
-
-let result1 = buildName("Bob");                  // works correctly now, returns "Bob Smith"
-let result2 = buildName("Bob", undefined);       // still works, also returns "Bob Smith"
-let result3 = buildName("Bob", "Adams", "Sr.");  // error, too many parameters
-let result4 = buildName("Bob", "Adams");         // ah, just right
-```
-
-在所有必须参数后面的带默认初始化的参数都是可选的，与可选参数一样，在调用函数的时候可以省略。 也就是说可选参数与末尾的默认参数共享参数类型。
-
-```ts
-function buildName(firstName: string, lastName?: string) {
-    // ...
+interface SetUser {
+  (name: string, age: number): void;
 }
 ```
 
-和
+###### type
 
-```ts
-function buildName(firstName: string, lastName = "Smith") {
-    // ...
+```
+type User = {
+  name: string
+  age: number
+};
+
+type SetUser = (name: string, age: number)=> void;
+```
+
+##### 都允许拓展（extends）
+
+interface 和 type 都可以拓展，并且两者并不是相互独立的，也就是说 interface 可以 extends type, type 也可以 extends interface 。 **虽然效果差不多，但是两者语法不同**。
+
+###### interface extends interface
+
+```
+interface Name { 
+  name: string; 
+}
+interface User extends Name { 
+  age: number; 
 }
 ```
 
-### 剩余参数
+###### type extends type
 
-必要参数，默认参数和可选参数有个共同点：它们表示某一个参数。 有时，你想同时操作多个参数，或者你并不知道会有多少参数传递进来。 在JavaScript里，你可以使用 `arguments`来访问所有传入的参数。
-
-在TypeScript里，你可以把所有参数收集到一个变量里：
-
-```ts
-function buildName(firstName: string, ...restOfName: string[]) {
-  return firstName + " " + restOfName.join(" ");
+```
+type Name = { 
+  name: string; 
 }
-
-let employeeName = buildName("Joseph", "Samuel", "Lucas", "MacKinzie");
+type User = Name & { age: number  };
 ```
 
-剩余参数会被当做个数不限的可选参数。 可以一个都没有，同样也可以有任意个。 编译器创建参数数组，名字是你在省略号（ `...`）后面给定的名字，你可以在函数体内使用这个数组。
+###### interface extends type
 
-```ts
-function buildName(firstName: string, ...restOfName: string[]) {
-  return firstName + " " + restOfName.join(" ");
+```
+type Name = { 
+  name: string; 
 }
-
-let buildNameFun: (fname: string, ...rest: string[]) => string = buildName;
+interface User extends Name { 
+  age: number; 
+}
 ```
 
-### 重载
+###### type extends interface
 
-为了让编译器能够选择正确的检查类型，它与JavaScript里的处理流程相似。 它查找重载列表，尝试使用第一个重载定义。 如果匹配的话就使用这个。 因此，在定义重载的时候，一定要把最精确的定义放在最前面。
+```js
+interface Name { 
+  name: string; 
+}
+type User = Name & { 
+  age: number; 
+}
+
+```
+
+#### 不同点
+
+###### type 可以而 interface 不行
+
+- type 可以声明基本类型别名，联合类型，元组等类型
+
+```
+// 基本类型别名
+type Name = string
+
+// 联合类型
+interface Dog {
+    wong();
+}
+interface Cat {
+    miao();
+}
+
+type Pet = Dog | Cat
+
+// 具体定义数组每个位置的类型
+type PetList = [Dog, Pet]
+
+```
+
+- type 语句中还可以使用 typeof 获取实例的 类型进行赋值
+
+```
+// 当你想获取一个变量的类型时，使用 typeof
+let div = document.createElement('div');
+type B = typeof div
+```
+
+- 其他骚操作
+
+```
+type StringOrNumber = string | number;  
+type Text = string | { text: string };  
+type NameLookup = Dictionary<string, Person>;  
+type Callback<T> = (data: T) => void;  
+type Pair<T> = [T, T];  
+type Coordinates = Pair<number>;  
+type Tree<T> = T | { left: Tree<T>, right: Tree<T> };
+```
+
+###### interface 可以而 type 不行
+
+interface 能够声明合并
+
+```
+interface User {
+  name: string
+  age: number
+}
+
+interface User {
+  sex: string
+}
+
+/*
+User 接口为 {
+  name: string
+  age: number
+  sex: string 
+}
+*/
+```
+
+
 
 ## 泛型
 
@@ -879,33 +523,9 @@ createInstance(Lion).keeper.nametag;  // typechecks!
 createInstance(Bee).keeper.hasMask;   // typechecks!
 ```
 
-## 枚举
 
-使用枚举我们可以定义一些带名字的常量。 使用枚举可以清晰地表达意图或创建一组有区别的用例。 TypeScript支持数字的和基于字符串的枚举。
 
-### 数字枚举
 
-```ts
-enum Direction {
-    Up = 1,
-    Down,
-    Left,
-    Right
-}
-```
-
-### 字符串枚举
-
- 在一个字符串枚举里，每个成员都必须用字符串字面量，或另外一个字符串枚举成员进行初始化。
-
-```ts
-enum Direction {
-    Up = "UP",
-    Down = "DOWN",
-    Left = "LEFT",
-    Right = "RIGHT",
-}
-```
 
 ## 高级类型
 
@@ -1338,309 +958,220 @@ type T24 = InstanceType<Function>;  // Error
 
 > 注意：`Exclude`类型是[建议的](https://github.com/Microsoft/TypeScript/issues/12215#issuecomment-307871458)`Diff`类型的一种实现。我们使用`Exclude`这个名字是为了避免破坏已经定义了`Diff`的代码，并且我们感觉这个名字能更好地表达类型的语义。我们没有增加`Omit<T, K>`类型，因为它可以很容易的用`Pick<T, Exclude<keyof T, K>>`来表示。
 
-## 装饰器
+## 类型体操
 
-若要启用实验性的装饰器特性，你必须在命令行或`tsconfig.json`里启用`experimentalDecorators`编译器选项
+[type-challenge](https://github.com/type-challenges/type-challenges)
 
-### 装饰器概念
+### 1.实现一个`pick`
 
-它是一种特殊类型的声明，它能够被附加到类声明，方法，属性或参数上，可以修改类的行为。 通俗的**讲装饰器就是一个函数/方法**，可以注入到**类、方法、属性参数**上来扩展类、属性、方法、参数的功能。 常见的装饰器有：
+#### 题目
 
--   类装饰器
--   属性装饰器
--   方法装饰器
--   参数装饰器
+不使用内置的`Pick<T, K>`泛型, 通过从 T 中选择属性 K 来构造类型
 
-装饰器的写法：普通装饰器(无法传参)、装饰器工厂(可传参)
-
-#### 类装饰器
-
-类装饰器在类声明之前被声明〈紧靠着类声明)。类装饰器应用于类构造函数，可以用来监视，修改或替换类定义。传入一个参数
-
-##### 普通装饰器：不能传参
-
-```typescript
-/**
- * 装饰器
- * target属性就是使用装饰器的那个类
-*/
-function logClass(target: any) {
-  target.prototype.apiUrl = 'http://www.baidu.com'
-  target.prototype.hello = () => {
-    console.log("hello world")
-  }
-}
-
-@logClass
-class HttpClient {
-  constructor() { }
-}
-
-const http: any = new HttpClient()
-
-console.log(http.apiUrl) // http://www.baidu.com
-http.hello() //hello world
-```
-
-##### 装饰器工厂：可以传参
-
-```typescript
-/**
- * 装饰器工厂
- * params就是我们要传递的参数
- * target就是要使用装饰器的那个类
- */
-function logClass(params: string) {
-  return function (target: any) {
-    target.prototype.hello = () => {
-      console.log(params)
-    }
-  }
-}
-
-@logClass('hello world')
-class HttpClient {
-  constructor() { }
-}
-
-const http: any = new HttpClient()
-http.hello()  //打印hello world
-```
-
-##### 重载构造函数
-
-类装饰器表达式会在运行时当作函数被调用，类的构造函数作为其唯一的参数。如果类装饰器返回一个值，它会使用提供的构造函数来替换类的声明
-
-```typescript
-function logClass(target: any) {
-  return class extends target {
-    apiUrl: string = '修改后的apiUrl'
-    getData() {
-      console.log('修改:', this.apiUrl)
-    }
-  }
-}
-
-@logClass
-class HttpClient {
-  public apiUrl: string | undefined
-  constructor() {
-    this.apiUrl = '没修改前的apiUrl'
-  }
-
-  getData() {
-    console.log(this.apiUrl)
-  }
-}
-
-const http = new HttpClient()
-http.getData() //修改: 修改后的apiUrl
-```
-
-#### 属性装饰器
-
-属性装饰器表达式会在运行时当作函数被调用，传入下列2个参数:
-
--   装饰的实例。对于静态成员来说是类的构造函数，对于实例成员是类的原型对象
--   装饰的属性名
+例如
 
 ```ts
-/**
- * 属性装饰器
- * params就是装饰器传入的参数
- * target就是装饰的实例
- * attr就是装饰的属性
- */
-function logProperty(params: any) {
-  return function (target: any, attr: string) {
-    //通过这样的方式就可以通过装饰器来修改属性值
-    target[attr] = params
-  }
+interface Todo {
+  title: string;
+  description: string;
+  completed: boolean;
 }
 
-class HttpClient {
-  @logProperty('属性装饰器赋值')
-  public apiUrl: string | undefined
-  constructor() {
-  }
+type TodoPreview = MyPick<Todo, "title" | "completed">;
 
-  getData() {
-    console.log(this.apiUrl)
-  }
-}
-
-const http = new HttpClient()
-http.getData() // 属性装饰器赋值
+const todo: TodoPreview = {
+  title: "Clean room",
+  completed: false,
+};
 ```
 
-#### 方法装饰器
-
-它会被应用到方法的属性描述符上，可以用来监视，修改或者替换方法定义。方法装饰会在运行时传入下列个参数:
-
--   装饰的实例。对于静态成员来说是类的构造函数，对于实例成员是类的原型对象
--   成员的名字
--   成员的属性描述符
+#### 答案
 
 ```typescript
-/**
- * params 传递给装饰器的值
- * target 装饰器的实例
- * methodName 方法名称
- * descriptor 描述
- */
-function get(params: any) {
-  console.log(params) // http://www.baidu.com
-  return function (target: any, methodName: string, descriptor: PropertyDescriptor) {
-    console.log(target)
-    console.log(methodName)
-    console.log(descriptor)
-    //修改前保存原始传入的方法
-    let originalMethod = descriptor.value
-
-    //重写传入的方法
-    descriptor.value = function (...args: any[]) {
-      //执行原来的方法
-      originalMethod.apply(this, args)
-
-      args = args.map(val => +val)
-
-      console.log(args)
-    }
-  }
-}
-
-class HttpClient {
-  constructor() {
-  }
-
-  @get('http://www.baidu.com')
-  getApi() {
-  }
-}
-
-const http: any = new HttpClient()
-
-http.getApi('123', '456', '789')  //打印[123, 456, 789]
+type MyPick<T, Ks extends keyof T> = {
+  [K in Ks]: T[K];
+};
 ```
 
-#### 方法参数装饰器
+#### 分析
 
-运行时会被当做函数被调用，可以使用参数装饰器为类的原型增加一些元素数据，传入3个参数：
+从`T`中选择属性`K`, 那么`K`一定要是`T`的键.  
+所以需要对泛型参数进行约束, 即限制`Ks extends keyof T` => `Ks`(Keys) 一定要是 `T` 的 key 的子集.
 
--   装饰的实例。对于静态成员来说是类的构造函数，对于实例成员是类的原型对象
--   方法名
--   参数在函数参数列表中的索引
+之后, 我们返回一个类型, 这个类型的 Key 来自于`K`, `K`是怎么来的呢,  
+我们遍历给定的 Keys(`[K in Ks]`), 将得到的 Ks 这个 union 类型的每一项记作 `K`.  
+对于每个`K`, 在我们返回的对象上追加一条属性, 该属性的名称为`K`, 值的类型为`T[K]`
+(从原始对象上得到这个 Key(`K`)对应的类型, 此操作与在 JS 对象上根据键获得值类型, 只不过是根据键获得值的**类型**)
+
+最后得到的这个类型即为从原类型上挑选出需要的 keys 的类型了
+
+#### 伪代码：
 
 ```typescript
-function logParams(param: any) {
-  return function (target: any, methodName: string, paramIndex: number) {
-    console.log(target)     // httpClient实例
-    console.log(methodName) // getApi
-    console.log(paramIndex) // 0
-  }
-}
+function MyPick(T, Ks) { // Ks 是联合类型, 可看作js中的 Set 来遍历
+  if(Ks is not subset of (keyof T)) throw new Error() // Ks extends keyof T
 
-class HttpClient {
-  constructor() {
-  }
-  getApi(@logParams('id') id: number) {
-    console.log(id)
-  }
-}
-
-const http = new HttpClient()
-
-http.getApi(123456)
-```
-
-#### 装饰器的执行顺序
-
-这里先放结论，具体的代码请往下看：
-
--   属性 > 方法 > 方法参数 > 类
--   如果有多个同样的装饰器，它会先执行后面的(从下到上，方法参数装饰器执行顺序是从右到左)
-
-```typescript
-// 先进行一些装饰器的定义
-function logClass1(target: any) {
-  console.log('logClass1')
-}
-
-function logClass2(target: any) {
-  console.log('logClass2')
-}
-
-function logAttribute1(param?: any) {
-  return function (target: any, attrName: string) {
-    console.log('attribute1')
-  }
-}
-
-function logAttribute2(param?: any) {
-  return function (target: any, attrName: string) {
-    console.log('attribute2')
-  }
-}
-
-function logMethod1(param?: any) {
-  return function (target: any, methodName: string, descriptor: PropertyDescriptor) {
-    console.log('logMethod1')
-  }
-}
-
-function logMethod2(param?: any) {
-  return function (target: any, methodName: string, descriptor: PropertyDescriptor) {
-    console.log('logMethod2')
-  }
-}
-
-function logParam1(param?: any) {
-  return function (target: any, methodName: string, index: number) {
-    console.log('logParam1')
-  }
-}
-
-function logParam2(param?: any) {
-  return function (target: any, methodName: string, index: number) {
-    console.log('logParam2')
-  }
-}
-
-@logClass1
-@logClass2
-class HttpClient {
-  @logAttribute1()
-  api1: string | undefined
-  @logAttribute2()
-  api2: string | undefined
-
-  constructor() {
+  const returnType = {};
+  for (let K of Ks) { // [K in Ks]
+    typeOf(returnType[K]) = typeOf(T[K]); //[K in Ks]: T[K];
   }
 
-  @logMethod1()
-  get1() {
-  }
-
-  @logMethod2()
-  get2() { }
-
-  get3(@logParam1() param1: string, @logParam2() param2: string) { }
+  return returnType
 }
 ```
 
-上述代码最终的打印结果如下，可以验证了我们一开始得出的执行顺序的结论
+
+
+### 2.实现一个`Readonly`
+
+实现内置的`Readonly<T>`泛型.  
+构造一个类型，并将 T 的所有属性设置为只读，这意味着无法重新对所构造类型的属性进行赋值
+
+#### 题目
+
+例如
 
 ```ts
-attribute1
-attribute2
-logMethod1
-logMethod2
-logParam2
-logParam1
-logClass2
-logClass1
+interface Todo {
+  title: string;
+  description: string;
+}
+
+const todo: MyReadonly<Todo> = {
+  title: "Hey",
+  description: "foobar",
+};
+
+todo.title = "Hello"; // Error: cannot reassign a readonly property
+todo.description = "barFoo"; // Error: cannot reassign a readonly property
 ```
 
-## 总结
+#### 答案
 
-![ts](https://s2.loli.net/2022/04/10/79bEyc3j8ZMY4dr.jpg)
+```ts
+type MyReadonly<T> = {
+  readonly [K in keyof T]: T[K];
+};
+```
+
+#### 分析
+
+遍历`T`的每一个 key, 对每一个`K`添加
+[`readonly`描述符](https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes-func.html#readonly-and-const)
+, 而`K`对应的值的类型即为对象上原本的类型`T[K]`
+
+#### 伪代码:
+
+```typescript
+function MyReadonly(T) {
+  const returnType = {};
+
+  // 获得 T 上所有的 key
+  for (let K in T) {
+    returnType[K] = readonly(T[K]);
+  }
+
+  return returnType;
+}
+```
+
+### 3.实现一个`Tuple to Object`
+
+#### 题目
+
+给定数组，转换为对象类型，键/值必须在给定数组中
+
+例如
+
+```ts
+const tuple = ["tesla", "model 3", "model X"] as const;
+
+const result: TupleToObject<typeof tuple> = {
+  tesla: "tesla",
+  "model 3": "model 3",
+  "model X": "model X",
+};
+```
+
+#### 答案
+
+```ts
+type TupleToObject<T extends readonly (number | string | symbol)[]> = {
+  [V in T[number]]: V;
+};
+```
+
+#### 分析
+
+`TupleToObject`接受一个泛型参数 `T`, 首先这个`T`要是一个数组, 那么我们可以先写下以下代码
+
+```ts
+type TupleToObject<T extends any[]> = {
+  /* TODO */
+};
+```
+
+其次依题意, 这个数组是被`as const`修饰过的, 其作用在于将一个变量的类型限制为他的**值**, 且让他不可变, 例如
+
+```ts
+let a = "foo"; // type of a is *string*
+let b = "bar" as const; // type of a is *"bar"*
+
+let arr = ["foo", "bar"]; // type of arr is ["string", "string"]
+// type of arrAsConst is ["foo", "bar"]
+let arrAsConst = ["foo", "bar"] as const;
+```
+
+关于`as const`, 详见[杀手级的 TypeScript 功能：const 断言](https://juejin.cn/post/6844903848939634696).
+总之, 兼容这种类型, 必须修改代码为以下:
+
+```ts
+// `readonly` 与 `as const` 对应
+type TupleToObject<T extends readonly any[]> = {
+  /* TODO */
+};
+```
+
+再次, 该数组中的 value 最后会变成一个对象的属性, 而我们知道对象的属性只能接受`string | number | symbol`
+几种形式, 进一步约束泛型参数为
+
+```ts
+// 注意三种类型首字母均小写, 是 symbol 而不是 Symbol
+// 二者区别详见 https://stackoverflow.com/questions/14727044/what-is-the-difference-between-types-string-and-string
+type TupleToObject<T extends readonly (number | string | symbol)[]> = {
+  /* TODO */
+};
+```
+
+最后, 我们依次取出传入数组的每一项的值的**类型**, 我们知道对数组取值是使用下标进行访问得到的, 而下标
+都是`number`类型. 在 TS 类型编程中, 我们可以使用`T[number]`的写法来获得所有值的**类型**, 完整代码如下
+
+```ts
+type TupleToObject<T extends readonly (number | string | symbol)[]> = {
+  [V in T[number]]: V;
+};
+```
+
+#### 伪代码
+
+```typescript
+function TupleToObject(T) {
+  if(!(T extends Array<(number | string | symbol)>)) throw new Error()
+  if(T is not readonly) throw new Error()
+
+  const returnType = {};
+  T.forEach((value)=>{
+    /*
+     * 此处不是直接用 value 当作对象的键和值, 我们是在进行类型编程, 操作的都是类型
+     * \`\`\`ts
+     * var value = "foo"   // 此处"foo"是一个JS字符串
+     * typeOf(value)       // 得到的结果是 "foo", 此处 "foo" 是TS类型
+     * \`\`\`
+     */
+    returnType[typeOf(value)] = typeOf(value);
+  })
+
+  return returnType;
+}
+```
+
