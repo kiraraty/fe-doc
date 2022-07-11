@@ -1,6 +1,6 @@
 # CSS面试题
 
-## **基础题**
+## **基本原理**
 
 ### 1.选择器和选择器优先级
 
@@ -4078,6 +4078,76 @@ metaEl.setAttribute('content', `width=device-width,user-scalable=no,initial-scal
 
 [纯css实现朋友圈照片排列布局](https://juejin.cn/post/6844904184941117454)
 
+假设有如下HTML代码，
+
+这里imgList是一个图片地址数组；
+
+------
+
+```
+<ul>
+    <li v-for="(item, index) in imgList" :key=index >
+        <img :src="item">
+    </li>
+</ul>
+```
+
+1、首先我们使用flex实现正常的三列布局:
+
+设置为换行，每个元素占1/3或指定宽度，除每行最后一个元素（3n）都设置margin-right并通过预留间隔；
+
+```
+ul{
+  display: flex;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+li{
+  width: 32%; 
+  height: 100px;
+  margin-top: 5px;
+}
+.list:not(:nth-child(3n)) {
+  margin-right: 2%;
+}
+```
+
+2、对于只有一张图片情况，只需用css选择器判断为一张图片时，改变图片大小即可;
+
+**选择器逻辑：元素为 倒数第一个元素 && 第一个元素 时，则可判断只有一个元素：对其样式单独设置覆盖原样式即可**
+
+```
+ul li: nth-last-child(1): first-child{
+  width: 200px;
+  height: 200px;
+}
+```
+
+3、对于四张图片的情况时，图片需呈 两行两列布局：这里就需对此种情况下的第二张图片添加margin-right实现三列变两列：
+
+**选择器逻辑： 元素为 倒数第4个 && 第一个的元素 时， 判断为共有四个元素，**
+
+ **再选择 其后的 同级元素 的第 2n 个后添加margin-right属性；**
+
+```
+ul li: nth-last-child(4): first-child ~ li: nth-child(2n){
+  margin-right: 32%;
+}
+```
+
+再次之前需对第三个元素恢复间隔，或同朋友圈类似，四张照片是不显示间隔，如有需求也可设置其他属性，如下：（此属性需在上一条属性之前）
+
+```
+ul li: nth-last-child(4): first-child , ul li: nth-last-child(4): first-child ~ li{
+  width: 50%;
+  margin-right: 0;
+}
+```
+
+
+
+
+
 ### 7.图片下方出现多3px的原因及解决方法
 
 产生原因：主要是因为图片的垂直对齐方式vertical-align引发的，默认值是baseline，默认为此值时图片下方就会多出3px。
@@ -4297,7 +4367,7 @@ metaEl.setAttribute('content', `width=device-width,user-scalable=no,initial-scal
 
 ### 9.实现九宫格
 
-#### 方法一：使用table
+#### 使用table布局
 
 > table布局能够实现的原因在于table的tr和td能够将元素形成行列显示。table布局中有一个是否合并边框的样式border-collapse: collapse;值得我们注意。
 
@@ -4344,7 +4414,7 @@ table td {
 }
 ```
 
-#### 方法二：使用flex布局
+#### 使用flex布局
 
 > 使用flex布局的核心在于flex-wrap: wrap。
 
@@ -4390,6 +4460,80 @@ ul > li {
     text-align: center;
 }
 ```
+
+#### 使用float布局
+
+使用 `float` 来实现需要注意一个点，浮动会造成浮动崩塌，因此可以设置 `overflow: hidden;` 把 `box` 设置成 BFC 来解决浮动崩塌。
+
+```css
+.box {
+    width: 100%;
+    overflow: hidden;
+}
+
+ul {
+    width: 100%;
+    height: 100%;
+}
+
+.box li {
+    width: 30%;
+    height: 30%;
+    margin-right: 5%;
+    margin-bottom: 5%;
+    float: left;
+}
+
+.box li:nth-of-type(3n) {
+    margin-right: 0;
+}
+
+.box li:nth-of-type(n+7) {
+    margin-bottom: 0;
+}
+```
+
+#### 使用gird布局
+
+```css
+<div class="grid">
+    <div>1</div>
+    <div>2</div>
+    <div>3</div>
+    <div>4</div>
+    <div>5</div>
+    <div>6</div>
+    <div>7</div>
+    <div>8</div>
+    <div>9</div>
+</div>
+box {
+    background: #e4f7fd61;
+    border: 2px solid #0786ada1;
+    border-radius: 8px;
+}
+
+.grid {
+    display: grid;
+    width: 100%;
+    grid-template-rows: repeat(3, 1fr);
+    grid-template-columns: repeat(3, 1fr);
+    grid-gap: 5%;
+    grid-auto-flow: row;
+}
+
+.grid>div {
+    list-style: none;
+    text-align: center;
+    line-height: 200px;
+    background: skyblue;
+    border-radius: 8px;
+    font-size: 20px;
+    color: black;
+}
+```
+
+
 
 #### 其他实现方法
 
