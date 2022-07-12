@@ -137,8 +137,6 @@ model: function (node, value, vm) {
 
 但是，除了上面列举的这些，别的都是 `$emit('input')` 以及 `props:value` 。
 
-
-
 **（1）作用在表单元素上** 动态绑定了 input 的 value 指向了 messgae 变量，并且在触发 input 事件的时候去动态把 message设置为目标值：
 
 ```javascript
@@ -1001,57 +999,372 @@ JavaScript中的对象是引用类型的数据，当多个实例引用同一个�
 
 所以组件的数据不能写成对象的形式，而是要写成函数的形式。数据以函数返回值的形式定义，这样当每次复用组件的时候，就会返回一个新的data，也就是说每个组件都有自己的私有数据空间，它们各自维护自己的数据，不会干扰其他组件的正常运行。
 
-### 9.单页面Web应用的优缺点
+### 9.Vue中的三种Watcher
 
-单页面应用程序将所有的活动局限于一个Web页面中，在该Web页面初始化时加载相应的HTML、JavaScript 和 CSS。一旦页面加载完成，单页面应用不会因为用户的操作而进行页面的重新加载或跳转。取而代之的是利用 JavaScript 动态的变换HTML的内容，从而实现UI与用户的交互。由于避免了页面的重新加载，单页面应用可以提供较为流畅的用户体验。
+`Vue`可以说存在三种`watcher`，第一种是在定义`data`函数时定义数据的`render watcher`；第二种是`computed watcher`，是`computed`函数在自身内部维护的一个`watcher`，配合其内部的属性`dirty`开关来决定`computed`的值是需要重新计算还是直接复用之前的值；第三种就是`whtcher api`了，就是用户自定义的`export`导出对象的`watch`属性；当然实际上他们都是通过`class Watcher`类来实现的。
 
-###### 1.单页面应用的优点
+#### 描述
 
-- 良好的交互体验
+`Vue.js`的数据响应式，通常有以下的的场景：
 
-单页应用的内容的改变不需要重新加载整个页面，获取数据也是通过Ajax异步获取，没有页面之间的切换，就不会出现“白屏现象”,也不会出现假死并有“闪烁”现象，页面显示流畅
+- 数据变`->`使用数据的视图变。
+- 数据变`->`使用数据的计算属性变`->`使用计算属性的视图变。
+- 数据变`->`开发者主动注册的`watch`回调函数执行。
 
-- 良好的前后端工作分离模式
+三个场景，对应三种`watcher`：
 
-后端不再负责模板渲染、输出页面工作，后端API通用化，即同一套后端程序代码，不用修改就可以用于Web界面、手机、平板等多种客户端
+- 负责视图更新的`render watcher`。
+- 执行计算属性更新的`computed watcher`。
+- 用户注册的普通`watcher api`。
 
-- 减轻服务器压力
+#### render watcher
 
-单页应用相对服务器压力小，服务器只用出数据就可以，不用管展示逻辑和页面合成，吞吐能力会提高几倍
+在`render watcher`中，响应式就意味着，当数据中的值改变时，在视图上的渲染内容也需要跟着改变，在这里就需要一个视图渲染与属性值之间的联系，`Vue`中的响应式，简单点来说分为以下三个部分：
 
-###### 2.缺点
+- `Observer`: 这里的主要工作是递归地监听对象上的所有属性，在属性值改变的时候，触发相应的`Watcher`。
+- `Watcher`: 观察者，当监听的数据值修改时，执行响应的回调函数，在`Vue`里面的更新模板内容。
+- `Dep`: 链接`Observer`和`Watcher`的桥梁，每一个`Observer`对应一个`Dep`，它内部维护一个数组，保存与该`Observer`相关的`Watcher`。
 
-- 首屏加载慢
+根据上面的三部分实现一个功能非常简单的`Demo`，实际`Vue`中的数据在页面的更新是异步的，且存在大量优化，实际非常复杂。
+首先实现`Dep`方法，这是链接`Observer`和`Watcher`的桥梁，简单来说，就是一个监听者模式的事件总线，负责接收`watcher`并保存。其中`subscribers`数组用以保存将要触发的事件，`addSub`方法用以添加事件，`notify`方法用以触发事件。
 
-解决方案： 1，vue-router懒加载
+```javascript
+function __dep(){
+    this.subscribers = [];
+    this.addSub = function(watcher){
+        if(__dep.target && !this.subscribers.includes(__dep.target) ) this.subscribers.push(watcher);
+    }
+    this.notifyAll = function(){
+        this.subscribers.forEach( watcher => watcher.update());
+    }
+}Copy to clipboardErrorCopied
+```
 
-Vue-router懒加载就是按需加载组件，只有当路由被访问时才会加载对应的组件，而不是在加载首页的时候就加载，项目越大，对首屏加载的速度提升得越明显
+`Observer`方法就是将数据进行劫持，使用`Object.defineProperty`对属性进行重定义，注意一个属性描述符只能是数据描述符和存取描述符这两者其中之一，不能同时是两者，所以在这个小`Demo`中使用`getter`与`setter`操作的的是定义的`value`局部变量，主要是利用了`let`的块级作用域定义`value`局部变量并利用闭包的原理实现了`getter`与`setter`操作`value`，对于每个数据绑定时都有一个自己的`dep`实例，利用这个总线来保存关于这个属性的`Watcher`，并在`set`更新数据的时候触发。
 
-2，使用CDN加速
+```javascript
+function __observe(obj){
+    for(let item in obj){
+        let dep = new __dep();
+        let value = obj[item];
+        if (Object.prototype.toString.call(value) === "[object Object]") __observe(value);
+        Object.defineProperty(obj, item, {
+            configurable: true,
+            enumerable: true,
+            get: function reactiveGetter() {
+                if(__dep.target) dep.addSub(__dep.target);
+                return value;
+            },
+            set: function reactiveSetter(newVal) {
+                if (value === newVal) return value;
+                value = newVal;
+                dep.notifyAll();
+            }
+        });
+    }
+    return obj;
+}Copy to clipboardErrorCopied
+```
 
-在做项目时，我们会用到很多库，采用cdn加载可以加快加载速度。
+`Watcher`方法传入一个回调函数，用以执行数据变更后的操作，一般是用来进行模板的渲染，`update`方法就是在数据变更后执行的方法，`activeRun`是首次进行绑定时执行的操作，关于这个操作中的`__dep.target`，他的主要目的是将执行回调函数相关的数据进行`sub`，例如在回调函数中用到了`msg`，那么在执行这个`activeRun`的时候`__dep.target`就会指向`this`，然后执行`fn()`的时候会取得`msg`，此时就会触发`msg`的`get()`，而`get`中会判断这个`__dep.target`是不是空，此时这个`__dep.target`不为空，上文提到了每个属性都会有一个自己的`dep`实例，此时这个`__dep.target`便加入自身实例的`subscribers`，在执行完之后，便将`__dep.target`设置为`null`，重复这个过程将所有的相关属性与`watcher`进行了绑定，在相关属性进行`set`时，就会触发各个`watcher`的`update`然后执行渲染等操作。
 
-3，异步加载组件
+```javascript
+function __watcher(fn){
+    this.update = function(){
+        fn();
+    }
 
-4，服务端渲染
+    this.activeRun = function(){
+        __dep.target = this;
+        fn();
+        __dep.target = null;
+    }
+    this.activeRun();
+}Copy to clipboardErrorCopied
+```
 
-服务端渲染还能对seo优化起到作用，有利于搜索引擎抓取更多有用的信息（如果页面纯前端渲染，搜索引擎抓取到的就只是空页面）
+这是上述的小`Demo`的代码示例，其中上文没有提到的`__proxy`函数主要是为了将`vm.$data`中的属性直接代理到`vm`对象上，两个`watcher`中第一个是为了打印并查看数据，第二个是之前做的一个非常简单的模板引擎的渲染，为了演示数据变更使得页面数据重新渲染，在这个`Demo`下打开控制台，输入`vm.msg = 11;`即可触发页面的数据更改，也可以通过在`40`行添加一行`console.log(dep);`来查看每个属性的`dep`绑定的`watcher`。
 
-- 不利于SEO
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>数据绑定</title>
+</head>
+<body>
+    <div id="app">
+        <div>{{msg}}</div>
+        <div>{{date}}</div>
+    </div> 
+</body>
+<script type="text/javascript">
 
-seo 本质是一个服务器向另一个服务器发起请求，解析请求内容。但一般来说搜索引擎是不会去执行请求到的js的。也就是说，搜索引擎的基础爬虫的原理就是抓取url，然后获取html源代码并解析。 如果一个单页应用，html在服务器端还没有渲染部分数据数据，在浏览器才渲染出数据，即搜索引擎请求到的html是模型页面而不是最终数据的渲染页面。 这样就很不利于内容被搜索引擎搜索到
+    var Mvvm = function(config) {
+        this.$el = config.el;
+        this.__root = document.querySelector(this.$el);
+        this.__originHTML = this.__root.innerHTML;
 
-解决方案：1，服务端渲染
+        function __dep(){
+            this.subscribers = [];
+            this.addSub = function(watcher){
+                if(__dep.target && !this.subscribers.includes(__dep.target) ) this.subscribers.push(watcher);
+            }
+            this.notifyAll = function(){
+                this.subscribers.forEach( watcher => watcher.update());
+            }
+        }
 
-服务器合成完整的 html 文件再输出到浏览器
 
-2，页面预渲染
+        function __observe(obj){
+            for(let item in obj){
+                let dep = new __dep();
+                let value = obj[item];
+                if (Object.prototype.toString.call(value) === "[object Object]") __observe(value);
+                Object.defineProperty(obj, item, {
+                    configurable: true,
+                    enumerable: true,
+                    get: function reactiveGetter() {
+                        if(__dep.target) dep.addSub(__dep.target);
+                        return value;
+                    },
+                    set: function reactiveSetter(newVal) {
+                        if (value === newVal) return value;
+                        value = newVal;
+                        dep.notifyAll();
+                    }
+                });
+            }
+            return obj;
+        }
 
-3，路由采用h5 history模式
+        this.$data = __observe(config.data);
 
-- 不适合开发大型项目
+        function __proxy (target) {
+            for(let item in target){
+                Object.defineProperty(this, item, {
+                    configurable: true,
+                    enumerable: true,
+                    get: function proxyGetter() {
+                        return this.$data[item];
+                    },
+                    set: function proxySetter(newVal) {
+                        this.$data[item] = newVal;
+                    }
+                });
+            }
+        }
 
-大型项目中可能会涉及大量的DOM操作、复杂的动画效果，也就不适合使用Vue、react框架进行开发
+        __proxy.call(this, config.data);
+
+        function __watcher(fn){
+            this.update = function(){
+                fn();
+            }
+
+            this.activeRun = function(){
+                __dep.target = this;
+                fn();
+                __dep.target = null;
+            }
+            this.activeRun();
+        }
+
+        new __watcher(() => {
+            console.log(this.msg, this.date);
+        })
+
+        new __watcher(() => {
+            var html = String(this.__originHTML||'').replace(/"/g,'\\"').replace(/\s+|\r|\t|\n/g, ' ')
+            .replace(/\{\{(.)*?\}\}/g, function(value){ 
+                return  value.replace("{{",'"+(').replace("}}",')+"');
+            })
+            html = `var targetHTML = "${html}";return targetHTML;`;
+            var parsedHTML = new Function(...Object.keys(this.$data), html)(...Object.values(this.$data));
+            this.__root.innerHTML = parsedHTML;
+        })
+
+    }
+
+    var vm = new Mvvm({
+        el: "#app",
+        data: {
+            msg: "1",
+            date: new Date(),
+            obj: {
+                a: 1,
+                b: 11
+            }
+        }
+    })
+
+</script>
+</html>Copy to clipboardErrorCopied
+```
+
+#### computed watcher
+
+`computed`函数在自身内部维护的一个`watcher`，配合其内部的属性`dirty`开关来决定`computed`的值是需要重新计算还是直接复用之前的值。
+在`Vue`中`computed`是计算属性，其会根据所依赖的数据动态显示新的计算结果，虽然使用`{{}}`模板内的表达式非常便利，但是设计它们的初衷是用于简单运算的，在模板中放入太多的逻辑会让模板过重且难以维护，所以对于任何复杂逻辑，都应当使用计算属性。计算属性是基于数据的响应式依赖进行缓存的，只在相关响应式依赖发生改变时它们才会重新求值，也就是说只要计算属性依赖的数据还没有发生改变，多次访问计算属性会立即返回之前的计算结果，而不必再次执行函数，当然如果不希望使用缓存可以使用方法属性并返回值即可，`computed`计算属性非常适用于一个数据受多个数据影响以及需要对数据进行预处理的条件下使用。
+`computed`计算属性可以定义两种方式的参数，`{ [key: string]: Function | { get: Function, set: Function } }`，计算属性直接定义在`Vue`实例中，所有`getter`和`setter`的`this`上下文自动地绑定为`Vue`实例，此外如果为一个计算属性使用了箭头函数，则`this`不会指向这个组件的实例，不过仍然可以将其实例作为函数的第一个参数来访问，计算属性的结果会被缓存，除非依赖的响应式`property`变化才会重新计算，注意如果某个依赖例如非响应式`property`在该实例范畴之外，则计算属性是不会被更新的。
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Vue</title>
+</head>
+<body>
+    <div id="app"></div>
+</body>
+<script src="https://cdn.bootcss.com/vue/2.4.2/vue.js"></script>
+<script type="text/javascript">
+    var vm = new Vue({
+        el: "#app",
+        data: {
+            a: 1,
+            b: 2
+        },
+        template:`
+            <div>
+                <div>{{multiplication}}</div>
+                <div>{{multiplication}}</div>
+                <div>{{multiplication}}</div>
+                <div>{{multiplicationArrow}}</div>
+                <button @click="updateSetting">updateSetting</button>
+            </div>
+        `,
+        computed:{
+            multiplication: function(){
+                console.log("a * b"); // 初始只打印一次 返回值被缓存
+                return this.a * this.b;
+            },
+            multiplicationArrow: vm => vm.a * vm.b * 3, // 箭头函数可以通过传入的参数获取当前实例
+            setting: {
+                get: function(){
+                    console.log("a * b * 6");
+                    return this.a * this.b * 6;
+                },
+                set: function(v){
+                    console.log(`${v} -> a`);
+                    this.a = v;
+                }
+            }
+        },
+        methods:{
+            updateSetting: function(){ // 点击按钮后
+                console.log(this.setting); // 12
+                this.setting = 3; // 3 -> a
+                console.log(this.setting); // 36
+            }
+        },
+
+    })
+</script>
+</html>Copy to clipboardErrorCopied
+```
+
+#### watcher api
+
+在`watch api`中可以定义`deep`与`immediate`属性，分别为深度监听`watch`和最初绑定即执行回调的定义，在`render watch`中定义数组的每一项由于性能与效果的折衷是不会直接被监听的，但是使用`deep`就可以对其进行监听，当然在`Vue3`中使用`Proxy`就不存在这个问题了，这原本是`Js`引擎的内部能力，拦截行为使用了一个能够响应特定操作的函数，即通过`Proxy`去对一个对象进行代理之后，我们将得到一个和被代理对象几乎完全一样的对象，并且可以从底层实现对这个对象进行完全的监控。
+对于`watch api`，类型`{ [key: string]: string | Function | Object | Array }`，是一个对象，键是需要观察的表达式，值是对应回调函数，值也可以是方法名，或者包含选项的对象，`Vue`实例将会在实例化时调用`$watch()`，遍历`watch`对象的每一个`property`。 不应该使用箭头函数来定义`watcher`函数，例如`searchQuery: newValue => this.updateAutocomplete(newValue)`，理由是箭头函数绑定了父级作用域的上下文，所以`this`将不会按照期望指向`Vue`实例，`this.updateAutocomplete`将是`undefined`。
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Vue</title>
+</head>
+<body>
+    <div id="app"></div>
+</body>
+<script src="https://cdn.bootcss.com/vue/2.4.2/vue.js"></script>
+<script type="text/javascript">
+    var vm = new Vue({
+        el: "#app",
+        data: {
+            a: 1,
+            b: 2,
+            c: 3,
+            d: {
+                e: 4,
+            },
+            f: {
+                g: 5
+            }
+        },
+        template:`
+            <div>
+                <div>a: {{a}}</div>
+                <div>b: {{b}}</div>
+                <div>c: {{c}}</div>
+                <div>d.e: {{d.e}}</div>
+                <div>f.g: {{f.g}}</div>
+                <button @click="updateA">updateA</button>
+                <button @click="updateB">updateB</button>
+                <button @click="updateC">updateC</button>
+                <button @click="updateDE">updateDE</button>
+                <button @click="updateFG">updateFG</button>
+            </div>
+        `,
+        watch: {
+            a: function(n, o){ // 普通watcher
+                console.log("a", o, "->", n);
+            },
+            b: { // 可以指定immediate属性
+                handler: function(n, o){
+                    console.log("b", o, "->", n);
+                },
+                immediate: true
+            },
+            c: [ // 逐单元执行
+                function handler(n, o){
+                    console.log("c1", o, "->", n);
+                },{
+                    handler: function(n, o){
+                        console.log("c2", o, "->", n);
+                    },
+                    immediate: true
+                }
+            ],
+            d: {
+                handler: function(n, o){ // 因为是内部属性值 更改不会执行
+                    console.log("d.e1", o, "->", n);
+                },
+            },
+            "d.e": { // 可以指定内部属性的值
+                handler: function(n, o){
+                    console.log("d.e2", o, "->", n);
+                }
+            },
+            f: { // 深度绑定内部属性
+                handler: function(n){
+                    console.log("f.g", n.g);
+                },
+                deep: true
+            }
+        },
+        methods:{
+            updateA: function(){
+                this.a = this.a * 2;
+            },
+            updateB: function(){
+                this.b = this.b * 2;
+            },
+            updateC: function(){
+                this.c = this.c * 2;
+            },
+            updateDE: function(){
+                this.d.e = this.d.e * 2;
+            },
+            updateFG: function(){
+                this.f.g = this.f.g * 2;
+            }
+        },
+
+    })
+</script>
+</html>
+```
 
 ### 10.slot的应用场景
 
@@ -1691,6 +2004,338 @@ vue-loader 的底层使用了 Vue 官方提供的包（package） [@vue/componen
 
 [精简版](https://juejin.cn/post/6844904041823240205)
 
+献上源码地址： [源码](https://link.juejin.cn?target=https%3A%2F%2Fgithub.com%2FMasonEast%2Fmasoneast-cli)
+
+```
+$ npm i masoneast-cli -g
+$ masoneast init my-project
+```
+
+现在， 我们一起来了解下`vue-cli`到底帮我们做了什么，让我们可以一行命令就可以生成一个工程吧！
+
+#### 整体流程
+
+我们先了解下如何使用`vue-cli`， 再详细讲解每一步的实现。
+
+`vue-cli`提供了多种模板， 我们这里以`webpack`模板为例。
+
+- 安装: `npm install vue-cli -g`
+- 使用：
+  1. 直接下载使用： `vue init webpack my-project`
+  2. 离线使用： `vue init webpack my-projiect --offline`
+  3. clone使用： `vue init webpack my-projiect --clone`
+
+这样， 我们就能在当前目录下得到一个vue的初始工程了。
+
+当我们使用`vue-cli`时， 其实依赖了两个东西： 一个是`vue-cli`命令行， 一个是`vue-template`模板， 用于生成工程。
+
+#### 流程：
+
+1. 当我们**全局安装了`vue-cli`后**， 会注册环境变量，生成软连接， 这样我们在命令行中任意路径就可以使用该命令了。
+2. 当我们**敲下`vue init webpack my-project`时**， `vue-cli`会提示你正在下载模板。
+
+此时， `vue-cli`就是从github托管的代码中`download`对应的`webpack`模板。 对应的webpack模板的git地址在这里： [webpack模板](https://link.juejin.cn?target=https%3A%2F%2Fgithub.com%2Fvuejs-templates%2Fwebpack)
+
+拼接url代码是这段：
+
+```
+function getUrl (repo, clone) {
+    var url
+
+    // Get origin with protocol and add trailing slash or colon (for ssh)
+    var origin = addProtocol(repo.origin, clone)
+    if (/^git\@/i.test(origin))
+        origin = origin + ':'
+    else
+        origin = origin + '/'
+
+    // Build url
+    if (clone) {
+        url = origin + repo.owner + '/' + repo.name + '.git'
+    } else {
+        if (repo.type === 'github')
+            url = origin + repo.owner + '/' + repo.name + '/archive/' + repo.checkout + '.zip'
+        else if (repo.type === 'gitlab')
+            url = origin + repo.owner + '/' + repo.name + '/repository/archive.zip?ref=' + repo.checkout
+        else if (repo.type === 'bitbucket')
+            url = origin + repo.owner + '/' + repo.name + '/get/' + repo.checkout + '.zip'
+    }
+
+    return url
+}
+```
+
+1. **当模板下载完毕后**， `vue-cli`会将它放在你的本地，方便你以后离线使用它生成项目， 路径是`/Users/xxx/.vue-templates`， 如果你之前有使用`vue-cli`生成过项目， 应该在你的管理员路径下能找到对应的`.vue-templates`文件夹。里面的webpack文件就和上面git地址里的代码一模一样。
+
+**注意：** .开头的文件夹默认是隐藏的， 你需要让它展示出来才能看到。
+
+1. **询问交互**
+
+
+
+![img](https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/1/9/16f89a80b2ee4ff2~tplv-t2oaga2asx-zoom-in-crop-mark:3024:0:0:0.awebp)
+
+
+
+接下， `vue-cli`会问你一堆问题， 你回答的这些问题它会将它们的答案存起来， 在接下来的生成中， 会根据你的答案来渲染生成对应的文件。
+
+1. **文件筛选**
+
+在你回答完问题后， `vue-cli`就会根据你的需求从webpack模板中筛选出无用的文件， 并删除， 它不是从你本地删除， 只是在给你生成的项目中删除这些文件。
+
+1. **模板渲染**
+
+在模板中， 你的`src/App.vue`长这样：
+
+```
+<template>
+  <div id="app">
+    <img src="./assets/logo.png">
+    {{#router}}
+    <router-view/>
+    {{else}}
+    <HelloWorld/>
+    {{/router}}
+  </div>
+</template>
+
+<script>
+{{#unless router}}
+import HelloWorld from './components/HelloWorld'
+
+{{/unless}}
+export default {
+  name: 'App'{{#router}}{{else}},
+  components: {
+    HelloWorld
+  }{{/router}}
+}
+</script>
+
+<style>
+#app {
+  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: #2c3e50;
+  margin-top: 60px;
+}
+</style>
+```
+
+如果在选择是否需要路由， 你选是，那最后生成在你的项目的`App.vue`长这样：
+
+```
+<template>
+  <div id="app">
+    <img src="./assets/logo.png">
+    <router-view/>
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'App'
+}
+</script>
+
+<style>
+#app {
+  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: #2c3e50;
+  margin-top: 60px;
+}
+</style>
+```
+
+它会根据你的要求，渲染出不同的文件给你。
+
+1. **文件生成**
+
+在完成渲染后， 接下来就会在你当前目录下生成对应的文件了， 至此， `vue-cli`的工作就完成了。
+
+#### 动手实现
+
+搞明白了`vue-cli`的工作原理， 我们完全可以自己做一个简单点的cli出来了。
+
+##### 命令注册
+
+通过`npm init`生成你的`package.json`文件, 在里面加入bin
+
+```
+  "bin": {
+    "xxx": "bin/index.js"
+  },
+```
+
+这样， 当你全局装包的时候才会把你`xxx`命令注册到环境变量中。
+
+接下来就是`bin/index.js`的事了。
+
+##### 使用`commander`完成命令行中的命令
+
+```
+program
+   .command('init [project-name]')
+   .description('create a project')
+   .option("-c, --clone", `it will clone from ${tmpUrl}`)
+   .option('--offline', 'use cached template')
+   .action(function (name, options) {
+       console.log('we are try to create "%s"....', name);
+       downloadAndGenerate(name, options)
+   }).on('--help', function () {
+       console.log('');
+       console.log('Examples:');
+       console.log('');
+       console.log('  $ masoneast init my-project');
+       console.log(`  $ path: ${home}`);
+   });
+
+program.parse(process.argv)
+```
+
+通过上面代码， 你就有了`init`命令， 和`clone`, `offline`参数了， 此时你就有了：
+
+```
+$ masoneast init my-project
+$ masoneast init my-project --clone
+$ masoneast init my-project --offline
+```
+
+关于`commander`包的具体使用， 可以看这里： [commander](https://link.juejin.cn?target=)
+
+##### 实现下载和clone模板
+
+这里你需要有有个模板的地址供你下载和clone， 如果你只是玩玩的话也可以直接使用`vue`提供的模板地址， 或者我的模板地址： [模板](https://link.juejin.cn?target=https%3A%2F%2Fgithub.com%2FMasonEast%2Fmasoneast-template)
+
+下载实现代码：
+
+这里依赖了两个库: `git-clone`和`download`。
+
+```
+function download (name, clone, fn) {
+    if (clone) {
+        gitclone(tmpUrl, tmpPath, err => {
+            if (err) fn(err)
+            rm(tmpPath + '/.git')
+            fn()
+        })
+    } else {
+        const url = tmpUrl.replace(/\.git*/, '') + '/archive/master.zip'
+        console.log(url)
+        downloadUrl(url, tmpPath, { extract: true, strip: 1, mode: '666', headers: { accept: 'application/zip' } })
+            .then(function (data) {
+                fn()
+            })
+            .catch(function (err) {
+                fn(err)
+            })
+    }
+}
+```
+
+##### 实现询问交互
+
+交互的实现， 主要依赖了`inquirer`库。
+
+```
+function askQuestion (prompts) {                    //询问交互
+    return (files, metalsmith, done) => {
+        async.eachSeries(Object.keys(prompts), (key, next) => {
+            prompt(metalsmith.metadata(), key, prompts[key], next)
+        }, done)
+    }
+}
+```
+
+将询问得到的答案存贮起来， 留给后面渲染使用
+
+```
+function prompt (data, key, prompt, done) {                    //将用户操作存储到metaData中
+    inquirer.prompt([{
+        type: prompt.type,
+        name: key,
+        message: prompt.message || prompt.label || key,
+        default: prompt.default,
+        choices: prompt.choices || [],
+        validate: prompt.validate || (() => true)
+    }]).then(answers => {
+        if (Array.isArray(answers[key])) {
+            data[key] = {}
+            answers[key].forEach(multiChoiceAnswer => {
+                data[key][multiChoiceAnswer] = true
+            })
+        } else if (typeof answers[key] === 'string') {
+            data[key] = answers[key].replace(/"/g, '\\"')
+        } else {
+            data[key] = answers[key]
+        }
+        done()
+    }).catch(done)
+}
+```
+
+##### 实现模板渲染
+
+模板渲染， 依赖了前端模板引擎`handlebar`和解析模板引擎的`consolidate`库。 上面看到的`vue-template`模板里的`{{#router}}`其实就是`handlebar`的语法。
+
+```
+function renderTemplateFiles () {
+
+    return (files, metalsmith, done) => {
+
+        const keys = Object.keys(files)
+        const metalsmithMetadata = metalsmith.metadata()            //之前用户操作后的数据存在这里面
+        async.each(keys, (file, next) => {                          //对模板进行遍历， 找到需要渲染内容的文件
+            const str = files[file].contents.toString()
+            if (!/{{([^{}]+)}}/g.test(str)) {                       //正则匹配文件内容， 如果没有就不需要修改文件， 直接去往下一个
+                return next()
+            }
+            render(str, metalsmithMetadata, (err, res) => {
+                if (err) {
+                    err.message = `[${file}] ${err.message}`
+                    return next(err)
+                }
+                files[file].contents = new Buffer(res)
+                next()
+            })
+        }, done)
+    }
+}
+```
+
+##### 实现将文件从本地写到你的项目目录中
+
+这里用到了一个核心库： `metalsmith`。它主要功能就是读取你的文件， 并通过一系列的中间件对你的文件进行处理， 然后写到你想要的路径中去。就是通过这个库， 将我们的各个流程串联起来， 实现对模板的改造， 写出你想要的项目。
+
+```
+    metalsmith.use(askQuestion(options.prompts))                            //这一段是generator的精华， 通过各种中间件对用户选择的模板进行处理
+        .use(filterFiles(options.filters))                                  //文件筛选过滤
+        .use(renderTemplateFiles())                                         //模板内部变量渲染
+        .source('.')
+        .destination(projectPath)                                            //项目创建的路径
+        .build((err, files) => {
+            if (err) console.log(err)
+
+        })
+```
+
+##### 后话
+
+我这里实现的demo就是`vue-cli`的精简版， 主要功能有：
+
+- 1. 从git上download和clone项目模板
+- 1. 保存模板到本地，方便离线使用
+- 1. 询问问题， 按用户需求定制模板
+
+`vue-cli`还有有很多的容错判断， 以及其他模板， 下载源等的切换我这里都没有做处理了。
+
+
+
 ### 22.render函数触发过程
 
 [第一次挂载和每次数据更新都会触发render函数](https://www.zhihu.com/question/406811368)
@@ -1881,7 +2526,493 @@ compile编译可以分成 `parse`、`optimize` 与 `generate` 三个阶段，最
 
 <img src="https://img.kancloud.cn/01/db/01db136b4380b1804c072899e92daa3d_1752x1216.gif" alt="img" style="zoom:50%;" />
 
+### 24.Vue性能优化
 
+#### 编码优化
+
+##### 避免响应所有数据
+
+不要将所有的数据都放到`data`中，`data`中的数据都会增加`getter`和`setter`，并且会收集`watcher`，这样还占内存，不需要响应式的数据我们可以直接定义在实例上。
+
+```html
+<template>
+    <view>
+
+    </view>
+</template>
+
+<script>
+    export default {
+        components: {},
+        data: () => ({
+
+        }),
+        beforeCreate: function(){
+            this.timer = null;
+        }
+    }
+</script>
+
+<style scoped>
+</style>Copy to clipboardErrorCopied
+```
+
+##### 函数式组件
+
+函数组是一个不包含状态和实例的组件，简单的说，就是组件不支持响应式，并且不能通过`this`关键字引用自己。因为函数式组件没有状态，所以它们不需要像`Vue`的响应式系统一样需要经过额外的初始化，这样就可以避免相关操作带来的性能消耗。当然函数式组件仍然会对相应的变化做出响应式改变，比如新传入新的`props`，但是在组件本身中，它无法知道数据何时发生了更改，因为它不维护自己的状态。很多场景非常适合使用函数式组件：
+
+- 一个简单的展示组件，也就是所谓的`dumb`组件。例如`buttons`、`pills`、`tags`、`cards`等，甚至整个页面都是静态文本，比如`About`页面。
+- 高阶组件，即用于接收一个组件作为参数，返回一个被包装过的组件。
+- `v-for`循环中的每项通常都是很好的候选项。
+
+##### 区分computed和watch使用场景
+
+`computed`是计算属性，依赖其它属性值，并且`computed`的值有缓存，只有它依赖的属性值发生改变，下一次获取`computed`的值时才会重新计算`computed`的值。
+`watch`更多的是观察的作用，类似于某些数据的监听回调，每当监听的数据变化时都会执行回调进行后续操作。
+当我们需要进行数值计算，并且依赖于其它数据时，应该使用`computed`，因为可以利用`computed`的缓存特性，避免每次获取值时，都要重新计算。当我们需要在数据变化时执行异步或开销较大的操作时，应该使用`watch`，使用`watch`选项允许我们执行异步操作，限制我们执行该操作的频率，并在我们得到最终结果前，设置中间状态。
+
+##### v-for添加key且避免同时使用v-if
+
+- `v-for`遍历必须为`item`添加`key`，且尽量不要使用`index`而要使用唯一`id`去标识`item`，在列表数据进行遍历渲染时，设置唯一`key`值方便`Vue.js`内部机制精准找到该条列表数据，当`state`更新时，新的状态值和旧的状态值对比，较快地定位到`diff`。
+- `v-for`遍历避免同时使用`v-if`，`v-for`比`v-if`优先级高，如果每一次都需要遍历整个数组，将会影响速度。
+
+##### 区分v-if与v-show使用场景
+
+- 实现方式: `v-if`是动态的向`DOM`树内添加或者删除`DOM`元素，`v-show`是通过设置`DOM`元素的`display`样式属性控制显隐。
+- 编译过程: `v-if`切换有一个局部编译卸载的过程，切换过程中合适地销毁和重建内部的事件监听和子组件，`v-show`只是简单的基于`CSS`切换。
+- 编译条件: `v-if`是惰性的，如果初始条件为假，则什么也不做，只有在条件第一次变为真时才开始局部编译， `v-show`是在任何条件下都被编译，然后被缓存，而且`DOM`元素保留。
+- 性能消耗: `v-if`有更高的切换消耗，`v-show`有更高的初始渲染消耗。
+- 使用场景: `v-if`适合条件不太可能改变的情况，`v-show`适合条件频繁切换的情况。
+
+##### 长列表性能优化
+
+`Vue`会通过`Object.defineProperty`对数据进行劫持，来实现视图响应数据的变化，然而有些时候我们的组件就是纯粹的数据展示，不会有任何改变，我们就不需要`Vue`来劫持我们的数据，在大量数据展示的情况下，这能够很明显的减少组件初始化的时间，可以通过`Object.freeze`方法来冻结一个对象，一旦被冻结的对象就再也不能被修改了。对于需要修改的长列表的优化大列表两个核心，一个分段一个区分，具体执行分为：仅渲染视窗可见的数据、进行函数节流、 减少驻留的`VNode`和`Vue`组件，不使用显示的子组件`slot`方式，改为手动创建虚拟`DOM`来切断对象引用。
+
+```javascript
+export default {
+  data: () => ({
+      users: {}
+  }),
+  async created() {
+      const users = await axios.get("/api/users");
+      this.users = Object.freeze(users);
+  }
+};Copy to clipboardErrorCopied
+```
+
+##### 路由懒加载
+
+`Vue`是单页面应用，可能会有很多的路由引入，这样使用`webpcak`打包后的文件很大，当进入首页时，加载的资源过多，页面会出现白屏的情况，不利于用户体验。如果我们能把不同路由对应的组件分割成不同的代码块，然后当路由被访问的时候才加载对应的组件，这样就更加高效。对于`Vue`路由懒加载的方式有`Vue`异步组件、动态`import`、`webpack`提供的`require.ensure`，最常用的就是动态`import`的方式。
+
+```javascript
+{
+  path: "/example",
+  name: "example",
+  //打包后，每个组件单独生成一个chunk文件
+  component: () => import("@/views/example.vue")
+}Copy to clipboardErrorCopied
+```
+
+##### 服务端渲染SSR
+
+如果需要优化首屏加载速度并且首屏加载速度是至关重要的点，那么就需要服务端渲染`SSR`，服务端渲染`SSR`其实是优缺点并行的，需要合理决定是否真的需要服务端渲染。
+
+##### 优点
+
+- 更好的`SEO`，由于搜索引擎爬虫抓取工具可以直接查看完全渲染的页面，如果`SEO`对站点至关重要，而页面又是异步获取内容，则可能需要服务器端渲染`SSR`解决此问题。
+- 更快的内容到达时间`time-to-content`，特别是对于缓慢的网络情况或运行缓慢的设备，无需等待所有的`JavaScript`都完成下载并执行，用户将会更快速地看到完整渲染的页面，通常可以产生更好的用户体验，并且对于那些内容到达时间`time-to-content`与转化率直接相关的应用程序而言，服务器端渲染`SSR`至关重要。
+
+##### 缺点
+
+- 开发条件所限，浏览器特定的代码，只能在某些生命周期钩子函数`lifecycle hook`中使用，一些外部扩展库`external library`可能需要特殊处理，才能在服务器渲染应用程序中运行。
+- 涉及构建设置和部署的更多要求，与可以部署在任何静态文件服务器上的完全静态单页面应用程序`SPA`不同，服务器渲染应用程序，通常需要处于`Node.js server`运行环境。
+- 更大的服务器端负载，在`Node.js`中渲染完整的应用程序，显然会比仅仅提供静态文件的`server`更加大量占用`CPU`资源`CPU-intensive`-`CPU`密集型，因此如果预料在高流量环境`high traffic`下使用，需要准备相应的服务器负载，并明智地采用缓存策略。
+
+##### 使用keep-alive组件
+
+当在组件之间切换的时候，有时会想保持这些组件的状态，以避免反复重渲染导致的性能等问题，使用`<keep-alive>`包裹动态组件时，会缓存不活动的组件实例，而不是销毁它们。重新创建动态组件的行为通常是非常有用的，但是在有些情况下我们更希望那些标签的组件实例能够被在它们第一次被创建的时候缓存下来，此时使用`<keep-alive>`包裹组件即可缓存当前组件实例，将组件缓存到内存，用于保留组件状态或避免重新渲染，和`<transition>`相似它，其自身不会渲染一个`DOM`元素，也不会出现在组件的父组件链中。
+
+```html
+<keep-alive>
+    <component v-bind:is="currentComponent" class="tab"></component>
+</keep-alive>Copy to clipboardErrorCopied
+```
+
+#### 打包优化
+
+##### 模板预编译
+
+当使用`DOM`内模板或`JavaScript`内的字符串模板时，模板会在运行时被编译为渲染函数，通常情况下这个过程已经足够快了，但对性能敏感的应用还是最好避免这种用法。预编译模板最简单的方式就是使用单文件组件——相关的构建设置会自动把预编译处理好，所以构建好的代码已经包含了编译出来的渲染函数而不是原始的模板字符串。如果使用`webpack`，并且喜欢分离`JavaScript`和模板文件，可以使用`vue-template-loader`，其可以在构建过程中把模板文件转换成为`JavaScript`渲染函数。
+
+##### SourceMap
+
+在项目进行打包后，会将开发中的多个文件代码打包到一个文件中，并且经过压缩、去掉多余的空格、`babel`编译化后，最终将编译得到的代码会用于线上环境，那么这样处理后的代码和源代码会有很大的差别，当有`bug`的时候，我们只能定位到压缩处理后的代码位置，无法定位到开发环境中的代码，对于开发来说不好调式定位问题，因此`sourceMap`出现了，它就是为了解决不好调式代码问题的，在线上环境则需要关闭`sourceMap`。
+
+##### 配置splitChunksPlugins
+
+`Webpack`内置了专门用于提取多个`Chunk`中的公共部分的插件`CommonsChunkPlugin`，是用于提取公共代码的工具，`CommonsChunkPlugin`于`4.0`及以后被移除，使用`SplitChunksPlugin`替代。
+
+##### 使用treeShaking
+
+`tree shaking`是一个术语，通常用于描述移除`JavaScript`上下文中的未引用代码`dead-code`，其依赖于`ES2015`模块系统中的静态结构特性，例如`import`和`export`，这个术语和概念实际上是兴起于`ES2015`模块打包工具`rollup`。
+
+##### 第三方插件的按需引入
+
+我们在项目中经常会需要引入第三方插件，如果我们直接引入整个插件，会导致项目的体积太大，我们可以借助`babel-plugin-component`，然后可以只引入需要的组件，以达到减小项目体积的目的，以项目中引入`element-ui`组件库为例。
+
+```js
+{
+  "presets": [["es2015", { "modules": false }]],
+  "plugins": [
+    [
+      "component",
+      {
+        "libraryName": "element-ui",
+        "styleLibraryName": "theme-chalk"
+      }
+    ]
+  ]
+}
+Copy to clipboardErrorCopied
+import Vue from 'vue';
+import { Button, Select } from 'element-ui';
+
+Vue.use(Button)
+Vue.use(Select)
+```
+
+### 25.Vue首屏性能优化组件
+
+简单实现一个`Vue`首屏性能优化组件，现代化浏览器提供了很多新接口，在不考虑`IE`兼容性的情况下，这些接口可以很大程度上减少编写代码的工作量以及做一些性能优化方面的事情，当然为了考虑`IE`我们也可以在封装组件的时候为其兜底，本文的首屏性能优化组件主要是使用`IntersectionObserver`以及`requestIdleCallback`两个接口。
+
+#### 描述
+
+先考虑首屏场景，当做一个主要为展示用的首屏时，通常会加载较多的资源例如图片等，如果我们不想在用户打开时就加载所有资源，而是希望用户滚动到相关位置时再加载组件，此时就可以选择`IntersectionObserver`这个接口，当然也可以使用`onscroll`事件去做一个监听，只不过这样性能可能比较差一些。还有一些组件，我们希望他必须要加载，但是又不希望他在初始化页面时同步加载，这样我们可以使用异步的方式比如`Promise`和`setTimeout`等，但是如果想再降低这个组件加载的优先级，我们就可以考虑`requestIdleCallback`这个接口，相关代码在`https://github.com/WindrunnerMax/webpack-simple-environment`的`vue--first-screen-optimization`分支。
+
+##### IntersectionObserver
+
+`IntersectionObserver`接口，从属于`Intersection Observer API`，提供了一种异步观察目标元素与其祖先元素或顶级文档视窗`viewport`交叉状态的方法，祖先元素与视窗`viewport`被称为根`root`，也就是说`IntersectionObserver API`，可以自动观察元素是否可见，由于可见`visible`的本质是，目标元素与视口产生一个交叉区，所以这个`API`叫做交叉观察器，兼容性`https://caniuse.com/?search=IntersectionObserver`。
+
+```javascript
+const io = new IntersectionObserver(callback, option);
+
+// 开始观察
+io.observe(document.getElementById("example"));
+// 停止观察
+io.unobserve(element);
+// 关闭观察器
+io.disconnect();Copy to clipboardErrorCopied
+```
+
+- 参数`callback`，创建一个新的`IntersectionObserver`对象后，当其监听到目标元素的可见部分穿过了一个或多个阈`thresholds`时，会执行指定的回调函数。
+
+- 参数
+
+  ```
+  option
+  ```
+
+  ，
+
+  ```
+  IntersectionObserver
+  ```
+
+  构造函数的第二个参数是一个配置对象，其可以设置以下属性:
+
+  - `threshold`属性决定了什么时候触发回调函数，它是一个数组，每个成员都是一个门槛值，默认为`[0]`，即交叉比例`intersectionRatio`达到`0`时触发回调函数，用户可以自定义这个数组，比如`[0, 0.25, 0.5, 0.75, 1]`就表示当目标元素`0%`、`25%`、`50%`、`75%`、`100%`可见时，会触发回调函数。
+  - `root`属性指定了目标元素所在的容器节点即根元素，目标元素不仅会随着窗口滚动，还会在容器里面滚动，比如在`iframe`窗口里滚动，这样就需要设置`root`属性，注意，容器元素必须是目标元素的祖先节点。
+  - `rootMargin`属性定义根元素的`margin`，用来扩展或缩小`rootBounds`这个矩形的大小，从而影响`intersectionRect`交叉区域的大小，它使用`CSS`的定义方法，比如`10px 20px 30px 40px`，表示`top`、`right`、`bottom`和`left`四个方向的值。
+
+- 属性`IntersectionObserver.root`只读，所监听对象的具体祖先元素`element`，如果未传入值或值为`null`，则默认使用顶级文档的视窗。
+
+- 属性`IntersectionObserver.rootMargin`只读，计算交叉时添加到根`root`边界盒`bounding box`的矩形偏移量，可以有效的缩小或扩大根的判定范围从而满足计算需要，此属性返回的值可能与调用构造函数时指定的值不同，因此可能需要更改该值，以匹配内部要求，所有的偏移量均可用像素`pixel`、`px`或百分比`percentage`、`%`来表达，默认值为`0px 0px 0px 0px`。
+
+- 属性`IntersectionObserver.thresholds`只读，一个包含阈值的列表，按升序排列，列表中的每个阈值都是监听对象的交叉区域与边界区域的比率，当监听对象的任何阈值被越过时，都会生成一个通知`Notification`，如果构造器未传入值，则默认值为`0`。
+
+- 方法`IntersectionObserver.disconnect()`，使`IntersectionObserver`对象停止监听工作。
+
+- 方法`IntersectionObserver.observe()`，使`IntersectionObserver`开始监听一个目标元素。
+
+- 方法`IntersectionObserver.takeRecords()`，返回所有观察目标的`IntersectionObserverEntry`对象数组。
+
+- 方法`IntersectionObserver.unobserve()`，使`IntersectionObserver`停止监听特定目标元素。
+
+此外当执行`callback`函数时，会传递一个`IntersectionObserverEntry`对象参数，其提供的信息如下。
+
+- `time:`可见性发生变化的时间，是一个高精度时间戳，单位为毫秒。
+- `target:`被观察的目标元素，是一个`DOM`节点对象。
+- `rootBounds:`根元素的矩形区域的信息，是`getBoundingClientRect`方法的返回值，如果没有根元素即直接相对于视口滚动，则返回`null`。
+- `boundingClientRect:`目标元素的矩形区域的信息。
+- `intersectionRect:`目标元素与视口或根元素的交叉区域的信息。
+- `intersectionRatio:`目标元素的可见比例，即`intersectionRect`占`boundingClientRect`的比例，完全可见时为`1`，完全不可见时小于等于`0`。
+
+```
+{
+  time: 3893.92,
+  rootBounds: ClientRect {
+    bottom: 920,
+    height: 1024,
+    left: 0,
+    right: 1024,
+    top: 0,
+    width: 920
+  },
+  boundingClientRect: ClientRect {
+     // ...
+  },
+  intersectionRect: ClientRect {
+    // ...
+  },
+  intersectionRatio: 0.54,
+  target: element
+}Copy to clipboardErrorCopied
+```
+
+##### requestIdleCallback
+
+`requestIdleCallback`方法能够接受一个函数，这个函数将在浏览器空闲时期被调用，这使开发者能够在主事件循环上执行后台和低优先级工作，而不会影响延迟关键事件，如动画和输入响应，函数一般会按先进先调用的顺序执行，如果回调函数指定了执行超时时间`timeout`，则有可能为了在超时前执行函数而打乱执行顺序，兼容性`https://caniuse.com/?search=requestIdleCallback`。
+
+```javascript
+const handle = window.requestIdleCallback(callback[, options]);Copy to clipboardErrorCopied
+```
+
+- `requestIdleCallback`方法返回一个`ID`，可以把它传入`window.cancelIdleCallback()`方法来结束回调。
+
+- 参数`callback`，一个在事件循环空闲时即将被调用的函数的引用，函数会接收到一个名为`IdleDeadline`的参数，这个参数可以获取当前空闲时间以及回调是否在超时时间前已经执行的状态。
+
+- 参数
+
+  ```
+  options
+  ```
+
+  可选，包括可选的配置参数，具有如下属性:
+
+  - `timeout`: 如果指定了`timeout`，并且有一个正值，而回调在`timeout`毫秒过后还没有被调用，那么回调任务将放入事件循环中排队，即使这样做有可能对性能产生负面影响。
+
+#### 实现
+
+实际上编写组件主要是搞清楚如何使用这两个主要的`API`就好，首先关注`IntersectionObserver`，因为考虑需要使用动态组件`<component />`，那么我们向其传值的时候就需要使用异步加载组件`() => import("component")`的形式。监听的时候，可以考虑加载完成之后即销毁监听器，或者离开视觉区域后就将其销毁等，这方面主要是策略问题。在页面销毁的时候就必须将`Intersection Observer`进行`disconnect`，防止内存泄漏。另外我们为了使用`IntersectionObserver`则必须需要一个可以观察的目标，如果什么不都渲染，我们就无从观察，所以我们需要引入一个骨架屏，我们可以为真实的组件做一个在尺寸上非常接近真实组件的组件，在这里为了演示只是简单的渲染了`<section />`作为骨架屏。使用`requestIdleCallback`就比较简单了，只需要将回调函数执行即可，同样也类似于`Promise.resolve().then`这种异步处理的情况。
+这里是简单的实现逻辑，通常`observer`的使用方案是先使用一个`div`等先进行占位，然后在`observer`监控其占位的容器，当容器在视区时加载相关的组件，相关的代码在`https://github.com/WindrunnerMax/webpack-simple-environment`的`vue--first-screen-optimization`分支，请尽量使用`yarn`进行安装，可以使用`yarn.lock`文件锁住版本，避免依赖问题。使用`npm run dev`运行之后可以在`Console`中看到这四个懒加载组件`created`创建的顺序，其中`A`的`observer`懒加载是需要等其加载页面渲染完成之后，判断在可视区，才进行加载，首屏使能够直接看到的，而`D`的懒加载则是需要将滚动条滑动到`D`的外部容器出现在视图之后才会出现，也就是说只要不滚动到底部是不会加载`D`组件的，另外还可以通过`component-params`和`component-events`将`attrs`和`listeners`传递到懒加载的组件，类似于`$attrs`和`$listeners`，至此懒加载组件已简单实现。
+
+```html
+<!-- App.vue -->
+<template>
+    <div>
+        <section>1</section>
+        <section>
+            <div>2</div>
+            <lazy-load
+                :lazy-component="Example"
+                type="observer"
+                :component-params="{ content: 'Example A' }"
+                :component-events="{
+                    'test-event': testEvent,
+                }"
+            ></lazy-load>
+        </section>
+        <section>
+            <div>3</div>
+            <lazy-load
+                :lazy-component="Example"
+                type="idle"
+                :component-params="{ content: 'Example B' }"
+                :component-events="{
+                    'test-event': testEvent,
+                }"
+            ></lazy-load>
+        </section>
+        <section>
+            <div>4</div>
+            <lazy-load
+                :lazy-component="Example"
+                type="lazy"
+                :component-params="{ content: 'Example C' }"
+                :component-events="{
+                    'test-event': testEvent,
+                }"
+            ></lazy-load>
+        </section>
+        <section>
+            <div>5</div>
+            <lazy-load
+                :lazy-component="Example"
+                type="observer"
+                :component-params="{ content: 'Example D' }"
+                :component-events="{
+                    'test-event': testEvent,
+                }"
+            ></lazy-load>
+        </section>
+    </div>
+</template>
+
+<script lang="ts">
+import { Component, Vue } from "vue-property-decorator";
+import LazyLoad from "./components/lazy-load/lazy-load.vue";
+@Component({
+    components: { LazyLoad },
+})
+export default class App extends Vue {
+    protected Example = () => import("./components/example/example.vue");
+
+    protected testEvent(content: string) {
+        console.log(content);
+    }
+}
+</script>
+
+<style lang="scss">
+@import "./common/styles.scss";
+body {
+    padding: 0;
+    margin: 0;
+}
+section {
+    margin: 20px 0;
+    color: #fff;
+    height: 500px;
+    background: $color-blue;
+}
+</style>Copy to clipboardErrorCopied
+<!-- lazy-load.vue -->
+<template>
+    <div>
+        <component
+            :is="renderComponent"
+            v-bind="componentParams"
+            v-on="componentEvents"
+        ></component>
+    </div>
+</template>
+
+<script lang="ts">
+import { Component, Prop, Vue } from "vue-property-decorator";
+@Component
+export default class LazyLoad extends Vue {
+    @Prop({ type: Function, required: true })
+    lazyComponent!: () => Vue;
+    @Prop({ type: String, required: true })
+    type!: "observer" | "idle" | "lazy";
+    @Prop({ type: Object, default: () => ({}) })
+    componentParams!: Record<string, unknown>;
+    @Prop({ type: Object, default: () => ({}) })
+    componentEvents!: Record<string, unknown>;
+
+    protected observer: IntersectionObserver | null = null;
+    protected renderComponent: (() => Vue) | null = null;
+
+    protected mounted() {
+        this.init();
+    }
+
+    private init() {
+        if (this.type === "observer") {
+            // 存在`window.IntersectionObserver`
+            if (window.IntersectionObserver) {
+                this.observer = new IntersectionObserver(entries => {
+                    entries.forEach(item => {
+                        // `intersectionRatio`为目标元素的可见比例，大于`0`代表可见
+                        // 在这里也有实现策略问题 例如加载后不解除`observe`而在不可见时销毁等
+                        if (item.intersectionRatio > 0) {
+                            this.loadComponent();
+                            // 加载完成后将其解除`observe`
+                            this.observer?.unobserve(item.target);
+                        }
+                    });
+                });
+                this.observer.observe(this.$el.parentElement || this.$el);
+            } else {
+                // 直接加载
+                this.loadComponent();
+            }
+        } else if (this.type === "idle") {
+            // 存在`requestIdleCallback`
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+            if (window.requestIdleCallback) {
+                requestIdleCallback(this.loadComponent, { timeout: 3 });
+            } else {
+                // 直接加载
+                this.loadComponent();
+            }
+        } else if (this.type === "lazy") {
+            // 存在`Promise`
+            if (window.Promise) {
+                Promise.resolve().then(this.loadComponent);
+            } else {
+                // 降级使用`setTimeout`
+                setTimeout(this.loadComponent);
+            }
+        } else {
+            throw new Error(`type: "observer" | "idle" | "lazy"`);
+        }
+    }
+
+    private loadComponent() {
+        this.renderComponent = this.lazyComponent;
+        this.$emit("loaded");
+    }
+
+    protected destroyed() {
+        this.observer && this.observer.disconnect();
+    }
+}
+</script>
+```
+
+### 26.单页面Web应用的优缺点
+
+单页面应用程序将所有的活动局限于一个Web页面中，在该Web页面初始化时加载相应的HTML、JavaScript 和 CSS。一旦页面加载完成，单页面应用不会因为用户的操作而进行页面的重新加载或跳转。取而代之的是利用 JavaScript 动态的变换HTML的内容，从而实现UI与用户的交互。由于避免了页面的重新加载，单页面应用可以提供较为流畅的用户体验。
+
+###### 1.单页面应用的优点
+
+- 良好的交互体验
+
+单页应用的内容的改变不需要重新加载整个页面，获取数据也是通过Ajax异步获取，没有页面之间的切换，就不会出现“白屏现象”,也不会出现假死并有“闪烁”现象，页面显示流畅
+
+- 良好的前后端工作分离模式
+
+后端不再负责模板渲染、输出页面工作，后端API通用化，即同一套后端程序代码，不用修改就可以用于Web界面、手机、平板等多种客户端
+
+- 减轻服务器压力
+
+单页应用相对服务器压力小，服务器只用出数据就可以，不用管展示逻辑和页面合成，吞吐能力会提高几倍
+
+###### 2.缺点
+
+- 首屏加载慢
+
+解决方案： 1，vue-router懒加载
+
+Vue-router懒加载就是按需加载组件，只有当路由被访问时才会加载对应的组件，而不是在加载首页的时候就加载，项目越大，对首屏加载的速度提升得越明显
+
+2，使用CDN加速
+
+在做项目时，我们会用到很多库，采用cdn加载可以加快加载速度。
+
+3，异步加载组件
+
+4，服务端渲染
+
+服务端渲染还能对seo优化起到作用，有利于搜索引擎抓取更多有用的信息（如果页面纯前端渲染，搜索引擎抓取到的就只是空页面）
+
+- 不利于SEO
+
+seo 本质是一个服务器向另一个服务器发起请求，解析请求内容。但一般来说搜索引擎是不会去执行请求到的js的。也就是说，搜索引擎的基础爬虫的原理就是抓取url，然后获取html源代码并解析。 如果一个单页应用，html在服务器端还没有渲染部分数据数据，在浏览器才渲染出数据，即搜索引擎请求到的html是模型页面而不是最终数据的渲染页面。 这样就很不利于内容被搜索引擎搜索到
+
+解决方案：1，服务端渲染
+
+服务器合成完整的 html 文件再输出到浏览器
+
+2，页面预渲染
+
+3，路由采用h5 history模式
+
+- 不适合开发大型项目
+
+大型项目中可能会涉及大量的DOM操作、复杂的动画效果，也就不适合使用Vue、react框架进行开发
 
 ## 生命周期
 
@@ -3935,6 +5066,240 @@ mapGetters  传入对象包含计算属性名和state对应的变量名
 mapActions 生成对应方法  方法中会调用dispatch去联系actions  注意模块名
 
 mapMutations 生成对应方法  方法中会调用commit去联系mutations 注意模块名
+
+### 6.vuex持久化
+
+vuex的 store 中的数据是保存在运行内存中的，当页面刷新时，页面会重新加载 vue 实例，vuex 里面的数据就会被重新赋值，这样就会出现页面刷新vuex中的数据丢失的问题。 如何解决浏览器刷新数据丢失问题呢？
+
+#### 方法一：
+
+全局监听，页面刷新的时候将 store 里 state 的值存到 sessionStorage 中，然后从sessionStorage 中获取，再赋值给 store ，并移除 sessionStorage 中的数据。在 app.vue 中添加以下代码：
+
+```js
+ created() {
+    window.addEventListener('beforeunload',()=>{
+       sessionStorage.setItem('list', JSON.stringify(this.$store.state))
+    })
+    
+    try{
+      sessionStorage.getItem('list') && this.$store.replaceState(Object.assign({},this.$store.state,JSON.parse(sessionStorage.getItem('list'))))
+    }catch(err) {
+      console.log(err);
+    }
+  
+    sessionStorage.removeItem("list");
+  }
+复制代码
+ 注意!!! storage 只能存储字符串的数据，对于 JS 中常用的数组或对象不能直接存储。但我们可以通过JSON 对象提供的 parse 和 stringify 方法将其他数据类型转化成字符串，再存储到storage中就可以了。
+```
+
+#### 方法二：
+
+安装 vuex-persistedstate 插件
+
+```
+1. npm install vuex-persistedstate -S //安装插件
+2. 在 store/index.js 文件中添加以下代码：
+import persistedState from 'vuex-persistedstate'
+const store = new Vuex.Store({
+ state:{},
+ getters:{},
+ ...
+ plugins: [persistedState()] //添加插件
+})
+复制代码
+注意!!! vuex-persistedstate 默认使用 localStorage 来存储数据，若要实现无痕浏览该如何实现呢？
+```
+
+这时候就需要使用 sessionStorage 进行存储，修改 plugins 中的代码
+
+```js
+plugins: [
+    persistedState({ storage: window.sessionStorage })
+]
+```
+
+### 7.Vuex为什么是响应式的
+
+#### `vuex`响应式原理
+
+一旦理解了`vue`的模板如何响应数据变化，那么`vuex`就好理解了
+
+`vuex`本质上是将`state`值绑定到了一个`vue`对象上，请看超简略源码：
+
+```js
+class Store {
+    constructor(options){
+        this.state = new Vue({
+            data:options.state
+        })
+    }
+}
+```
+
+于是当我们在`test.vue`中写出这种代码：
+
+```js
+<template>
+	<div>{{ $store.state.xx }}</div>
+</template>
+```
+
+`test.vue`实例`mount`的时候执行`updateComponent`，就会为`updateComponent`函数绑定一个依赖：`Store.state.xx`这个属性的`Dep`对象（暂时命名为`xxDep`,便于后续说明）
+
+那么一旦通过`commit`或其他手段更新了属性`Store.state.xx`，`xxDep`就会通知`updateComponent`所绑定的`Watcher`去执行`update`
+
+```
+Watcher.prototype.update = function(){
+	if (this.lazy) {
+    	...
+    } else {
+    	// 将此watcher加入队列，在nextick中执行
+        // 最终会执行到Watcher.getter，本例中也就是updateComponent
+		queueWatcher(this);
+	}
+}
+```
+
+从而最终又执行到了`updateComponent`去更新dom树，而在执行`updateComponent`过程中解析dom树时会重新获取`{{ $store.state.xx }}`，从而正确的更新了dom，实现了`store.state`到`vue`对象的绑定
+
+#### store.getters
+
+上面讲了`store.state`如何绑定到`vue`对象，那么`store.getters`呢？
+
+```
+var wrappedGetters = store._wrappedGetters;
+var computed = {};
+forEachValue(wrappedGetters, function (fn, key) {
+  computed[key] = partial(fn, store);
+  Object.defineProperty(store.getters, key, {
+    get: function () { return store._vm[key]; },
+    enumerable: true // for local getters
+  });
+});
+
+store._vm = new Vue({
+  data: {
+    $$state: state
+  },
+  computed: computed
+});
+复制代码
+```
+
+可以看到对于每个getters的值，最终放在两个地方：`store.getters`, `store`内部的`vue`对象上的`computed`属性，`computed`属性的双向绑定机制跟`data`属性类似，这里不多讲
+
+而通过`store.getters.key`获取的值根据以上代码，得到的是`store._vm[key]`,而这个就是`computed[key]`,因为`computed`属性都会绑定到`vm`对象上。所以`store.getters[key]===computed[key]`，是完完全全的同一个值
+
+#### 装载到`vue`
+
+`vue2`中使用`vuex`需要执行`vue.use(vuex)`。最终会执行到`vuex`的`install`方法
+
+```js
+// 初始化全局Vue对象时挂载store，并在跟元素上生成
+new Vue({
+    store,
+    ...
+})
+
+function install() {
+    Vue.mixin({
+        beforeCreate() {
+            if (this.$options.store) {
+                this.$store = this.$options.store // 这里对应根组件
+                return
+            }
+            this.$store = this.$parent.$store // 其他组件逐级向上取
+        } 
+    })
+}
+复制代码
+```
+
+通过生命周期给每个组件单独挂载`$store`，而不是直接`Vue.prototype.$store =`，这样可以防止声明多个`vuex`实例后覆盖
+
+```
+vue3`中挂载`vuex`要执行`app.use(store)`。最终会执行到`Store.prototype.install
+function install (app, injectKey) {
+    // globalProperties属性上挂载的属性可以在app下所有组件实例中访问到
+    app.config.globalProperties.$store = this;
+}
+```
+
+### 8.Vuex源码分析
+
+[Vuex源码分析](https://juejin.cn/post/6895980141466386440)
+
+#### Vuex的使用
+
+```js
+// store/index
+import Vue from 'vue'
+import Vuex from 'vuex'
+import cart from './modules/cart'
+import products from './modules/products'
+
+Vue.use(Vuex)
+
+export default new Vuex.Store({
+  state: {
+    rootState: 'rootState'
+  },
+  mutations: {
+    rootMutation (state, payload) {
+      state.value = payload
+    }
+  },
+  actions: {
+    rootAction ({ commit }, payload) {
+      commit('updateValue', payload)
+    }
+  },
+  getters: {
+    rootGetter: state => state.rootState
+  },
+  modules: {
+    cart,
+    products
+  },
+})
+
+```
+
+```js
+// app.js
+import Vue from 'vue'
+import store from './store'
+
+new Vue({
+  el: '#app',
+  store,
+  render: h => h(App)
+})
+
+```
+
+使用vuex有如下3个步骤；
+
+  **1. 显式地通过 Vue.use() 来安装 Vuex；**
+
+  **2. 通过 Vuex.Store 构造与实际业务相关的 store;**
+
+  **3. 在 Vue 的实例化时，添加 store 属性；**
+
+### 9.Pinia和Vuex对比
+
+完整的 typescript 的支持；
+
+足够轻量，压缩后的体积只有1.6kb;
+
+去除 mutations，只有 state，getters，actions（这是我最喜欢的一个特点）；
+
+actions 支持同步和异步；
+
+没有模块嵌套，只有 store 的概念，store 之间可以自由使用，更好的代码分割；
+
+
 
 ## Vue3
 
