@@ -13,7 +13,11 @@
   - [Node.js](八股/node.js.md)
   - [Axios](八股/axios.md)
   - [浏览器原理](八股/浏览器.md)
-  - [可视化](八股/可视化.md)
+  - 可视化
+     - [canvas](八股/HTML5-Canvas.md)
+     - [svg](八股/SVG入门指南.md)
+     - [webgl](八股/webgl.md)
+     - [three.js&d3.js](八股/three.js&d3.js.md)
 - 综合
   - [计算机网络](八股/网络.md)
   - [数据结构与算法](八股/数据结构与算法基础.md)
