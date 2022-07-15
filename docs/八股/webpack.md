@@ -422,7 +422,7 @@ module.exports = {
 ***\*注意：\****
 
 - 如果因为某些原因你需要将CSS提取为一个文件(即不要将CSS存储在JS模块中)，此时你需要使用插件 ***\*mini-css-extract-plugin\****(后面的Pugin部分会介绍)；
-- 对于development模式(包括 webpack-dev-server)你可以使用style-loader，因为它是通过<style></style>标签的方式引入CSS的，加载会更快；
+- 对于development模式(包括 webpack-dev-server)你可以使用style-loader，因为它是通过`<style></style>`标签的方式引入CSS的，加载会更快；
 - 不要将 style-loader 和 mini-css-extract-plugin 针对同一个CSS模块一起使用！
 
 ##### 9. css-loader
@@ -511,8 +511,6 @@ module.exports = {
 [学习文章](https://juejin.cn/post/6994468137584295973)
 
 作为 `webpack` 中一个为解析 `.vue` 文件的 `loader`。主要的作用是是将单文件组件(`SFC`) 解析为 `vue runtime`是可识别的组件模块
-
-
 
 对 `.vue` 文件转换大致分为三个阶段
 
@@ -837,7 +835,306 @@ module.exports = {
 
 
 
-### 3.Webpack打包的结构
+### 3.Webpack打包后代码的结构
+
+#### 1、打包单一模块
+
+[webpack](https://so.csdn.net/so/search?q=webpack&spm=1001.2101.3001.7020).config.js
+
+```js
+module.exports = {
+    entry:"./chunk1.js",
+    output: {
+        path: __dirname + '/dist',
+        filename: '[name].js'
+    },
+};
+```
+
+chunk1.js
+
+```js
+var chunk1=1;
+exports.chunk1=chunk1;
+```
+
+打包后，main.js(webpack生成的一些注释已经去掉)
+
+```js
+(function(modules) { // webpackBootstrap
+ 	// The module cache
+ 	var installedModules = {};
+ 	// The require function
+ 	function __webpack_require__(moduleId) {
+ 		// Check if module is in cache
+ 		if(installedModules[moduleId])
+ 			return installedModules[moduleId].exports;
+ 		// Create a new module (and put it into the cache)
+ 		var module = installedModules[moduleId] = {
+ 			exports: {},
+ 			id: moduleId,
+ 			loaded: false
+ 		};
+ 		// Execute the module function
+ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+ 		// Flag the module as loaded
+ 		module.loaded = true;
+ 		// Return the exports of the module
+ 		return module.exports;
+ 	}
+
+
+ 	// expose the modules object (__webpack_modules__)
+ 	__webpack_require__.m = modules;
+ 	// expose the module cache
+ 	__webpack_require__.c = installedModules;
+ 	// __webpack_public_path__
+ 	__webpack_require__.p = "";
+ 	// Load entry module and return exports
+ 	return __webpack_require__(0);
+ })([function(module, exports) {
+	var chunk1=1;
+	exports.chunk1=chunk1;
+}]);
+```
+
+这其实就是一个立即执行函数，简化一下就是：
+
+```js
+function(modules) { // webpackBootstrap
+ 	// modules就是一个数组，元素就是一个个函数体，就是我们声明的模块
+ 	var installedModules = {};
+ 	// The require function
+ 	function __webpack_require__(moduleId) {
+ 		...
+ 	}
+ 	// expose the modules object (__webpack_modules__)
+ 	__webpack_require__.m = modules;
+ 	// expose the module cache
+ 	__webpack_require__.c = installedModules;
+ 	// __webpack_public_path__
+ 	__webpack_require__.p = "";
+ 	// Load entry module and return exports
+ 	return __webpack_require__(0);
+ }
+```
+
+整个函数里就声明了一个变量installedModules 和函数__webpack_require__，并在函数上添加了一个m,c,p属性，m属性保存的是传入的模块数组，c属性保存的是installedModules变量，P是一个空字符串。最后执行__webpack_require__函数，参数为零，并将其执行结果返回。下面看一下__webpack_require__干了什么：
+
+```js
+function __webpack_require__(moduleId) {
+		//moduleId就是调用是传入的0
+ 		// installedModules[0]是undefined,继续往下
+ 		if(installedModules[moduleId])
+ 			return installedModules[moduleId].exports;
+ 		// module就是{exports: {},id: 0,loaded: false}
+ 		var module = installedModules[moduleId] = {
+ 			exports: {},
+ 			id: moduleId,
+ 			loaded: false
+ 		};
+ 		// 下面接着分析这个
+ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+ 		// 表明模块已经载入
+ 		module.loaded = true;
+ 		// 返回module.exports(注意modules[moduleId].call的时候module.exports会被修改)
+ 		return module.exports;
+ 	}
+```
+
+接着看一下modules[moduleId].call(module.[exports](https://so.csdn.net/so/search?q=exports&spm=1001.2101.3001.7020), module, module.exports, webpack_require)，其实就是
+
+```js
+modules[moduleId].call({}, module, module.exports, __webpack_require__)
+```
+
+对call不了解当然也可以认为是这样(但是并不是等价，call能确保当模块中使用this的时候，this是指向module.exports的)：
+
+```js
+function  a(module, exports) {
+	var chunk1=1;
+	exports.chunk1=chunk1;
+}
+a(module, exports,__webpack_require__);
+```
+
+传入的module就是{exports: {},id: 0,loaded: false}，exports就是{}，__webpack_require__就是声明的__webpack_require__函数(传入这个函数有什么用呢，第二节将会介绍)；
+运行后module.exports就是{chunk1:1}。所以当我们使用chunk1这个模块的时候（比如var chunk1=require(“chunk1”),得到的就是一个对象{chunk1:1}）。如果模块里没有exports.chunk1=chunk1或者module.exports=chunk1得到的就是一个空对象{}
+
+#### 2、使用模块
+
+上面我们已经分析了webpack是怎么打包一个模块的（入口文件就是一个模块），现在我们来看一下使用一个模块，然后使用模块的文件作为入口文件
+webpack.config.js
+
+```js
+module.exports = {
+    entry:"./main.js",
+    output: {
+        path: __dirname + '/dist',
+        filename: '[name].js'
+    }
+};
+```
+
+main.js
+
+```js
+var chunk1=require("./chunk1");
+console.log(chunk1);
+```
+
+打包后
+
+```js
+(function (modules) { // webpackBootstrap
+	// The module cache
+	var installedModules = {};
+	// The require function
+	function __webpack_require__(moduleId) {
+		// Check if module is in cache
+		if (installedModules[moduleId])
+			return installedModules[moduleId].exports;
+		// Create a new module (and put it into the cache)
+		var module = installedModules[moduleId] = {
+			exports: {},
+			id: moduleId,
+			loaded: false
+		};
+		// Execute the module function
+		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+		// Flag the module as loaded
+		module.loaded = true;
+		// Return the exports of the module
+		return module.exports;
+	}
+	// expose the modules object (__webpack_modules__)
+	__webpack_require__.m = modules;
+	// expose the module cache
+	__webpack_require__.c = installedModules;
+	// __webpack_public_path__
+	__webpack_require__.p = "";
+	// Load entry module and return exports
+	return __webpack_require__(0);
+})([function (module, exports, __webpack_require__) {
+	var chunk1=__webpack_require__(1);
+	console.log(chunk1);
+}, function (module, exports) {
+    var chunk1 = 1;
+	exports.chunk1 = chunk1;
+}]);
+```
+
+不一样的地方就是自执行函数的参数由
+
+```js
+[function(module, exports) { var chunk1=1; exports.chunk1=chunk1;}]
+```
+
+变为
+
+```js
+[function (module, exports, __webpack_require__) {
+	var chunk1=__webpack_require__(1);
+	console.log(chunk1);
+}, function (module, exports) {
+    var chunk1 = 1;
+	exports.chunk1 = chunk1;
+}]
+```
+
+其实就是多了一个main模块，不过这个模块没有导出项，而且这个模块依赖于chunk1模块。所以当运行__webpack_require__(0)的时候，main模块缓存到installedModules[0]上，modules[0].call(也就是调用main模块)的时候，chunk1被缓存到installedModules[1]上，并且导出对象{chunk1：1}给模块main使用
+
+#### 3、重复使用模块
+
+webpack.config.js
+
+```js
+module.exports = {
+    entry:"./main.js",
+    output: {
+        path: __dirname + '/dist',
+        filename: '[name].js'
+    }
+};
+```
+
+main.js
+
+```js
+var chunk1=require("./chunk1");
+var chunk2=require(".chunlk2");
+console.log(chunk1);
+console.log(chunk2);
+```
+
+chunk1.js
+
+```js
+var chunk2=require("./chunk2");
+var chunk1=1;
+exports.chunk1=chunk1;
+```
+
+chunk2.js
+
+```js
+var chunk2=1;
+exports.chunk2=chunk2;
+```
+
+打包后
+
+```js
+(function (modules) { // webpackBootstrap
+	// The module cache
+	var installedModules = {};
+	// The require function
+	function __webpack_require__(moduleId) {
+		// Check if module is in cache
+		if (installedModules[moduleId])
+			return installedModules[moduleId].exports;
+		// Create a new module (and put it into the cache)
+		var module = installedModules[moduleId] = {
+			exports: {},
+			id: moduleId,
+			loaded: false
+		};
+		// Execute the module function
+		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+		// Flag the module as loaded
+		module.loaded = true;
+		// Return the exports of the module
+		return module.exports;
+	}
+	// expose the modules object (__webpack_modules__)
+	__webpack_require__.m = modules;
+	// expose the module cache
+	__webpack_require__.c = installedModules;
+	// __webpack_public_path__
+	__webpack_require__.p = "";
+	// Load entry module and return exports
+	return __webpack_require__(0);
+})([function (module, exports, __webpack_require__) {
+
+	var chunk1 = __webpack_require__(1);
+	var chunk2 = __webpack_require__(2);
+	console.log(chunk1);
+	console.log(chunk2);
+}, function (module, exports, __webpack_require__) {
+
+	__webpack_require__(2);
+	var chunk1 = 1;
+	exports.chunk1 = chunk1;
+}, function (module, exports) {
+
+	var chunk2 = 1;
+	exports.chunk2 = chunk2;
+}]);
+```
+
+不难发现，当需要重复使用模块的时候，缓存变量installedModules 就起作用了
+
+
 
 ### 4.热更新原理
 
@@ -946,7 +1243,6 @@ if(process.env.NODE_ENV === 'development'){
   require('./bar');
   exports.foo = 'foo';
 }
-
 ```
 
 而 ESM 方案则从规范层面规避这一行为，它要求所有的导入导出语句只能出现在模块顶层，且导入导出的模块名必须为字符串常量，这意味着下述代码在 ESM 方案下是非法的：
@@ -998,7 +1294,6 @@ sourceMap`是一项将编译、打包、压缩后的代码映射回源代码的�
   "names": ["src", "maps", "are", "fun"], // mappings使用的符号名称列表
   "mappings": "A,AAAB;;ABCDE;"            // 带有编码映射数据的字符串
 }
-
 ```
 
 其中`mappings`数据有如下规则：
@@ -1020,6 +1315,18 @@ sourceMap`是一项将编译、打包、压缩后的代码映射回源代码的�
 
 
 ### 9.手写loader
+
+#### [loader 接受的参数](https://kiraraty.github.io/fe-doc/#/八股/webpack5?id=loader-接受的参数)
+
+-   `content` 源文件的内容
+-   `map` SourceMap 数据
+-   `meta` 数据，可以是任何内容
+
+`this.callback`方法则更灵活，因为它允许传递多个参数，而不仅仅是content
+
+**传递map，让source-map不中断**
+
+**传递meta，让下一个loader接收到其他参数**
 
 在配资文件中
 
@@ -1048,6 +1355,8 @@ module.exports = {
 通过配置可以看出，针对每个文件类型，`loader`是支持以数组的形式配置多个的，因此当`Webpack`在转换该文件类型的时候，会按顺序链式调用每一个`loader`，前一个`loader`返回的内容会作为下一个`loader`的入参。因此`loader`的开发需要遵循一些规范，比如返回值必须是标准的`JS`代码字符串，以保证下一个`loader`能够正常工作，同时在开发上需要严格遵循“单一职责”，只关心`loader`的输出以及对应的输出
 
 `loader`函数中的`this`上下文由`webpack`提供，可以通过`this`对象提供的相关属性，获取当前`loader`需要的各种信息数据，事实上，这个`this`指向了一个叫`loaderContext`的`loader-runner`特有对象
+
+**loader API**
 
 ### 10.手写plugin
 
@@ -1165,7 +1474,6 @@ function babelLoader (sourceCode,options) {
         }]
     ]
 }
-
 ```
 
 -   `useBuiltIns`--`"usage"`| `"entry"`| `false`
@@ -1224,7 +1532,6 @@ class Circle {}
 // babel-runtime 编译Class需要借助_classCallCheck这个工具函数
 function _classCallCheck(instance, Constructor) { //... } 
 var Circle = function Circle() { _classCallCheck(this, Circle); };
-复制代码
 ```
 
 如果我们项目中存在多个文件使用了`class`，那么无疑在每个文件中注入这样一段冗余重复的工具函数将是一种灾难。
@@ -1287,12 +1594,6 @@ babel-runtime 是为了减少重复代码而生的。 babel生成的代码，可
 
 babel-runtime插件能够将这些工具函数的代码转换成require语句，指向为对babel-runtime的引用，如 require('babel-runtime/helpers/classCallCheck'). 这样， classCallCheck的代码就不需要在每个文件中都存在了。
 
-
-
-
-
-
-
 大多数JavaScript Parser遵循 `estree` 规范，Babel 最初基于 `acorn` 项目(轻量级现代 JavaScript 解析器) Babel大概分为三大部分：
 
 - 解析：将代码转换成 AST
@@ -1347,7 +1648,7 @@ webpack dev server 在启动时需要先build一遍，而这个过程需要消�
 
 重点:这里需要递归识别依赖，构建依赖图谱。图谱对象就是类似下面这种
 
-```
+```js
 { './app.js':
    { dependencies: { './test1.js': './test1.js' },
      code:
@@ -1371,7 +1672,7 @@ t2;\nexports["default"] = _default;' } }
 
 如：
 
-```
+```js
 浏览器就会像服务器发起一个GET
 
 http://localhost:3000/src/main.js请求main.js文件：
@@ -1389,7 +1690,7 @@ createApp(App).mount('#app')
 
 Vite 的主要功能就是通过劫持浏览器的这些请求，并在后端进行相应的处理将项目中使用的文件通过简单的分解与整合，然后再返回给浏览器,Vite整个过程中没有对文件进行打包编译，所以其运行速度比原始的webpack开发编译速度快出许多！
 
-#### webpack缺点一。缓慢的服务器启动
+#### webpack缺点1.缓慢的服务器启动
 
 当冷启动开发服务器时，基于打包器的方式是在提供服务前去急切地抓取和构建你的整个应用。
 
@@ -1425,6 +1726,40 @@ Vite 将会使用 esbuild 预构建依赖。Esbuild 使用 Go 编写，并且比
 #### vite缺点3
 
 1.还没有被大规模使用,很多问题或者诉求没有真正暴露出来，vite真正崛起那一天，是跟vue3有关系的,当vue3广泛开始使用在生产环境的时候，vite也就大概率意味着被大家慢慢开始接受了
+
+#### Vite快速原因
+
+Vite这么快，是利用了ES Modules嘛？这只是其中的一部分。
+
+Vite在冷启动的时候，将代码分为依赖和源码两部分，源码部分通常会使用ESModules或者CommonJS拆分到大量小模块中，而对于依赖部分，Vite使用Esbuild对依赖进行预构建。 而Esbuild有以下优势。
+
+1.  语言优势，Esbuild使用Go语言开发，相对于JavaScript，Go语言是一种编译型语言，在编译阶段就已经将源码转译为机器码。
+
+![image.png](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/894e8c3136944c049dd0d22d95eb4494~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp?) 2. 多线程，Rollup和webpack都没有使用多线程的能力，而Esbuild在算法上进行了大量的优化，充分的利用了多CPU的优势。
+
+以上这些原因，导致Esbuild构建模块的速度比webpack快到10-100倍。
+
+其次，对于源码部分，Vite省略了webpack遍历打包的时间，这部分工作让浏览器来执行，基本没有打包的时间，Vite只是在浏览器发送对模块的请求时，拦截请求，对源码进行转换后提供给浏览器，实现了源码的动态导入。
+
+以我们上面的读技术文章的例子来看，我们不关心webpack，Rollup和Parcel相关链接的内容是什么，这些内容不影响我们阅读当前的文章，只有当我们需要使用到相关链接内容的时候，我们才去点击链接查看对应的内容。
+
+![image.png](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/c34d0fa22cfa43f78b6205b8bc408112~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp?)
+
+这两方面加起来，让Vite的冷启动快到不可思议。
+
+而在热更新方面，基于已经启动的服务，我们不应该对所有的改动都完全重构打包项目，我们只需要对失活的模块进行热重载，而不影响页面的其他部分，但webpack依然会随着项目规模的扩大而变得更慢，因为webpack包含了完整的打包项目，对失活模块的替换和查找都会因为体积的增大而更加耗时。
+
+相比之下，Vite的热更新也是在原生的ESM上进行的，热更新的范围只在当前模块上，无论项目的规模多大，也只会加载当前使用到的模块，编辑一般也是在当前加载的模块上进行，控制住了体积，热更新的速度自然不受影响。
+
+我们已经从冷启动，热更新，使用的语言方面，解释了Vite为什么会这么快，但是Vite也存在一些短板。
+
+1.  Vite的生态与webpack相差甚远，webpack的loader和plugin已经非常丰富，而Vite在这方面还缺少积累。
+2.  Vite开发环境很快，但生产环境还达不到如此惊艳的程度，Vite生产环境使用Rollup进行构建的，还是需要打包的，虽然在研发环境下，Vite因为不需要打包，快得惊人，但相应的也增加了网络请求的次数，而在生产环境使用ESM效率仍然低下，综合考虑，在生产环境依然需要进行打包，而Esbuild对css的处理和代码分割并不友好，最终选择了Rollup。
+3.  Vite作为新出来的构建工具，还没有经历过大量的项目考验，“实战经验”不够成熟，可能会存在没有发现的问题。
+
+>   当我们开始构建越来越大型的应用时，需要处理的 JavaScript 代码量也呈指数级增长。包含数千个模块的大型项目相当普遍。我们开始遇到性能瓶颈 —— 使用 JavaScript 开发的工具通常需要很长时间（甚至是几分钟！）才能启动开发服务器，即使使用 HMR，文件修改后的效果也需要几秒钟才能在浏览器中反映出来。如此循环往复，迟钝的反馈会极大地影响开发者的开发效率和幸福感。
+>
+>   Vite 旨在利用生态系统中的新进展解决上述问题：浏览器开始原生支持 ES 模块，且越来越多 JavaScript 工具使用编译型语言编写。
 
 ### 13.如何进行css的抽离
 
@@ -1608,7 +1943,7 @@ plugins: [
 -   `IgnorePlugin` 直接就将符合匹配条件的模块，不再进行引入，代码中没有。
 -   `noParse` 该引入还是会引入，只是不参与loader或webpack的解析及打包
 
-### 使用DllPlugin
+##### 使用DllPlugin
 
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/3dce44d09e6d463788476a5951eecf8a.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBA56Wl5ZOl55qE6K-0,size_20,color_FFFFFF,t_70,g_se,x_16)
 
@@ -1834,3 +2169,51 @@ resolve: {
 
 
 
+### 17.代码分割
+
+拆分原则是：
+
+-   业务代码和第三方库分离打包，实现代码分割；
+-   业务代码中的公共业务模块提取打包到一个模块；
+-   第三方库最好也不要全部打包到一个文件中，因为第三方库加起来通常会很大，我会把一些特别大的库分别独立打包，剩下的加起来如果还很大，就把它按照一定大小切割成若干模块
+
+optimization.splitChunks
+
+-   `cacheGroups`是`splitChunks`配置的核心，对代码的拆分规则全在`cacheGroups`缓存组里配置。缓存组的每一个属性都是一个配置规则，我这里给他的`default`属性进行了配置，属性名可以不叫default可以自己定
+
+-   name：提取出来的公共模块将会以这个来命名，可以不配置，如果不配置，就会生成默认的文件名，大致格式是`index～a.js`这样的。
+
+-   chunks：指定哪些类型的chunk参与拆分，值可以是string可以是函数。如果是string，可以是这个三个值之一：`all`, `async`, `initial`，`all` 代表所有模块，`async`代表只管异步加载的, `initial`代表初始化时就能获取的模块。如果是函数，则可以根据chunk参数的name等属性进行更细致的筛选。
+-   `splitChunks`是自带默认配置的，而缓存组默认会继承这些配置，其中有个`minChunks`属性：
+    -   它控制的是每个模块什么时候被抽离出去：当模块被不同entry引用的次数大于等于这个配置值时，才会被抽离出去。
+    -   它的默认值是1。也就是任何模块都会被抽离出去（入口模块其实也会被webpack引入一次）
+
+我希望公共模块`common.js`中，业务代码和第三方模块jquery能够剥离开来。
+
+我们需要再添加一个拆分规则。
+
+```js
+//webpack.config.js
+
+optimization: {
+    splitChunks: {
+    	minSize: 30,  //提取出的chunk的最小大小
+        cacheGroups: {
+            default: {
+                name: 'common',
+                chunks: 'initial',
+                minChunks: 2,  //模块被引用2次以上的才抽离
+                priority: -20
+            },
+            vendors: {  //拆分第三方库（通过npm|yarn安装的库）
+            	test: /[\\/]node_modules[\\/]/,
+                name: 'vendor',
+                chunks: 'initial',
+                priority: -10
+            }
+        }
+    }
+}
+```
+
+我给cacheGroups添加了一个vendors属性（属性名可以自己取，只要不跟缓存组下其他定义过的属性同名就行，否则后面的拆分规则会把前面的配置覆盖掉）

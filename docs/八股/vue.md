@@ -1370,7 +1370,7 @@ function __watcher(fn){
 
 我们知道在Vue中 Child 组件的标签 的中间是不可以包着什么的 。
 
-![img](https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/692ecedc80604d4ea8921e84bf0baf19~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp)
+![image-20220714223514708](https://s2.loli.net/2022/07/14/ld6RJOhpcTbBPvN.png)
 
 可是往往在很多时候我们在使用组件的时候总想在组件间外面自定义一些标签，vue新增了一种插槽机制，叫做作用域插槽。
 
@@ -1378,7 +1378,7 @@ function __watcher(fn){
 
 在 2.6.0 中，我们为具名插槽和作用域插槽引入了一个新的统一的语法 (即 `v-slot` 指令)。它取代了 `slot` 和 `slot-scope`
 
-子组件里面写<slot>标签
+子组件里面写`<slot>`标签
 
 #### 匿名插槽
 
@@ -1420,7 +1420,7 @@ father.vue
 
 child.vue
 
-![image-20220621091217351](C:/Users/Administrator/AppData/Roaming/Typora/typora-user-images/image-20220621091217351.png)
+![image-20220621091217351](https://s2.loli.net/2022/07/14/HQG3KPIelOzysAR.png)
 
 #### 作用域插槽
 
@@ -3014,9 +3014,9 @@ seo 本质是一个服务器向另一个服务器发起请求，解析请求内�
 
 大型项目中可能会涉及大量的DOM操作、复杂的动画效果，也就不适合使用Vue、react框架进行开发
 
-## 生命周期
+## 生命周期![b1493c640d7e4cf2bd7785cea7c86789](https://s2.loli.net/2022/07/14/mXbkqBsVgAYinc1.png)
 
-![image.png](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/b1493c640d7e4cf2bd7785cea7c86789~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp?)
+
 
 ### 1.生命周期有哪些，vue2和vue3有什么区别
 
@@ -5287,6 +5287,10 @@ new Vue({
 
   **3. 在 Vue 的实例化时，添加 store 属性；**
 
+
+
+
+
 ### 9.Pinia和Vuex对比
 
 完整的 typescript 的支持；
@@ -5298,6 +5302,134 @@ new Vue({
 actions 支持同步和异步；
 
 没有模块嵌套，只有 store 的概念，store 之间可以自由使用，更好的代码分割；
+
+### 10.手写vuex
+
+index.js
+
+```js
+import Vue from 'vue'
+// import Vuex from 'vuex' //引用三方库
+import Vuex from './vuex'  //使用自定义vuex.js
+
+Vue.use(Vuex)  //使用插件
+
+//每一个vue实例中都有一个属性$store
+export default new Vuex.Store({
+  state: {
+    num: 1
+  },
+  getters: {
+    getNum(state) {
+      return state.num;
+    }
+  },
+  mutations: {  //同步
+    //payload---传入参数
+    syncAdd(state, payload) {
+      state.num += payload;
+    },
+    syncMinus(state, payload) {
+      state.num -= payload;
+    }
+  },
+  actions: {  //异步
+    asyncAdd({commit, dispatch}, payload) {
+      //模拟ajax
+      setTimeout(()=>{
+        //调用mutation
+        commit("syncAdd", payload);
+      }, 1000)
+    }
+  },
+  modules: {
+  }
+})
+```
+
+vuex.js
+
+```js
+//自己实现vuex
+let Vue;
+
+const forEach = (obj, callback) => {
+    Object.keys(obj).forEach(key => {
+        callback(key, obj[key]);
+    })
+}
+
+class Store{
+    constructor(options){
+        this.vm = new Vue({
+            data: {
+                state: options.state
+            }
+        })
+
+        //for getters
+        let getters = options.getters || {}
+        this.getters = {}
+        //把getters中属性定义到this.getters
+        Object.keys(getters).forEach(getterName=>{
+            Object.defineProperty(this.getters, getterName, {
+                get: ()=>{
+                    return getters[getterName](this.state);
+                }
+            })
+        })
+        //for mutations
+        let mutations = options.mutations || {}
+        this.mutations = {}
+        Object.keys(mutations).forEach(mutationName=>{
+            this.mutations[mutationName] = payload => {
+                mutations[mutationName](this.state, payload);
+            }
+        })
+        //for actions
+        let actions = options.actions || {}
+        this.actions = {}
+        Object.keys(actions).forEach(actionName=>{
+            this.actions[actionName] = payload=>{
+                actions[actionName](this, payload);
+            }
+        })
+    }
+    dispatch(type, payload) {
+        this.actions[type](payload);
+    }
+    commit = (type, payload)=>{
+        console.log(this)
+        this.mutations[type](payload)
+    }
+    get state(){
+        return this.vm.state;
+    }
+}
+
+// 安装插件
+// 目的：让每一个组件都有$store
+const install = (_Vue)=>{
+    Vue = _Vue;
+    //给每一个组件都注册一个beforeCreate
+    Vue.mixin({
+        beforeCreate(){
+            console.log(this.$options.name)
+            if (this.$options && this.$options.store) {
+                //根
+                this.$store = this.$options.store;
+            } else {
+                //子
+                this.$store = this.$parent && this.$parent.$store;
+            }
+        }
+    })
+}
+
+export default {
+    install, Store
+}
+```
 
 
 
