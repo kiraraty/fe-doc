@@ -4167,6 +4167,245 @@ formdata.append('filename', md5code+'.'+fileType);
 
 ### 5.FormData 传输表单文件
 
+#### multipart/form-data
+
+在前端开发过程中，不可避免地会遇到表单，即 `multipart/form-data`，你是否知道：
+
+- HTTP 如何传输 `multipart/form-data`
+- 服务端如何解析 `multipart/form-data`
+- 浏览器如何组装 `multipart/form-data`
+
+我们来看一个简单的 form 表单：
+
+```xml
+<form action="/submit" method="POST" enctype="multipart/form-data">
+    <input type="text" name="username"><br>
+    <input type="text" name="password"><br>
+    <button>提交</button> 
+</form>
+复制代码
+```
+
+当提交的时候，查看浏览器的网络请求：
+
+请求头：
+
+```makefile
+POST /submit HTTP/1.1
+Host: localhost:3000
+Accept-Encoding: gzip, deflate
+Content-Type: multipart/form-data; boundary=---------------------------340073633417401055292887335273
+Content-Length: 303
+复制代码
+```
+
+请求体：
+
+```lua
+-----------------------------340073633417401055292887335273
+Content-Disposition: form-data; name="username"
+
+张三
+-----------------------------340073633417401055292887335273
+Content-Disposition: form-data; name="password"
+
+123456
+-----------------------------340073633417401055292887335273--
+
+复制代码
+```
+
+这就是 `multipart/form-data` 的传输过程了，但是这里面有三个大坑：
+
+- 请求头 Content-Type 里面的 boundary 分隔符比请求体用的分隔符少了两个杠(-)
+
+  > 从请求头中取分隔符之后，一定要在之前加两个 - 再对请求体进行分割
+
+- 请求头 Content-Length 的换行用的是 `\r\n` 而不是 `\n`
+
+  > 请求体的真实面目是下面的字符串： "-----------------------------340073633417401055292887335273\r\nContent-Disposition: form-data; name="username"\r\n\r\n张三\r\n-----------------------------340073633417401055292887335273\r\nContent-Disposition: form-data; name="password"\r\n\r\n123456\r\n-----------------------------340073633417401055292887335273--\r\n"
+
+- 请求头 Content-Length 的值表示字节的长度，而不是字符串的长度
+
+  > 因为字节的长度跟编码无关，而字符串的长度往往跟编码有关，举个例子，在 utf8 编码下：
+
+  > ```arduino
+  > console.log('a1'.length) // 2
+  > console.log(Buffer.from('a1').length) // 2
+  > console.log('张三'.length) // 2
+  > console.log(Buffer.from('张三').length) // 6
+  > 复制代码
+  > ```
+
+如果仅仅是基本的字符串类型，完全可以用 `www-form-urlencoded` 来进行传输，`multipart/form-data` 强大的地方是其能够传输二进制文件的能力，我们看一下如果包含二进制文件的话应该如何处理。我们增加一个 file 类型的 input，上传一张图片作为头像，发现请求体多出了一部分：
+
+```arduino
+-----------------------------114007818631328932362459060915
+Content-Disposition: form-data; name="avatar"; filename="1.jpg"
+Content-Type: image/jpeg
+
+xxxxxx文件的二进制数据xxxxx
+
+```
+
+可以发现，文件类型的 part 跟之前字符串的格式有所不同了，head 部分有两个头字段，多出一个 Content-Type 头，而且 Content-Disposition 头多出来 filename 字段，body 部分是文件的二进制数据。
+
+了解这这些规律之后，接下来就可以在服务端对 `multipart/form-data` 进行解码了：
+
+```javascript
+const http = require('http')
+const fs = require('fs')
+http
+  .createServer(function (req, res) {
+    // 获取 content-type 头，格式为： multipart/form-data; boundary=--------------------------754404743474233185974315
+    const contentType = req.headers['content-type']
+    const headBoundary = contentType.slice(contentType.lastIndexOf('=') + 1) // 截取 header 里面的 boundary 部分
+    const bodyBoundary = '--' + headBoundary // 前面加两个 - 才是 body 里面真实的分隔符
+    const arr = [], obj = {}
+    req.on('data', (chunk) => arr.push(chunk))
+    req.on('end', function () {
+      const parts = Buffer.concat(arr).split(bodyBoundary).slice(1, -1) // 根据分隔符进行分割
+      for (let i = 0; i < parts.length; i++) {
+        const { key, value } = handlePart(parts[i])
+        obj[key] = value
+      }
+      res.end(JSON.stringify(obj))
+    })
+  })
+  .listen(3000)
+```
+
+其中关键的就是 handlePart 部分，即对分隔出来的每一部分单独处理，如果是二进制的就保存到文件，是字符串就返回键值对：
+
+```javascript
+function handlePart(part) {
+  const [head, body] = part.split('\r\n\r\n') // buffer 分割
+  const headStr = head.toString()
+  const key = headStr.match(/name="(.+?)"/)[1]
+  const match = headStr.match(/filename="(.+?)"/)
+  if (!match) {
+    const value = body.toString().slice(0, -2) // 把末尾的 \r\n 去掉
+    return { key, value }
+  }
+  const filename = match[1]
+  const content = part.slice(head.length + 4, -2) // 文件二进制部分是 head + \r\n\r\n 再去掉最后的 \r\n
+  fs.writeFileSync(filename, content)
+  return { key, value: filename }
+}
+复制代码
+```
+
+这里面涉及到 buffer 的分割，nodejs 中并没有提供 split 方法，可根据 slice 方法自己实现：
+
+```ini
+Buffer.prototype.split = function (sep) {
+  let sepLength = sep.length, arr = [], offset = 0, currentIndex = 0
+  while ((currentIndex = this.indexOf(sep, offset)) !== -1) {
+    arr.push(this.slice(offset, currentIndex))
+    offset = currentIndex + sepLength
+  }
+  arr.push(this.slice(offset))
+  return arr
+}
+```
+
+
+
+
+
+#### FormData 传输表单文件
+
+在浏览器中，我们用 `<form>` 元素来提交表单中的文件，表单的编码类型由 `enctype` 属性决定，必须是以下三种之一：
+
+- `application/x-www-form-urlencoded`：表单默认的编码类型
+- `multipart/form-data`：如果包含文件，只能选择这种类型
+- `text/plain`：无需编码，直接发送
+
+最重要的就是 `multipart/form-data` 这种类型了，因为可以传输文件，之前有写过专门的[文章](https://juejin.cn/post/6854573218679046157)介绍过其底层原理。在 node.js 中我们一般用 [form-data](https://link.juejin.cn?target=https%3A%2F%2Fgithub.com%2Fform-data%2Fform-data) 这个包来模拟浏览器中的表单，使用方法如下：
+
+```js
+var form = new FormData()
+form.append('my_string', 'my value')
+form.append('my_integer', 1)
+form.append('my_boolean', true)
+form.append('my_buffer', Buffer.from('hello'))
+form.append('my_file', fs.readFileSync('/foo/bar.jpg'))
+form.append('my_file', fs.createReadStream('/foo/bar.jpg'))
+```
+
+用法很简单，不再赘述，对于文件类型，用 `createReadStream` 或者 `readFileSync` 两种方式来读取即可，这里主要强调一点：form-data 对这两种格式的处理稍有不同。请看下面两段代码：
+
+1. `createReadStream`
+
+   ```js
+   var media = new FormData()
+   media.append('contentType', 'image/jpeg')
+   media.append('value', fs.createReadStream('/Users/keliq/Pictures/1.jpeg'))
+   ```
+
+2. `readFileSync`
+
+   ```js
+   var media = new FormData()
+   media.append('contentType', 'image/jpeg')
+   media.append('value', fs.readFileSync('/Users/keliq/Pictures/1.jpeg'))
+   ```
+
+抓包得到的结果是：
+
+1. `createReadStream`
+
+   ```arduino
+   ----------------------------015517802272525417891317
+   Content-Disposition: form-data; name="contentType"
+   
+   image/jpeg
+   ----------------------------015517802272525417891317
+   Content-Disposition: form-data; name="value"; filename="1.jpeg"
+   Content-Type: image/jpeg
+   ```
+
+2. `readFileSync`
+
+   ```css
+   ----------------------------152374567568773937407488
+   Content-Disposition: form-data; name="contentType"
+   
+   image/jpeg
+   ----------------------------152374567568773937407488
+   Content-Disposition: form-data; name="value"
+   Content-Type: application/octet-stream
+   ```
+
+最后发现原因在这个 [merge](https://link.juejin.cn?target=https%3A%2F%2Fgithub.com%2Fform-data%2Fform-data%2Fpull%2F128%2Ffiles) 里面，把 `Content-Type` 默认设置为 `application/octet-stream` 了，那如果想和 createReadStream 的格式一样，需要改成这样子：
+
+```js
+var media = new FormData()
+media.append('contentType', 'image/jpeg')
+media.append('value', fs.readFileSync('/Users/keliq/Pictures/1.jpeg'), '1.jpeg')
+```
+
+这是 form-data 库提供的 API：
+
+```js
+// Set filename by providing a string for options
+form.append( 'my_file', fs.createReadStream('/foo/bar.jpg'), 'bar.jpg' );
+
+// provide an object.
+form.append( 'my_file', fs.createReadStream('/foo/bar.jpg'), {filename: 'bar.jpg', contentType: 'image/jpeg', knownLength: 19806} );
+```
+
+查看了一下源码，原因是如果提供了文件名，就会用 [mime-types](https://link.juejin.cn?target=https%3A%2F%2Fgithub.com%2Fjshttp%2Fmime-types) 的 lookup 方法自动判断 `Content-Type`，例如：
+
+```js
+mime.lookup('json') // 'application/json'
+mime.lookup('.md') // 'text/markdown'
+mime.lookup('file.html') // 'text/html'
+mime.lookup('folder/file.js') // 'application/javascript'
+```
+
+这也是为什么当提供了 `1.jpeg` 参数之后，`Content-Type` 会从默认的 `application/octet-stream` 变成了 `image/jpeg`。
+
 
 
 ### 6.设计一个分页功能
