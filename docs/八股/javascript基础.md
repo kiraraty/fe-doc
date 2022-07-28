@@ -172,6 +172,57 @@ console.log(Object.getOwnPropertySymbols(task));
 //[Symbol(status)]
 ```
 
+###### 使用Symbol来替代常量
+
+有以下场景
+
+```js
+// 赋值
+const one = 'oneXin'
+const two = 'twoXin'
+
+function fun(key) {
+  switch (key) {
+    case one:
+        return 'one'
+      break;
+    case two:
+        return 'two'
+      break;
+  }
+}
+```
+
+如果变量少的话还好，但是变量多的时候，赋值命名很烦，可以利用Symbol的唯一性
+
+```js
+const one = Symbol()
+const two = Symbol()
+```
+
+###### 使用Symbol定义类的私有属性
+
+以下例子，PASSWORD属性无法在实例里获取到
+
+```js
+class Login {
+  constructor(username, password) {
+    const PASSWORD = Symbol()
+    this.username = username
+    this[PASSWORD] = password
+  }
+  checkPassword(pwd) { return this[PASSWORD] === pwd }
+}
+
+const login = new Login('123456', 'hahah')
+
+console.log(login.PASSWORD) // 报错
+console.log(login[PASSWORD]) // 报错
+console.log(login[PASSWORD]) // 报错
+```
+
+
+
 ##### Symbol.iterator
 
 `Symbol.iterator` 指定函数是否会返回对象的迭代器。
