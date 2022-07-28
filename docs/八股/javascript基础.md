@@ -110,6 +110,36 @@ let systemID = Symbol('sys');
 console.log(Symbol.keyFor(systemID)); // undefined
 ```
 
+##### Symbol.toStringTag
+
+这是一个内置 symbol，它通常作为对象的属性键使用，对应的属性值应该为字符串类型，这个字符串用来表示该对象的自定义类型标签
+
+我们通常利用Object.prototype.toString()来返回数据类型，比如：
+
+```js
+console.log(Object.prototype.toString.call("foo")); // "[object String]"
+console.log(Object.prototype.toString.call([1, 2])); // "[object Array]"
+console.log(Object.prototype.toString.call(3)); // "[object Number]"
+console.log(Object.prototype.toString.call(true)); // "[object Boolean]"
+console.log(Object.prototype.toString.call(undefined)); // "[object Undefined]"
+console.log(Object.prototype.toString.call(null)); // "[object Null]"
+```
+
+
+那么这些返回值[object Xxx]是怎么来的？其实就是Object.prototype.toString()方法会去读取Symbol.toStringTag标签并把它包含在自己的返回值里。
+
+```js
+let myObj = {}
+Object.defineProperty(myObj, Symbol.toStringTag, { value: "Yuhua" });
+console.log(Object.prototype.toString.call(myObj)); //[object Yuhua]
+```
+
+
+上面的例子第二行就通过Object.defineProperty改写了myObj的Symbol.toStringTag，将值改为Yuhua，所以，原本myObj的类型[object Object]变成了[object Yuhua]
+
+结论：
+通过重定义数据的Symbol.toStringTag可以改写Object.prototype.toString.call()返回的数据类型。**也就是说，可以使得数据类型自定义**
+
 ##### Symbol应用
 
 ######  使用Symbol作唯一值
@@ -171,57 +201,6 @@ console.log(Object.getOwnPropertyNames(task));
 console.log(Object.getOwnPropertySymbols(task));
 //[Symbol(status)]
 ```
-
-###### 使用Symbol来替代常量
-
-有以下场景
-
-```js
-// 赋值
-const one = 'oneXin'
-const two = 'twoXin'
-
-function fun(key) {
-  switch (key) {
-    case one:
-        return 'one'
-      break;
-    case two:
-        return 'two'
-      break;
-  }
-}
-```
-
-如果变量少的话还好，但是变量多的时候，赋值命名很烦，可以利用Symbol的唯一性
-
-```js
-const one = Symbol()
-const two = Symbol()
-```
-
-###### 使用Symbol定义类的私有属性
-
-以下例子，PASSWORD属性无法在实例里获取到
-
-```js
-class Login {
-  constructor(username, password) {
-    const PASSWORD = Symbol()
-    this.username = username
-    this[PASSWORD] = password
-  }
-  checkPassword(pwd) { return this[PASSWORD] === pwd }
-}
-
-const login = new Login('123456', 'hahah')
-
-console.log(login.PASSWORD) // 报错
-console.log(login[PASSWORD]) // 报错
-console.log(login[PASSWORD]) // 报错
-```
-
-
 
 ##### Symbol.iterator
 
@@ -637,131 +616,19 @@ Math不是构造函数，不需要new来调用，直接使用里面的属性和�
 
 Date()对象是一个构造函数，必须使用new来调用创建我们的日期对象，即为需要**实例化**后才能使用。
 
-**如果没有输入任何参数，则Date的构造器会依据系统设置的当前时间来创建一个Date对象**。
+- 如果没有输入任何参数，则Date的构造器会依据系统设置的当前时间来创建一个Date对象。
 
-```js
- let time=new Date()   //Sun Jul 17 2022 21:01:37 GMT+0800 (中国标准时间)
- let time1 = Date.parse(new Date()); //1603009257000,精确到秒
- let time2 = new Date().getTime(); //1603009495724,精确到毫秒
- let time3 = new Date().valueOf(); //1603009495724.精确到毫秒
- let time4 = Date.now();//1603009495724,精确到毫秒，实际上是new Date().getTime()
-```
+#### 日期格式化
 
-**创建Date对象时,当我们需要创建一个特定的时间时,其有下面几种方式**:
-
-month:用英文表示月份名称，从January到December
-
-mth:用整数表示月份，从0-11(1月到12月)
-
-dd:表示一个月中的第几天，从1到31
-
-yyyy:四位数表示的年份
-
-hh:小时数，从0（午夜）到23（晚11点）
-
-mm:分钟数，从0到59的整数
-
-ss:秒数，从0到59的整数
-
-ms:毫秒数，为大于等于0的整数  参数表示的是需要创建的时间和GMT时间1970年1月1日之间相差的毫秒数
-
-```js
-new Date("month dd,yyyy hh:mm:ss");
-new Date("month dd,yyyy");
-new Date(yyyy,mth,dd,hh,mm,ss);
-new Date(yyyy,mth,dd);
-new Date(ms);
-```
-
-```js
-new Date("January 12,2006 22:19:35");
-
-new Date("January 12,2006");
-
-new Date(2006,0,12,22,19,35);
-
-new Date(2006,0,12);
-
-new Date(1137075575000);
-```
-
-使用例子
-
-```js
-var date =new Date(1603009495724);
-console.log(date.getMonth())  //9
-```
-
-
-
-##### 获取时间
-
-| 方法名            | 说明                             |
-| ----------------- | -------------------------------- |
-| getFullyear()     | 获取当年                         |
-| getMonth()        | 获取当月 0~11 要+1               |
-| getDate()         | 获取当前日期                     |
-| getDay()          | 获取星期几 周日0~周六6           |
-| getHours()        | 获取当前小时                     |
-| getMinutes()      | 获取当前分钟                     |
-| getSeconds()      | 获取当前秒钟                     |
-| getMilliseconds() | 获取毫秒(0 ~ 999）               |
-| getTime()         | 获取1970.1.1至今的毫秒数(时间戳) |
-
-
-
-##### 设置时间
-
-| setDate()         | 设置 Date 对象中月的某一天 (1 ~ 31) |
-| ----------------- | ----------------------------------- |
-| setMonth()        | 设置 Date 对象中月份 (0 ~ 11)       |
-| setFullYear()     | 设置 Date 对象中的年份（四位数字）  |
-| setHours()        | 设置 Date 对象中的小时 (0 ~ 23)     |
-| setMinutes()      | 设置 Date 对象中的分钟 (0 ~ 59)     |
-| setSeconds()      | 设置 Date 对象中的秒钟 (0 ~ 59)     |
-| setMilliseconds() | 设置 Date 对象中的毫秒 (0 ~ 999)    |
-| setTime()         | 以毫秒设置 Date 对象                |
-
-##### [时间格式化](https://www.cnblogs.com/zhangpengshou/archive/2012/07/19/2599053.html)
-
-```js
-/**
- *对Date的扩展，将 Date 转化为指定格式的String
- *月(M)、日(d)、小时(h)、分(m)、秒(s)、季度(q) 可以用 1-2 个占位符，
- *年(y)可以用 1-4 个占位符，毫秒(S)只能用 1 个占位符(是 1-3 位的数字)
- *例子：
- *(new Date()).Format("yyyy-MM-dd hh:mm:ss.S") ==> 2006-07-02 08:09:04.423
- *(new Date()).Format("yyyy-M-d h:m:s.S")      ==> 2006-7-2 8:9:4.18
- */
-// eslint-disable-next-line no-extend-native
-Date.prototype.Format = function(fmt) {
-  var o = {
-    'M+': this.getMonth() + 1, // 月份
-    'd+': this.getDate(), // 日
-    'h+': this.getHours(), // 小时
-    'm+': this.getMinutes(), // 分
-    's+': this.getSeconds(), // 秒
-    'q+': Math.floor((this.getMonth() + 3) / 3), // 季度
-    S: this.getMilliseconds() // 毫秒
-  };
-  // 年
-  if (/(y+)/.test(fmt)) {
-    fmt = fmt.replace(
-      RegExp.$1,
-      (this.getFullYear() + '').substr(4 - RegExp.$1.length)
-    );
-  }
-  for (var k in o) {
-    if (new RegExp('(' + k + ')').test(fmt)) {
-      fmt = fmt.replace(
-        RegExp.$1,
-        RegExp.$1.length === 1 ? o[k] : ('00' + o[k]).substr(('' + o[k]).length) // 如果两位补0
-      );
-    }
-  }
-  return fmt;
-};
-```
+| 方法名        | 说明                   |
+| ------------- | ---------------------- |
+| getFullyear() | 获取当年               |
+| getMonth()    | 获取当月 0~11 要+1     |
+| getDate()     | 获取当前日期           |
+| getDay()      | 获取星期几 周日0~周六6 |
+| getHours()    | 获取当前小时           |
+| getMinutes()  | 获取当前分钟           |
+| getSeconds    | 获取当前秒钟           |
 
 #### 字符串对象
 
@@ -834,6 +701,8 @@ new RegExp(pattern, attributes)
 | [exec](https://www.w3school.com.cn/jsref/jsref_exec_regexp.asp) | 检索字符串中指定的值。返回找到的值，并确定其位置。 ans=reg.exec(str)   ans[0]为匹配的全部字符串   ans[1]...ans[n]为分组捕获的字符 |
 | [test](https://www.w3school.com.cn/jsref/jsref_test_regexp.asp) | 检索字符串中指定的值。返回 true 或 false。     reg.test(str) |
 
+
+
 ##### 支持正则表达式的 String 对象的方法
 
 | 方法                                                         | 描述                             |
@@ -847,7 +716,7 @@ new RegExp(pattern, attributes)
 
 > 三个简单的数据类型：String、Number、Boolean。**基本包装类型**就是把简单的数据类型包装成复杂数据类型，这样基本数据类型就有了属性和方法。
 
-实际使用中，调用方法，**不需要使用**`new Number/String/Boolean`，使用基础类型的时候，js 会自动帮我们包装成对应的对象
+实际使用中，调用方法，**不需要使用**`new Number/String/Boolean`，使用基础类型的时候，js 会自动帮我们包装成对应的对象：
 
 ### 2.怎么判断对象属于哪个类
 
@@ -3220,7 +3089,7 @@ const b = new Person("b");
 b.say();
 ```
 
-
+### 
 
 ![image.png](https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/7888aa4371ef44ba900cbd1224752545~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp?)
 
@@ -3807,6 +3676,8 @@ offsetHeight：获取元素自身的高度（包含边框）
 
 
 
+
+
 clientX：当事件被触发时鼠标指针相对于窗口左边界的水平坐标,`参照点为浏览器内容区域的左上角，该参照点会随之滚动条的移动而移动`。
 
 offsetX：当事件被触发时鼠标指针相对于所触发的标签元素的左内边框的水平坐标。
@@ -3835,7 +3706,7 @@ scrollWidth：获取对象可滚动的总宽度；
 
 `scrollHeight = content + padding；（即border之内的内容）`
 
-### 16.Node 和 Element
+### 16. Node 和 Element
 
 [ELement](https://juejin.cn/post/7032218037746925581#heading-7)
 
@@ -3880,168 +3751,7 @@ parentEle instanceof HTMLElement
     -   span 是一个 Node；
     -   “ 1 2 3 ”、“ 4 5 6 ”和 “ 7 8 9 ”全都是单独的 Node
 
-### 17.IntersectionObserver对象
 
-`IntersectionObserver`对象，从属于`Intersection Observer API`，提供了一种异步观察目标元素与其祖先元素或顶级文档视窗`viewport`交叉状态的方法，祖先元素与视窗`viewport`被称为根`root`，也就是说`IntersectionObserver API`，可以自动观察元素是否可见，由于可见`visible`的本质是，目标元素与视口产生一个交叉区，所以这个`API`叫做交叉观察器，兼容性`https://caniuse.com/?search=IntersectionObserver`。
-
-#### 描述
-
-`IntersectionObserver`解决了一个长期以来`Web`的问题，观察元素是否可见，这个可见`visible`的本质是，目标元素与视口产生一个交叉区，所以这个`API`叫做交叉观察器。
-要检测一个元素是否可见或者两个元素是否相交并不容易，很多解决办法不可靠或性能很差。现在很多需求下都需要用到相交检测，例如图片懒加载、内容无限滚动、检测元素的曝光情况、可视区域播放动画等等，相交检测通常要用到`onscroll`事件监听，并且可能需要频繁调用`Element.getBoundingClientRect()`等方法以获取相关元素的边界信息，事件监听和调用`Element.getBoundingClientRect`都是在主线程上运行，因此频繁触发、调用可能会造成性能问题，这种检测方法极其怪异且不优雅。
-`Intersection Observer API`会注册一个回调函数，每当被监视的元素进入或者退出另外一个元素时或`viewport`，或者两个元素的相交部分大小发生变化时，该回调方法会被触发执行，这样网站的主线程不需要再为了监听元素相交而辛苦劳作，浏览器会自行优化元素相交管理，注意`Intersection Observer API`无法提供重叠的像素个数或者具体哪个像素重叠，他的更常见的使用方式是当两个元素相交比例在`N%`左右时，触发回调，以执行某些逻辑。
-
-```javascript
-const io = new IntersectionObserver(callback, option);
-
-// 开始观察
-io.observe(document.getElementById("example"));
-// 停止观察
-io.unobserve(element);
-// 关闭观察器
-io.disconnect();Copy to clipboardErrorCopied
-```
-
-- 参数`callback`，创建一个新的`IntersectionObserver`对象后，当其监听到目标元素的可见部分穿过了一个或多个阈`thresholds`时，会执行指定的回调函数。
-
-- 参数
-
-  ```
-  option
-  ```
-
-  ，
-
-  ```
-  IntersectionObserver
-  ```
-
-  构造函数的第二个参数是一个配置对象，其可以设置以下属性:
-
-  - `threshold`属性决定了什么时候触发回调函数，它是一个数组，每个成员都是一个门槛值，默认为`[0]`，即交叉比例`intersectionRatio`达到`0`时触发回调函数，用户可以自定义这个数组，比如`[0, 0.25, 0.5, 0.75, 1]`就表示当目标元素`0%`、`25%`、`50%`、`75%`、`100%`可见时，会触发回调函数。
-  - `root`属性指定了目标元素所在的容器节点即根元素，目标元素不仅会随着窗口滚动，还会在容器里面滚动，比如在`iframe`窗口里滚动，这样就需要设置`root`属性，注意，容器元素必须是目标元素的祖先节点。
-  - `rootMargin`属性定义根元素的`margin`，用来扩展或缩小`rootBounds`这个矩形的大小，从而影响`intersectionRect`交叉区域的大小，它使用`CSS`的定义方法，比如`10px 20px 30px 40px`，表示`top`、`right`、`bottom`和`left`四个方向的值。
-
-- 属性`IntersectionObserver.root`只读，所监听对象的具体祖先元素`element`，如果未传入值或值为`null`，则默认使用顶级文档的视窗。
-
-- 属性`IntersectionObserver.rootMargin`只读，计算交叉时添加到根`root`边界盒`bounding box`的矩形偏移量，可以有效的缩小或扩大根的判定范围从而满足计算需要，此属性返回的值可能与调用构造函数时指定的值不同，因此可能需要更改该值，以匹配内部要求，所有的偏移量均可用像素`pixel`、`px`或百分比`percentage`、`%`来表达，默认值为`0px 0px 0px 0px`。
-
-- 属性`IntersectionObserver.thresholds`只读，一个包含阈值的列表，按升序排列，列表中的每个阈值都是监听对象的交叉区域与边界区域的比率，当监听对象的任何阈值被越过时，都会生成一个通知`Notification`，如果构造器未传入值，则默认值为`0`。
-
-- 方法`IntersectionObserver.disconnect()`，使`IntersectionObserver`对象停止监听工作。
-
-- 方法`IntersectionObserver.observe()`，使`IntersectionObserver`开始监听一个目标元素。
-
-- 方法`IntersectionObserver.takeRecords()`，返回所有观察目标的`IntersectionObserverEntry`对象数组。
-
-- 方法`IntersectionObserver.unobserve()`，使`IntersectionObserver`停止监听特定目标元素。
-
-此外当执行`callback`函数时，会传递一个`IntersectionObserverEntry`对象参数，其提供的信息如下。
-
-- `time:`可见性发生变化的时间，是一个高精度时间戳，单位为毫秒。
-- `target:`被观察的目标元素，是一个`DOM`节点对象。
-- `rootBounds:`根元素的矩形区域的信息，是`getBoundingClientRect`方法的返回值，如果没有根元素即直接相对于视口滚动，则返回`null`。
-- `boundingClientRect:`目标元素的矩形区域的信息。
-- `intersectionRect:`目标元素与视口或根元素的交叉区域的信息。
-- `intersectionRatio:`目标元素的可见比例，即`intersectionRect`占`boundingClientRect`的比例，完全可见时为`1`，完全不可见时小于等于`0`。
-
-#### 应用
-
-实现一个使用`IntersectionObserver`的简单示例，两个方块分别可以演示方块`1`是否在屏幕可见区域内以及方块`2`是否在方块`1`的相对可见交叉区域内，另外可以使用`IntersectionObserver`可以进行首屏渲染的优化，
-
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <style> 
-        body{
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            width: 100vw;
-            overflow-x: hidden;
-        }
-        .flex{
-            display: flex;
-        }
-        .top-fixed{
-            top: 0;
-            position: fixed;
-        }
-        .placeholder1{
-            width: 100%;
-        }
-        #box1{
-            height: 200px; 
-            overflow-y: auto; 
-            border: 1px solid #aaa; 
-            width: 60%;
-        }
-        .box1-placeholder{
-            height: 105vh;
-        }
-        #box2{
-            height: 100px; 
-            background-color: blue; 
-            margin-top: 300px; 
-            width: 60%;
-        }
-        .box2-placeholder{
-            height: 205px;
-        }
-    </style>
-</head>
-<body>
-    <section class="flex top-fixed">
-        <div class="flex">BOX1:</div>
-        <div class="flex" id="box1-status">invisible</div>
-        <div class="flex">&nbsp;BOX2:</div>
-        <div class="flex" id="box2-status">invisible</div>
-    </section>
-    <div class="box1-placeholder"></div>
-    <div id="box1">
-        <div class="box2-placeholder"></div>
-        <div id="box2"></div>   
-        <div class="box2-placeholder"></div>
-    </div>
-    <div class="box1-placeholder"></div>
-
-</body>
-<script>
-    (function(){
-        const box1 = document.querySelector("#box1");
-        const box2 = document.querySelector("#box2");
-        const box1Status = document.querySelector("#box1-status");
-        const box2Status = document.querySelector("#box2-status");
-        const box1Observer = new IntersectionObserver(entries => {
-            entries.forEach(item => {
-                // `intersectionRatio`为目标元素的可见比例，大于`0`代表可见
-                if (item.intersectionRatio > 0) {
-                    box1Status.innerText = "visible";
-                }else{
-                    box1Status.innerText = "invisible";
-                }
-            });
-        }, {root: document});
-        const box2Observer = new IntersectionObserver(entries => {
-            entries.forEach(item => {
-                // `intersectionRatio`为目标元素的可见比例，大于`0`代表可见
-                if (item.intersectionRatio > 0) {
-                    box2Status.innerText = "visible";
-                }else{
-                    box2Status.innerText = "invisible";
-                }
-            });
-        }, {root: box1});
-        box1Observer.observe(box1);
-        box2Observer.observe(box2);
-    })();
-</script>
-</html>
-```
 
 ## 模块化
 
