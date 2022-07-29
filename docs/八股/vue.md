@@ -20,11 +20,13 @@ Model和View并无直接关联，而是通过ViewModel来进行联系的，Model
 
 这种模式实现了 Model和View的数据自动同步，因此开发者只需要专注于数据的维护操作即可，而不需要自己操作DOM。 ![image.png](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/d5ce15b7b704483eb91ee1f5d1d64786~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp)
 
-### 2.数据代理和劫持是怎么实现的？
 
-当一个Vue实例创建时，Vue会遍历data中的属性，用 Object.defineProperty（vue3.0使用proxy ）将它们转为 getter/setter，并且在内部追踪相关依赖，在属性被访问和修改时通知变化。 每个组件实例都有相应的 watcher 程序实例，它会在组件渲染的过程中把属性记录为依赖，之后当依赖项的setter被调用时，会通知watcher重新计算，从而致使它关联的组件得以更新。 ![0_tB3MJCzh_cB6i3mS-1.png](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/b1b16025a35b4cd2b343a92e740621b7~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp)
 
-### 3.双向绑定是怎么实现的？ 如何通过发布订阅模式实现数据的双向绑定？
+### 2.双向绑定是怎么实现的？ 如何通过发布订阅模式实现数据的双向绑定？
+
+![0_tB3MJCzh_cB6i3mS-1.png](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/b1b16025a35b4cd2b343a92e740621b7~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp)
+
+当一个Vue实例创建时，Vue会遍历data中的属性，用 Object.defineProperty（vue3.0使用proxy ）将它们转为 getter/setter，并且在内部追踪相关依赖，在属性被访问和修改时通知变化。 每个组件实例都有相应的 watcher 程序实例，它会在组件渲染的过程中把属性记录为依赖，之后当依赖项的setter被调用时，会通知watcher重新计算，从而致使它关联的组件得以更新。 
 
 Vue.js 是采用**数据劫持**结合**发布者-订阅者模式**的方式，通过Object.defineProperty()来劫持各个属性的setter，getter，在数据变动时发布消息给订阅者，触发相应的监听回调。主要分为以下几个步骤：
 
@@ -115,7 +117,7 @@ model: function (node, value, vm) {
 
 [代码实现](https://juejin.cn/post/6844903903822086151)
 
-### 4.v-model原理是什么? 语法糖实际是什么？
+### 3.v-model原理是什么? 语法糖实际是什么？
 
 在自己封装组件的时在Vue中，我们可以使用`v-bind`实现单向的数据绑定，也就是通过**父组件向子组件传入数据** ，但是反过来，**子组件不可以修改父组件传递过来的数据** ，这也就是所谓的单向数据绑定。
 
@@ -1019,6 +1021,64 @@ JavaScript中的对象是引用类型的数据，当多个实例引用同一个�
 
 #### render watcher
 
+##### 建立联系
+
+如何才能建立视图渲染与属性值之间的联系？先来搞清楚两个问题
+
+- 谁**用了**这个数据
+- 数据**变了**之后怎么办
+
+在视图渲染这个场景下，这两个问题的解答分别是：
+
+- 负责生成视图的render函数要用这个数据
+- 数据变了得执行render函数
+
+##### 数据劫持
+
+**用了**和**变了**，是可以通过对该属性值设置访问描述符（get/set）知道的。
+
+因此，需要遍历所有data属性值，用Object.defineProperty设置访问描述符（get/set）。
+
+- 谁用了这个数据？
+   触发了属性值get的就是要用到的，应该在getter里记录下使用者。
+- 数据变了怎么办？
+   数据变就会触发属性值set，应该在setter里告知使用者。
+
+##### 订阅-发布
+
+从上面的描述可以看出，这个场景是典型的发布&订阅。
+
+在视图渲染的场景中，render-watcher是订阅者。每个属性值都有一个依赖管理者——dep，负责记录和通知订阅者。
+
+##### 依赖的收集与通知
+
+###### 收集订阅（依赖）者的流程
+
+1. 订阅者执行回调（render函数）
+2. 触发属性值getter
+3. 添加到订阅者队列
+4. 重复2、3直至所有getter执行完
+
+###### 通知订阅者的流程
+
+1. 属性改变
+2. 触发属性值setter
+3. dep通知订阅者（render watcher）
+4. 订阅者执行回调（render函数）
+
+##### 取消订阅
+
+当某些属性值不再被视图使用的时候，就应该取消掉对这些属性的订阅。
+
+怎么才能知道哪些属性值不再被引用呢？我们可以这么做：
+
+订阅者（render-watcher）也维护一个依赖集合，将依赖的属性值的dep存储在这个集合里。
+
+每当render function执行一次，也就是触发属性值的getter时，订阅者（render-watcher）会存储一份新的依赖集合。对比新旧依赖集合，找出已经不再依赖的旧dep，将render-watcher从这个旧dep的订阅者队列中删除。这样就不会通知到当前的订阅者了（render-watcher）。
+
+
+
+
 在`render watcher`中，响应式就意味着，当数据中的值改变时，在视图上的渲染内容也需要跟着改变，在这里就需要一个视图渲染与属性值之间的联系，`Vue`中的响应式，简单点来说分为以下三个部分：
 
 - `Observer`: 这里的主要工作是递归地监听对象上的所有属性，在属性值改变的时候，触发相应的`Watcher`。
@@ -1374,7 +1434,7 @@ function __watcher(fn){
 
 可是往往在很多时候我们在使用组件的时候总想在组件间外面自定义一些标签，vue新增了一种插槽机制，叫做作用域插槽。
 
-插槽，其实就相当于占位符。它在组件中给你的HTML模板占了一个位置，让你来传入一些东西。插槽又分为 匿名插槽、具名插槽、作用域插槽。
+插槽，其实就相当于占位符。**它在组件中给你的HTML模板占了一个位置，让你来传入一些东西**。插槽又分为 匿名插槽、具名插槽、作用域插槽。
 
 在 2.6.0 中，我们为具名插槽和作用域插槽引入了一个新的统一的语法 (即 `v-slot` 指令)。它取代了 `slot` 和 `slot-scope`
 
@@ -1919,6 +1979,8 @@ const code = generate(ast, options)
 
 generate将ast抽象语法树编译成 render字符串并将静态部分放到 staticRenderFns 中，最后通过 `new Function(`` render``)` 生成render函数。
 
+转换成AST的是Vue模板，Vue需要根据模版去处理各种插值、指令；生成虚拟DOM的是最终要展示在页面上的内容的对象描述，Vue每次需要通过Diff算法对比新旧虚拟DOM的差异；固定模版生成的AST是不变的，虚拟DOM是不断变化、需要进行差异对比的（数据等会变）
+
 ### 15.mixin和extends的应用
 
 **（1）mixin 和 extends** mixin 和 extends均是用于合并、拓展组件的，两者均通过 mergeOptions 方法实现合并。
@@ -1976,7 +2038,258 @@ v-cloak 指令设置样式，样式会在 Vue 实例编译结束时，从 HTML �
 
 [vue渲染过程](https://segmentfault.com/a/1190000018495383)
 
-### 18.修改后页面保存渲染的原理
+### 18.修改后页面更新渲染的过程
+
+![在这里插入图片描述](https://s2.loli.net/2022/07/29/5EZMmAjgp3Olv1w.png)
+
+![img](https://s2.loli.net/2022/07/29/KWtlC9SIxfFOkhA.png)
+
+一、初始化
+
+ ![img](https://s2.loli.net/2022/07/29/OP6ZFBQD1WRbMay.png)
+
+在 new Vue() 之后。 Vue 会调用 _init 函数进行初始化，也就是这里的 init 过程，它会初始化生命周期、事件、 props、 methods、 data、 computed 与 watch 等。
+
+二、模板编译
+
+ ![img](https://s2.loli.net/2022/07/29/QH8LvVxN1BediCp.png)
+
+上面就是使用vue template complier（compile编译可以分成 parse、optimize 与 generate 三个阶段），将模板编译成render函数，执行render函数后，变成vnode。
+
+parse、optimize 与 generate 三个阶段
+
+parse
+
+parse 会用正则等方式解析 template 模板中的指令、class、style等数据，形成AST，就是with语法的过程。
+
+optimize
+
+optimize 的主要作用是标记 static 静态节点，这是 Vue 在编译过程中的一处优化，后面当 update更新界面时，会有一个 patch 的过程， diff 算法会直接跳过静态节点，从而减少了比较的过程，优化了 patch 的性能。
+
+generate
+
+generate 是将 AST 转化成 render function 字符串的过程，得到结果是 render 的字符串以及 staticRenderFns 字符串。
+
+在经历过 parse、optimize 与 generate 这三个阶段以后，组件中就会存在渲染 VNode 所需的 render function 了。
+
+三、vue的响应式原理：
+
+ ![img](https://s2.loli.net/2022/07/29/tzy3aGYQmgcwK5n.png)
+
+前置知识: 
+
+observer (value) ，其中 value（需要「响应式」化的对象）。
+defineReactive ，这个方法通过 Object.defineProperty 来实现对对象的「响应式」化，入参是一个 obj（需要绑定的对象）、key（obj的某一个属性），val（具体的值）。
+对象被读，就是说，这个值已经在页面中使用或则说已经使用插值表达式插入。
+正式知识: 
+
+ 1.首先我们一开始会进行响应式初始化，也即是我们开始前的哪个init过程，通过observer (value) 方法，然后通过defineReactive()方法遍历，对每个对象的每个属性进行setter和getter初始化。
+
+2.依赖收集：我们在闭包中增加了一个 Dep 类的对象，用来收集 Watcher 对象。在对象被「读」的时候，会触发 reactiveGetter 函数把当前的 Watcher 对象，收集到 Dep 类中去。之后如果当该对象被「写」的时候，则会触发 reactiveSetter 方法，通知 Dep 类调用 notify 来触发所有 Watcher 对象的 update 方法更新对应视图。
+
+附加知识点：object.defineproperty()的缺点
+
+我们知道vue响应式主要使用的是object.defineproperty()这个api，那他也会带来一些缺点：
+
+需要深度监听，需要递归到底，一次性计算量大（比如引用类型层级较深）
+
+无法监听新增属性/删除属性，需要使用Vue.set和Vue.delete才行
+无法监听原生数组，需要重写数组方法
+ 四、虚拟dom
+
+DOM操作非常耗时，所以使用VDOM，我们把计算转移为JS计算，
+VDOM-用JS模拟DOM结构，计算出最小的变更，操作DOM
+因为有了虚拟DOM，所以让Vue有了跨平台的能力
+
+五、patch函数，diff算法上台
+
+ ![img](https://s2.loli.net/2022/07/29/gKfwp6R9qtZ4okX.png)
+
+这部分涉及算法
+
+前置知识：
+
+insert：在父几点下插入节点，如果指定ref则插入道ref这个子节点的前面。
+createElm：用来新建一些节点，tag节点存在创建一个标签节点，否则创建一个文本节点。
+addVnodes：用来批量调用createElm新建节点。
+removeNode：用来移除一个节点
+removeVnodes：会批量调用removeNode移除节点
+patch函数：
+
+patch的核心就是diff算法，diff算法通过同层的树节点进行比较而非对树进行逐层搜索遍历的方式，所以时间复杂度只有o(n)，比较高效，我们看下图所示：
+
+ ![img](https://s2.loli.net/2022/07/29/9Sz7lEO5gQjtpi2.png)
+
+我们看下patch这个函数的demo:
+
+```
+ 1 function patch (oldVnode, vnode, parentElm) {
+ 2     if (!oldVnode) {
+ 3         addVnodes(parentElm, null, vnode, 0, vnode.length - 1);
+ 4     } else if (!vnode) {
+ 5         removeVnodes(parentElm, oldVnode, 0, oldVnode.length - 1);
+ 6     } else {
+ 7         if (sameVnode(oldVNode, vnode)) {
+ 8             patchVnode(oldVNode, vnode);
+ 9         } else {
+10             removeVnodes(parentElm, oldVnode, 0, oldVnode.length - 1);
+11             addVnodes(parentElm, null, vnode, 0, vnode.length - 1);
+12         }
+13     }
+14 }
+```
+
+
+首先在 oldVnode（老 VNode 节点）不存在的时候，相当于新的 VNode 替代原本没有的节点，所以直接用 addVnodes 将这些节点批量添加到 parentElm 上。
+如果 vnode（新 VNode 节点）不存在的时候，相当于要把老的节点删除，所以直接使用 removeVnodes 进行批量的节点删除即可。
+当 oldVNode 与 vnode 都存在的时候，需要判断它们是否属于 sameVnode（相同的节点）。如果是则进行patchVnode（比对 VNode ）操作，否则删除老节点，增加新节点 
+patchVnode函数:
+
+我们看下关键代码
+
+```
+ 1 function patchVnode (oldVnode, vnode) {
+ 2     // 新老节点相同，直接return
+ 3     if (oldVnode === vnode) {
+ 4         return;
+ 5     }
+ 6     // 节点是否静态，并且新老接待你的key相同，只要把老节点拿来用就好了
+ 7     if (vnode.isStatic && oldVnode.isStatic && vnode.key === oldVnode.key) {
+ 8         vnode.elm = oldVnode.elm;
+ 9         vnode.componentInstance = oldVnode.componentInstance;
+10         return;
+11     }
+12  
+13     const elm = vnode.elm = oldVnode.elm;
+14     const oldCh = oldVnode.children;
+15     const ch = vnode.children;
+16     // 当VNode是文本节点，直接setTextContent来设置text
+17     if (vnode.text) {
+18         nodeOps.setTextContent(elm, vnode.text);
+19     // 不是文本节点
+20     } else {
+21         // oldch(老)与ch(新)存在且不同，使用updateChildren()
+22         if (oldCh && ch && (oldCh !== ch)) {
+23             updateChildren(elm, oldCh, ch);
+24         // 只有ch存在，若oldch(老)节点是文本节点，先删除，再将ch(新)节点插入elm节点下
+25         } else if (ch) {
+26             if (oldVnode.text) nodeOps.setTextContent(elm, '');
+27             addVnodes(elm, null, ch, 0, ch.length - 1);
+28         // 同理当只有oldch(老)节点存在，说明需要将oldch(老)节点通过removeVnode全部删除
+29         } else if (oldCh) {
+30             removeVnodes(elm, oldCh, 0, oldCh.length - 1)
+31         // 当老节点是文本节点，清除其节点内容
+32         } else if (oldVnode.text) {
+33             nodeOps.setTextContent(elm, '')
+34         }
+35     }
+36 }
+```
+
+
+整理如下：
+
+新老节点相同，直接return
+节点是否静态，并且新老接待你的key相同，只要把老节点拿来用就好了
+当VNode是文本节点，直接setTextContent来设置text，若不是文本节点者执行4-7
+oldch(老)与ch(新)存在且不同，使用updateChildren()（后面介绍）
+只有ch存在，若oldch(老)节点是文本节点，先删除，再将ch(新)节点插入elm节点下
+同理当只有oldch(老)节点存在，说明需要将oldch(老)节点通过removeVnode全部删除
+当老节点是文本节点，清除其节点内容
+updateChildren函数
+
+下面是关键代码：
+
+ ![img](https://s2.loli.net/2022/07/29/SwqaBmjKc9NxPIA.png)
+
+直接看我的代码注释吧！
+
+```
+ 1 // sameVnode() 就是说key，tag，iscomment(注释节点)，data四个同时定义
+ 2 while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
+ 3   if (!oldStartVnode) {
+ 4       oldStartVnode = oldCh[++oldStartIdx];
+ 5   } else if (!oldEndVnode) {
+ 6       oldEndVnode = oldCh[--oldEndIdx];
+ 7   // 老节点的开头与新节点的开头对比
+ 8   } else if (sameVnode(oldStartVnode, newStartVnode)) {
+ 9       patchVnode(oldStartVnode, newStartVnode);
+10       oldStartVnode = oldCh[++oldStartIdx];
+11       newStartVnode = newCh[++newStartIdx];
+12   // 老节点的结尾与新节点的结尾对比
+13   } else if (sameVnode(oldEndVnode, newEndVnode)) {
+14       patchVnode(oldEndVnode, newEndVnode);
+15       oldEndVnode = oldCh[--oldEndIdx];
+16       newEndVnode = newCh[--newEndIdx];
+17   // 老节点的开头与新节点的结尾
+18   } else if (sameVnode(oldStartVnode, newEndVnode)) {
+19       patchVnode(oldStartVnode, newEndVnode);
+20       nodeOps.insertBefore(parentElm, oldStartVnode.elm, nodeOps.nextSibling(oldEndVnode.elm));
+21       oldStartVnode = oldCh[++oldStartIdx];
+22       newEndVnode = newCh[--newEndIdx];
+23   // 老节点的结尾与新节点的开头
+24   } else if (sameVnode(oldEndVnode, newStartVnode)) {
+25       patchVnode(oldEndVnode, newStartVnode);
+26       nodeOps.insertBefore(parentElm, oldEndVnode.elm, oldStartVnode.elm);
+27       oldEndVnode = oldCh[--oldEndIdx];
+28       newStartVnode = newCh[++newStartIdx];
+29   // 如果上面的情况都没有满足
+30   } else {
+31       // 把老的元素进行移动
+32       let elmToMove = oldCh[idxInOld];
+33       // 如果老的节点找不到对应索引则创建
+34       if (!oldKeyToIdx) oldKeyToIdx = createKeyToOldIdx(oldCh, oldStartIdx, oldEndIdx);
+35       // 在新节点中的key值找到老节点索引
+36       idxInOld = newStartVnode.key ? oldKeyToIdx[newStartVnode.key] : null;
+37       // 如果没有找到相同的节点，则通过 createElm 创建一个新节点，并将 newStartIdx 向后移动一位。
+38       if (!idxInOld) {
+39           createElm(newStartVnode, parentElm);
+40           newStartVnode = newCh[++newStartIdx];
+41       // 否则如果找到了节点，同时它符合 sameVnode，则将这两个节点进行 patchVnode，将该位置的老节点赋值 undefined
+42       } else {
+43           // 这是是想把相同的节点进行移动
+44           elmToMove = oldCh[idxInOld];
+45           // 然后再进行对比
+46           if (sameVnode(elmToMove, newStartVnode)) {
+47               patchVnode(elmToMove, newStartVnode);
+48               oldCh[idxInOld] = undefined;
+49               nodeOps.insertBefore(parentElm, newStartVnode.elm, oldStartVnode.elm);
+50               newStartVnode = newCh[++newStartIdx];
+51               // 如果不符合 sameVnode，只能创建一个新节点插入到 parentElm 的子节点中，newStartIdx 往后移动一位。
+52           } else {
+53               createElm(newStartVnode, parentElm);
+54               newStartVnode = newCh[++newStartIdx];
+55           }
+56       }
+57   }
+58 }
+59 // 当oldStartIdx > oldEndIdx 或oldStartIdx> oldEndIdx说明结束
+60 if (oldStartIdx > oldEndIdx) {
+61   refElm = (newCh[newEndIdx + 1]) ? newCh[newEndIdx + 1].elm : null;
+62   addVnodes(parentElm, refElm, newCh, newStartIdx, newEndIdx);
+63 } else if (newStartIdx > newEndIdx) {
+64   removeVnodes(parentElm, oldCh, oldStartIdx, oldEndIdx);
+65 }
+66 }
+```
+
+
+上面涉及了很多东西，也不是一时半会能够讲完的，看代码的过程也挺艰辛的！
+
+**最后总结下渲染过程**
+
+初次渲染：
+
+解析模板为render函数(或再开发环境已完成)
+触发响应式，监听data属性的getter的依赖收集，也即是往dep里面添加watcher的过程
+执行render函数，生成vnode，patch
+更新过程:
+
+修改data，setter(必需是初始渲染已经依赖过的)调用Dep.notify()，将通知它内部的所有的Watcher对象进行视图更新
+重新执行rendern函数，生成newVnode
+然后就是patch的过程(diff算法)
+
+
 
 ### 19.Vue data 中某一个属性的值发生改变后，视图会立即同步执行重新渲染吗？
 
@@ -2336,7 +2649,621 @@ function renderTemplateFiles () {
 
 
 
-### 22.render函数触发过程
+### 22.render函数使用
+
+![img](https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/5/21/172372fba069e0b7~tplv-t2oaga2asx-zoom-in-crop-mark:3024:0:0:0.awebp)
+
+
+
+在了解vue render函数之前, 需要先了解下Vue的整体流程(如上图)
+
+通过上图, 应该可以理解一个Vue组件是如何运行起来的.
+
+- 模板通过编译生成AST树
+- AST树生成Vue的render渲染函数
+- render渲染函数结合数据生成vNode(Virtual DOM Node)树
+- Diff和Patch后生新的UI界面(真实DOM渲染)
+
+在这张图中, 我们需要了解以下几个概念:
+
+- 模板, Vue模板是纯HTML, 基于Vue的模板语法, 可以比较方便的处理数据和UI界面的关系
+- AST, 即Abstract Syntax Tree的简称, Vue将HTML模板解析为AST,并对AST进行一些优化的标记处理, 提取最大的静态树,以使Virtual DOM直接跳过后面的Diff
+- render渲染函数, render渲染函数是用来生成Virtual DOM的. Vue推荐使用模板来构建我们的应用程序, 在底层实现中Vue最终还是会将模板编译成渲染函数. 因此, 若我们想要得到更好的控制, 可以直接写渲染函数.(**重点**)
+- Virtual DOM, 虚拟DOM
+- Watcher, 每个Vue组件都有一个对应的`watcher`, 它会在组件`render`时收集组件所依赖的数据, 并在依赖有更新时, 触发组件重新渲染, Vue会自动优化并更新需要更新DOM
+
+在上图中, `render`函数可以作为一道分割线:
+
+- `render`函数左边可以称为**编译期**, 将Vue板转换为渲染函数
+- `render`函数右边, 是Vue运行时, 主要是将渲染函数生成Virtual DOM树, 以及Diff和Patch
+
+#### render渲染组件
+
+Vue 推荐在绝大多数情况下使用模板来创建你的 HTML。然而在一些场景中，你真的需要 JavaScript 的完全编程的能力。这时你可以用渲染函数，它比模板更接近编译器。
+
+这个例子里 `render` 函数很实用。假设我们要生成一些带锚点的标题：
+
+```js
+<h1>
+  <a name="hello-world" href="#hello-world">
+    Hello world!
+  </a>
+</h1>
+```
+
+对于上面的 HTML，你决定这样定义组件接口：
+
+```js
+<anchored-heading :level="1">Hello world!</anchored-heading>
+```
+
+当开始写一个只能通过 `level` prop 动态生成标题 (heading) 的组件时，你可能很快想到这样实现：
+
+```js
+<script type="text/x-template" id="anchored-heading-template">
+  <h1 v-if="level === 1">
+    <slot></slot>
+  </h1>
+  <h2 v-else-if="level === 2">
+    <slot></slot>
+  </h2>
+  <h3 v-else-if="level === 3">
+    <slot></slot>
+  </h3>
+  <h4 v-else-if="level === 4">
+    <slot></slot>
+  </h4>
+  <h5 v-else-if="level === 5">
+    <slot></slot>
+  </h5>
+  <h6 v-else-if="level === 6">
+    <slot></slot>
+  </h6>
+</script>
+Vue.component('anchored-heading', {
+  template: '#anchored-heading-template',
+  props: {
+    level: {
+      type: Number,
+      required: true
+    }
+  }
+})
+```
+
+这里用模板并不是最好的选择：不但代码冗长，而且在每一个级别的标题中重复书写了 `<slot></slot>`，在要插入锚点元素时还要再次重复。
+
+虽然模板在大多数组件中都非常好用，但是显然在这里它就不合适了。那么，我们来尝试使用 `render` 函数重写上面的例子：
+
+```js
+Vue.component('anchored-heading', {
+  render: function (createElement) {
+    return createElement(
+      'h' + this.level,   // 标签名称
+      this.$slots.default // 子节点数组
+    )
+  },
+  props: {
+    level: {
+      type: Number,
+      required: true
+    }
+  }
+})
+```
+
+#### Node & tree & Virtual DOM
+
+HTML代码:
+
+```xml
+<div>
+    <h1>My title</h1>
+    Some text content
+    <!-- TODO: Add tagline -->
+</div>
+
+```
+
+当浏览器读取到这些代码时, 它会建立一个[DOM节点树](https://link.juejin.cn?target=https%3A%2F%2Fjavascript.info%2Fdom-nodes)来保持追踪, 如果你要画一张家谱树来追踪家庭成员的发展的话, HTML的DOM节点树的可能如下图所示:
+
+
+
+![img](https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/5/21/1723730421bee927~tplv-t2oaga2asx-zoom-in-crop-mark:3024:0:0:0.awebp)
+
+
+
+每个**元素**和**文字**都是一个节点, 甚至注释也是节点. 一个节点就是页面的一部分, 就像家谱树中一样, 每个节点都可以有孩子节点.
+
+高效的更新所有节点可能是比较困难的, 不过你不用担心, 这些Vue都会自动帮你完成, 你只需要通知Vue页面上HTML是什么?
+
+可以是一个HTML模板, 例如:
+
+```css
+<h1>{{title}}</h1>
+```
+
+也可以是一个渲染函数:
+
+```javascript
+render(h){
+  return h('h1', this.title)
+}
+```
+
+在这两种情况下，若`title`值发生了改变, Vue 都会自动保持页面的更新.
+
+#### 虚拟DOM
+
+Vue编译器在编译模板之后, 会将这些模板编译为渲染函数(render), 当渲染函数(render)被调用时, 就会返回一个虚拟DOM树.
+
+当我们得到虚拟DOM树后, 再转交给一个**Patch函数**, 它会负责把这些虚拟DOM渲染为真实DOM. 在这个过程中, Vue自身的响应式系统会侦测在渲染过程中所依赖的数据来源, 在渲染过程中, 侦测到数据来源后即可精确感知数据源的变动, 以便在需要的时候重新进行渲染. 当重新进行渲染之后, 会生成一个新的树, 将新的树与旧的树进行对比, 就可以得到最终需要对真实DOM进行修改的改动点, 最后通过Patch函数实施改动.
+
+简单来讲, 即: 在Vue的底层实现上，Vue将模板编译成虚拟DOM渲染函数。结合Vue自带的响应系统，在应该状态改变时，Vue能够智能地计算出重新渲染组件的最小代价并应到DOM操作上。
+
+Vue支持我们通过`data`参数传递一个JavaScript对象作为组件数据, Vue将遍历data对象属性, 使用`Object.defineProperty`方法设置描述对象, 通过`gett/setter`函数来拦截对该属性的读取和修改.
+
+Vue创建了一层`Watcher`层, 在组件渲染的过程中把属性记录为依赖, 当依赖项的`setter`被调用时, 会通知`Watcher`重新计算, 从而使它关联的组件得以更新.
+
+![img](https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/5/21/17237310660b24e8~tplv-t2oaga2asx-zoom-in-crop-mark:3024:0:0:0.awebp)
+
+
+
+
+
+通过前面的学习, 我们初步了解到Vue通过建立一个**虚拟DOM"对真实DOM发生变化保持追踪. 例如
+
+```kotlin
+return createElement('h1', this.title)
+```
+
+`createElement`, 即`createNodeDescription`, 返回虚拟节点(Virtual Node), 通常简写为"VNode". 虚拟DOM是由Vue组件树建立起来的整个VNode树的总称.
+
+Vue组件树建立起来的整个VNode树是唯一的, 不可重复的. 例如, 下面的render函数是无效的.
+
+```javascript
+render(createElement) {
+  const vP = createElement('p', 'hello james')
+  return createElement('div', [
+    // error, 有重复的vNode
+    vP, vP
+  ])
+}
+```
+
+若需要很多重复的组件/元素, 可以使用工厂函数来实现. 例如:
+
+```javascript
+render(createElement){
+  return createElement('div', Array.apply(null, {length: 20}).map(() => {
+    return createElement('p', 'hi james')
+  }))
+}
+```
+
+#### Vue 渲染机制
+
+下图展示的是独立构建时, 一个组件的渲染流程图:
+
+
+
+![img](https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/5/21/172373152da9e577~tplv-t2oaga2asx-zoom-in-crop-mark:3024:0:0:0.awebp)
+
+
+
+会涉及到Vue的2个概念:
+
+- 独立构建, 包含模板编译器, 渲染过程: HTML字符串 => render函数 => vNode => 真实DOM
+- 运行时构建, 不包含模板编译器, 渲染过程: render函数 => vNode => 真实DOM
+
+运行时构建的包, 会比独立构建少一个模板编译器(因此运行速度上会更快). 在`$mount`函数上也不同, 而`$mount`方法是整个渲染过程中的起始点, 用下面这张流程图来说明:
+
+
+
+![img](https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/5/21/172373180b3ed878~tplv-t2oaga2asx-zoom-in-crop-mark:3024:0:0:0.awebp)
+
+
+
+从上图可以看出, 在渲染过程中, 提供了三种模板:
+
+- 自定义render函数
+- template
+- el
+
+均可以渲染页面, 也就对应我们使用Vue时的三种写法. 这3种模式最终都是要得到`render`函数.
+
+对于平时开发来讲, 使用template和el会比较友好些, 容易理解, 但灵活性较差. 而render函数, 能够胜任更加复杂的逻辑, 灵活性高, 但对于用户理解相对较差.
+
+##### 自定义render函数
+
+```js
+Vue.component('anchored-heading', {
+    render(createElement) {
+        return createElement (
+            'h' + this.level,   
+            this.$slots.default 
+        )
+    },
+    props: {
+        level: {
+            type: Number,
+            required: true
+        }
+    }
+})
+```
+
+##### template写法
+
+```js
+const app = new Vue({
+    template: `<div>{{ msg }}</div>`,
+    data () {
+        return {
+            msg: 'Hello Vue.js!'
+        }
+    }
+})
+```
+
+##### el写法
+
+```js
+let app = new Vue({
+    el: '#app',
+    data () {
+        return {
+            msg: 'Hello Vue!'
+        }
+    }
+})
+```
+
+#### 理解&使用render函数
+
+#### createElement 参数
+
+`createElement`可以接受多个参数
+
+##### 第1个参数: `{String | Object | Function }`, 必传
+
+第一个参数是必传参数, 可以是字符串`String`, 也可以是`Object`对象或函数`Function`
+
+```javascript
+// String
+Vue.component('custom-element', {
+    render(createElement) {
+        return createElement('div', 'hello world!')
+    }
+})
+// Object
+Vue.component('custom-element', {
+    render(createElement) {
+        return createElement({
+          template: `<div>hello world!</div>`
+        })
+    }
+})
+// Function
+Vue.component('custom-element', {
+    render(createElement) {
+      const elFn = () => { template: `<div>hello world!</div>` }
+      return createElement(elFn())
+    }
+})
+复制代码
+```
+
+以上代码, 等价于:
+
+```xml
+<template>
+  <div>hello world!</>
+</template>
+<script>
+  export default {
+    name: 'custom-element'
+  }
+</script>
+复制代码
+```
+
+##### 第2个参数: `{ Object }`, 可选
+
+`createElemen`的第二个参数是可选参数, 这个参数是一个Object, 例如:
+
+```php
+Vue.component('custom-element', {
+  render(createElement) {
+    const self = this;
+    return createElement('div', {
+      'class': {
+        foo: true,
+        bar: false
+      },
+      style: {
+        color: 'red',
+        fontSize: '18px'
+      },
+      attrs: {
+        ...self.attrs,
+        id: 'id-demo'
+      },
+      on: {
+        ...self.$listeners,
+        click: (e) => {console.log(e)}
+      },
+      domProps: {
+        innerHTML: 'hello world!'
+      },
+      staticClass: 'wrapper'
+    })
+  }
+})
+```
+
+等价于:
+
+```xml
+<template>
+  <div :id="id" class="wrapper" :class="{'foo': true, 'bar': false}" :style="{color: 'red', fontSize: '18px'}" v-bind="$attrs" v-on="$listeners" @click="(e) => console.log(e)"> hello world! </div>
+</template>
+<script>
+export default {
+  name: 'custom-element',
+  data(){
+    return {
+      id: 'id-demo'
+    }
+  }
+}
+</script>
+
+<style>
+.wrapper{
+  display: block;
+  width: 100%;
+}
+</style>
+复制代码
+```
+
+##### 第3个参数: `{ String | Array }`, 可选
+
+`createElement`第3个参数是可选的，可以给其传一个`String`或`Array`, 例如:
+
+```js
+Vue.component('custom-element', {
+    render (createElement) {
+        var self = this
+        return createElement(
+            'div',
+            {
+                class: {
+                    title: true
+                },
+                style: {
+                    border: '1px solid',
+                    padding: '10px'
+                }
+            }, 
+            [
+                createElement('h1', 'Hello Vue!'),
+                createElement('p', 'Hello world!')
+            ]
+        )
+    }
+})
+```
+
+等价于:
+
+```js
+<template>
+  <div :class="{'title': true}" :style="{border: '1px solid', padding: '10px'}">
+    <h1>Hello Vue!</h1>
+    <p>Hello world!</p>
+  </div>
+</template>
+<script>
+export default {
+  name: 'custom-element',
+  data(){
+    return {
+      id: 'id-demo'
+    }
+  }
+}
+</script>
+```
+
+##### 使用template和render创建相同效果的组件
+
+template方式
+
+```xml
+<template>
+  <div id="wrapper" :class="{show: show}" @click="clickHandler">
+    Hello Vue!
+  </div>
+</template>
+<script>
+export default {
+  name: 'custom-element',
+  data(){
+    return {
+      show: true
+    }
+  },
+  methods: {
+    clickHandler(){
+      console.log('you had click me!');
+    }
+  }
+}
+</script>
+复制代码
+```
+
+render方式
+
+```php
+Vue.component('custom-element', {
+      data () {
+        return {
+            show: true
+        }
+      },
+      methods: {
+          clickHandler: function(){
+            console.log('you had click me!');
+          }
+      },
+      render: function (createElement) {
+          return createElement('div', {
+              class: {
+                show: this.show
+              },
+              attrs: {
+                id: 'wrapper'
+              },
+              on: {
+                click: this.handleClick
+              }
+          }, 'Hello Vue!')
+      }
+})
+```
+
+### createElement解析过程
+
+createElement解析流程图
+
+![img](https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/5/21/1723732009c3aa66~tplv-t2oaga2asx-zoom-in-crop-mark:3024:0:0:0.awebp)
+
+
+
+[`createElement`解析过程核心源代码](https://segmentfault.com/a/1190000008291645)
+
+```scss
+const SIMPLE_NORMALIZE = 1
+const ALWAYS_NORMALIZE = 2
+
+function createElement (context, tag, data, children, normalizationType, alwaysNormalize) {
+
+    // 兼容不传data的情况
+    if (Array.isArray(data) || isPrimitive(data)) {
+        normalizationType = children
+        children = data
+        data = undefined
+    }
+
+    // 如果alwaysNormalize是true
+    // 那么normalizationType应该设置为常量ALWAYS_NORMALIZE的值
+    if (alwaysNormalize) normalizationType = ALWAYS_NORMALIZE
+        // 调用_createElement创建虚拟节点
+        return _createElement(context, tag, data, children, normalizationType)
+    }
+
+    function _createElement (context, tag, data, children, normalizationType) {
+        /**
+        * 如果存在data.__ob__，说明data是被Observer观察的数据
+        * 不能用作虚拟节点的data
+        * 需要抛出警告，并返回一个空节点
+        * 
+        * 被监控的data不能被用作vnode渲染的数据的原因是：
+        * data在vnode渲染过程中可能会被改变，这样会触发监控，导致不符合预期的操作
+        */
+        if (data && data.__ob__) {
+            process.env.NODE_ENV !== 'production' && warn(
+            `Avoid using observed data object as vnode data: ${JSON.stringify(data)}\n` +
+            'Always create fresh vnode data objects in each render!',
+            context
+            )
+            return createEmptyVNode()
+        }
+
+        // 当组件的is属性被设置为一个falsy的值
+        // Vue将不会知道要把这个组件渲染成什么
+        // 所以渲染一个空节点
+        if (!tag) {
+            return createEmptyVNode()
+        }
+
+        // 作用域插槽
+        if (Array.isArray(children) && typeof children[0] === 'function') {
+            data = data || {}
+            data.scopedSlots = { default: children[0] }
+            children.length = 0
+        }
+
+        // 根据normalizationType的值，选择不同的处理方法
+        if (normalizationType === ALWAYS_NORMALIZE) {
+            children = normalizeChildren(children)
+        } else if (normalizationType === SIMPLE_NORMALIZE) {
+            children = simpleNormalizeChildren(children)
+        }
+        let vnode, ns
+
+        // 如果标签名是字符串类型
+        if (typeof tag === 'string') {
+            let Ctor
+            // 获取标签名的命名空间
+            ns = config.getTagNamespace(tag)
+
+            // 判断是否为保留标签
+            if (config.isReservedTag(tag)) {
+                // 如果是保留标签,就创建一个这样的vnode
+                vnode = new VNode(
+                    config.parsePlatformTagName(tag), data, children,
+                    undefined, undefined, context
+                )
+
+                // 如果不是保留标签，那么我们将尝试从vm的components上查找是否有这个标签的定义
+            } else if ((Ctor = resolveAsset(context.$options, 'components', tag))) {
+                // 如果找到了这个标签的定义，就以此创建虚拟组件节点
+                vnode = createComponent(Ctor, data, context, children, tag)
+            } else {
+                // 兜底方案，正常创建一个vnode
+                vnode = new VNode(
+                    tag, data, children,
+                    undefined, undefined, context
+                )
+            }
+
+        // 当tag不是字符串的时候，我们认为tag是组件的构造类
+        // 所以直接创建
+        } else {
+            vnode = createComponent(tag, data, context, children)
+        }
+
+        // 如果有vnode
+        if (vnode) {
+            // 如果有namespace，就应用下namespace，然后返回vnode
+            if (ns) applyNS(vnode, ns)
+            return vnode
+        // 否则，返回一个空节点
+        } else {
+            return createEmptyVNode()
+        }
+    }
+}
+```
+
+Vue渲染中, 核心关键的几步是:
+
+- `new Vue`, 执行初始化
+- 挂载`$mount`, 通过自定义`render`方法, `template`, `el`等生成`render`渲染函数
+- 通过`Watcher`监听数据的变化
+- 当数据发生变化时, `render`函数执行生成VNode对象
+- 通过`patch`方法, 对比新旧VNode对象, 通过`DOM Diff`算法, 添加/修改/删除真正的DOM元素
+
+至此, 整个`new Vue`渲染过程完成.
+
+
+
+
+#### render函数触发过程
 
 [第一次挂载和每次数据更新都会触发render函数](https://www.zhihu.com/question/406811368)
 
@@ -3014,6 +3941,610 @@ seo 本质是一个服务器向另一个服务器发起请求，解析请求内�
 
 大型项目中可能会涉及大量的DOM操作、复杂的动画效果，也就不适合使用Vue、react框架进行开发
 
+### 27.Vue的双向绑定和单向数据流冲突吗？
+
+`Vue`中更加推荐单向数据流的状态管理模式(比如`Vuex`)，但`Vue`同时支持通过`v-model`实现双向数据绑定。
+
+#### props传递问题
+
+不管是react还是vue，父级组件与子组件的通信都是通过props来实现的，在vue中父组件的props遵循的是单向数据流，用官方的话说就是，父级的props的更新会向下流动到子组件中，反之则不行。也就是说，子组件不应该去修改props。但实际开发过程中，可能会有一些情况试图去修改props数据：
+
+1、这个props只是传递一个初始值，子组件把它当做一个局部变量来使用，这种情况一般定义一个本地的data属性，将props的值赋值给它。如下：
+
+```js
+props: [ 'initialCounter' ],
+data: function () {
+   return  {
+     counter:  this .initialCounter
+   }
+}
+```
+
+2、这个props的值以原始数据传入，但是子组件对其需要转换。这种情况，最好使用computed来定义一个计算属性，如下：
+
+```js
+props: ['size'],
+computed: {
+  normalizedSize: function () {
+    return this.size.trim().toLowerCase()
+  }
+}
+```
+
+以上两种情况，传递的值都是基本数据类型，但是大多数情况下，我们需要向子组件传递一个引用类型数据，那么问题就来了
+
+JavaScript 中对象和数组是通过引用传入的，所以对于一个数组或对象类型的 prop 来说，在子组件中改变这个对象或数组本身将会影响到父组件的状态。
+
+比如，在父组件中有一个列表，双击其中一个元素进行编辑，该元素的数据作为props传递给一个子组件，在子组件中需要对该数据进行编辑，你会发现如上所说，编辑后父组件的值也发生了变化。**实际上我们想父组件影响子组件，但是子组件修改不要影响父组件**
+
+对于仅仅是复制了引用（地址），换句话说，复制了之后，原来的变量和新的变量指向同一个东西，彼此之间的操作会互相影响，为 **浅拷贝**。
+
+而如果是在堆中重新分配内存，拥有不同的地址，但是值是一样的，复制后的对象与原来的对象是完全隔离，互不影响，为 **深拷贝**。
+
+所以props的传递应该是浅拷贝
+
+虽然通过拷贝props数据解决了问题，但是拷贝后修改新数据的属性并不会触发vue的更新机制，需要强制更新$forceUpdate()
+
+#### 单向绑定 `vs` 双向绑定
+
+单双向绑定，指的是`View`层和`Model`层之间的映射关系。
+`react`采取单向绑定
+
+![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/8ced2b6b6dbf4f8d8318b63f4ca2e3b4~tplv-k3u1fbpfcp-zoom-in-crop-mark:3024:0:0:0.awebp)
+
+
+
+在`React`中，当`View`层发生更改时，用户通过发出`Actions`进行处理，`Actions`中通过`setState`对`State`进行更新，`State`更新后触发`View`更新。可以看出，`View`层不能直接修改`State`，必须要通过`Actions`来进行操作，这样更加清晰可控
+
+单向绑定的方式的优点在于清晰可控，缺点则在于会有一些模板代码，`Vue`则同时支持单向绑定和双向绑定
+
+- 单向绑定：插值形式`{{data}}`，`v-bind`也是单向绑定
+- 双向绑定：表单的`v-model`，用户对`View`层的更改会直接同步到`Model`层
+
+实际上`v-model`只是`v-bind:value` 和 `v-on:input`的语法糖，我们也可以采取类似`react`的单向绑定。两者各有利弊，单向绑定清晰可控，但是模板代码过多，双向绑定可以简化开发，但是也会导致数据变化不透明，优缺点共存，大家可以根据情况使用。
+
+#### 单向数据流 `vs` 双向数据流
+
+数据流指的是组件之间的数据流动。
+ `Vue`与`React`都是单向数据流的模型，虽然`vue`有双向绑定`v-model`，但是`vue`和`react`父子组件之间数据传递，仍然还是遵循单向数据流的，父组件可以向子组件传递`props`，但是子组件不能修改父组件传递来的`props`，子组件只能通过事件通知父组件进行数据更改
+
+
+![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/4ac74159a37043b28cd519629bd96646~tplv-k3u1fbpfcp-zoom-in-crop-mark:3024:0:0:0.awebp)
+
+通过单向数据流的模型，所有状态的改变可记录、可跟踪，相比于双向数据流可加容易维护与定位问题
+
+#### 为什么说`v-model`只是语法糖
+
+>你可以用 `v-model` 指令在表单 `<input>`、`<textarea>` 及 `<select>` 元素上创建双向数据绑定。它会根据控件类型自动选取正确的方法来更新元素。尽管有些神奇，但 `v-model` 本质上不过是语法糖。它负责监听用户的输入事件以更新数据，并对一些极端场景进行一些特殊处理
+
+正如上面所述，`Vue`文档中说`v-model`只是语法糖
+
+```javascript
+<input v-model=“phoneInfo.phone”/>
+
+//在组件中使用时，实际相当于下面的简写
+<input :value="PhoneInfo.phone" @input="val => { PhoneInfo.phone = val }"
+```
+
+那么问题来了，为什么说`v-model`不是真正的双向数据流呢？按照这道理，是不是可以认为`model->view`的单向数据流也是语法糖啊，也是`vue`作者通过一定方法实现的而已
+ 真正的原因上面已经说了，**数据绑定是`View`与`Model`之间的映射关系，数据流指的是组件之间的数据流动**
+ `v-model`不是真正的双向数据流，是因为它不能直接修改父组件的值，比如你在`v-model`中绑定`props`中的值是会报错的，它只能绑定组件的值
+ 而真正的双向数据流，比如`AngularJs`，是允许在子组件中直接更新父组件的值的，这就是为什么说`v-model`只是语法糖的原因
+
+#### 总结
+
+总得来说，单双向数据绑定与数据流是两个不同维度的概念，数据绑定是`View`与`Model`之间的映射关系，数据流指的是组件之间的数据流动。因此，单向数据流也可有双向绑定，双向数据流也可以有双向绑定，两者不应该混为一谈
+
+![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/d455393db0954438b9719cf7e6b33408~tplv-k3u1fbpfcp-zoom-in-crop-mark:3024:0:0:0.awebp)
+
+### 28.自定义指令
+
+[vue中如何自定义指令](https://blog.csdn.net/weixin_58032613/article/details/122759818)
+
+#### 指令使用的几种方式
+
+```js
+//会实例化一个指令，但这个指令没有参数 
+`v-xxx`
+ 
+// -- 将值传到指令中
+`v-xxx="value"`  
+ 
+// -- 将字符串传入到指令中，如`v-html="'<p>内容</p>'"`
+`v-xxx="'string'"` 
+ 
+// -- 传参数（`arg`），如`v-bind:class="className"`
+`v-xxx:arg="value"` 
+ 
+// -- 使用修饰符（`modifier`）
+`v-xxx:arg.modifier="value"` 
+
+```
+
+#### 如何自定义指令
+
+注册一个自定义指令有全局注册与局部注册
+
+全局注册注册主要是用过**Vue.directive**方法进行注册
+
+**Vue.directive**第一个参数是**指令的名字**（不需要写上v-前缀），第二个参数可以是**对象数据**，也可以是一个**指令函数**
+
+```js
+// 注册一个全局自定义指令 `v-focus`
+Vue.directive('focus', {
+  // 当被绑定的元素插入到 DOM 中时……
+  inserted: function (el) {
+    // 聚焦元素
+    el.focus()  // 页面加载完成之后自动让输入框获取到焦点的小功能
+  }
+})
+```
+
+局部注册通过在组件options选项中设置directive属性  是定义在组件内部的，只能在当前组件中使用
+
+```js
+directives: {
+  focus: {
+    // 指令的定义
+    inserted: function (el) {
+      el.focus() // 页面加载完成之后自动让输入框获取到焦点的小功能
+    }
+  }
+}
+```
+
+然后你可以在模板中任何元素上使用新的 v-focus property，如下：
+
+```js
+<input v-focus />
+```
+
+**钩子函数**
+
+自定义指令也像组件那样存在钩子函数：
+
+bind：只调用一次，指令第一次绑定到元素时调用。在这里可以进行一次性的初始化设置
+inserted：被绑定元素插入父节点时调用 (仅保证父节点存在，但不一定已被插入文档中)
+update：所在组件的 VNode 更新时调用，但是可能发生在其子 VNode更新之前。指令的值可能发生了改变，也可能没有。但是你可以通过比较更新前后的值来忽略不必要的模板更新
+componentUpdated：指令所在组件的 VNode 及其子 VNode 全部更新后调用
+unbind：只调用一次，指令与元素解绑时调用
+
+所有的钩子函数的参数都有以下：
+
+- el：指令所绑定的元素，可以用来直接操作 DOM
+- binding：一个对象，包含以下 property：
+
+
+
+`name`：指令名，不包括 v- 前缀。
+
+`value`：指令的绑定值，例如：v-my-directive="1 + 1" 中，绑定值为 2。
+
+`oldValue`：指令绑定的前一个值，仅在 update 和 componentUpdated 钩子中可用。无论值是否改变都可用。
+
+`expression`：字符串形式的指令表达式。例如 v-my-directive="1 + 1" 中，表达式为 "1 + 1"。
+
+`arg`：传给指令的参数，可选。例如 v-my-directive:foo 中，参数为 "foo"。
+
+`modifiers`：一个包含修饰符的对象。例如：v-my-directive.foo.bar 中，修饰符对象为 { foo: true, bar: true }
+
+`vnode`：Vue 编译生成的虚拟节点
+
+`oldVnode`：上一个虚拟节点，仅在 update 和 componentUpdated 钩子中可用
+
+
+
+除了 el 之外，其它参数都应该是只读的，切勿进行修改。如果需要在钩子之间共享数据，建议通过元素的 dataset 来进行
+
+```js
+<div v-demo="{ color: 'white', text: 'hello!' }"></div>
+<script>
+    Vue.directive('demo', function (el, binding) {
+    console.log(binding.value.color) // "white"
+    console.log(binding.value.text)  // "hello!"
+    })
+</script>
+```
+
+#### 批量注册使用
+
+批量注册指令，新建 `directives/index.js` 文件
+
+```js
+import copy from './copy'
+import longpress from './longpress'
+// 自定义指令
+const directives = {
+  copy,
+  longpress,
+}
+
+export default {
+  install(Vue) {
+    Object.keys(directives).forEach((key) => {
+      Vue.directive(key, directives[key])
+    })
+  },
+}
+
+```
+
+在 `main.js` 引入并调用
+
+```js
+import Vue from 'vue'
+import Directives from './JS/directives'
+Vue.use(Directives)
+```
+
+#### 实现v-lazyload
+
+背景：在类电商类项目，往往存在大量的图片，如 banner 广告图，菜单导航图，美团等商家列表头图等。图片众多以及图片体积过大往往会影响页面加载速度，造成不良的用户体验，所以进行图片懒加载优化势在必行。
+
+需求：实现一个图片懒加载指令，只加载浏览器可见区域的图片。
+
+思路：
+
+1. 图片懒加载的原理主要是判断当前图片是否到了可视区域这一核心逻辑实现的
+2. 拿到所有的图片 Dom ，遍历每个图片判断当前图片是否到了可视区范围内
+3. 如果到了就设置图片的 `src` 属性，否则显示默认图片
+
+图片懒加载有两种方式可以实现，一是绑定 `srcoll` 事件进行监听，二是使用 `IntersectionObserver` 判断图片是否到了可视区域，但是有浏览器兼容性问题。
+
+下面封装一个懒加载指令兼容两种方法，判断浏览器是否支持 `IntersectionObserver` API，如果支持就使用 `IntersectionObserver` 实现懒加载，否则则使用 `srcoll` 事件监听 + 节流的方法实现
+
+```js
+const LazyLoad = {
+  // install方法
+  install(Vue, options) {
+    const defaultSrc = options.default
+    Vue.directive('lazy', {
+      bind(el, binding) {
+        LazyLoad.init(el, binding.value, defaultSrc)
+      },
+      inserted(el) {
+        if (IntersectionObserver) {
+          LazyLoad.observe(el)
+        } else {
+          LazyLoad.listenerScroll(el)
+        }
+      },
+    })
+  },
+  // 初始化
+  init(el, val, def) {
+    el.setAttribute('data-src', val)
+    el.setAttribute('src', def)
+  },
+  // 利用IntersectionObserver监听el
+  observe(el) {
+    var io = new IntersectionObserver((entries) => {
+      const realSrc = el.dataset.src
+      if (entries[0].isIntersecting) {
+        if (realSrc) {
+          el.src = realSrc
+          el.removeAttribute('data-src')
+        }
+      }
+    })
+    io.observe(el)
+  },
+  // 监听scroll事件
+  listenerScroll(el) {
+    const handler = LazyLoad.throttle(LazyLoad.load, 300)
+    LazyLoad.load(el)
+    window.addEventListener('scroll', () => {
+      handler(el)
+    })
+  },
+  // 加载真实图片
+  load(el) {
+    const windowHeight = document.documentElement.clientHeight
+    const elTop = el.getBoundingClientRect().top
+    const elBtm = el.getBoundingClientRect().bottom
+    const realSrc = el.dataset.src
+    if (elTop - windowHeight < 0 && elBtm > 0) {
+      if (realSrc) {
+        el.src = realSrc
+        el.removeAttribute('data-src')
+      }
+    }
+  },
+  // 节流
+  throttle(fn, delay) {
+    let timer
+    let prevTime
+    return function (...args) {
+      const currTime = Date.now()
+      const context = this
+      if (!prevTime) prevTime = currTime
+      clearTimeout(timer)
+
+      if (currTime - prevTime > delay) {
+        prevTime = currTime
+        fn.apply(context, args)
+        clearTimeout(timer)
+        return
+      }
+
+      timer = setTimeout(function () {
+        prevTime = Date.now()
+        timer = null
+        fn.apply(context, args)
+      }, delay)
+    }
+  },
+}
+
+export default LazyLoad
+```
+
+使用，将组件内标签的 `src` 换成 `v-LazyLoad`
+
+```js
+<img v-LazyLoad="xxx.jpg" />
+```
+
+#### 实现一个v-debounce
+
+背景：在开发中，有些提交保存按钮有时候会在短时间内被点击多次，这样就会多次重复请求后端接口，造成数据的混乱，比如新增表单的提交按钮，多次点击就会新增多条重复的数据。
+
+需求：防止按钮在短时间内被多次点击，使用防抖函数限制规定时间内只能点击一次。
+
+思路：
+
+1. 定义一个延迟执行的方法，如果在延迟时间内再调用该方法，则重新计算执行时间。
+2. 将事件绑定在 click 方法上。
+
+```js
+const debounce = {
+  inserted: function (el, binding) {
+    let timer
+    el.addEventListener('click', () => {
+      if (timer) {
+        clearTimeout(timer)
+      }
+      timer = setTimeout(() => {
+        binding.value()
+      }, 1000)
+    })
+  },
+}
+
+export default debounce
+```
+
+使用：给 Dom 加上 `v-debounce` 及回调函数即可
+
+```html
+<template>
+  <button v-debounce="debounceClick">防抖</button>
+</template>
+
+<script>
+export default {
+  methods: {
+    debounceClick () {
+      console.log('只触发一次')
+    }
+  }
+}
+</script>
+```
+
+#### 常用案例
+
+- 代码复用和抽象的主要形式是组件。
+- 当需要对普通 DOM 元素进行底层操作，此时就会用到自定义指令
+- 但是，对于大幅度的 DOM 变动，还是应该使用组件
+
+##### 输入框自动聚焦
+
+```vue
+输入框自动聚焦
+// 注册一个全局自定义指令 `v-focus`
+Vue.directive('focus', {
+  // 当被绑定的元素插入到 DOM 中时
+  inserted: function (el) {
+    // 聚焦元素
+    el.focus()
+  }
+})
+//<input v-focus>
+```
+
+##### 下拉菜单
+
+点击下拉菜单本身不会隐藏菜单
+点击下拉菜单以外的区域隐藏菜单
+
+```js
+<script>
+Vue.directive('clickoutside', {
+  bind(el, binding) {
+    function documentHandler(e) {
+      if (el.contains(e.target)) {
+       return false 
+      }
+      
+      if (binding.expression) {
+        binding.value(e)
+      }
+    }
+    
+    el.__vueMenuHandler__ = documentHandler
+    document.addEventListener('click', el.__vueMenuHandler__)
+  },
+  unbind(el) {
+    document.removeEventListener('click', el.__vueMenuHandler__)
+    delete el.__vueMenuHandler__
+  }
+})
+
+new Vue({
+  el: '#app',
+  data: {
+    show: false
+  },
+  methods: {
+    handleHide() {
+      this.show = false
+    }
+  }
+})
+</script>
+<div class="main" v-menu="handleHide">
+  <button @click="show = !show">点击显示下拉菜单</button>
+  <div class="dropdown" v-show="show">
+    <div class="item"><a href="#">选项 1</a></div>
+    <div class="item"><a href="#">选项 2</a></div>
+    <div class="item"><a href="#">选项 3</a></div>
+  </div>
+</div>
+
+```
+
+##### 相对时间转换
+
+类似微博、朋友圈发布动态后的相对时间，比如刚刚、两分钟前等等
+
+```js
+<span v-relativeTime="time"></span>
+<script>
+new Vue({
+  el: '#app',
+  data: {
+    time: 1565753400000
+  }
+})
+
+Vue.directive('relativeTime', {
+  bind(el, binding) {
+    // Time.getFormatTime() 方法，自行补充
+    el.innerHTML = Time.getFormatTime(binding.value)
+    el.__timeout__ = setInterval(() => {
+      el.innerHTML = Time.getFormatTime(binding.value)
+    }, 6000)
+  },
+  unbind(el) {
+    clearInterval(el.innerHTML)
+    delete el.__timeout__
+  }
+})
+</script>
+```
+
+##### 输入框防抖
+
+防抖这种情况设置一个v-throttle自定义指令来实现
+
+```js
+// 1.设置v-throttle自定义指令
+Vue.directive('throttle', {
+  bind: (el, binding) => {
+    let throttleTime = binding.value; // 防抖时间
+    if (!throttleTime) { // 用户若不设置防抖时间，则默认2s
+      throttleTime = 2000;
+    }
+    let cbFun;
+    el.addEventListener('click', event => {
+      if (!cbFun) { // 第一次执行
+        cbFun = setTimeout(() => {
+          cbFun = null;
+        }, throttleTime);
+      } else {
+        event && event.stopImmediatePropagation();
+      }
+    }, true);
+  },
+});
+// 2.为button标签设置v-throttle自定义指令
+<button @click="sayHello" v-throttle>提交</button>
+```
+
+##### 一键 Copy的功能
+
+```js
+import { Message } from 'ant-design-vue';
+ 
+const vCopy = { //
+  /*
+    bind 钩子函数，第一次绑定时调用，可以在这里做初始化设置
+    el: 作用的 dom 对象
+    value: 传给指令的值，也就是我们要 copy 的值
+  */
+  bind(el, { value }) {
+    el.$value = value; // 用一个全局属性来存传进来的值，因为这个值在别的钩子函数里还会用到
+    el.handler = () => {
+      if (!el.$value) {
+      // 值为空的时候，给出提示，我这里的提示是用的 ant-design-vue 的提示，你们随意
+        Message.warning('无复制内容');
+        return;
+      }
+      // 动态创建 textarea 标签
+      const textarea = document.createElement('textarea');
+      // 将该 textarea 设为 readonly 防止 iOS 下自动唤起键盘，同时将 textarea 移出可视区域
+      textarea.readOnly = 'readonly';
+      textarea.style.position = 'absolute';
+      textarea.style.left = '-9999px';
+      // 将要 copy 的值赋给 textarea 标签的 value 属性
+      textarea.value = el.$value;
+      // 将 textarea 插入到 body 中
+      document.body.appendChild(textarea);
+      // 选中值并复制
+      textarea.select();
+      // textarea.setSelectionRange(0, textarea.value.length);
+      const result = document.execCommand('Copy');
+      if (result) {
+        Message.success('复制成功');
+      }
+      document.body.removeChild(textarea);
+    };
+    // 绑定点击事件，就是所谓的一键 copy 啦
+    el.addEventListener('click', el.handler);
+  },
+  // 当传进来的值更新的时候触发
+  componentUpdated(el, { value }) {
+    el.$value = value;
+  },
+  // 指令与元素解绑的时候，移除事件绑定
+  unbind(el) {
+    el.removeEventListener('click', el.handler);
+  },
+};
+ 
+export default vCopy;
+```
+
+##### 拖拽
+
+```js
+<div ref="a" id="bg" v-drag></div>
+
+  directives: {
+    drag: {
+      bind() {},
+      inserted(el) {
+        el.onmousedown = (e) => {
+          let x = e.clientX - el.offsetLeft;
+          let y = e.clientY - el.offsetTop;
+          document.onmousemove = (e) => {
+            let xx = e.clientX - x + "px";
+            let yy = e.clientY - y + "px";
+            el.style.left = xx;
+            el.style.top = yy;
+          };
+          el.onmouseup = (e) => {
+            document.onmousemove = null;
+          };
+        };
+      },
+    },
+  }
+```
+
+
+
 ## 生命周期![b1493c640d7e4cf2bd7785cea7c86789](https://s2.loli.net/2022/07/14/mXbkqBsVgAYinc1.png)
 
 
@@ -3115,6 +4646,53 @@ keep-alive是 Vue 提供的一个内置组件，用来对组件进行缓存—�
 2. 子组件 beforeDestroy
 3. 子组件 destroyed
 4. 父组件 destoryed
+
+把父组件的data通过props传递给子组件的时候，子组件在初次渲染的时候生命周期或者render方法，有调用data相关的props的属性, 这样子组件也被添加到父组件的data的相关属性依赖中，这样父组件的data在set的时候，就相当于触发自身和子组件的update。
+例子如下:
+
+```javascript
+// main.vue
+import Vue from 'vue'
+import App from './App'
+
+const root = new Vue({
+  data: {
+    state: false
+  },
+  mounted() {
+    setTimeout(() => {
+      this.state = true
+    }, 1000)
+  },
+  render: function(h) {
+    const { state } = this // state 变化重新触发render
+    let root = h(App, { props: { status: state } })
+    console.log('root:', root)
+    return root
+  }
+}).$mount('#app')
+
+window.root = root
+// App.vue
+<script>
+export default {
+  props: {
+    status: Boolean
+  },
+  render: function (h){
+    const { status } = this
+    let app = h('h1', ['hello world'])
+    console.log('app:', app)
+    return app
+  }
+}
+</script>
+```
+
+截图如下:
+
+![clipboard.png](https://s2.loli.net/2022/07/29/LMqTznvaVtNOYGE.png)
+在`main.js`中 **state** 状态发生了变化，由`false` => `true`, 触发了**自身**与**子组件**的render方法。
 
 ### 6.生命周期源码分析
 
@@ -5460,9 +7038,10 @@ export default {
 
 **（5）其它方面的更改**
 
-- 支持自定义渲染器，从而使得 weex 可以通过自定义渲染器的方式来扩展，而不是直接 fork 源码来改的方式。
 - 支持 Fragment（多个根节点）和 Protal（在 dom 其他部分渲染组建内容）组件，针对一些特殊的场景做了处理。
 - 基于 tree shaking 优化，提供了更多的内置功能。
+- 生命周期   名称发生变化  使用setup    在 beforeCreate 钩子之前调用
+- diff算法 
 
 ### 2.Proxy的优点
 
@@ -5729,11 +7308,17 @@ export default function Count () {
 
 ### 4.reactive和ref
 
+在vue2中只需要在data里定义数据，就可以实现数据层-视图层的双向绑定，而在vue3中使用ref接受一个内部值并返回一个响应式且可变的 ref 对象。ref 对象具有指向内部值的单个 property.value
+
+reactive的作用和ref的作用是类似的，都是将数据变成可相应的对象，其实ref的底层其实利用了reactive。 两者的区别，ref包装的对象需要.value ,而reactive中的不需要
+
 ![image-20220316213837203](https://s2.loli.net/2022/04/03/298TSq6sEyKnQIX.png)
 
 `toRefs`会将我们一个`响应式`的对象转变为一个`普通`对象，然后将这个`普通对象`里的每一个属性变为一个响应式的数据
 
+如果利用toRef将一个数据变成响应式数据，是会影响到原始数据，但是响应式数据通过toRef。并不回出发ui界面更新(ref式改变，不会影响到原始数据)
 
+toRefs类似toRef,只是一次性处理多次toRef
 
 ### 5.setup
 
@@ -5984,6 +7569,11 @@ setup script语法糖提供了三个新的API来供我们使用：`defineProps`�
 
 ### 6.Vue3 中 watch 与 watchEffect 有什么区别？
 
+- `watch` 与 `watchEffect` 的不同
+  1. `watch` 初次渲染不执行
+  2. `watch` 侦听的更具体
+  3. `watch` 可以访问侦听数据变化前后的值
+
 同一个功能的两种不同形态，底层的实现是一样的。
 
 -   `watch`- 显式指定依赖源，依赖源更新时执行回调函数
@@ -6011,6 +7601,70 @@ watchEffect(
   () => { /* 依赖源同时是回调函数 */ }
 )
 ```
+
+### 7.Teleport
+
+这个组件的作用主要用来将模板内的 DOM 元素移动到其他位置
+
+业务开发的过程中，我们经常会封装一些常用的组件，例如 Modal 组件
+
+有时组件模板的一部分逻辑上属于该组件，而从技术角度来看，最好将模板的这一部分移动到 DOM 中 Vue app 之外的其他位置 最常见的就是类似于element的dialog组件 dialog是fixed定位，而dialog父元素的css会影响dialog  因此要将dialog放在body下
+
+>eleport 提供了一种干净的方法，允许我们控制在 DOM 中哪个父节点下呈现 HTML，而不必求助于全局状态或将其拆分为两个组件。 -- Vue 官方文档
+
+我们只需要将弹窗内容放入 `Teleport` 内，并设置 `to` 属性为 `body`，表示弹窗组件每次渲染都会做为 `body` 的子级，这样之前的问题就能得到解决
+
+```javascript
+<template>
+  <teleport to="body">
+    <div class="modal__mask">
+      <div class="modal__main">
+        ...
+      </div>
+    </div>
+  </teleport>
+</template>
+
+```
+
+### 8.Suspense
+
+前端开发中异步请求是非常常见的事情,比如远程读取图片,调用后端接口等等 Suspense是有两个template插槽的，第一个default代表异步请求完成后，显示的模板内容。fallback代表在加载中时，显示的模板内容。 子组件 child
+
+```xml
+<template>
+  <h1>{{result}}</h1>
+</template>
+<script>
+import { defineComponent } from 'vue'
+export default defineComponent({
+  setup() {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        return resolve({
+          result: 1000
+        })
+      }, 5000)
+    })
+  }
+})
+</script>
+```
+
+父组件 当异步没有执行完的时候。使用fallback里面的组件，当执行成功之后使用default
+
+```xml
+<Suspense>
+  <template #default>
+    <Child />
+  </template>
+  <template #fallback>
+    <h1>Loading !...</h1>
+  </template>
+</Suspense>
+```
+
+
 
 ## Virtual DOM
 
@@ -6095,7 +7749,41 @@ watchEffect(
 
 ```
 
+#### VNode的实例对象
 
+一个VNode的实例对象包含了以下属性
+
+- `tag`: 当前节点的标签名
+- `data`: 当前节点的数据对象，具体包含哪些字段可以参考vue源码`types/vnode.d.ts`中对`VNodeData`的定义
+  ![clipboard.png](https://segmentfault.com/img/bVITKL?w=419&h=458)
+- `children`: 数组类型，包含了当前节点的子节点
+- `text`: 当前节点的文本，一般文本节点或注释节点会有该属性
+- `elm`: 当前虚拟节点对应的真实的dom节点
+- `ns`: 节点的namespace
+- `context`: 编译作用域
+- `functionalContext`: 函数化组件的作用域
+- `key`: 节点的key属性，用于作为节点的标识，有利于patch的优化
+- `componentOptions`: 创建组件实例时会用到的选项信息
+- `child`: 当前节点对应的组件实例
+- `parent`: 组件的占位节点
+- `raw`: raw html
+- `isStatic`: 静态节点的标识
+- `isRootInsert`: 是否作为根节点插入，被`<transition>`包裹的节点，该属性的值为`false`
+- `isComment`: 当前节点是否是注释节点
+- `isCloned`: 当前节点是否为克隆节点
+- `isOnce`: 当前节点是否有`v-once`指令
+
+#### VNode分类
+
+![clipboard.png](https://segmentfault.com/img/bVITTR?w=495&h=540)
+
+`VNode`可以理解为vue框架的虚拟dom的基类，通过`new`实例化的`VNode`大致可以分为几类
+
+- `EmptyVNode`: 没有内容的注释节点
+- `TextVNode`: 文本节点
+- `ElementVNode`: 普通元素节点
+- `ComponentVNode`: 组件节点
+- `CloneVNode`: 克隆节点，可以是以上任意类型的节点，唯一的区别在于`isCloned`属性为`true`
 
 ### 2.Diff算法
 
@@ -6112,7 +7800,7 @@ watchEffect(
 
 在diff中，只对同层的子节点进行比较，放弃跨级的节点比较，使得时间复杂从O(n3)降低值O(n)，也就是说，只有当新旧children都为多个子节点时才需要用核心的Diff算法进行同层级比较。
 
-![img](https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2018/5/19/163777930be304eb~tplv-t2oaga2asx-zoom-in-crop-mark:1304:0:0:0.awebp)
+![img](https://s2.loli.net/2022/07/29/9hujPrWTm7C5fKO.webp)
 
 > Diff算法真的很美，整个流程如下图所示：
 
@@ -6166,7 +7854,7 @@ function vue2Diff(prevChildren, nextChildren, parent) {
 
 使用以上四步进行对比，去寻找`key`相同的可复用的节点，当在某一步中找到了则停止后面的寻找。具体对比顺序如下图
 
-![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/847306f303ab4177891b56cccff1ebd3~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp)
+![img](https://s2.loli.net/2022/07/29/l934S67nmNPreZH.webp)
 
 对比顺序代码结构如下:
 
@@ -6360,7 +8048,7 @@ function vue3Diff(prevChildren, nextChildren, parent) {
 
 这时候，我们就需要考虑边界情况了，这里有两种情况。一种是`j > prevEnd`；另一种是`j > nextEnd`。
 
-![img](https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/52779ed5f26a451d8098e945709132cf~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp)
+![img](https://s2.loli.net/2022/07/29/6FxtkycMsIqo9US.webp)
 
 我们以这张图为例，此时`j > prevEnd`且`j <= nextEnd`，我们只需要把**新列表**中`j`到`nextEnd`之间剩下的节点**插入**进去就可以了。相反， 如果`j > nextEnd`时，我们把**旧列表**中`j`到`prevEnd`之间的节点**删除**就可以了。
 
@@ -6430,13 +8118,13 @@ function vue3Diff(prevChildren, nextChildren, parent) {
 
 ```
 
-#### 判断是否需要移动
+##### 判断是否需要移动
 
 其实几个算法看下来，套路已经很明显了，就是找到移动的节点，然后给他移动到正确的位置。把该加的新节点添加好，把该删的旧节点删了，整个算法就结束了。这个算法也不例外，我们接下来看一下它是如何做的。
 
 当`前/后置`的预处理结束后，我们进入真正的`diff`环节。首先，我们先根据**新列表**剩余的节点数量，创建一个`source`数组，并将数组填满`-1`。
 
-![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/75944ec3b6a245989a0eaf7e474ef174~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp)
+![img](https://s2.loli.net/2022/07/29/9hXlTeUGFP7WMsi.webp)
 
 我们先写这块逻辑。
 
@@ -6590,9 +8278,62 @@ function vue3Diff(prevChildren, nextChildren, parent) {
 
 而在 vue3 中是**建立一个存储新节点数组中的剩余节点在旧节点数组上的索引的映射关系数组**，建立完成这个数组后也即找到了**可复用的节点**，然后通过这个**数组计算得到最长递增子序列**，这个序列中的节点保持不动，然后将**新节点数组中的剩余节点移动到正确的位置**。
 
-### 3. DOM如何移动
+##### DOM如何移动
 
 判断完是否需要移动后，我们就需要考虑如何移动了。一旦需要进行DOM移动，我们首先要做的就是找到`source`的**最长递增子序列**。
+
+从后向前进行遍历`source`每一项。此时会出现三种情况：
+
+1. 当前的值为`-1`，这说明该节点是全新的节点，又由于我们是**从后向前**遍历，我们直接创建好DOM节点插入到队尾就可以了。
+2. 当前的索引为`最长递增子序列`中的值，也就是`i === seq[j]`，这说说明该节点不需要移动
+3. 当前的索引不是`最长递增子序列`中的值，那么说明该DOM节点需要移动，这里也很好理解，我们也是直接将DOM节点插入到队尾就可以了，因为队尾是排好序的。
+
+![image.png](https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/0657d2691beb4fb1a9a494e7cb19a51a~tplv-k3u1fbpfcp-zoom-in-crop-mark:3024:0:0:0.awebp)
+
+```js
+function vue3Diff(prevChildren, nextChildren, parent) {
+  //...
+  if (move) {
+	const seq = lis(source); // [0, 1]
+    let j = seq.length - 1;  // 最长子序列的指针
+    // 从后向前遍历
+    for (let i = nextLeft - 1； i >= 0; i--) {
+      let pos = nextStart + i, // 对应新列表的index
+        nextNode = nextChildren[pos],	// 找到vnode
+      	nextPos = pos + 1，    // 下一个节点的位置，用于移动DOM
+        refNode = nextPos >= nextChildren.length ? null : nextChildren[nextPos].el, //DOM节点
+        cur = source[i];  // 当前source的值，用来判断节点是否需要移动
+    
+      if (cur === -1) {
+        // 情况1，该节点是全新节点
+      	mount(nextNode, parent, refNode)
+      } else if (cur === seq[j]) {
+        // 情况2，是递增子序列，该节点不需要移动
+        // 让j指向下一个
+        j--
+      } else {
+        // 情况3，不是递增子序列，该节点需要移动
+        parent.insetBefore(nextNode.el, refNode)
+      }
+    }
+  } else {
+    //不需要移动: 我们只需要判断是否有全新的节点【其在source数组中对应的值就是初始的-1】，给他添加进去
+    for (let i = nextLeft - 1； i >= 0; i--) {
+      let cur = source[i];  // 当前source的值，用来判断节点是否需要移动
+    
+      if (cur === -1) {
+       let pos = nextStart + i, // 对应新列表的index
+          nextNode = nextChildren[pos],	// 找到vnode
+          nextPos = pos + 1，    // 下一个节点的位置，用于移动DOM
+          refNode = nextPos >= nextChildren.length ? null : nextChildren[nextPos].el, //DOM节点
+      	mount(nextNode, parent, refNode)
+      }
+    }
+  }
+}
+```
+
+
 
 ### 3.虚拟DOM怎么解析
 
@@ -6602,7 +8343,58 @@ function vue3Diff(prevChildren, nextChildren, parent) {
 - 当页面的状态发生改变，需要对页面的 DOM 的结构进行调整的时候，首先根据变更的状态，重新构建起一棵对象树，然后将这棵新的对象树和旧的对象树进行比较，记录下两棵树的的差异。
 - 最后将记录的有差异的地方应用到真正的 DOM 树中去，这样视图就更新了。
 
-### 4.虚拟DOM性能真的好吗
+### 4.patch原理
+
+`patch`函数的定义在`src/core/vdom/patch.js`中，我们先来看下这个函数的逻辑
+
+`patch`函数接收6个参数：
+
+- `oldVnode`: 旧的虚拟节点或旧的真实dom节点
+- `vnode`: 新的虚拟节点
+- `hydrating`: 是否要跟真是dom混合
+- `removeOnly`: 特殊flag，用于`<transition-group>`组件
+- `parentElm`: 父节点
+- `refElm`: 新节点将插入到`refElm`之前
+
+`patch`的策略是：
+
+1. 如果`vnode`不存在但是`oldVnode`存在，说明意图是要销毁老节点，那么就调用`invokeDestroyHook(oldVnode)`来进行销毁
+
+2. 如果`oldVnode`不存在但是`vnode`存在，说明意图是要创建新节点，那么就调用`createElm`来创建新节点
+
+3. 当`vnode`和`oldVnode`都存在时
+
+   - 如果`oldVnode`和`vnode`是同一个节点，就调用`patchVnode`来进行`patch`
+   - 当`vnode`和`oldVnode`不是同一个节点时，如果`oldVnode`是真实dom节点或`hydrating`设置为`true`，需要用`hydrate`函数将虚拟dom和真是dom进行映射，然后将`oldVnode`设置为对应的虚拟dom，找到`oldVnode.elm`的父节点，根据vnode创建一个真实dom节点并插入到该父节点中`oldVnode.elm`的位置
+
+   这里面值得一提的是`patchVnode`函数，因为真正的patch算法是由它来实现的（patchVnode中更新子节点的算法其实是在`updateChildren`函数中实现的，为了便于理解，我统一放到`patchVnode`中来解释）。
+
+`patchVnode`算法是：
+
+1. 如果`oldVnode`跟`vnode`完全一致，那么不需要做任何事情
+2. 如果`oldVnode`跟`vnode`都是静态节点，且具有相同的`key`，当`vnode`是克隆节点或是`v-once`指令控制的节点时，只需要把`oldVnode.elm`和`oldVnode.child`都复制到`vnode`上，也不用再有其他操作
+3. 否则，如果`vnode`不是文本节点或注释节点
+   - 如果`oldVnode`和`vnode`都有子节点，且2方的子节点不完全一致，就执行更新子节点的操作（这一部分其实是在`updateChildren`函数中实现），算法如下
+     - 分别获取`oldVnode`和`vnode`的`firstChild`、`lastChild`，赋值给`oldStartVnode`、`oldEndVnode`、`newStartVnode`、`newEndVnode`
+     - 如果`oldStartVnode`和`newStartVnode`是同一节点，调用`patchVnode`进行`patch`，然后将`oldStartVnode`和`newStartVnode`都设置为下一个子节点，重复上述流程
+       ![clipboard.png](https://segmentfault.com/img/bVIVBX?w=667&h=204)
+     - 如果`oldEndVnode`和`newEndVnode`是同一节点，调用`patchVnode`进行`patch`，然后将`oldEndVnode`和`newEndVnode`都设置为上一个子节点，重复上述流程
+       ![clipboard.png](https://segmentfault.com/img/bVIVCG?w=676&h=221)
+     - 如果`oldStartVnode`和`newEndVnode`是同一节点，调用`patchVnode`进行`patch`，如果`removeOnly`是`false`，那么可以把`oldStartVnode.elm`移动到`oldEndVnode.elm`之后，然后把`oldStartVnode`设置为下一个节点，`newEndVnode`设置为上一个节点，重复上述流程
+       ![clipboard.png](https://segmentfault.com/img/bVIVEu?w=826&h=224)
+     - 如果`newStartVnode`和`oldEndVnode`是同一节点，调用`patchVnode`进行`patch`，如果`removeOnly`是`false`，那么可以把`oldEndVnode.elm`移动到`oldStartVnode.elm`之前，然后把`newStartVnode`设置为下一个节点，`oldEndVnode`设置为上一个节点，重复上述流程
+       ![clipboard.png](https://segmentfault.com/img/bVIVFk?w=864&h=214)
+     - 如果以上都不匹配，就尝试在`oldChildren`中寻找跟`newStartVnode`具有相同`key`的节点，如果找不到相同`key`的节点，说明`newStartVnode`是一个新节点，就创建一个，然后把`newStartVnode`设置为下一个节点
+     - 如果上一步找到了跟`newStartVnode`相同`key`的节点，那么通过其他属性的比较来判断这2个节点是否是同一个节点，如果是，就调用`patchVnode`进行`patch`，如果`removeOnly`是`false`，就把`newStartVnode.elm`插入到`oldStartVnode.elm`之前，把`newStartVnode`设置为下一个节点，重复上述流程
+       ![clipboard.png](https://segmentfault.com/img/bVIVJb?w=869&h=227)
+     - 如果在`oldChildren`中没有寻找到`newStartVnode`的同一节点，那就创建一个新节点，把`newStartVnode`设置为下一个节点，重复上述流程
+     - 如果`oldStartVnode`跟`oldEndVnode`重合了，并且`newStartVnode`跟`newEndVnode`也重合了，这个循环就结束了
+   - 如果只有`oldVnode`有子节点，那就把这些节点都删除
+   - 如果只有`vnode`有子节点，那就创建这些子节点
+   - 如果`oldVnode`和`vnode`都没有子节点，但是`oldVnode`是文本节点或注释节点，就把`vnode.elm`的文本设置为空字符串
+4. 如果`vnode`是文本节点或注释节点，但是`vnode.text != oldVnode.text`时，只需要更新`vnode.elm`的文本内容就可以
+
+### 5.虚拟DOM性能真的好吗
 
 - MVVM框架解决视图和状态同步问题
 
@@ -6644,7 +8436,7 @@ Virtual DOM的更新DOM的准备工作耗费更多的时间，也就是JS层面�
 - 首次渲染大量DOM时，由于多了一层虚拟DOM的计算，会比innerHTML插入慢。
 - 正如它能保证性能下限，在真实DOM操作的时候进行针对性的优化时，还是更快的。
 
-### 5.Vue key的作用是什么，为什么不建议index做key
+### 6.Vue key的作用是什么，为什么不建议index做key
 
 vue 中 key 值的作用可以分为两种情况来考虑：
 
@@ -6658,7 +8450,371 @@ key 是为 Vue 中 vnode 的唯一标记，通过这个 key，diff 操作可以�
 
 使用index 作为 key和没写基本上没区别，因为不管数组的顺序怎么颠倒，index 都是 0, 1, 2...这样排列，导致 Vue 会复用错误的旧子节点，做很多额外的工作。
 
+### 7.vnode的挂载和更新流程
 
+本文主要介绍在视图的渲染过程中，Vue 是如何把 vnode 解析并挂载到页面中的。我们通过一个最简单的例子来分析主要流程：
+
+```html
+  <div id="app">
+      {{someVar}}
+  </div>
+
+  <script type="text/javascript">
+      new Vue({
+          el: '#app',
+
+          data: {
+              someVar: 'init'
+          },
+
+          mounted(){
+              setTimeout(() => this.someVar = 'changed', 3000)
+          }
+
+      })
+  </script>
+```
+
+页面初始会显示 "init" 字符串，3秒钟之后，会更新为 "changed" 字符串。
+
+为了便于理解，将流程分为两个阶段：
+
+1. 首次渲染，生成 vnode，并将其挂载到页面中
+2. 再次渲染，根据更新后的数据，再次生成 vnode，并将其更新到页面中
+
+#### 第一阶段
+
+##### 流程
+
+vm.$mount(vm.$el) => **render = compileToFunctions(template).render** => updateComponent() => **vnode = render()** => vm._update(vnode) => **patch(vm.$el, vnode)**
+
+##### 说明
+
+由 render() 方法生成 vnode，然后由 patch() 方法挂载到页面中。
+
+##### render() 方法
+
+render() 方法根据当前 vm 的数据生成 vnode。
+
+该方法可以是新建 Vue 实例时传入的 render() 方法，也可以由 Vue 的 compiler 模块根据传入的 template 自动生成。
+
+本例中该方法是由 el 属性对应的 template 生成的，代码如下：
+
+```javascript
+(function() {
+    with (this) {
+        return _c('div', {
+            attrs: {
+                "id": "app"
+            }
+        }, [_v("
+            " + _s(someVar) + "
+        ")])
+    }
+})
+```
+
+实例化 Vue 时传入这样的参数可以达到相似的效果（区别在于变量两边的空格）：
+
+```javascript
+new Vue({
+  data: {
+    someVar: 'init'
+  },
+  render: function(createElement){
+    return createElement(
+      'div',
+      {
+        attrs: {
+          "id": "app"
+        }
+      },
+      [
+        this.someVar
+      ]
+    )
+  },
+  mounted(){
+    setTimeout(() => this.someVar = 'changed', 3000)
+  }
+
+}).$mount('#app')
+  
+```
+
+##### Vnode() 类
+
+Vnode 是虚拟 DOM 节点类，其实例 vnode 是一个包含着渲染 DOM 节点所需要的一切信息的普通对象。
+
+上述的 render() 方法调用后会生成 vnode 对象，这是第一次生成，将其称为 initVnode，结构如下（选取部分属性）：
+
+```javascript
+{
+    children: [
+        {
+            children: undefined,
+            data: undefined,
+            elm: undefined,
+            tag: undefined,
+            text: 'init'
+        }
+    ],
+    data: {
+        attrs: {
+            id: 'app'
+        }
+    },
+    elm: undefined,
+    tag: 'div',
+    text: undefined
+}
+```
+
+简要介绍其属性：
+
+1. children 是当前 vnode 的子节点（VNodes）数组，当前只有一个文本子节点
+2. data 是当前 vnode 代表的节点的各种属性，是 createElement() 方法的第二个参数
+3. elm 是根据 vnode 生成 HTML 元素挂载到页面中后对应的 DOM 节点，此时还没有挂载，所以为空
+4. tag 是当前 vnode 对应的 html 标签
+5. text 是当前 vnode 对应的文本或者注释
+
+children 和 text 是互斥的，不会同时存在。
+
+生成了 vnode 之后，就要根据其属性生成 DOM 元素并挂载到页面中了，这是 patch() 方法要做的事情，下面看其内部的流程：
+
+patch(vm.$el, vnode) => createElm(vnode, [], parentElm, nodeOps.nextSibling(oldElm)) => removeVnodes(parentElm, [oldVnode], 0, 0)
+
+##### patch(oldVnode, vnode) 方法
+
+根据参数的不同，该方法的处理方式也不同，oldVnode 有这几种可能的取值：undefined、ELEMENT_NODE、VNode，vnode 有这几种可能的取值：undefined、VNode，所以组合起来一共是 3 * 2 = 6 种处理方式：
+
+| oldVnode     | vnode     | 操作                                    |
+| ------------ | --------- | --------------------------------------- |
+| undefined    | undefined | -                                       |
+| ELEMENT_NODE | undefined | invokeDestroyHook(oldVnode)             |
+| Vnode        | undefined | invokeDestroyHook(oldVnode)             |
+| undefined    | Vnode     | createElm(vnode, [], parentElm, refElm) |
+| ELEMENT_NODE | Vnode     | createElm(vnode, [], parentElm, refElm) |
+| Vnode        | Vnode     | patchVnode(oldVnode, vnode)             |
+
+可以看到，处理方式可以分为3种情况：
+
+1. 如果 vnode 为 undefined，就要删除节点
+2. 如果 oldVnode 是 undefined 或者是 DOM 节点，vnode 是 VNode 实例的话，表示是第一次渲染 vnode，调用 createElm() 方法创建新节点
+3. 如果 oldVnode 和 vnode 都是 VNode 类型的话，就要调用 patchVnode() 方法来对 oldVnode 和 vnode 做进一步处理了，第二阶段流程会介绍这种情况
+
+本阶段流程是首次渲染，符合第 2 种情况，下面看 createElm() 方法的实现：
+
+##### createElm(vnode, [], parentElm, refElm) 方法
+
+该方法根据 vnode 的属性创建组件或者普通 DOM 元素，有如下几种处理方式：
+
+1. 调用 createComponent() 方法对 component 做处理，这里就不再展开讨论。
+2. vnode.tag 存在：
+   1. 调用 nodeOps.createElement(tag, vnode) 创建 DOM 元素，
+   2. 调用 createChildren() 方法递归创建子节点。
+   3. 调用 invokeCreateHooks() 方法调用生命周期相关的 create 钩子处理 vnode.data 数据
+3. vnode 是文本类型，调用 nodeOps.createTextNode(vnode.text) 创建文本元素
+
+对于2，3 这两种情况，最后都会调用 insert() 方法将生成的 DOM 元素挂载到页面中。此时，页面的 DOM 结构如下：
+
+```html
+<body>
+  <div id="app">
+    {{someVar}}
+  </div>
+  <div id="app">
+    init
+  </div>
+</body>
+```
+
+可以看到，原始的 DOM 元素还保留在页面中，所以在createElm() 方法调用之后，还会调用 removeVnodes() 方法，将原始的 DOM 元素删除掉。
+
+这样，就完成了首次视图的渲染。在这个过程中，Vue 还会做一些额外的操作：
+
+1. 将 vnode 保存到 vm._vnode 属性上，供再次渲染视图时与新 vnode 做比较
+2. vnode 会更新一些属性：
+
+```javascript
+{
+    children: [
+        {
+            children: undefined,
+            data: undefined,
+            elm: Text, // text
+            tag: undefined,
+            text: 'init'
+        }
+    ],
+    data: {
+        attrs: {
+            id: 'app'
+        }
+    },
+    elm: HTMLDivElement, // div#app
+    tag: 'div',
+    text: undefined
+}
+```
+
+可以看到，vnode 及其子节点的 elm 属性更新为了页面中对应的 DOM 节点，不再是 undefined，也是为了再次渲染时使用。
+
+#### 第二阶段
+
+##### 流程
+
+updateComponent() => **vnode = render()** => vm._update(vnode) => **patch(oldVnode, vnode)**
+
+第二阶段渲染时，会根据更新后的 vm 数据，再次生成 vnode 节点，称之为 updateVnode，结构如下：
+
+```javascript
+{
+    children: [
+        {
+            children: undefined,
+            data: undefined,
+            elm: undefined,
+            tag: undefined,
+            text: 'changed'
+        }
+    ],
+    data: {
+        attrs: {
+            id: 'app'
+        }
+    },
+    elm: undefined,
+    tag: 'div',
+    text: undefined
+}
+```
+
+可以看到， updateVnode 与 最初生成的 initVnode 的区别就是子节点的 text 属性由 init 变为了 changed，正是符合我们预期的变化。
+
+生成新的 vnode 之后，还是要调用 patch 方法对 vnode 做处理，不过这次参数发生了变化，第一个参数不再是要挂载的DOM节点，而是 initVnode，本次 patch() 方法调用的流程如下：
+
+patch(oldVnode, vnode) => patchVnode(oldVnode, vnode) => updateChildren(elm, oldCh, ch) => patchVnode(oldCh, ch) => nodeOps.setTextContent(elm, vnode.text)
+
+其中 oldVnode 就是第一阶段保存的 vm._vnode，elm 就是第一阶段更新的 elm 属性。
+
+根据上面对 patch() 方法的分析，此时 oldVnode 和 vnode 都是 VNode 类型，所以调用 patchVnode() 方法做进一步处理。
+
+##### patchVnode(oldVnode, vnode) 方法
+
+该方法包含两个主要流程：
+
+1. 更新自身属性，调用 Vue 内置的组件生命周期 update 阶段的钩子方法更新节点自身的属性，类似之前的 invokeCreateHooks() 方法，这里不再展开说明
+2. 更新子节点，根据子节点的不同类型调用不同的方法
+
+根据 vnode 的 children 和 text 属性的取值，子节点有 3 种可能：
+
+1. children 不为空，text 为空
+2. children 为空，text 不为空
+3. children 和 text 都为空
+
+由于 oldVnode 和 vnode 的子节点都有 3 种可能：undefined、children 或 text，所以一共有 3 * 3 = 9 种操作：
+
+| oldCh     | ch        | 操作                                                         |
+| --------- | --------- | ------------------------------------------------------------ |
+| children  | text      | nodeOps.setTextContent(elm, vnode.text)                      |
+| text      | text      | nodeOps.setTextContent(elm, vnode.text)                      |
+| undefined | text      | nodeOps.setTextContent(elm, vnode.text)                      |
+| children  | children  | updateChildren(elm, oldCh, ch)                               |
+| text      | children  | setTextContent(elm, ''); addVnodes(elm, null, ch, 0, ch.length - 1) |
+| undefined | children  | addVnodes(elm, null, ch, 0, ch.length - 1)                   |
+| children  | undefined | removeVnodes(elm, oldCh, 0, oldCh.length - 1)                |
+| text      | undefined | nodeOps.setTextContent(elm, '')                              |
+| undefined | undefined | -                                                            |
+
+可以看到，大概分为这几类处理方式：
+
+1. 如果 ch 是 text ，那么就对 DOM 节点直接设置新的文本；
+2. 如果 ch 为 undefined 了，那么就清空 DOM 节点的内容
+3. 如果 ch 是 children 类型，而 oldCh是 文本或者为 undefined ，那么就是在 DOM 节点内新增节点
+4. ch 和 oldCh 都是 children 类型，那么就要调用 updateChildren() 方法来更新 DOM 元素的子节点
+
+##### updateChildren(elm, oldCh, ch) 方法
+
+updateChildren() 方法是 Vnode 处理方法中最复杂也是最核心的方法，它主要做两件事情：
+
+1. 递归调用 patchVnode 方法处理更下一级子节点
+2. 根据各种判断条件，对页面上的 DOM 节点进行**尽可能少**的添加、移动和删除操作
+
+下面分析方法的具体实现：
+
+oldCh 和 ch 是代表旧和新两个 Vnode 节点序列，oldStartIdx、newStartIdx、oldEndIdx、newEndIdx 是 4 个指针，指向 oldCh 和 ch 未处理节点序列中的的开始和结束节点，指向的节点命名为 oldStartVnode、newStartVnode、oldEndVnode、newEndVnode。指针在序列中从两边向中间移动，直到 oldCh 或 ch 中的某个序列中的全部节点都处理完毕，这时，如果另一个序列尚有未处理完毕的节点，会再对这些节点进行添加或删除。
+
+先看 while 循环，在 oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx 条件下，分为这几种情况：
+
+1. isUndef(oldStartVnode) 和 isUndef(oldEndVnode) 在第一次循环时是不会触发的，需要后续条件才可能触发，下面会分析到
+2. sameVnode(oldStartVnode, newStartVnode) 和 sameVnode(oldEndVnode, newEndVnode) 情况下不用移动 DOM 节点，只移动指针，比如：[A, B] => [A, C]
+3. sameVnode(oldStartVnode, newEndVnode) 情况下，是要将 oldStartVnode 向右移动到 oldEndIdx 对应的节点后面，比如：[A, B] => [C, A]
+4. sameVnode(oldEndVnode, newStartVnode) 情况下，是要将 oldEndVnode 向左移动到 oldStartIdx 对应的节点前面，比如：[A, B] => [B, C]
+5. 在以上条件都不满足的情况下，就要根据 newStartVnode 的 key 属性来进一步处理：
+   1. 如果 newStartVnode 没有对应到 oldCh 中的某个元素，比如：[A, B] => [C]，说明这个节点是新增加的，那么就调用 createElm() 新建节点及其子节点
+   2. 如果 newStartVnode 对应到了 oldCh 中的某个元素，比如：[A, B, C] => [B, A, E]，那么就直接移动该元素到 oldStartIdx 对应的节点前面，同时还会将 oldCh 中对应的节点置为 undefined，表示元素已经处理过了，此时，oldCh == [A, undefined, C]，这样，在后续的循环中，就可以触发 isUndef(oldStartVnode) 或 isUndef(oldEndVnode) 条件了
+   3. 另外，还可能会有重复 key 或者 key 相同但是 tag 等属性不同的情况，比如：[A, B, C] => [B, A, A, C]，对于这类情况，newStartVnode 也会被作为新元素处理
+
+循环结束时，必然会满足 oldStartIdx > oldEndIdx 或 newStartIdx > newEndIdx 两种情况之一，所以对这两种情况需要进一步处理：
+
+1. oldStartIdx > oldEndIdx 的情况，比如 [A] => [A, B, C]，循环结束时，ch 中的 B 和 C 都还没有添加到页面中，这时就会调用 addVnodes() 方法将他们依次添加
+2. newStartIdx > newEndIdx 的情况，比如 [A, B, C] => [D]，循环结束时，A, B, C 都还保留在页面中，这时需要调用 removeVnodes() 将他们从页面中移除
+
+如果循环结束时，新旧序列中的节点全部都处理完毕了，如：[A, B] => [B, A]，那么，虽然也会触发这两种逻辑之一，但是并不会对 DOM 产生实际的影响。
+
+下面通过一些例子来展示该方法对 DOM 节点的操作流程：
+
+[A, B] => [A, C]
+
+| 序号 | 说明                                                         | oldStartIdx | oldEndIdx | newStartIdx | newEndIdx | DOM     |
+| ---- | ------------------------------------------------------------ | ----------- | --------- | ----------- | --------- | ------- |
+| 0    | 初始状态                                                     | 0           | 1         | 0           | 1         | A, B    |
+| 1    | 第一次循环，满足 sameVnode(oldStartVnode, newStartVnode)， 无 DOM 操作 | 1           | 1         | 1           | 1         | A, B    |
+| 2    | 第二次循环，满足 isUndef(idxInOld) 条件，新增 C 到 B 之前    | 1           | 1         | 2           | 1         | A, C, B |
+| 2    | 循环结束，满足 newStartIdx > newEndIdx，将 B 移除            | 1           | 1         | 2           | 1         | A, C    |
+
+[A, B] => [C, A]
+
+| 序号 | 说明                                                         | oldStartIdx | oldEndIdx | newStartIdx | newEndIdx | DOM     |
+| ---- | ------------------------------------------------------------ | ----------- | --------- | ----------- | --------- | ------- |
+| 0    | 初始状态                                                     | 0           | 1         | 0           | 1         | A, B    |
+| 1    | 第一次循环，满足 sameVnode(oldStartVnode, newEndVnode) ，移动 A 到 B 之后 | 1           | 1         | 0           | 0         | B, A    |
+| 2    | 第二次循环，满足 isUndef(idxInOld) 条件，新增 C 到 B 之前    | 1           | 1         | 1           | 0         | C, B, A |
+| 2    | 循环结束，满足 newStartIdx > newEndIdx，将 B 移除            | 1           | 1         | 1           | 0         | C, A    |
+
+[A, B, C] => [B, A, E]
+
+| 序号 | 说明                                                         | oldCh             | oldStartIdx | oldEndIdx | ch        | newStartIdx | newEndIdx | DOM        |
+| ---- | ------------------------------------------------------------ | ----------------- | ----------- | --------- | --------- | ----------- | --------- | ---------- |
+| 0    | 初始状态                                                     | [A, B, C]         | 0           | 2         | [B, A, E] | 0           | 2         | A, B, C    |
+| 1    | 第一次循环，满足 sameVnode(elmToMove, newStartVnode)，移动 B 到 A 之前 | [A, undefined, C] | 0           | 2         | [B, A, E] | 1           | 2         | B, A, C    |
+| 2    | 第二次循环，满足 sameVnode(oldStartVnode, newStartVnode)，无 DOM 操作 | [A, undefined, C] | 1           | 2         | [B, A, E] | 2           | 2         | B, A, C    |
+| 3    | 第三次循环，满足 isUndef(oldStartVnode)，无 DOM 操作         | [A, undefined, C] | 2           | 2         | [B, A, E] | 2           | 2         | B, A, C    |
+| 4    | 第四次循环，满足 isUndef(idxInOld)，新增 E 到 C 之前         | [A, undefined, C] | 2           | 2         | [B, A, E] | 3           | 2         | B, A, E, C |
+| 5    | 循环结束，满足 newStartIdx > newEndIdx，将 C 移除            | [A, undefined, C] | 2           | 2         | [B, A, E] | 3           | 2         | B, A, E    |
+
+[A] => [B, A]
+
+| 序号 | 说明                                                         | oldStartIdx | oldEndIdx | newStartIdx | newEndIdx | DOM  |
+| ---- | ------------------------------------------------------------ | ----------- | --------- | ----------- | --------- | ---- |
+| 0    | 初始状态                                                     | 0           | 0         | 0           | 1         | A    |
+| 1    | 第一次循环，满足 sameVnode(oldStartVnode, newEndVnode)，无 DOM 操作 | 1           | 0         | 0           | 0         | A    |
+| 2    | 循环结束，满足 oldStartIdx > oldEndIdx ，新增 B 到 A 之前    | 1           | 0         | 0           | 1         | B, A |
+
+[A, B] => [B, A]
+
+| 序号 | 说明                                                         | oldStartIdx | oldEndIdx | newStartIdx | newEndIdx | DOM  |
+| ---- | ------------------------------------------------------------ | ----------- | --------- | ----------- | --------- | ---- |
+| 0    | 初始状态                                                     | 0           | 1         | 0           | 1         | A, B |
+| 1    | 第一次循环，满足 sameVnode(oldStartVnode, newEndVnode)，移动 A 到 B 之后 | 1           | 1         | 0           | 0         | B, A |
+| 2    | 第二次循环，满足 sameVnode(oldStartVnode, newStartVnode) 条件，无 DOM 操作 | 2           | 1         | 1           | 0         | B, A |
+| 3    | 循环结束，满足 oldStartIdx > oldEndIdx ，无 DOM 操作         | 2           | 1         | 1           | 0         | B, A |
+
+通过以上流程，视图再次得到了更新。同时，新的 vnode 和 elm 也会被保存，供下一次视图更新时使用。
+
+以上分析了 Vnode 渲染和更新过程中的主要方法和流程，下面是本例中涉及到的主要方法的流程图：
+![Vnode 流程图](https://s2.loli.net/2022/07/29/aoKSYQ4J5CxHzkA.png)
 
 ## vue源码分析
 
