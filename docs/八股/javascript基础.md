@@ -425,7 +425,7 @@ undefined 在 JavaScript 中不是一个保留字，这意味着可以使用 und
 
 当对这两种类型使用 typeof 进行判断时，Null 类型化会返回 “object”，这是一个历史遗留的问题。**当使用双等号对两种类型的值进行比较时会返回 true，使用三个等号时会返回 false。**
 
-### 5.  0.1+0.2!==0.3为什么，怎么解决
+### 5.0.1+0.2!==0.3为什么，怎么解决
 
 在开发过程中遇到类似这样的问题：
 
@@ -3089,7 +3089,7 @@ const b = new Person("b");
 b.say();
 ```
 
-### 
+
 
 ![image.png](https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/7888aa4371ef44ba900cbd1224752545~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp?)
 
