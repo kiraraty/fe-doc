@@ -2,7 +2,7 @@
 
 ### 1.数据类型有哪几种
 
-JavaScript共有八种数据类型，分别是 **Undefined、Null、Boolean、Number、String、Object、Symbol、BigInt**。
+JavaScript共有八种数据类型，分别是 **undefined、null、Boolean、Number、String、Object、Symbol、BigInt**。
 
 其中 Symbol 和 BigInt 是ES6 中新增的数据类型：
 
@@ -29,7 +29,287 @@ JavaScript共有八种数据类型，分别是 **Undefined、Null、Boolean、Nu
 - 栈区内存由编译器自动分配释放，存放函数的参数值，局部变量的值等。其操作方式类似于数据结构中的栈。
 - 堆区内存一般由开发着分配释放，若开发者不释放，程序结束时可能由垃圾回收机制回收。
 
+#### undefined
+
+undefined 的字面意思就是：未定义的值 。这个值的语义是，希望表示一个变量最原始的状态，而非人为操作的结果 。 这种原始状态会在以下 4 种场景中出现：
+
+##### **1、声明一个变量，但是没有赋值**
+
+```javascript
+var foo;
+console.log(foo); // undefined
+```
+
+访问 foo，返回了 undefined，表示这个变量自从声明了以后，就从来没有使用过，也没有定义过任何有效的值。
+
+##### **2、访问对象上不存在的属性或者未定义的变量**
+
+```javascript
+console.log(Object.foo); // undefined
+console.log(typeof demo); // undefined
+```
+
+访问 Object 对象上的 foo 属性，返回 undefined ， 表示Object 上不存在或者没有定义名为 foo 的属性；对未声明的变量执行typeof操作符返回了undefined值。
+
+##### **3、函数定义了形参，但没有传递实参**
+
+```js
+//函数定义了形参 a
+function fn(a) {
+    console.log(a); // undefined
+}
+fn(); //未传递实参
+```
+
+函数 fn 定义了形参 a，但 fn 被调用时没有传递参数，因此，fn 运行时的参数 a 就是一个原始的、未被赋值的变量。
+
+##### **4、使用void对表达式求值**
+
+```js
+void 0 ; // undefined
+void false; // undefined
+void []; // undefined
+void null; // undefined
+void function fn(){} ; // undefined
+```
+
+ECMAScript 明确规定 void 操作符 对任何表达式求值都返回 undefined ，这和函数执行操作后没有返回值的作用是一样的，JavaScript 中的函数都有返回值，当没有 return 操作时，就默认返回一个原始的状态值，这个值就是 undefined，表明函数的返回值未被定义。
+
+因此，**undefined 一般都来自于某个表达式最原始的状态值，不是人为操作的结果**。当然，你也可以手动给一个变量赋值 undefined，但这样做没有意义，因为一个变量不赋值就是 undefined
+
+#### null
+
+null 的字面意思是空值。这个值的语义是，希望表示一个对象被人为的重置为空对象，而非一个变量最原始的状态。在内存里的表示就是，栈中的变量没有指向堆中的内存对象。
+
+##### **1、一般在以下两种情况下我们会将变量赋值为null**
+
+- 如果定义的变量在将来用于保存对象，那么最好将该变量初始化为null，而不是其他值。换句话说，只要意在保存对象的变量还没有真正保存对象，就应该明确地让该变量保存null值，这样有助于进一步区分null和undefined。
+- 当一个数据不再需要使用时，我们最好通过将其值设置为null来释放其引用，这个做法叫做解除引用。不过解除一个值的引用并不意味着自动回收改值所占用的内存。解除引用的真正作用是让值脱离执行环境，以便垃圾收集器在下次运行时将其回收。解除引用还有助于消除有可能出现的循环引用的情况。这一做法适用于大多数全局变量和全局对象的属性，局部变量会在它们离开执行环境时(函数执行完时)自动被解除引用。
+
+##### **2、特殊的typeof null**
+
+当我们使用typeof操作符检测null值，我们理所应当地认为应该返"Null"类型呀，但是事实返回的类型却是"object"。
+
+```javascript
+var data = null;
+console.log(typeof data); // "object"
+```
+
+是不是很奇怪？其实我们可以从两方面来理解这个结果:
+
+- 一方面从逻辑角度来看，null值表示一个空对象指针，它代表的其实就是一个空对象，所以使用typeof操作符检测时返回"object"也是可以理解的。
+- 另一方面，其实在JavaScript 最初的实现中，JavaScript 中的值是由一个表示类型的标签和实际数据值表示的(对象的类型标签是 0)。由于 null 代表的是空指针（大多数平台下值为 0x00），因此，null的类型标签也成为了 0，typeof null就错误的返回了"object"。在ES6中，当时曾经有提案为历史平凡, 将type null的值纠正为null, 但最后提案被拒了,所以还是保持"object"类型。
+
+严格相等运算符`===`可以正确区分`undefined`和`null`：
+
+```ini
+let nothing = undefined;
+let missingObject = null;
+nothing === missingObject; // => false
+```
+
+
+
+#### boolean
+
+BooLean类型 的值有两个: `true` 和 `false` 表示某个事物是真还是假 
+
+##### 显示转换
+
+> 就是我们不需要解析器帮我处理，我们来控制转换为Boolean类型，有两种方式:
+
+在进行转换的时候我们可以看出对于引用类型的值都会转为`true`,基本类型Number中`0、NaN` 以及`''、null、undefined`会被转换为`false`
+
+```js
+/* 第一种方式是 使用逻辑非来转换(!!) */
+    !!0                           //=> false
+    !!''                          //=> false
+    !!null                        //=> false
+    !!undefined                   //=> false
+    !![]                          //=> true
+    !!{}                          //=> true
+    !!1                           //=> true
+    !!'2'                         //=> true
+    !!NaN                         //=> false
+    !![2022]                      //=> true
+    !!{year:2022}                 //=> true
+    
+/* 第二种方式是 使用Boolean转换 */ 
+    Boolean(0)                    //=> false
+    Boolean("")                   //=> false
+    Boolean(null)                 //=> false
+    Boolean(undefined)            //=> false
+    Boolean([])                   //=> true
+    Boolean({})                   //=> true
+    Boolean(1)                    //=> true
+    Boolean('2')                  //=> true
+    Boolean(NaN)                  //=> false
+    Boolean([2022])               //=> true
+    Boolean({year:2022})          //=> true
+```
+
+##### 隐式转换
+
+> **隐式转换涉及到三种转换：**`ToPrimitive`、`ToString`、`ToNumber`
+
+1. 转换为数字类型(ToNumber)
+
+```js
+  Number(null)                     //=> 0
+  Number(undefined)                //=> NaN
+  Number('')                       //=> 0 
+  Number('1')                      //=> 1
+  Number('0a')                     //=> NaN
+  Number(true)                     //=> 1
+  Number(false)                    //=> 0
+  Number([])                       //=> 0
+  Number([1])                      //=> 1
+  Number({})                       //=> NaN
+```
+
+2.转换为字符串类型(ToString)
+
+```scss
+  String(null)                     //=> 'null'
+  String(undefined)                //=> 'undefined'
+  String(true)                     //=> 'true'
+  String(false)                    //=> 'false'
+  String(1)                        //=> '1'
+  String([])                       //=> ''
+  String([null])                   //=> ''
+  String([undefined])              //=> ''
+  String([a,a,a])                  //=> 'a,a,a'
+  String({})                       //=> '[object Objecr]'
+```
+
+3.转换为原始值(ToPrimitive(转换的值,可选参数 Numbei|String))
+
+> 如果ToPrimitive的第二个参数标记为 Number `首先会判断要转换的值是不是原始值，是就返回，不是就会调用这个对象的 valueOf ,如果 valueOf 返回的是原始值，就返回这个原始值，不是就会调用这个对象的 toString ,如果 toString 返回的是原始值，就返回这个原始值，不是就会TypeError异常` 如果ToPrimitive的第二个参数标记为 String `首先会判断要转换的值是不是原始值，是就返回，不是就会调用这个对象的 toString ,如果 toString 返回的是原始值，就返回这个原始值，不是就会调用这个对象的 valueOf ,如果 valueOf 返回的是原始值，就返回这个原始值，不是就会TypeError异常` 如果ToPrimitive的第二个参数没有作为标记 该对象为Date类型，第二个参数被设置为String，否则设置为Number
+
+##### == 运算符隐式转换
+
+- `NaN` 不等于任何其它类型
+- `布尔类型` 参与比较，`布尔类型` 的值会被转换为 `数字类型`
+- `String` 与 `Number` 比较,`String` 转化为 `Number`
+- `null` 与 `undefined` 进行比较结果为 true
+- `null` , `undefined` 与其它任何类型进行比较结果都为 false
+- `引用类型` 与 `值类型` 比较,引用类型先转换为 `原始值`( ToPrimitive )
+- `引用类型` 与 `引用类型`，直接判断是否指向同一对象
+
+经典题目
+
+ 定义一个变量 a , 使 a == 1 && a == 2 && a == 3 表达式为 true
+
+```js
+let a = {
+    x:1,
+    valueOf(){
+        return a.x++
+    }
+}
+a == 1 && a == 2 && a == 3       => true
+复制代码
+表达式执行，从左到右执行 a == 1 时 a 会转化为原始值(ToPrimitive(a, Number)) 找到自己构造函数原型上的 valueOf ，我们 a 创建了一个 valueOf 方法，根据原型链查找机制使用的是我们定义的valueOf , 执行 a.valueOf 返回结果时 1 所以 a == 1` `第二次执行 a == 2 , 因为我们 valueOf return a.x++ 先赋值后自增 第一次执行完a.x的之久发生改变 a == 2 成立,依次往后比较...
+```
+
+#### number
+
+```js
+/* 自变量创建(推荐) */
+    ler Num = 123
+
+/* 构造函数创 */
+    let Num = new Number(123)
+```
+
+##### NaN
+
+(Not a Number)是一个特殊的值,代表不是一个有效的数字，但是他是一个数字类型, NaN 与所有值都不相等，也包括它自己，如果想要判断是否是Number类型，可以使用 isNaN, isNaN 是判断是否是 NaN (无效数字)
+
+```js
+
+    typeof NaN                              //=> 'number'    
+    NaN == NaN                              //=> 'false'    
+    isNaN(NaN)                              //=> 'true'
+    isNaN(123)                              //=> 'false'
+    !isNaN(123)                             //=> 'true'    
+```
+
+##### 常用函数
+
+```js
+判断是否为整数
+    Number.isInteger(0)                     //=> true
+    Number.isInteger(1)                     //=> true
+    Number.isInteger(1.1)                   //=> false
+
+指定小数位数，进行四舍五入 toFixed
+     const num = 1.1
+     num.toFixed(2)                       //=>1.10
+```
+
+##### 类型转换
+
+Number: undefined 和 NaN 和 {}, 会被转化为NaN
+
+```js
+    Number(null)                          //=> 0
+    Number(undefined)                     //=> NaN
+    Number([])                            //=> 0
+    Number({})                            //=> NaN
+    Number(true)                          //=> 1
+    Number('')                            //=> 0
+```
+
+##### 浮点精度
+
+```js
+计算机以二进制处理数值类型,都会有精度误差问题
+    const num = 0.1 + 0.2
+    console.log(num)                      //=> 0.30000000000000004
+    
+/* 可以用toFixed处理 */
+    num.tofixed(2)                        //=> 0.3
+/* 还可以计算的数字乘以 10 的 n 次幂，换算成计算机能够精确识别的整数，然后再除以 10 的 n 次幂 */
+    function func(s, n) {
+      const m = Math.pow(10, 2);
+      return (s * m + n * m) / m;
+    }
+    func(0.1,0.2)                         //=> 0.3    
+```
+
+##### Math
+
+```js
+Math 对象提供多种算数值类型和函数
+/* 取最小与最大值 */
+    Math.min(1, 2, 3)                     //=> 1
+    Math.max(1, 2, 3)                     //=> 3
+    
+/* 向上取整 */    
+    Math.ceil(1.1)                        //=> 2
+    
+/* 向下取整 */   
+    Math.floor(1.1)                       //=> 1
+    
+/* 四舍五入 */    
+    Math.round(1.1)                       //=> 1
+    Math.round(1.5)                       //=> 2
+/* 随机数 */    
+    Math.random()                         //=> 随机生成大于等于0，小于1的f浮点数    
+    Math.random() * 10                    //=> 随机生成大于等于0，小于10的浮点数
+    Math.floor(Math.random() * 10)        //=> 随机生成大于等于0，小于10的整数 
+    Math.ceil(Math.random() * 10)         //=> 随机生成等于0，小于等于10的整数 
+```
+
+
+
+
 #### symbol
+
+**symbol做对象属性 不可枚举 不能被对象直接访问** 
+
+**使用`Object.getOwnPropertyNames()` 获取所有属性，无论是否是可枚举**
 
 ##### 创建symbol
 
@@ -109,6 +389,36 @@ console.log(Symbol.keyFor(nz)); // 'ssn'
 let systemID = Symbol('sys');
 console.log(Symbol.keyFor(systemID)); // undefined
 ```
+
+##### Symbol.toStringTag
+
+这是一个内置 symbol，它通常作为对象的属性键使用，对应的属性值应该为字符串类型，这个字符串用来表示该对象的自定义类型标签
+
+我们通常利用Object.prototype.toString()来返回数据类型，比如：
+
+```js
+console.log(Object.prototype.toString.call("foo")); // "[object String]"
+console.log(Object.prototype.toString.call([1, 2])); // "[object Array]"
+console.log(Object.prototype.toString.call(3)); // "[object Number]"
+console.log(Object.prototype.toString.call(true)); // "[object Boolean]"
+console.log(Object.prototype.toString.call(undefined)); // "[object Undefined]"
+console.log(Object.prototype.toString.call(null)); // "[object Null]"
+```
+
+
+那么这些返回值[object Xxx]是怎么来的？其实就是Object.prototype.toString()方法会去读取Symbol.toStringTag标签并把它包含在自己的返回值里。
+
+```js
+let myObj = {}
+Object.defineProperty(myObj, Symbol.toStringTag, { value: "Yuhua" });
+console.log(Object.prototype.toString.call(myObj)); //[object Yuhua]
+```
+
+
+上面的例子第二行就通过Object.defineProperty改写了myObj的Symbol.toStringTag，将值改为Yuhua，所以，原本myObj的类型[object Object]变成了[object Yuhua]
+
+结论：
+通过重定义数据的Symbol.toStringTag可以改写Object.prototype.toString.call()返回的数据类型。**也就是说，可以使得数据类型自定义**
 
 ##### Symbol应用
 
@@ -240,7 +550,96 @@ for (let c of chars) {
 // C
 ```
 
+#### bigint
 
+JS 整数是怎么表示的
+
+------
+
+> 通过 Number 类型来表示，遵循 IEEE754 标准，通过 64 位来表示一个数字，（1 + 11 + 52），最大安全数字是 Math.pow(2, 53) - 1，对于 16 位十进制。（符号位 + 指数位 + 小数部分有效位）
+
+**什么是BigInt?**
+
+> `BigInt`是一种新的数据类型，用于当整数值大于Number数据类型支持的范围时。这种数据类型允许我们安全地对大整数执行算术操作，表示高分辨率的时间戳，使用大整数id，等等，而不需要使用库。
+
+**为什么需要BigInt?**
+
+在JS中，所有的数字都以双精度64位浮点格式表示，那这会带来什么问题呢？
+
+> 这导致JS中的Number无法精确表示非常大的整数，它会将非常大的整数四舍五入，确切地说，JS中的`Number`类型只能安全地表示`-9007199254740991(-(2^53-1))和9007199254740991（(2^53-1)）`，任何超出此范围的整数值都可能失去精度。
+
+```text
+console.log(999999999999999);  //=>10000000000000000 
+```
+
+同时也会有一定的安全性问题:
+
+```text
+9007199254740992 === 9007199254740993;    // → true 居然是true! 
+```
+
+**如何创建并使用BigInt？**
+
+要创建`BigInt`，只需要在数字末尾追加`n`即可
+
+```text
+console.log( 9007199254740995n );    // → 9007199254740995n	
+console.log( 9007199254740995 );     // → 9007199254740996 
+```
+
+另一种创建`BigInt`的方法是用`BigInt()`构造函数
+
+```text
+BigInt("9007199254740995");    // → 9007199254740995n 
+```
+
+简单使用如下:
+
+```text
+10n + 20n;    // → 30n	
+10n - 20n;    // → -10n	
++10n;         // → TypeError: Cannot convert a BigInt value to a number	
+-10n;         // → -10n	
+10n * 20n;    // → 200n	
+20n / 10n;    // → 2n	
+23n % 10n;    // → 3n	
+10n ** 3n;    // → 1000n	
+
+const x = 10n;	
+++x;          // → 11n	
+--x;          // → 9n
+console.log(typeof x);   //"bigint" 
+```
+
+**值得警惕的点**
+
+> `BigInt`不支持一元加号运算符, 这可能是某些程序可能依赖于 + 始终生成 `Number` 的不变量，或者抛出异常。另外，更改 `+` 的行为也会破坏 `asm.js` 代码。
+
+因为隐式类型转换可能丢失信息，所以不允许在`bigint`和 `Number` 之间进行混合操作。当混合使用大整数和浮点数时，结果值可能无法由`BigInt`或`Number`精确表示。
+
+```text
+10 + 10n;    // → TypeError 
+```
+
+> 不能将`BigInt`传递给`Web api`和内置的 JS 函数，这些函数需要一个 Number 类型的数字。尝试这样做会报TypeError错误。
+
+```text
+Math.max(2n, 4n, 6n);    // → TypeError 
+```
+
+> 当 `Boolean` 类型与 `BigInt` 类型相遇时，`BigInt` 的处理方式与`Number`类似，换句话说，只要不是`0n`，`BigInt`就被视为`truthy`的值。
+
+```text
+if(0n){//条件判断为false
+
+}
+if(3n){//条件为true
+
+} 
+```
+
+- 元素都为BigInt的数组可以进行sort。
+- `BigInt`可以正常地进行位运算，如`|`、`&`、`<<`、`>>`和`^`
 
 ### 2.数据类型检测有哪几种方法
 
@@ -308,7 +707,7 @@ function myInstanceof(left, right) {
 }
 ```
 
-#### (3) constructor
+#### (3)constructor
 
 ```javascript
 console.log((2).constructor === Number); // true
@@ -395,7 +794,7 @@ undefined 在 JavaScript 中不是一个保留字，这意味着可以使用 und
 
 当对这两种类型使用 typeof 进行判断时，Null 类型化会返回 “object”，这是一个历史遗留的问题。**当使用双等号对两种类型的值进行比较时会返回 true，使用三个等号时会返回 false。**
 
-### 5.  0.1+0.2!==0.3为什么，怎么解决
+### 5.0.1+0.2!==0.3为什么，怎么解决
 
 在开发过程中遇到类似这样的问题：
 
@@ -416,7 +815,7 @@ console.log(n1 + n2)  // 0.30000000000000004
 
 在 JavaScript 中只有一种数字类型：Number，它的实现遵循IEEE 754标准，使用**64位固定长度**来表示，也就是标准的double双精度浮点数。在二进制科学表示法中，双精度浮点数的**小数部分最多只能保留52位**，再加上前面的1，其实就是保留53位有效数字，剩余的需要舍去，遵从“0舍1入”的原则
 
-**双精度数是保存**： ![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/0cb225cf71d748a8b2d6a5615e402711~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp)
+**双精度数是保存**： ![img](https://s2.loli.net/2022/08/01/T9ltI4wZuGoYBvg.webp)
 
 - 第一部分（蓝色）：用来存储符号位（sign），用来区分正负数，0表示正数，**占用1位**
 - 第二部分（绿色）：用来存储指数（exponent），**占用11位**
@@ -465,13 +864,7 @@ console.log(numberepsilon(0.1 + 0.2, 0.3)); // true
 
 
 
-### 6.类型转换规则，字符怎么进行拼接
-
-首先我们要知道，在 `JS` 中类型转换只有三种情况，分别是：
-
-- 转换为布尔值
-- 转换为数字
-- 转换为字符串
+### 6.类型转换规则
 
 > 首先我们要知道，在 `JS` 中类型转换只有三种情况，分别是：
 
@@ -479,7 +872,25 @@ console.log(numberepsilon(0.1 + 0.2, 0.3)); // true
 - 转换为数字
 - 转换为字符串
 
-![img](https://poetries1.gitee.io/img-repo/2020/07/1.png)
+![img](https://s2.loli.net/2022/08/01/AjQ9lUvkCz8ia2V.png)
+
+**== 运算符隐式转换**
+
+- `NaN` 不等于任何其它类型
+- `Boolean` 参与比较，`Boolean` 的值会被转换为 `Number`  
+- `String` 与 `Number` 比较,`String` 转化为 `Number`
+- `null` 与 `undefined` 进行比较结果为 true
+- `null` , `undefined` 与其它任何类型进行比较结果都为 false
+- `引用类型` 与 `值类型` 比较,引用类型先转换为 `原始值`( ToPrimitive )
+- `引用类型` 与 `引用类型`，直接判断是否指向同一对象
+
+[] == ![]结果是什么？
+
+- `==` 中，左右两边都需要转换为数字然后进行比较
+- `[]`转换为数字为`0`
+- `![]` 首先是转换为布尔值，由于`[]`作为一个引用类型转换为布尔值为`true`
+- 因此`![]`为`false`，进而在转换成数字，变为`0`
+- `0 == 0` ， 结果为`true`
 
 **转Boolean**
 
@@ -527,7 +938,7 @@ true + true // 2
 - 对于第一行代码来说，触发特点一，所以将数字 `1` 转换为字符串，得到结果 `'11'`
 - 对于第二行代码来说，触发特点二，所以将 `true` 转为数字 `1`
 - 对于第三行代码来说，触发特点二，所以将数组通过 `toString`转为字符串 `1,2,3`，得到结果 `41,2,3`
-- 那么对于除了加法的运算符来说，只要其中一方是数字，那么另一方就会被转为数字
+- 那么对于**除了加法**的运算符来说，只要其中一方是数字，那么另一方就会被转为数字
 
 ```js
 4 * '3' // 12
@@ -570,7 +981,7 @@ JS中对象分为3类：
 
 Math不是构造函数，不需要new来调用，直接使用里面的属性和方法。
 
-#### Math常用内置属性和方法
+Math常用内置属性和方法
 
 | 属性/方法             | 描述                                                         |
 | --------------------- | ------------------------------------------------------------ |
@@ -586,131 +997,19 @@ Math不是构造函数，不需要new来调用，直接使用里面的属性和�
 
 Date()对象是一个构造函数，必须使用new来调用创建我们的日期对象，即为需要**实例化**后才能使用。
 
-**如果没有输入任何参数，则Date的构造器会依据系统设置的当前时间来创建一个Date对象**。
+- 如果没有输入任何参数，则Date的构造器会依据系统设置的当前时间来创建一个Date对象。
 
-```js
- let time=new Date()   //Sun Jul 17 2022 21:01:37 GMT+0800 (中国标准时间)
- let time1 = Date.parse(new Date()); //1603009257000,精确到秒
- let time2 = new Date().getTime(); //1603009495724,精确到毫秒
- let time3 = new Date().valueOf(); //1603009495724.精确到毫秒
- let time4 = Date.now();//1603009495724,精确到毫秒，实际上是new Date().getTime()
-```
+#### 日期格式化
 
-**创建Date对象时,当我们需要创建一个特定的时间时,其有下面几种方式**:
-
-month:用英文表示月份名称，从January到December
-
-mth:用整数表示月份，从0-11(1月到12月)
-
-dd:表示一个月中的第几天，从1到31
-
-yyyy:四位数表示的年份
-
-hh:小时数，从0（午夜）到23（晚11点）
-
-mm:分钟数，从0到59的整数
-
-ss:秒数，从0到59的整数
-
-ms:毫秒数，为大于等于0的整数  参数表示的是需要创建的时间和GMT时间1970年1月1日之间相差的毫秒数
-
-```js
-new Date("month dd,yyyy hh:mm:ss");
-new Date("month dd,yyyy");
-new Date(yyyy,mth,dd,hh,mm,ss);
-new Date(yyyy,mth,dd);
-new Date(ms);
-```
-
-```js
-new Date("January 12,2006 22:19:35");
-
-new Date("January 12,2006");
-
-new Date(2006,0,12,22,19,35);
-
-new Date(2006,0,12);
-
-new Date(1137075575000);
-```
-
-使用例子
-
-```js
-var date =new Date(1603009495724);
-console.log(date.getMonth())  //9
-```
-
-
-
-##### 获取时间
-
-| 方法名            | 说明                             |
-| ----------------- | -------------------------------- |
-| getFullyear()     | 获取当年                         |
-| getMonth()        | 获取当月 0~11 要+1               |
-| getDate()         | 获取当前日期                     |
-| getDay()          | 获取星期几 周日0~周六6           |
-| getHours()        | 获取当前小时                     |
-| getMinutes()      | 获取当前分钟                     |
-| getSeconds()      | 获取当前秒钟                     |
-| getMilliseconds() | 获取毫秒(0 ~ 999）               |
-| getTime()         | 获取1970.1.1至今的毫秒数(时间戳) |
-
-
-
-##### 设置时间
-
-| setDate()         | 设置 Date 对象中月的某一天 (1 ~ 31) |
-| ----------------- | ----------------------------------- |
-| setMonth()        | 设置 Date 对象中月份 (0 ~ 11)       |
-| setFullYear()     | 设置 Date 对象中的年份（四位数字）  |
-| setHours()        | 设置 Date 对象中的小时 (0 ~ 23)     |
-| setMinutes()      | 设置 Date 对象中的分钟 (0 ~ 59)     |
-| setSeconds()      | 设置 Date 对象中的秒钟 (0 ~ 59)     |
-| setMilliseconds() | 设置 Date 对象中的毫秒 (0 ~ 999)    |
-| setTime()         | 以毫秒设置 Date 对象                |
-
-##### [时间格式化](https://www.cnblogs.com/zhangpengshou/archive/2012/07/19/2599053.html)
-
-```js
-/**
- *对Date的扩展，将 Date 转化为指定格式的String
- *月(M)、日(d)、小时(h)、分(m)、秒(s)、季度(q) 可以用 1-2 个占位符，
- *年(y)可以用 1-4 个占位符，毫秒(S)只能用 1 个占位符(是 1-3 位的数字)
- *例子：
- *(new Date()).Format("yyyy-MM-dd hh:mm:ss.S") ==> 2006-07-02 08:09:04.423
- *(new Date()).Format("yyyy-M-d h:m:s.S")      ==> 2006-7-2 8:9:4.18
- */
-// eslint-disable-next-line no-extend-native
-Date.prototype.Format = function(fmt) {
-  var o = {
-    'M+': this.getMonth() + 1, // 月份
-    'd+': this.getDate(), // 日
-    'h+': this.getHours(), // 小时
-    'm+': this.getMinutes(), // 分
-    's+': this.getSeconds(), // 秒
-    'q+': Math.floor((this.getMonth() + 3) / 3), // 季度
-    S: this.getMilliseconds() // 毫秒
-  };
-  // 年
-  if (/(y+)/.test(fmt)) {
-    fmt = fmt.replace(
-      RegExp.$1,
-      (this.getFullYear() + '').substr(4 - RegExp.$1.length)
-    );
-  }
-  for (var k in o) {
-    if (new RegExp('(' + k + ')').test(fmt)) {
-      fmt = fmt.replace(
-        RegExp.$1,
-        RegExp.$1.length === 1 ? o[k] : ('00' + o[k]).substr(('' + o[k]).length) // 如果两位补0
-      );
-    }
-  }
-  return fmt;
-};
-```
+| 方法名        | 说明                   |
+| ------------- | ---------------------- |
+| getFullyear() | 获取当年               |
+| getMonth()    | 获取当月 0~11 要+1     |
+| getDate()     | 获取当前日期           |
+| getDay()      | 获取星期几 周日0~周六6 |
+| getHours()    | 获取当前小时           |
+| getMinutes()  | 获取当前分钟           |
+| getSeconds    | 获取当前秒钟           |
 
 #### 字符串对象
 
@@ -757,13 +1056,13 @@ RegExp 对象表示正则表达式，它是对字符串执行模式匹配的强�
 
 直接量语法
 
-```
+```js
 /pattern/attributes
 ```
 
  创建 RegExp 对象的语法：
 
-```
+```js
 new RegExp(pattern, attributes)
 ```
 
@@ -783,6 +1082,8 @@ new RegExp(pattern, attributes)
 | [exec](https://www.w3school.com.cn/jsref/jsref_exec_regexp.asp) | 检索字符串中指定的值。返回找到的值，并确定其位置。 ans=reg.exec(str)   ans[0]为匹配的全部字符串   ans[1]...ans[n]为分组捕获的字符 |
 | [test](https://www.w3school.com.cn/jsref/jsref_test_regexp.asp) | 检索字符串中指定的值。返回 true 或 false。     reg.test(str) |
 
+
+
 ##### 支持正则表达式的 String 对象的方法
 
 | 方法                                                         | 描述                             |
@@ -796,7 +1097,37 @@ new RegExp(pattern, attributes)
 
 > 三个简单的数据类型：String、Number、Boolean。**基本包装类型**就是把简单的数据类型包装成复杂数据类型，这样基本数据类型就有了属性和方法。
 
-实际使用中，调用方法，**不需要使用**`new Number/String/Boolean`，使用基础类型的时候，js 会自动帮我们包装成对应的对象
+实际使用中，调用方法，**不需要使用**`new Number/String/Boolean`，使用基础类型的时候，js 会自动帮我们包装成对应的对象：
+
+#### 内置方法
+
+- toString()方法返回一个表示该对象的字符串。
+- valueOf()方法返回指定对象的原始值。
+
+```javascript
+var str = new String('123')
+console.log(str.valueOf()) //123
+
+var num = new Number(123)
+console.log(num.valueOf()) //123
+
+var date = new Date()
+console.log(date.valueOf()) //1526990889729
+
+var bool = new Boolean('123')
+console.log(bool.valueOf()) //true
+
+var obj = new Object({
+  valueOf: () => {
+    return 1
+  }
+})
+console.log(obj.valueOf()) //1
+```
+
+**valueOf() 和 toString()在特定的场合下会自行调用**
+
+
 
 ### 2.怎么判断对象属于哪个类
 
@@ -850,11 +1181,11 @@ for (var key of Object.keys(myObject)) {
 
 **for of总是得到对象的value或数组、字符串的值**
 
-### 4.怎么确定嵌套对象深度
 
 
+### 4.什么是DOM?
 
-### 5.什么是DOM和BOM  各有什么对象和方法
+[DOM：节点类型](https://juejin.cn/post/6844903807327928333)
 
 #### DOM
 
@@ -874,6 +1205,13 @@ DOM的分层节点一般被称作是DOM树，树中的所有节点都可以通�
 当咱们访问一个web页面时，浏览器会解析每个HTML元素，创建了HTML文档的虚拟结构，并将其保存在内存中。接着，HTML页面被转换成树状结构，每个HTML元素成为一个叶子节点，连接到父分支
 
 结构的顶部有一个`document`，也称为根元素，它包含另一个元素：`html`, 每个`HTML`元素都来自`Element`
+
+#### dom节点类型
+
+- Document节点，整个文档是一个文档节点；
+- Element节点，每个HTML标签是一个元素节点；
+- Attribute节点，每一个HTML属性是一个属性节点；
+- Text节点，包含在HTML元素中的文本是文本节点
 
 #### document 和 window 之间的区别
 
@@ -983,6 +1321,12 @@ element.removeChild(Node)
 
 #### DOM 操作
 
+每个节点都拥有包含着关于节点某些信息的属性。这些属性是：
+
+- nodeName（节点名称）
+- nodeValue（节点值）
+- nodeType（节点类型）
+
 DOM中的每个HTML元素也是一个节点，可以像这样查找节点：
 
 ```js
@@ -1021,7 +1365,265 @@ heading.appendChild(text);
 document.body.appendChild(heading)
 ```
 
+#### DOM0、DOM1、DOM2、DOM3事件模型区别
 
+##### DOM0
+
+DOM0 事件就是直接通过 onclick 绑定到 html上的事件
+
+DOM0级事件具有极好的跨浏览器优势，会以最快的速度绑定。
+为某一个元素的同一个行为绑定不同的方法在行内会分别执行。
+为某一个元素的同一个行为绑定不同的方法在script标签中后面的方法会覆盖前面的方法。
+
+```js
+<div id="box">点我</div>
+<script>
+	// 某一个元素的同一个行为绑定不同的方法在script标签中后面的方法会覆盖前面的方法
+	var box = document.getElementById('box');
+	box.onclick = fun1;
+	box.onclick = fun2;
+	function fun1() {
+		console.log('方法1');
+	}
+	function fun2() {
+		console.log('方法2');
+	}
+	// 执行方法2；方法2覆盖方法1，所有方法1不执行
+</script>
+```
+
+
+
+```js
+<div id="box">点我</div>
+<script>
+	// 某一个元素的同一个行为绑定不同的方法在script标签中后面的方法会覆盖前面的方法
+	var box = document.getElementById('box');
+	box.onclick = fun1;
+	box.onclick = fun2;
+	function fun1() {
+		console.log('方法1');
+	}
+	function fun2() {
+		console.log('方法2');
+	}
+	// 执行方法2；方法2覆盖方法1，所有方法1不执行
+</script>
+
+```
+
+删除DOM 0事件处理程序，只要将对应事件属性设为null即可。
+
+```js
+box.onclick = null;
+```
+
+
+
+##### DOM1
+
+主要定义的是HTML和XML文档的底层结构。DOM2和DOM3级别则在这个结构的基础上引入了更多的交互能力，也支持了更高级的XML特性
+
+DOM1一般只有设计规范没有具体实现，所以一般跳过。
+
+##### DOM2
+
+DOM2级事件是通过addEventListener绑定的事件，IE下的DOM2事件通过attachEvent绑定；可以给某一个元素的同一个行为绑定不同的方法在行内会分别执行。
+
+```js
+<div id="box">点我</div>
+<script>
+ 	var box = document.getElementById('box');
+	box.addEventListener('click', fun1,false);
+	box.addEventListener('click', fun2,false);
+	function fun1() {
+		console.log('方法1');
+	}
+	function fun2() {
+		console.log('方法2');
+	}
+	// 执行方法1		// 执行方法2
+</script>
+```
+
+
+删除DOM 2事件处理程序，通过removeEventListener
+
+```js
+box.removeEventListener('click', fun2,false);
+```
+
+DOM2级事件处理添加进去的事件，我们可以控制事件的冒泡或是捕获过程。当addEventListener方法的第三个参数为true时，表示只进行事件捕获，不执行事件冒泡，再捕获的过程中，触发途径标签的对应事件函数。当第三个参数为false，表示执行事件冒泡的过程（默认情况）
+
+##### DOM3
+
+DOM3级事件在DOM2级事件的基础上添加了更多的事件类型，全部类型如下：
+
+事件类型	说明	举例
+UI事件	当用户与页面上的元素交互时触发	load、scroll
+焦点事件	当元素获得或失去焦点时触发	blur、focus
+鼠标事件	当用户通过鼠标在页面执行操作时触发	dbclick、mouseup
+滚轮事件	当使用鼠标滚轮或类似设备时触发	mousewheel
+文本事件	当在文档中输入文本时触发	textInput
+键盘事件	当用户通过键盘在页面上执行操作时触发	keydown、keypress
+合成事件	当为IME（输入法编辑器）输入字符时触发	compositionstart
+变动事件	当底层DOM结构发生变化时触发	DOMsubtreeModified
+同时DOM3级事件也允许开发人员自定义一些事件。
+
+
+
+###### 事件对象
+
+event写在侦听函数小括号中，当形参来看
+	也可以自己命名，如event、evt、e
+	如事件侦听方法：div.addEventListener(‘click’,function(event){
+					console.log(event)
+					})
+	ie 6/7/8显示事件对象必须：consloe.log(window.event)
+
+如果考虑事件对象的兼容性，可以：event = event || window.event
+
+事件对象属性
+
+```js
+.target与this的区别：
+	事件对象名.target : 指向的是我们点击的那个对象，谁点击了这个事件
+	this : 指向绑定的事件
+	e.type ：返回事件类型
+	e.preventDefault(); : 阻止默认行为
+	e.stopPropagation(); 阻止冒泡 //有兼容性问题
+	window.event.cancelBubble = true; 阻止冒泡 //适用于ie678
+```
+
+###### 事件委托
+
+原理：不再给每个子节点单独设置事件监听器，而是事件监听器设置在父节点上，然后利用冒泡原理影响每个子节点。
+
+###### 键盘事件
+
+```javascript
+keyup			键盘弹起
+keydown			键盘按下
+keypress		键盘按下，但是识别不了功能键，区分字母大小写
+执行顺序2-3-1
+属性：keyCode ：返回ASCII码值
+```
+
+#### MutationObserver
+
+[`MutationObserver`](https://developer.mozilla.org/zh-CN/docs/Web/API/MutationObserver) 接口提供了监视对 DOM 树所做更改的能力。它被设计为旧的 Mutation Events 功能的替代品，该功能是 DOM3 Events 规范的一部分。
+
+浏览器中DOM节点的属性，文本，插入，移除等结构的变动我们之前主要是通过监听`Mutation Events`事件来执行
+
+##### 1.Mutation 事件列表
+
+- `DOMAttrModified`(节点属性变更)
+- `DOMAttributeNameChanged`(节点属性属性节点名字改变)
+- `DOMCharacterDataModified`(节点中的文本节点改变)
+- `DOMElementNameChanged`(节点移除)
+- `DOMNodeInserted`(节点子节点插入)
+- `DOMNodeRemoved`(节点子节点移除)
+- `DOMNodeInsertedIntoDocument`(节点插入文档)
+- `DOMSubtreeModified`(节点子节点修改)
+
+##### 2.Mutation 简单的用法如下
+
+```js
+document.getElementById('list').addEventListener("DOMSubtreeModified", function(){
+  console.log('列表中子元素被修改');
+}, false);
+```
+
+##### 3.Mutation Events遇到的问题
+
+- 浏览器兼容性问题
+  1. IE9不支持`Mutation Events`
+  2. Webkit内核不支持`DOMAttrModified`特性，
+  3. `DOMElementNameChanged`和`DOMAttributeNameChanged` 在Firefox上不被支持。
+- 性能问题
+  1. `Mutation Events`是同步执行的，它的每次调用，都需要从事件队列中取出事件，执行，然后事件队列中移除，期间需要移动队列元素。如果事件触发的较为频繁的话，每一次都需要执行上面的这些步骤，那么浏览器会被拖慢。
+  2. `Mutation Events`本身是事件，所以捕获是采用的是事件冒泡的形式，如果冒泡捕获期间又触发了其他的`MutationEvents`的话，很有可能就会导致阻塞Javascript线程，甚至导致浏览器崩溃。
+
+##### 4.Mutation Observer的使用
+
+`Mutation Observer` 是在DOM4中定义的，用于替代 `mutation events` 的新API，它的不同于events的是，所有监听操作以及相应处理都是在其他脚本执行完成之后异步执行的，并且是所以变动触发之后，将变得记录在数组中，统一进行回调的，也就是说，当你使用`observer`监听多个DOM变化时，并且这若干个DOM发生了变化，那么`observer`会将变化记录到变化数组中，等待一起都结束了，然后一次性的从变化数组中执行其对应的回调函数。
+
+- 构造函数(`MutationObserver`)    用来实例化一个`Mutation`观察者对象，其中的参数是一个回调函数，它是会在指定的DOM节点发送变化后，执行的函数，并且会被传入两个参数。一个是变化记录数组(`MutationRecord`)，另一个是观察者对象本身。
+
+```js
+/*
+*观察者实例
+*/
+var observer = null;
+
+/*
+*观察者回调
+*records:变化记录数组
+*instance:观察者对象本身
+*/
+const callback = (records, instance) => {
+    console.log(records)
+    console.log(instance)
+    records.map(record => {
+      console.log('Mutation Type: ' + record.type)
+      console.log('Mutation Change Attribute: ' + record.attributeName)
+      console.log('Previous attribute value: ' + record.oldValue)
+    })
+}
+
+if(window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver){
+    observer = new MutationObserver(callback)
+}
+```
+
+- 观察者(`observe`) 在观察者对象上，注册需要观察的DOM节点，以及相应的参数
+
+```js
+//观察者配置项
+var options = { 
+    childList: true,//观察目标节点的子节点的新增和删除 
+    subtree: true, //观察目标节点的所有后代节点
+    attributes: true, //观察目标节点的属性节点
+    attributeOldValue: true,  //在attributes属性已经设为true的前提下, 将发生变化的属性节点之前的属性值记录下来
+    attributeFilter:[],//一个属性名数组(不需要指定命名空间),只有该数组中包含的属性名发生变化时才会被观察到,其他名称的属性发生变化后会被忽略想要设置那些删选参数的话
+    characterData: true,  //如果目标节点为characterData节点(一种抽象接口,具体可以为文本节点,注释节点,以及处理指令节点)时,也要观察该节点的文本内容是否发生变化
+    characterDataOldValue:true,//在characterData属性已经设为true的前提下,将发生变化characterData节点之前的文本内容记录下来(记录到下面MutationRecord对象的oldValue属性中)
+}
+
+//待观察的DOM节点
+var element = document.getElementById('text');
+
+//执行观察
+observer.observe(element, options)
+```
+
+- 停止观察(`disconnect`) 在观察者对象上停止的节点的变化监听，直到重新调用`observe`方法
+
+```js
+// 随后,你还可以停止观察
+observer.disconnect();
+```
+
+- 清除变动记录(`takeRecords`) 用来清除变动记录，即不再处理未处理的变动。该方法返回变动记录的数组
+
+```js
+// 返回变动记录的数组，同时清除变动记录，即不再处理未处理的变动。
+var changes = observer.takeRecords();
+```
+
+##### 5.应用场景
+
+###### `vue.$nextTrick`
+
+> `vue`中的`$nextTrick`理解为DOM的下次更新后执行的回调，接受2个参数（回调函数和执行回调函数的上下文环境），如果没有提供回调函数，那么将返回`promise`对象。查看vue源码后发现在浏览器不支持`porimise`的情况，会首选`MutationObserver`进行微任务执行来实现DOM的异步更新
+
+`vue`优先级是`Promise` 、 `MutationObserver`、 `setTimeout`。 当`Promise`不兼容时选择`MutationObserver`，从功能和性能角度来说两者基本一致，只是实现略有麻烦，要新建一个节点随便动一下。 `setTimeout`最后为了兼容备选使用，原因如下。
+
+原因： `MutationObserver`与`Promise`属于微任务，`setTimeout`属于宏任务； 在浏览器执行机制里，每当宏任务执行结束都会进行重新渲染，微任务则在当前宏任务中执行，可以最快的得到最新的更新，如果有对应的DOM操作（回想一下上一篇），在宏任务结束时会一并完成。 但如果使用`setTimeout`宏任务，更新内容需要等待队列中前面的全部宏任务执行完毕，并且，如果其中更新内容中有DOM操作，浏览器会渲染两次。
+
+![image-20220801161306537](https://s2.loli.net/2022/08/01/Dhj4R9i7fdH1lVz.png)
+
+### 5.什么是BOM?
 
 #### BOM
 
@@ -1250,11 +1852,9 @@ history.forward()
 | width         | 屏幕像素宽度                               |
 | orientation   | 返回 Screen Orientation API 中屏幕的朝向   |
 
-
-
 ### 6.什么是事件捕获 委托(代理) 冒泡
 
-![image.png](https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/6/13/172ac58c0d58cc61~tplv-t2oaga2asx-zoom-in-crop-mark:1304:0:0:0.awebp)
+![image.png](https://s2.loli.net/2022/08/01/GRcg4mQ3xhnbraX.webp)
 
 元素事件响应在DOM树中是从顶层的Window开始“流向”目标元素，然后又从目标元素“流向”顶层的Window
 
@@ -1357,15 +1957,41 @@ items.addEventListener('click', (e) => {console.log('冒泡：click ',e.target.i
 
 Window对象是直接面向用户的，那么用户触发一个事件，如点击事件，肯定是用window对象开始的，所以自然就是先捕获后冒泡
 
-### 7.数组怎么创建？有哪些方法？ 怎么遍历？
+### 7.数组方法？怎么遍历？怎么创建？
 
-#### 1.数组特点
+![数组1](https://s2.loli.net/2022/08/06/bH3iMtQCasWBVz5.png)
+
+#### 数组特点
+
+[探究JS V8引擎下的“数组”底层实现](https://juejin.cn/post/6844903943638794248)
 
 ECMAScript数组跟其他语言的数组一样，都是一组有序的数据，但跟其他语言不同的是，数组中每个槽位可以存储任意类型的数据。除此之外，ECMAScript数组的长度也是动态的，会随着数据的增删而改变。
 
 数组是被等分为许多小块的连续内存段，每个小块都和一个整数关联，可以通过这个整数快速访问对应的小块。除此之外，数组拥有一个length属性，该属性表示的并不是数组元素的数量，而是指数组元素的最高序号加1
 
-#### 2. 数组创建
+JS 数组有两种表现形式，fast 和 slow
+
+**fast** ：
+
+> 快速的后备存储结构是 FixedArray ，并且数组长度 <= elements.length();
+
+FixedArray 是 V8 实现的一个类似于数组的类，它表示一段固定长度的连续的内存。
+
+**slow** ：
+
+> 缓慢的后备存储结构是一个以数字为键的 HashTable 。
+
+HashTable
+
+> 散列表（Hash table，也叫哈希表），是根据键（Key）而直接访问在内存存储位置的数据结构。也就是说，它通过计算一个关于键值的函数，将所需查询的数据映射到表中一个位置来访问记录，这加快了查找速度。这个映射函数称做散列函数，存放记录的数组称做散列表。
+
+源码注释中的fast和slow，对应的是快数组和慢数组
+
+**快数组**是一种线性的存储方式。新创建的空数组，默认的存储方式是快数组，快数组长度是可变的，可以根据元素的增加和删除来动态调整存储空间大小，内部是通过扩容和收缩机制实现
+
+**慢数组**是一种哈希表的内存形式。不用开辟大块连续的存储空间，节省了内存，但是由于需要维护这样一个 HashTable，其效率会比快数组低
+
+#### 数组创建
 
 数组的创建方式有以下两种。
 
@@ -1455,7 +2081,7 @@ Array.from(new Set(['abc', 'def']));           // ["abc", "def"]
 Array.from(new Map([[1, 'ab'], [2, 'de']]));   // [[1, 'ab'], [2, 'de']]
 ```
 
-#### 3.数组索引
+#### 数组索引
 
 在数组中，我们可以通过使用数组的索引来获取数组的值：
 
@@ -1479,15 +2105,15 @@ console.log(colors[3])  // undefined
 
 数组长度始终比数组最后一个值的索引大1，这是因为索引值都是从0开始的
 
-#### 4.数组方法
+#### 数组方法
 
 改变原数组的方法：fill()、pop()、push()、shift()、splice()、unshift()、reverse()、sort()；
 
-不改变原数组的方法：concat()、every()、filter()、find()、findIndex()、forEach()、indexOf()、join()、lastIndexOf()、map()、reduce()、reduceRight()、slice()、some。
+不改变原数组的方法：concat()、every()、filter()、find()、findIndex()、forEach()、indexOf()、join()、lastIndexOf()、map()、reduce()、reduceRight()、slice()、some()。
 
-##### 1.复制和填充方法
+#### 1.复制和填充方法
 
-###### （1）fill()
+##### （1）fill()
 
 使用fill()方法可以向一个已有数组中插入全部或部分相同的值，开始索引用于指定开始填充的位置，它是可选的。如果不提供结束索引，则一直填充到数组末尾。如果是负值，则将从负值加上数组的长度而得到的值开始。该方法的语法如下：
 
@@ -1501,7 +2127,7 @@ array.fill(value, start, end)
 - start：可选。开始填充位置；
 - end：可选。停止填充位置 (默认为 *array*.length)。
 
-###### （2）copyWithin()
+##### （2）copyWithin()
 
 copyWithin()方法会按照指定范围来浅复制数组中的部分内容，然后将它插入到指定索引开始的位置，开始与结束索引的计算方法和fill方法一样。该方法的语法如下：
 
@@ -1515,7 +2141,7 @@ array.copyWithin(target, start, end)
 - start：可选。元素复制的起始位置；
 - end：可选。停止复制的索引位置 (默认为 *array*.length)。如果为负值，表示倒数。
 
-##### 2. 转化方法
+#### 2.转化方法
 
 ###### （1）toString()
 
@@ -1550,7 +2176,7 @@ console.log(num.toLocaleString()); // 12,345,678
 
 需要注意，如果数组中的某一项是null或者undefined，则在调用上述三个方法后，返回的结果中会以空字符串来表示。
 
-###### 4）join()
+###### （4）join()
 
 join() 方法用于把数组中的所有元素放入一个字符串。元素是通过指定的分隔符进行分隔的。其使用语法如下：
 
@@ -1570,9 +2196,11 @@ console.log(array.join());      // one,two,three,four,five
 console.log(array.join("-"));   // one-two-three-four-five
 ```
 
-##### 3. 栈方法
+#### 3.栈方法
 
 ###### （1）push()
+
+！！！**注意：push的返回值是数组加入元素之后的长度**
 
 push()方法可以接收任意数量的参数，并将它们添加了数组末尾，并返回数组新的长度。**该方法会改变原数组。** 其语法形式如下：
 
@@ -1591,6 +2219,8 @@ console.log(i);     // 4
 
 ###### （2）pop()
 
+
+
 pop() 方法用于删除并返回数组的最后一个元素。它没有参数。**该方法会改变原数组。** 其语法形式如下：
 
 ```javascript
@@ -1606,7 +2236,7 @@ console.log(array); // ["cat", "dog", "cow", "chicken"]
 console.log(item);  // mouse
 ```
 
-##### 4. 队列方法
+#### 4.队列方法
 
 ###### （1）shift()
 
@@ -1644,11 +2274,11 @@ console.log(array);  // ["yellow", "red", "green", "blue"]
 console.log(length); // 4
 ```
 
-#### 5. 排序方法
+#### 5.排序方法
 
 ###### （1）sort()
 
-sort()方法是我们常用给的数组排序方法，该方法会在原数组上进行排序，会改变原数组，其使用语法如下：
+sort()方法是我们常用给的数组排序方法，该方法会在原数组上进行排序，**会改变原数组**，其使用语法如下：
 
 ```javascript
 arrayObject.sort(sortby)
@@ -1664,7 +2294,6 @@ console.log(array2)  // [1, 2, 3, 4, 5]
 let array = [0, 1, 5, 10, 15];
 let array2 = array.sort();
 console.log(array2)  //  [0, 1, 10, 15, 5]
-复制代码
 ```
 
 可以看到，上面第二段代码就出现了问题，虽然5是小于10的，但是字符串10在5的前面，所以10还是会排在5前面，因此可知，在很多情况下，不添加参数是不行的。
@@ -1716,7 +2345,7 @@ console.log(array);   // [5,4,3,2,1]
 console.log(array2 === array);   // true
 ```
 
-#### 6. 操作方法
+#### 6.操作方法
 
 对于数组，还有很多操作方法，下面我们就来看看常用的concat()、slice()、splice()方法。
 
@@ -1760,7 +2389,6 @@ arrayObject.slice(start,end)
 let array = ["one", "two", "three", "four", "five"];
 console.log(array.slice(0));    // ["one", "two", "three","four", "five"]
 console.log(array.slice(2,3)); // ["three"]
-复制代码
 ```
 
 ##### （3）splice()
@@ -1796,7 +2424,7 @@ let array = ["one", "two", "three","four", "five"];
 console.log(array.splice(2, 1, 996));      // 替换：["three"]
 ```
 
-#### 7. 归并方法
+#### 7.归并方法
 
 ECMAScript为数组提供了两个归并方法：reduce()和reduceRight()。下面就分别来看看这两个方法。
 
@@ -1911,7 +2539,7 @@ console.log(arr, sum);
 [1, 2, 3, 4] 15
 ```
 
-#### 8. 搜索和位置方法
+#### 8.搜索和位置方法
 
 ECMAScript提供了两类搜索数组的方法：按照严格相等搜索和按照断言函数搜索。
 
@@ -1942,7 +2570,7 @@ arr.find(item => item > 2)      // 结果： 3
 arr.findIndex(item => item > 2) // 结果： 2
 ```
 
-#### 9. 迭代器方法
+#### 9.迭代器方法
 
 在ES6中，Array的原型上暴露了3个用于检索数组内容的方法：**keys()、values()、entries()**。keys()方法返回数组索引的迭代器，values()方法返回数组元素的迭代器，entries()方法返回索引值对的迭代器。
 
@@ -1955,7 +2583,7 @@ console.log(Array.from(array.values()))   // ["one", "two", "three", "four", "fi
 console.log(Array.from(array.entries()))  // [[0, "one"], [1, "two"], [2, "three"], [3, "four"], [4, "five"]]
 ```
 
-#### 10. 迭代方法
+#### 10.迭代方法
 
 ECMAScript为数组定义了5个迭代方法，分别是every()、filter()、forEach()、map()、some()。这些方法**都不会改变原数组**。这五个方法都**接收两个参数**：以每一项为参数运行的函数和可选的作为函数运行上下文的作用域对象（影响函数中的this值）。传给每个方法的函数接收三个参数，分别是当前元素、当前元素的索引值、当前元素所属的数对象。
 
@@ -2948,7 +3576,7 @@ myConcat(". ", "one", "two", "three", "four", "five");
 
 #### 3. 类数组转为数组
 
-#### （1）借用数组方法
+##### （1）借用数组方法
 
 类数组因为不是真正的数组，所以没有数组类型上自带的那些方法，所以就需要利用下面这几个方法去借用数组的方法。比如借用数组的 push 方法，代码如下：
 
@@ -2984,7 +3612,7 @@ sum(1, 2);  // 3
 
 可以看到，借用 Array 原型链上的各种方法，来实现 sum 函数的参数相加的效果。一开始都是将 arguments 通过借用数组的方法转换为真正的数组，最后都又通过数组的 reduce 方法实现了参数转化的真数组 args 的相加，最后返回预期的结果。
 
-#### （2）借用ES6方法
+##### （2）借用ES6方法
 
 还可以采用 ES6 新增的 Array.from 方法以及展开运算符的方法来将类数组转化为数组。那么还是围绕上面这个 sum 函数来进行改变，看下用 Array.from 和展开运算符是怎么实现转换数组的：
 
@@ -3006,8 +3634,6 @@ sum(1, 2);    // 3
 ```
 
 可以看到，Array.from 和 ES6 的展开运算符，都可以把 arguments 这个类数组转换成数组 args，从而实现调用 reduce 方法对参数进行累加操作。其中第二种和第三种都是用 ES6 的展开运算符，虽然写法不一样，但是基本都可以满足多个参数实现累加的效果。
-
-
 
 ### 10.ajax axios fetch各有什么特点
 
@@ -3034,7 +3660,7 @@ $.ajax({
 MVVM(Model-View-ViewModel), 源自于经典的 Model–View–Controller（MVC）模式。MVVM 的出现促进了 GUI 前端开发与后端业务逻辑的分离，极大地提高了前端开发效率。MVVM 的核心是 ViewModel 层，它就像是一个中转站（value converter），负责转换 Model 中的数据对象来让数据变得更容易管理和使用，该层向上与视图层进行双向数据绑定，向下与 Model 层通过接口请求进行数据交互，起呈上启下作用。View 层展现的不是 Model 层的数据，而是 ViewModel 的数据，由 ViewModel 负责与 Model 层交互，这就完全解耦了 View 层和 Model 层，这个解耦是至关重要的，它是前后端分离方案实施的最重要一环。
  如下图所示：
 
-![img](https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/8d975c0670d24c29a23d75d70ccc8206~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp)
+![img](https://s2.loli.net/2022/08/01/3Tdq1lRap5NxiMO.webp)
 
 **2.axios**
 
@@ -3103,9 +3729,9 @@ fetch号称是AJAX的替代品，是在ES6出现的，使用了ES6中的promise�
 
 **总结：axios既提供了并发的封装，也没有fetch的各种问题，而且体积也较小，当之无愧现在最应该选用的请求的方式。**
 
-### 11.new一个箭头函数会发生什么
+### 11.new的原理
 
-#### 1.面向对象中的new关键字
+#### 面向对象中的new关键字
 
 如上所述new操作实质上是定义一个具有构造函数内置对象的实例。其运行过程如下：
 1.创建一个javascript空对象 {};
@@ -3171,7 +3797,7 @@ b.say();
 
 
 
-![image.png](https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/7888aa4371ef44ba900cbd1224752545~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp?)
+![image.png](https://s2.loli.net/2022/08/01/EcRBXMHCevjQrAU.webp)
 
 ```js
 function myNew(fn, ...args) {
@@ -3188,37 +3814,7 @@ const c = myNew(Person, "b");
 c.say();
 ```
 
-#### 2.箭头函数和new
 
-箭头函数不可以使用new实例化的，这是因为因为箭头函数没有prototype也没有自己的this指向并且不可以使用arguments
-
-##### 1.箭头函数没有单独的this
-
-> 箭头函数不会创建自己的this,它只会从自己的作用域链的上一层继承this
-
-##### 2.通过 call 或 apply 调用
-
-> 由于 箭头函数没有自己的this指针，通过 call() 或 apply() 方法调用一个函数时，只能传递参数（不能绑定this），他们的第一个参数会被忽略
-
-##### 3.不绑定arguments
-
-箭头函数无法使用arguments，而普通函数可以使用arguments。如果要使用类似于arguments获取参数，可以使用rest参数代替
-
-##### 4.箭头函数不能作为构造器，和new一起使用会抛出错误
-
-```js
-var Foo = () => {};
-var foo = new Foo(); // TypeError: Foo is not a constructor
-```
-
-##### 5.箭头函数没有prototype属性
-
-```php
-var Foo = () => {};
-console.log(Foo.prototype); // undefined
-```
-
-##### 6.箭头函数不能当做Generator函数,不能使用yield关键字
 
 ### 12.js延迟加载
 
@@ -3691,7 +4287,6 @@ console.log(obj)     // {name: "haha", age: 30}
     console.log(event)
   })
 </script>
-
 ```
 
 #### clientX / clientY
@@ -3700,7 +4295,7 @@ console.log(obj)     // {name: "haha", age: 30}
 
 注意：以**可视区域（客户端）**的左上角位置为原点
 
-![clientX_clientY.png](https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/c1db75466c024ce78b0c0421fbee55df~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp?)
+![clientX_clientY.png](https://s2.loli.net/2022/08/01/kd2aOx9Xje6IlsH.webp)
 
 #### offsetX / offsetY
 
@@ -3708,7 +4303,7 @@ console.log(obj)     // {name: "haha", age: 30}
 
 注意：以**目标元素**的（含 `padding` ）**左上角**位置为原点
 
-![offsetX_offsetY.png](https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/932b998707cb4997b11a4cd0dd9900ff~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp?)
+![offsetX_offsetY.png](https://s2.loli.net/2022/08/01/4AzdjiaqH2GuOES.webp)
 
 #### screenX / screenY
 
@@ -3730,7 +4325,7 @@ console.log(obj)     // {name: "haha", age: 30}
 
 注意：以**文档**的左上角位置为原点
 
-![pageX_pageY.png](https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/156f748920964a5faae7a8625b178658~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp?)
+![pageX_pageY.png](https://s2.loli.net/2022/08/01/oN9zubVR7GSem6j.webp)
 
 ------
 
@@ -3753,6 +4348,8 @@ offsetTop：获取对象上侧与定位父级之间的距离
 offsetWidth：获取元素自身的宽度（包含边框）
 
 offsetHeight：获取元素自身的高度（包含边框）
+
+
 
 
 
@@ -3812,7 +4409,7 @@ parentEle instanceof HTMLElement
 
 可以看到，`document.getElementById()` 获取到的结果既是 Node 也是 Element
 
-![各层级关系](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/114633e51bb24e5586d14e0079aed4a9~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp)
+![各层级关系](https://s2.loli.net/2022/08/01/UiC5P1W9KeQ7OHB.webp)
 
 **Element 继承于 Node**。
 
@@ -3829,168 +4426,54 @@ parentEle instanceof HTMLElement
     -   span 是一个 Node；
     -   “ 1 2 3 ”、“ 4 5 6 ”和 “ 7 8 9 ”全都是单独的 Node
 
-### 17.IntersectionObserver对象
 
-`IntersectionObserver`对象，从属于`Intersection Observer API`，提供了一种异步观察目标元素与其祖先元素或顶级文档视窗`viewport`交叉状态的方法，祖先元素与视窗`viewport`被称为根`root`，也就是说`IntersectionObserver API`，可以自动观察元素是否可见，由于可见`visible`的本质是，目标元素与视口产生一个交叉区，所以这个`API`叫做交叉观察器，兼容性`https://caniuse.com/?search=IntersectionObserver`。
 
-#### 描述
+### 17.判断对象是否为空
 
-`IntersectionObserver`解决了一个长期以来`Web`的问题，观察元素是否可见，这个可见`visible`的本质是，目标元素与视口产生一个交叉区，所以这个`API`叫做交叉观察器。
-要检测一个元素是否可见或者两个元素是否相交并不容易，很多解决办法不可靠或性能很差。现在很多需求下都需要用到相交检测，例如图片懒加载、内容无限滚动、检测元素的曝光情况、可视区域播放动画等等，相交检测通常要用到`onscroll`事件监听，并且可能需要频繁调用`Element.getBoundingClientRect()`等方法以获取相关元素的边界信息，事件监听和调用`Element.getBoundingClientRect`都是在主线程上运行，因此频繁触发、调用可能会造成性能问题，这种检测方法极其怪异且不优雅。
-`Intersection Observer API`会注册一个回调函数，每当被监视的元素进入或者退出另外一个元素时或`viewport`，或者两个元素的相交部分大小发生变化时，该回调方法会被触发执行，这样网站的主线程不需要再为了监听元素相交而辛苦劳作，浏览器会自行优化元素相交管理，注意`Intersection Observer API`无法提供重叠的像素个数或者具体哪个像素重叠，他的更常见的使用方式是当两个元素相交比例在`N%`左右时，触发回调，以执行某些逻辑。
+1.将json对象转化为json字符串，再判断该字符串是否为"{}"
+
+```js
+var data = {};
+var b = (JSON.stringify(data) == "{}");
+alert(b);//true
+```
+
+2.for in 循环判断
 
 ```javascript
-const io = new IntersectionObserver(callback, option);
-
-// 开始观察
-io.observe(document.getElementById("example"));
-// 停止观察
-io.unobserve(element);
-// 关闭观察器
-io.disconnect();Copy to clipboardErrorCopied
+var obj = {};
+var b = function() {
+    for(var key in obj) {
+        return false;
+    }
+    return true;
+}
+alert(b());//true
 ```
 
-- 参数`callback`，创建一个新的`IntersectionObserver`对象后，当其监听到目标元素的可见部分穿过了一个或多个阈`thresholds`时，会执行指定的回调函数。
+3.Object.getOwnPropertyNames()方法
 
-- 参数
+此方法是使用Object对象的getOwnPropertyNames方法，获取到对象中的属性名，存到一个数组中，返回数组对象，我们可以通过判断数组的length来判断此对象是否为空
 
-  ```
-  option
-  ```
+注意：此方法不兼容ie8，其余浏览器没有测试
 
-  ，
-
-  ```
-  IntersectionObserver
-  ```
-
-  构造函数的第二个参数是一个配置对象，其可以设置以下属性:
-
-  - `threshold`属性决定了什么时候触发回调函数，它是一个数组，每个成员都是一个门槛值，默认为`[0]`，即交叉比例`intersectionRatio`达到`0`时触发回调函数，用户可以自定义这个数组，比如`[0, 0.25, 0.5, 0.75, 1]`就表示当目标元素`0%`、`25%`、`50%`、`75%`、`100%`可见时，会触发回调函数。
-  - `root`属性指定了目标元素所在的容器节点即根元素，目标元素不仅会随着窗口滚动，还会在容器里面滚动，比如在`iframe`窗口里滚动，这样就需要设置`root`属性，注意，容器元素必须是目标元素的祖先节点。
-  - `rootMargin`属性定义根元素的`margin`，用来扩展或缩小`rootBounds`这个矩形的大小，从而影响`intersectionRect`交叉区域的大小，它使用`CSS`的定义方法，比如`10px 20px 30px 40px`，表示`top`、`right`、`bottom`和`left`四个方向的值。
-
-- 属性`IntersectionObserver.root`只读，所监听对象的具体祖先元素`element`，如果未传入值或值为`null`，则默认使用顶级文档的视窗。
-
-- 属性`IntersectionObserver.rootMargin`只读，计算交叉时添加到根`root`边界盒`bounding box`的矩形偏移量，可以有效的缩小或扩大根的判定范围从而满足计算需要，此属性返回的值可能与调用构造函数时指定的值不同，因此可能需要更改该值，以匹配内部要求，所有的偏移量均可用像素`pixel`、`px`或百分比`percentage`、`%`来表达，默认值为`0px 0px 0px 0px`。
-
-- 属性`IntersectionObserver.thresholds`只读，一个包含阈值的列表，按升序排列，列表中的每个阈值都是监听对象的交叉区域与边界区域的比率，当监听对象的任何阈值被越过时，都会生成一个通知`Notification`，如果构造器未传入值，则默认值为`0`。
-
-- 方法`IntersectionObserver.disconnect()`，使`IntersectionObserver`对象停止监听工作。
-
-- 方法`IntersectionObserver.observe()`，使`IntersectionObserver`开始监听一个目标元素。
-
-- 方法`IntersectionObserver.takeRecords()`，返回所有观察目标的`IntersectionObserverEntry`对象数组。
-
-- 方法`IntersectionObserver.unobserve()`，使`IntersectionObserver`停止监听特定目标元素。
-
-此外当执行`callback`函数时，会传递一个`IntersectionObserverEntry`对象参数，其提供的信息如下。
-
-- `time:`可见性发生变化的时间，是一个高精度时间戳，单位为毫秒。
-- `target:`被观察的目标元素，是一个`DOM`节点对象。
-- `rootBounds:`根元素的矩形区域的信息，是`getBoundingClientRect`方法的返回值，如果没有根元素即直接相对于视口滚动，则返回`null`。
-- `boundingClientRect:`目标元素的矩形区域的信息。
-- `intersectionRect:`目标元素与视口或根元素的交叉区域的信息。
-- `intersectionRatio:`目标元素的可见比例，即`intersectionRect`占`boundingClientRect`的比例，完全可见时为`1`，完全不可见时小于等于`0`。
-
-#### 应用
-
-实现一个使用`IntersectionObserver`的简单示例，两个方块分别可以演示方块`1`是否在屏幕可见区域内以及方块`2`是否在方块`1`的相对可见交叉区域内，另外可以使用`IntersectionObserver`可以进行首屏渲染的优化，
-
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <style> 
-        body{
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            width: 100vw;
-            overflow-x: hidden;
-        }
-        .flex{
-            display: flex;
-        }
-        .top-fixed{
-            top: 0;
-            position: fixed;
-        }
-        .placeholder1{
-            width: 100%;
-        }
-        #box1{
-            height: 200px; 
-            overflow-y: auto; 
-            border: 1px solid #aaa; 
-            width: 60%;
-        }
-        .box1-placeholder{
-            height: 105vh;
-        }
-        #box2{
-            height: 100px; 
-            background-color: blue; 
-            margin-top: 300px; 
-            width: 60%;
-        }
-        .box2-placeholder{
-            height: 205px;
-        }
-    </style>
-</head>
-<body>
-    <section class="flex top-fixed">
-        <div class="flex">BOX1:</div>
-        <div class="flex" id="box1-status">invisible</div>
-        <div class="flex">&nbsp;BOX2:</div>
-        <div class="flex" id="box2-status">invisible</div>
-    </section>
-    <div class="box1-placeholder"></div>
-    <div id="box1">
-        <div class="box2-placeholder"></div>
-        <div id="box2"></div>   
-        <div class="box2-placeholder"></div>
-    </div>
-    <div class="box1-placeholder"></div>
-
-</body>
-<script>
-    (function(){
-        const box1 = document.querySelector("#box1");
-        const box2 = document.querySelector("#box2");
-        const box1Status = document.querySelector("#box1-status");
-        const box2Status = document.querySelector("#box2-status");
-        const box1Observer = new IntersectionObserver(entries => {
-            entries.forEach(item => {
-                // `intersectionRatio`为目标元素的可见比例，大于`0`代表可见
-                if (item.intersectionRatio > 0) {
-                    box1Status.innerText = "visible";
-                }else{
-                    box1Status.innerText = "invisible";
-                }
-            });
-        }, {root: document});
-        const box2Observer = new IntersectionObserver(entries => {
-            entries.forEach(item => {
-                // `intersectionRatio`为目标元素的可见比例，大于`0`代表可见
-                if (item.intersectionRatio > 0) {
-                    box2Status.innerText = "visible";
-                }else{
-                    box2Status.innerText = "invisible";
-                }
-            });
-        }, {root: box1});
-        box1Observer.observe(box1);
-        box2Observer.observe(box2);
-    })();
-</script>
-</html>
+```js
+var data = {};
+var arr = Object.getOwnPropertyNames(data);
+alert(arr.length == 0);//true
 ```
+
+4.使用ES6的Object.keys()方法
+
+ES6的新方法, 返回值也是对象中属性名组成的数组
+
+```js
+var data = {};
+var arr = Object.keys(data);
+alert(arr.length == 0);//true
+```
+
+
 
 ## 模块化
 
@@ -4012,6 +4495,22 @@ io.disconnect();Copy to clipboardErrorCopied
 
 #### CommonJS
 
+##### **规范**：
+
+- module模块本身，是Module的一个实例
+
+- exports指向module.exports，可以通过exports向module.exports对象中添加变量
+
+- require用于加载模块（核心）
+
+  所有模块都运行在模块作用域，不会污染全局作用域
+
+  模块加载的顺序，按照代码中出现的顺序执行（也就是同步）
+
+  模块输入的值是复制（基础类型为复制，引用类型为值引用），第一次加载结果就被缓存了，之后再加载就直接读取缓存中的结果，如果要让模块再次运行，需要清除缓存。或者直接导出函数，每次调用函数重新计算。
+
+##### 特点：
+
 node使用的是commonjs 在使用模块的时候是运行时同步加载的 拷贝模块中的对象 
 
 模块可以多次加载，但只会在第一次加载 之后会被缓存 引入的是缓存中的值
@@ -4028,11 +4527,81 @@ node使用的是commonjs 在使用模块的时候是运行时同步加载的 拷
 
 本质上还是module.exports进行导出
 
-一般情况下 node内部会进行 module.exports=exports的操作
+**一般情况下 node内部会进行 module.exports=exports的操作**
 
-如果使用了module.exports， 会使用优先使用module.exports, exports的修改无效  相当于不使用exports
+**如果使用了module.exports， 会使用优先使用module.exports, exports的修改无效  相当于不使用exports**
 
-#### Es6 模块
+CommonJS 是 NodeJs 的一种模块同步加载规范，一个文件即是一个模块，使用时直接 require(),即可，但是不适用于客户端，因为加载模块的时候有可能出现‘假死’状况，必须等模块请求成功，加载完毕才可以执行调用的模块。但是在服务期不存在这种状况。
+
+##### 主要实现代码
+
+从代码中可以看出，模块加载实质上就是注入了exports，require，module三个全局变量，然后执行模块的源码，最后将模块的exports的变量输入
+
+```js
+(function(exports, require, module, __filename, __dirname) {
+    // 模块源码
+});
+```
+
+
+
+```js
+function Module(id, parent) {
+    this.id = id;
+    this.expotrs = {};
+    this.parent = parent;
+    if (parent && parent.children) {
+        parent.children.push(this);
+    }
+    this.fileanme = null;
+    this.loaded = false;
+    this.children = [];
+}
+// 这里的module是全局变量
+module.exports = Module;
+
+// 通过一个path加载模块，并返回exports属性
+Module.prototype.require = function(path) {
+    return Module._load(path, this);
+}
+
+Module._load = function(path, parent) {
+    const filename = path;
+    var module = new Module(filename, parent);
+    // 加载模块
+    module.load(filename);
+
+    // 输出模块的exports属性
+    return module.exports;
+}
+
+Module.prototype.load = function(filename) {
+    // 通过磁盘中读取文件
+    var content = fs.readFileSync(filename, 'utf8');
+    module._compile(content, filename);
+    this.loaded = true;
+}
+
+// 模块编译
+Module.prototype._compile = function(content, filename) {
+    const self = this;
+    const args = [self.exports, require, self, filename, dirname];
+    // 在沙箱中执行代码
+    return compiledWrapper.apply(self.exports, args);
+}
+```
+
+##### 存在问题：
+
+缺少模块封装的能力，CommonJS规范中每个模块都是一个文件，这意味着每个文件只有一个模块。这在服务器上是可行的，但是在浏览器中就不是很友好，浏览器中需要做到尽可能少的发起请求。
+
+使用同步的方式加载依赖，在浏览器中由于JS的加载会阻塞渲染，同步加载会导致长时间的白屏，对于用户体验是致命的。
+
+CommonJS规范中使用了**export**的对象来暴露模块，可以讲需要导出的变量附加到**export**上，但是要导出一个函数确是能使用**module.export**，这种语法容易让人感到困惑。
+
+#### ES6 模块
+
+##### 基本使用
 
 默认导出  export default 变量或者函数或者对象
 
@@ -4048,9 +4617,13 @@ node使用的是commonjs 在使用模块的时候是运行时同步加载的 拷
 
 会将默认导出和按需导出 全部引入
 
+##### 特点
 
+CommonJS模块的**require**是同步加载模块，而ESM 会对静态代码分析，即在代码编译时进行模块的加载，在运行时之前就已经确定了依赖关系
 
-CommonJS 是 NodeJs 的一种模块同步加载规范，一个文件即是一个模块，使用时直接 require(),即可，但是不适用于客户端，因为加载模块的时候有可能出现‘假死’状况，必须等模块请求成功，加载完毕才可以执行调用的模块。但是在服务期不存在这种状况。
+ESM模块是动态引用，变量不会被缓存，而是成为一个指向加载模块的引用，只有真正取值的时候才会进行计算取值
+
+#### AMD模块
 
 AMD (Asynchronous Module Definition):异步模块加载机制。requireJS 就是 AMD 规范，使用时，先定义所有依赖，然后在加载完成后的回调函数中执行，属于依赖前置，使用：define()来定义模块，require([module], callback)来使用模块。 AMD 同时也保留 CommonJS 中的 require、exprots、module，可以不把依赖罗列在 dependencies 数组中，而是在代码中用 require 来引入。
 
@@ -4076,6 +4649,8 @@ define(function() {
 ```
 
 缺点：属于依赖前置，需要加载所有的依赖， 不可以像 CommonJS 在用的时候再 require，异步加载后再执行。
+
+#### CMD模块
 
 CMD(Common Module Definition):定义模块时无需罗列依赖数组，在 factory 函数中需传入形参 require,exports,module，然后它会调用 factory 函数的 toString 方法，对函数的内容进行正则匹配，通过匹配到的 require 语句来分析依赖，这样就真正实现了 CommonJS 风格的代码。是 seajs 推崇的规范，是依赖就近原则。
 
@@ -4145,9 +4720,9 @@ ES6 模块化编译时加载，通过 export,import 静态输出输入代码，�
 -   CommonJS 是可以动态加载的，对每一个加载都存在缓存，可以有效的解决循环引用问题。
 -   CommonJS 模块同步加载并执行模块文件。
 
-#### es module 总结
+#### ES module 总结
 
-`Es module` 的特性如下：
+`ES module` 的特性如下：
 
 -   ES6 Module 静态的，不能放在块级作用域内，代码发生在编译时。
 -   ES6 Module 的值是动态绑定的，可以通过导出方法修改，可以直接访问修改结果。
@@ -4237,8 +4812,6 @@ import用于引入外部模块， 其他脚本等的函数， 对象或者基本
 > `commonjs` 是运行时加载，`es6`是编译时输出接口；
 
 
-
-
 ### 7.require原理
 
 #### 查找规则
@@ -4288,3 +4861,20 @@ import用于引入外部模块， 其他脚本等的函数， 对象或者基本
 阶段二：实例化（Instantiation），对模块记录进行实例化，并且分配内存空间，解析模块的导入和导出语句，把模块指向 对应的内存地址。 
 
 阶段三：运行（Evaluation），运行代码，计算值，并且将值填充到内存地址中
+
+> 构造（Construction）
+
+从入口文件开始，并通过代码解析（module specifiers）找到入口文件所依赖的模块，一步一步找到其他模块，并将所有模块解析成模块记录（module record），并缓存到**module map**中，遇到不同文件获取相同依赖，都会直接在**module map**缓存中获取，注意这里并不是要把所有模块的依赖关系全部解析完再开始下一步，因为浏览器一次性下载这么多文件会跟CommonJS一样阻塞主线程。所以这也就是为什么**ESM spec**要把3个加载过程区分开执行的原因。
+
+![img](https://s2.loli.net/2022/08/01/zmAx5wpLyr3IYlh.webp)
+
+> 实例化（Instantiation）
+
+实例化的过程就是将代码导出的变量一一指向内存。JS引擎通过**优先深度后序遍历**遍历整个模块关系图，即从依赖关系的最后一个模块（没有引入其他模块）开始实例化，并将所有模块导出的变量绑定在内存上，然后再将**所有模块导入变量绑定到与导出变量同一个内存区域**。所以一旦导出值发生变化，导入值也会变化。这也是ESM导出的是**值引用**的原理。同样也**解决了循环调用**的问题，为什么CommonJS无法解决循环调用的详细解释请查看[图解ES Modules](https://link.juejin.cn?target=https%3A%2F%2Fhacks.mozilla.org%2F2018%2F03%2Fes-modules-a-cartoon-deep-dive%2F)
+
+![img](https://s2.loli.net/2022/08/01/KIJpFrehX7WGqdb.webp)
+
+> 求值（Evaluation）
+
+求值步骤相对简单，只要运行代码把计算出来的值填入之前记录的内存地址就可以了，这里就不展开说明了。
+
