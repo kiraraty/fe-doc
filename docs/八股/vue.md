@@ -2921,6 +2921,7 @@ let app = new Vue({
 
 #### 理解&使用render函数
 
+<<<<<<< HEAD
 render 函数即渲染函数，它接收一个`createElement` 方法作为第一个参数用来创建 `VNode`。（简单的说就是 render函数的参数也是一个函数）
 
 createElement也是一个函数，它接受三个参数
@@ -2939,6 +2940,8 @@ vue-template-complier  可以将template转换成  withIthis){  return h('p',[..
 
 ![DOM的流程图 (1).png](https://s2.loli.net/2022/08/06/PWVyCU5BtrkQKjS.webp)
 
+=======
+>>>>>>> 0a45b56e3e904b4a4ddf1f0c5cf5db6d5844e5d6
 #### createElement 参数
 
 `createElement`可以接受多个参数
@@ -3964,6 +3967,7 @@ JavaScript 中对象和数组是通过引用传入的，所以对于一个数组
 在`React`中，当`View`层发生更改时，用户通过发出`Actions`进行处理，`Actions`中通过`setState`对`State`进行更新，`State`更新后触发`View`更新。可以看出，`View`层不能直接修改`State`，必须要通过`Actions`来进行操作，这样更加清晰可控
 
 单向绑定的方式的优点在于清晰可控，缺点则在于会有一些模板代码，`Vue`则同时支持单向绑定和双向绑定
+<<<<<<< HEAD
 
 - 单向绑定：插值形式`{{data}}`，`v-bind`也是单向绑定
 - 双向绑定：表单的`v-model`，用户对`View`层的更改会直接同步到`Model`层
@@ -4511,7 +4515,553 @@ export default vCopy;
 ```
 
 
+=======
 
+- 单向绑定：插值形式`{{data}}`，`v-bind`也是单向绑定
+- 双向绑定：表单的`v-model`，用户对`View`层的更改会直接同步到`Model`层
+
+实际上`v-model`只是`v-bind:value` 和 `v-on:input`的语法糖，我们也可以采取类似`react`的单向绑定。两者各有利弊，单向绑定清晰可控，但是模板代码过多，双向绑定可以简化开发，但是也会导致数据变化不透明，优缺点共存，大家可以根据情况使用。
+>>>>>>> 0a45b56e3e904b4a4ddf1f0c5cf5db6d5844e5d6
+
+#### 单向数据流 `vs` 双向数据流
+
+数据流指的是组件之间的数据流动。
+ `Vue`与`React`都是单向数据流的模型，虽然`vue`有双向绑定`v-model`，但是`vue`和`react`父子组件之间数据传递，仍然还是遵循单向数据流的，父组件可以向子组件传递`props`，但是子组件不能修改父组件传递来的`props`，子组件只能通过事件通知父组件进行数据更改
+
+
+![img](https://s2.loli.net/2022/08/01/OcgMQGnyUfeXZbd.webp)
+
+通过单向数据流的模型，所有状态的改变可记录、可跟踪，相比于双向数据流可加容易维护与定位问题
+
+#### 为什么说`v-model`只是语法糖
+
+>你可以用 `v-model` 指令在表单 `<input>`、`<textarea>` 及 `<select>` 元素上创建双向数据绑定。它会根据控件类型自动选取正确的方法来更新元素。尽管有些神奇，但 `v-model` 本质上不过是语法糖。它负责监听用户的输入事件以更新数据，并对一些极端场景进行一些特殊处理
+
+正如上面所述，`Vue`文档中说`v-model`只是语法糖
+
+```javascript
+<input v-model=“phoneInfo.phone”/>
+
+//在组件中使用时，实际相当于下面的简写
+<input :value="PhoneInfo.phone" @input="val => { PhoneInfo.phone = val }"
+```
+
+那么问题来了，为什么说`v-model`不是真正的双向数据流呢？按照这道理，是不是可以认为`model->view`的单向数据流也是语法糖啊，也是`vue`作者通过一定方法实现的而已
+ 真正的原因上面已经说了，**数据绑定是`View`与`Model`之间的映射关系，数据流指的是组件之间的数据流动**
+ `v-model`不是真正的双向数据流，是因为它不能直接修改父组件的值，比如你在`v-model`中绑定`props`中的值是会报错的，它只能绑定组件的值
+ 而真正的双向数据流，比如`AngularJs`，是允许在子组件中直接更新父组件的值的，这就是为什么说`v-model`只是语法糖的原因
+
+#### 总结
+
+总得来说，单双向数据绑定与数据流是两个不同维度的概念，数据绑定是`View`与`Model`之间的映射关系，数据流指的是组件之间的数据流动。因此，单向数据流也可有双向绑定，双向数据流也可以有双向绑定，两者不应该混为一谈
+
+![img](https://s2.loli.net/2022/08/01/q3NVdyOxcBLACDb.webp)
+
+### 27.自定义指令
+
+[vue中如何自定义指令](https://blog.csdn.net/weixin_58032613/article/details/122759818)
+
+#### 指令使用的几种方式
+
+```js
+//会实例化一个指令，但这个指令没有参数 
+`v-xxx`
+ 
+// -- 将值传到指令中
+`v-xxx="value"`  
+ 
+// -- 将字符串传入到指令中，如`v-html="'<p>内容</p>'"`
+`v-xxx="'string'"` 
+ 
+// -- 传参数（`arg`），如`v-bind:class="className"`
+`v-xxx:arg="value"` 
+ 
+// -- 使用修饰符（`modifier`）
+`v-xxx:arg.modifier="value"` 
+
+```
+
+#### 如何自定义指令
+
+注册一个自定义指令有全局注册与局部注册
+
+全局注册注册主要是用过**Vue.directive**方法进行注册
+
+**Vue.directive**第一个参数是**指令的名字**（不需要写上v-前缀），第二个参数可以是**对象数据**，也可以是一个**指令函数**
+
+```js
+// 注册一个全局自定义指令 `v-focus`
+Vue.directive('focus', {
+  // 当被绑定的元素插入到 DOM 中时……
+  inserted: function (el) {
+    // 聚焦元素
+    el.focus()  // 页面加载完成之后自动让输入框获取到焦点的小功能
+  }
+})
+```
+
+局部注册通过在组件options选项中设置directive属性  是定义在组件内部的，只能在当前组件中使用
+
+```js
+directives: {
+  focus: {
+    // 指令的定义
+    inserted: function (el) {
+      el.focus() // 页面加载完成之后自动让输入框获取到焦点的小功能
+    }
+  }
+}
+```
+
+然后你可以在模板中任何元素上使用新的 v-focus property，如下：
+
+```js
+<input v-focus />
+```
+
+**钩子函数**
+
+自定义指令也像组件那样存在钩子函数：
+
+bind：只调用一次，指令第一次绑定到元素时调用。在这里可以进行一次性的初始化设置
+inserted：被绑定元素插入父节点时调用 (仅保证父节点存在，但不一定已被插入文档中)
+update：所在组件的 VNode 更新时调用，但是可能发生在其子 VNode更新之前。指令的值可能发生了改变，也可能没有。但是你可以通过比较更新前后的值来忽略不必要的模板更新
+componentUpdated：指令所在组件的 VNode 及其子 VNode 全部更新后调用
+unbind：只调用一次，指令与元素解绑时调用
+
+所有的钩子函数的参数都有以下：
+
+- el：指令所绑定的元素，可以用来直接操作 DOM
+- binding：一个对象，包含以下 property：
+
+
+
+`name`：指令名，不包括 v- 前缀。
+
+`value`：指令的绑定值，例如：v-my-directive="1 + 1" 中，绑定值为 2。
+
+`oldValue`：指令绑定的前一个值，仅在 update 和 componentUpdated 钩子中可用。无论值是否改变都可用。
+
+`expression`：字符串形式的指令表达式。例如 v-my-directive="1 + 1" 中，表达式为 "1 + 1"。
+
+`arg`：传给指令的参数，可选。例如 v-my-directive:foo 中，参数为 "foo"。
+
+`modifiers`：一个包含修饰符的对象。例如：v-my-directive.foo.bar 中，修饰符对象为 { foo: true, bar: true }
+
+`vnode`：Vue 编译生成的虚拟节点
+
+`oldVnode`：上一个虚拟节点，仅在 update 和 componentUpdated 钩子中可用
+
+
+
+除了 el 之外，其它参数都应该是只读的，切勿进行修改。如果需要在钩子之间共享数据，建议通过元素的 dataset 来进行
+
+```js
+<div v-demo="{ color: 'white', text: 'hello!' }"></div>
+<script>
+    Vue.directive('demo', function (el, binding) {
+    console.log(binding.value.color) // "white"
+    console.log(binding.value.text)  // "hello!"
+    })
+</script>
+```
+
+#### 批量注册使用
+
+批量注册指令，新建 `directives/index.js` 文件
+
+```js
+import copy from './copy'
+import longpress from './longpress'
+// 自定义指令
+const directives = {
+  copy,
+  longpress,
+}
+
+export default {
+  install(Vue) {
+    Object.keys(directives).forEach((key) => {
+      Vue.directive(key, directives[key])
+    })
+  },
+}
+
+```
+
+在 `main.js` 引入并调用
+
+```js
+import Vue from 'vue'
+import Directives from './JS/directives'
+Vue.use(Directives)
+```
+
+#### 实现v-lazyload
+
+背景：在类电商类项目，往往存在大量的图片，如 banner 广告图，菜单导航图，美团等商家列表头图等。图片众多以及图片体积过大往往会影响页面加载速度，造成不良的用户体验，所以进行图片懒加载优化势在必行。
+
+需求：实现一个图片懒加载指令，只加载浏览器可见区域的图片。
+
+思路：
+
+1. 图片懒加载的原理主要是判断当前图片是否到了可视区域这一核心逻辑实现的
+2. 拿到所有的图片 Dom ，遍历每个图片判断当前图片是否到了可视区范围内
+3. 如果到了就设置图片的 `src` 属性，否则显示默认图片
+
+图片懒加载有两种方式可以实现，一是绑定 `srcoll` 事件进行监听，二是使用 `IntersectionObserver` 判断图片是否到了可视区域，但是有浏览器兼容性问题。
+
+下面封装一个懒加载指令兼容两种方法，判断浏览器是否支持 `IntersectionObserver` API，如果支持就使用 `IntersectionObserver` 实现懒加载，否则则使用 `srcoll` 事件监听 + 节流的方法实现
+
+```js
+const LazyLoad = {
+  // install方法
+  install(Vue, options) {
+    const defaultSrc = options.default
+    Vue.directive('lazy', {
+      bind(el, binding) {
+        LazyLoad.init(el, binding.value, defaultSrc)
+      },
+      inserted(el) {
+        if (IntersectionObserver) {
+          LazyLoad.observe(el)
+        } else {
+          LazyLoad.listenerScroll(el)
+        }
+      },
+    })
+  },
+  // 初始化
+  init(el, val, def) {
+    el.setAttribute('data-src', val)
+    el.setAttribute('src', def)
+  },
+  // 利用IntersectionObserver监听el
+  observe(el) {
+    var io = new IntersectionObserver((entries) => {
+      const realSrc = el.dataset.src
+      if (entries[0].isIntersecting) {
+        if (realSrc) {
+          el.src = realSrc
+          el.removeAttribute('data-src')
+        }
+      }
+    })
+    io.observe(el)
+  },
+  // 监听scroll事件
+  listenerScroll(el) {
+    const handler = LazyLoad.throttle(LazyLoad.load, 300)
+    LazyLoad.load(el)
+    window.addEventListener('scroll', () => {
+      handler(el)
+    })
+  },
+  // 加载真实图片
+  load(el) {
+    const windowHeight = document.documentElement.clientHeight
+    const elTop = el.getBoundingClientRect().top
+    const elBtm = el.getBoundingClientRect().bottom
+    const realSrc = el.dataset.src
+    if (elTop - windowHeight < 0 && elBtm > 0) {
+      if (realSrc) {
+        el.src = realSrc
+        el.removeAttribute('data-src')
+      }
+    }
+  },
+  // 节流
+  throttle(fn, delay) {
+    let timer
+    let prevTime
+    return function (...args) {
+      const currTime = Date.now()
+      const context = this
+      if (!prevTime) prevTime = currTime
+      clearTimeout(timer)
+
+      if (currTime - prevTime > delay) {
+        prevTime = currTime
+        fn.apply(context, args)
+        clearTimeout(timer)
+        return
+      }
+
+      timer = setTimeout(function () {
+        prevTime = Date.now()
+        timer = null
+        fn.apply(context, args)
+      }, delay)
+    }
+  },
+}
+
+export default LazyLoad
+```
+
+使用，将组件内标签的 `src` 换成 `v-LazyLoad`
+
+```js
+<img v-LazyLoad="xxx.jpg" />
+```
+
+#### 实现一个v-debounce
+
+背景：在开发中，有些提交保存按钮有时候会在短时间内被点击多次，这样就会多次重复请求后端接口，造成数据的混乱，比如新增表单的提交按钮，多次点击就会新增多条重复的数据。
+
+需求：防止按钮在短时间内被多次点击，使用防抖函数限制规定时间内只能点击一次。
+
+思路：
+
+1. 定义一个延迟执行的方法，如果在延迟时间内再调用该方法，则重新计算执行时间。
+2. 将事件绑定在 click 方法上。
+
+```js
+const debounce = {
+  inserted: function (el, binding) {
+    let timer
+    el.addEventListener('click', () => {
+      if (timer) {
+        clearTimeout(timer)
+      }
+      timer = setTimeout(() => {
+        binding.value()
+      }, 1000)
+    })
+  },
+}
+
+export default debounce
+```
+
+使用：给 Dom 加上 `v-debounce` 及回调函数即可
+
+```html
+<template>
+  <button v-debounce="debounceClick">防抖</button>
+</template>
+
+<script>
+export default {
+  methods: {
+    debounceClick () {
+      console.log('只触发一次')
+    }
+  }
+}
+</script>
+```
+
+#### 常用案例
+
+- 代码复用和抽象的主要形式是组件。
+- 当需要对普通 DOM 元素进行底层操作，此时就会用到自定义指令
+- 但是，对于大幅度的 DOM 变动，还是应该使用组件
+
+##### 输入框自动聚焦
+
+```vue
+输入框自动聚焦
+// 注册一个全局自定义指令 `v-focus`
+Vue.directive('focus', {
+  // 当被绑定的元素插入到 DOM 中时
+  inserted: function (el) {
+    // 聚焦元素
+    el.focus()
+  }
+})
+//<input v-focus>
+```
+
+##### 下拉菜单
+
+点击下拉菜单本身不会隐藏菜单
+点击下拉菜单以外的区域隐藏菜单
+
+```js
+<script>
+Vue.directive('clickoutside', {
+  bind(el, binding) {
+    function documentHandler(e) {
+      if (el.contains(e.target)) {
+       return false 
+      }
+      
+      if (binding.expression) {
+        binding.value(e)
+      }
+    }
+    
+    el.__vueMenuHandler__ = documentHandler
+    document.addEventListener('click', el.__vueMenuHandler__)
+  },
+  unbind(el) {
+    document.removeEventListener('click', el.__vueMenuHandler__)
+    delete el.__vueMenuHandler__
+  }
+})
+
+new Vue({
+  el: '#app',
+  data: {
+    show: false
+  },
+  methods: {
+    handleHide() {
+      this.show = false
+    }
+  }
+})
+</script>
+<div class="main" v-menu="handleHide">
+  <button @click="show = !show">点击显示下拉菜单</button>
+  <div class="dropdown" v-show="show">
+    <div class="item"><a href="#">选项 1</a></div>
+    <div class="item"><a href="#">选项 2</a></div>
+    <div class="item"><a href="#">选项 3</a></div>
+  </div>
+</div>
+
+```
+
+##### 相对时间转换
+
+类似微博、朋友圈发布动态后的相对时间，比如刚刚、两分钟前等等
+
+```js
+<span v-relativeTime="time"></span>
+<script>
+new Vue({
+  el: '#app',
+  data: {
+    time: 1565753400000
+  }
+})
+
+Vue.directive('relativeTime', {
+  bind(el, binding) {
+    // Time.getFormatTime() 方法，自行补充
+    el.innerHTML = Time.getFormatTime(binding.value)
+    el.__timeout__ = setInterval(() => {
+      el.innerHTML = Time.getFormatTime(binding.value)
+    }, 6000)
+  },
+  unbind(el) {
+    clearInterval(el.innerHTML)
+    delete el.__timeout__
+  }
+})
+</script>
+```
+
+##### 输入框防抖
+
+防抖这种情况设置一个v-throttle自定义指令来实现
+
+```js
+// 1.设置v-throttle自定义指令
+Vue.directive('throttle', {
+  bind: (el, binding) => {
+    let throttleTime = binding.value; // 防抖时间
+    if (!throttleTime) { // 用户若不设置防抖时间，则默认2s
+      throttleTime = 2000;
+    }
+    let cbFun;
+    el.addEventListener('click', event => {
+      if (!cbFun) { // 第一次执行
+        cbFun = setTimeout(() => {
+          cbFun = null;
+        }, throttleTime);
+      } else {
+        event && event.stopImmediatePropagation();
+      }
+    }, true);
+  },
+});
+// 2.为button标签设置v-throttle自定义指令
+<button @click="sayHello" v-throttle>提交</button>
+```
+
+##### 一键 Copy的功能
+
+```js
+import { Message } from 'ant-design-vue';
+ 
+const vCopy = { //
+  /*
+    bind 钩子函数，第一次绑定时调用，可以在这里做初始化设置
+    el: 作用的 dom 对象
+    value: 传给指令的值，也就是我们要 copy 的值
+  */
+  bind(el, { value }) {
+    el.$value = value; // 用一个全局属性来存传进来的值，因为这个值在别的钩子函数里还会用到
+    el.handler = () => {
+      if (!el.$value) {
+      // 值为空的时候，给出提示，我这里的提示是用的 ant-design-vue 的提示，你们随意
+        Message.warning('无复制内容');
+        return;
+      }
+      // 动态创建 textarea 标签
+      const textarea = document.createElement('textarea');
+      // 将该 textarea 设为 readonly 防止 iOS 下自动唤起键盘，同时将 textarea 移出可视区域
+      textarea.readOnly = 'readonly';
+      textarea.style.position = 'absolute';
+      textarea.style.left = '-9999px';
+      // 将要 copy 的值赋给 textarea 标签的 value 属性
+      textarea.value = el.$value;
+      // 将 textarea 插入到 body 中
+      document.body.appendChild(textarea);
+      // 选中值并复制
+      textarea.select();
+      // textarea.setSelectionRange(0, textarea.value.length);
+      const result = document.execCommand('Copy');
+      if (result) {
+        Message.success('复制成功');
+      }
+      document.body.removeChild(textarea);
+    };
+    // 绑定点击事件，就是所谓的一键 copy 啦
+    el.addEventListener('click', el.handler);
+  },
+  // 当传进来的值更新的时候触发
+  componentUpdated(el, { value }) {
+    el.$value = value;
+  },
+  // 指令与元素解绑的时候，移除事件绑定
+  unbind(el) {
+    el.removeEventListener('click', el.handler);
+  },
+};
+ 
+export default vCopy;
+```
+
+##### 拖拽
+
+```js
+<div ref="a" id="bg" v-drag></div>
+
+  directives: {
+    drag: {
+      bind() {},
+      inserted(el) {
+        el.onmousedown = (e) => {
+          let x = e.clientX - el.offsetLeft;
+          let y = e.clientY - el.offsetTop;
+          document.onmousemove = (e) => {
+            let xx = e.clientX - x + "px";
+            let yy = e.clientY - y + "px";
+            el.style.left = xx;
+            el.style.top = yy;
+          };
+          el.onmouseup = (e) => {
+            document.onmousemove = null;
+          };
+        };
+      },
+    },
+  }
+```
 ## 生命周期![b1493c640d7e4cf2bd7785cea7c86789](https://s2.loli.net/2022/07/14/mXbkqBsVgAYinc1.png)
 
 
@@ -7781,6 +8331,7 @@ Proxy 实现的响应式原理与 Vue2的实现原理相同，实现方式大同
 
 ### 3.Vue3的响应式
 
+<<<<<<< HEAD
 vue2跟vue3实现方式不同：
 
 -   vue2使用 Object.defineProperty() 劫持对象监听数据的变化
@@ -7810,6 +8361,11 @@ vue2跟vue3实现方式不同：
 >   **`Map`** 对象保存键值对，并且能够记住键的原始插入顺序。任何值(对象或者[原始值](https://link.juejin.cn/?target=https%3A%2F%2Fdeveloper.mozilla.org%2Fzh-CN%2Fdocs%2FGlossary%2FPrimitive)) 都可以作为一个键或一个值。
 
 ![image.png](https://s2.loli.net/2022/08/06/wHfd9aMEv3WUN5r.webp)
+=======
+#### 依赖收集
+
+![image-20220621090916477](https://s2.loli.net/2022/08/01/l1iQPteGcCnaRvH.png)
+>>>>>>> 0a45b56e3e904b4a4ddf1f0c5cf5db6d5844e5d6
 
 ```js
 const targetMap = new WeakMap()
@@ -7851,8 +8407,11 @@ const reactive = (obj) => {
 }
 ```
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> 0a45b56e3e904b4a4ddf1f0c5cf5db6d5844e5d6
 ### 4.如何理解composition API
 
 在 Vue2 中，代码是 Options API 风格的，也就是通过填充 (option) data、methods、computed 等属性来完成一个 Vue 组件。这种风格使得 Vue 相对于 React极为容易上手，同时也造成了几个问题：
@@ -8396,7 +8955,11 @@ export default defineComponent({
 
 另外现代前端框架的一个基本要求就是无须手动操作DOM，一方面是因为手动操作DOM无法保证程序性能，多人协作的项目中如果review不严格，可能会有开发者写出性能较低的代码，另一方面更重要的是省略手动DOM操作可以大大提高开发效率。
 
+<<<<<<< HEAD
 **为什么Svelte不使用虚拟dom,性能却好？**
+=======
+**为什么Svelte性能好？**
+>>>>>>> 0a45b56e3e904b4a4ddf1f0c5cf5db6d5844e5d6
 
 Svelte 是一个构建 web 应用程序的工具，与 React 和 Vue 等 JavaScript 框架类似，都怀揣着一颗让构建交互式用户界面变得更容易的心。
 
@@ -8482,6 +9045,7 @@ svelte便实现了这种优化，通过将数据和真实dom的映射关系，�
 ```
 
 #### VNode的实例对象
+<<<<<<< HEAD
 
 一个VNode的实例对象包含了以下属性
 
@@ -8622,7 +9186,42 @@ _c('div', {
 
 ![image.png](https://s2.loli.net/2022/08/06/CoSe4EH1MQdsKNF.webp)
 
+=======
+>>>>>>> 0a45b56e3e904b4a4ddf1f0c5cf5db6d5844e5d6
 
+一个VNode的实例对象包含了以下属性
+
+- `tag`: 当前节点的标签名
+- `data`: 当前节点的数据对象，具体包含哪些字段可以参考vue源码`types/vnode.d.ts`中对`VNodeData`的定义
+  ![clipboard.png](https://s2.loli.net/2022/08/01/6lpF9OrxEYutqI7.png)
+- `children`: 数组类型，包含了当前节点的子节点
+- `text`: 当前节点的文本，一般文本节点或注释节点会有该属性
+- `elm`: 当前虚拟节点对应的真实的dom节点
+- `ns`: 节点的namespace
+- `context`: 编译作用域
+- `functionalContext`: 函数化组件的作用域
+- `key`: 节点的key属性，用于作为节点的标识，有利于patch的优化
+- `componentOptions`: 创建组件实例时会用到的选项信息
+- `child`: 当前节点对应的组件实例
+- `parent`: 组件的占位节点
+- `raw`: raw html
+- `isStatic`: 静态节点的标识
+- `isRootInsert`: 是否作为根节点插入，被`<transition>`包裹的节点，该属性的值为`false`
+- `isComment`: 当前节点是否是注释节点
+- `isCloned`: 当前节点是否为克隆节点
+- `isOnce`: 当前节点是否有`v-once`指令
+
+#### VNode分类
+
+![clipboard.png](https://s2.loli.net/2022/08/01/jgi8nv5XW3yMsq9.png)
+
+`VNode`可以理解为vue框架的虚拟dom的基类，通过`new`实例化的`VNode`大致可以分为几类
+
+- `EmptyVNode`: 没有内容的注释节点
+- `TextVNode`: 文本节点
+- `ElementVNode`: 普通元素节点
+- `ComponentVNode`: 组件节点
+- `CloneVNode`: 克隆节点，可以是以上任意类型的节点，唯一的区别在于`isCloned`属性为`true`
 
 ### 2.Diff算法
 
@@ -9186,6 +9785,7 @@ function vue3Diff(prevChildren, nextChildren, parent) {
 
 ### 4.patch原理
 
+<<<<<<< HEAD
 一个Vue组件是如何运行起来的.
 
 -   template模板通过编译生成AST树
@@ -9211,6 +9811,8 @@ patch
 
 
 
+=======
+>>>>>>> 0a45b56e3e904b4a4ddf1f0c5cf5db6d5844e5d6
 `patch`函数的定义在`src/core/vdom/patch.js`中，我们先来看下这个函数的逻辑
 
 `patch`函数接收6个参数：
