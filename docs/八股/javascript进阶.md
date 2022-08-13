@@ -31,6 +31,69 @@
 | 是否必须设置初始值 | ×       | ×       | ✔️         |
 | 能否改变指针指向   | ✔️       | ✔️       | ×         |
 
+#### 变量声明特点
+
+##### 不使用var let const
+
+说明：
+1.使用var声明变量，在方法内部是局部变量，在方法外部是全局变量
+2.没有使用var声明的变量，在方法内部或外部都是全局变量，但如果是在方
+法内部声明，在方法外部使用之前需要先调用方法，告知系统声明了全局变量后方可在方法外部使用。
+
+在函数作用域内 加var定义的变量是局部变量,不加var定义的就成了全局变量
+在function内部,加var的是局部变量,不加var的则是全局变量；
+在function外部,不管有没有使用var声明变量,都是全局变量，在function外部,var关键字一般可以省略,但是为了书写规范和维护方便以及可读性好,不建议省略var关键字
+
+##### var声明
+
+var声明的变量可以不初始化赋值，输出是undefined，不会报错；
+
+var声明的变量可以修改，存在变量提升(大多数语言都有块级作用域，但JS使用var声明变量时，以function划分作用域，大括号“{}”去无法限值var的作用域)；
+
+var声明的变量作用域是全局的或者是函数级的；
+
+var声明的变量在window上；
+
+var定义的变量可以修改，如果不初始化会输出undefined，不会报错；
+var 声明的变量在window上，用let或者const去声明变量，这个变量不会被放到window上；
+很多语言中都有块级作用域，但JS没有，它使用var声明变量，以function来划分作用域，大括号“{}” 却限定不了var的作用域，因此用var声明的变量具有变量提升的效果；
+var 声明的变量作用域是全局的或者是函数级的；
+var可以**重复声明**：var语句多次声明一个变量不仅是合法的,而且也不会造成任何错误；如果重复使用的一个声明有一个初始值,那么它担当的不过是一个赋值语句的角色；如果重复使用的一个声明没有一个初始值,那么它不会对原来存在的变量有任何的影响;
+
+##### let声明
+
+需要”javascript 严格模式”：'use strict'；
+let 不能重复声明
+不会预处理,
+不存在变量提升
+let声明的变量作用域是在块级域中，函数内部使用let定义后，对函数外部无影响(块级作用域)
+可以在声明变量时为变量赋值，默认值为undefined,也可以稍后在脚本中给变量赋值，在生命前无法使用(暂时死区)
+
+##### const声明
+
+const定义的变量不可以修改，而且必须初始化
+该变量是个全局变量，或者是模块内的全局变量；可以在全局作用域或者函数内声明常量，但是必须初始化常量
+如果一个变量只有在声明时才被赋值一次，永远不会在其它的代码行里被重新赋值，那么应该使用const，但是该变量的初始值有可能在未来会被调整（常变量）
+创建一个只读常量，在不同浏览器上表现为不可修改；建议声明后不修改；拥有块级作用域
+const 代表一个值的常量索引 ，也就是说，变量名字在内存中的指针不能够改变，但是指向这个变量的值可能 改变
+const定义的变量不可修改，一般在require一个模块的时候用或者定义一些全局常量
+常量不能和它所在作用域内其它变量或者函数拥有相同名称
+
+##### function声明
+
+function命令用于定义(声明)一个函数:
+
+```js
+function sum() {
+　　var sum++
+　　return sum;
+}
+```
+
+声明了一个名为 sum的新变量，并为其分配了一个函数定义
+{}之间的内容被分配给了 sum函数声明后不会立即执行，需要调用的时候才执行；
+对支持ES5和ES6浏览器环境在块作用域内有一定区别，所以应避免在块级作用域内声明函数。
+
 #### es5实现let和const
 
 ##### let
@@ -308,33 +371,119 @@ typeof 检测一个未被声明的变量不会报错，结果是`undefined`
 
 ### 3.箭头函数特性
 
-##### 1.箭头函数没有单独的this
+#### 1.箭头函数没有单独的this
+
+对于一般函数：
+
+- 如果该函数是一个构造函数，this 指针指向一个新的对象
+- 在严格模式下的函数调用下，this 指向`undefined`
+- 如果该函数是一个对象的方法，则它的 this 指针指向这个对象
 
 > 箭头函数不会创建自己的this,它只会从自己的作用域链的上一层继承this
 
-##### 2.通过 call 或 apply 调用
+**对象不是作用域**
+
+所以对象内的箭头函数作用域是外部
+
+而正常函数this会指向这个对象
+
+```js
+var obj = {
+  i: 10,
+  b: () => console.log(this.i, this),
+  c: function() {
+    console.log( this.i, this)
+  }
+}
+obj.b();
+// undefined, Window{...}
+obj.c();
+// 10, Object {...}
+```
+
+构造函数的this
+
+```js
+function Person(){
+  this.age = 0;
+  setInterval(() => {
+    this.age++; // |this| 正确地指向 p 实例
+  }, 1000);
+}
+
+var p = new Person();
+```
+
+
+
+```json
+function Person() {
+	this.age = 0;
+}
+Person.prototype.func=()=>{
+		console.log(this.age)
+}
+var p = new Person();
+p.func()//undefined
+```
+
+
+
+#### 2.通过 call 或 apply 调用
 
 > 由于 箭头函数没有自己的this指针，通过 call() 或 apply() 方法调用一个函数时，只能传递参数（不能绑定this），他们的第一个参数会被忽略
 
-##### 3.不绑定arguments
+#### 3.不绑定arguments
 
 箭头函数无法使用arguments，而普通函数可以使用arguments。如果要使用类似于arguments获取参数，可以使用rest参数代替
 
-##### 4.箭头函数不能作为构造器，和new一起使用会抛出错误
+#### 4.箭头函数不能作为构造器，和new一起使用会抛出错误
 
 ```js
 var Foo = () => {};
 var foo = new Foo(); // TypeError: Foo is not a constructor
 ```
 
-##### 5.箭头函数没有prototype属性
+#### 5.箭头函数没有prototype属性
 
 ```php
 var Foo = () => {};
 console.log(Foo.prototype); // undefined
 ```
 
-##### 6.箭头函数不能当做Generator函数,不能使用yield关键字
+#### 6.箭头函数不能当做Generator函数,不能使用yield关键字
+
+#### 7.省略写法
+
+当箭头函数的函数体只有一个 `return` 语句时，可以省略 `return` 关键字和方法体的花括号
+
+```js
+在一个简写体中，只需要一个表达式，并附加一个隐式的返回值。在块体中，必须使用明确的return语句。
+
+var func = x => x * x;
+// 简写函数 省略 return
+
+var func = (x, y) => { return x + y; };
+//常规编写 明确的返回值
+```
+
+记住用`params => {object:literal}`这种简单的语法返回对象字面量是行不通的。
+
+```js
+var func = () => { foo: 1 };
+// Calling func() returns undefined!
+
+var func = () => { foo: function() {} };
+// SyntaxError: function statement requires a name
+```
+
+这是因为花括号（`{}` ）里面的代码被解析为一系列语句（即 `foo` 被认为是一个标签，而非对象字面量的组成部分）。
+
+所以，记得用圆括号把对象字面量包起来：
+
+```js
+var func = () => ({foo: 1});
+```
 
 ### 4.模板语法和字符串处理
 
@@ -1286,7 +1435,7 @@ mounted () {
 
 [JavaScript 对象属性底层原理](https://www.cnblogs.com/full-stack-engineer/p/9684072.html)
 
-### V8中的快速属性
+##### V8中的快速属性
 
 对象大多数时候表现为Dictionary：以字符串为key，任意object为值。但是...往下看
 
@@ -1526,8 +1675,6 @@ WeakSet中 - `垃圾回收机制会自动回收该对象所占用的内存`
 - yield*：`yield*`后跟一个可遍历的数据结构，会调用其遍历器接口
 - 接受数组作为参数的函数：`for-of`、`Array.from()`、`new Set()`、`new WeakSet()`、`new Map()`、`new WeakMap()`、`Promise.all()`、`Promise.race()`
 
-
-
 #### 生成器
 
 定义：封装多个内部状态的异步编程解决方案
@@ -1663,32 +1810,18 @@ function *createIterator(items) {
 
   - 显示定义：使用`constructor() { super(); }`定义继承父类，没有书写则`显示定义`
 
-  - 子类继承父类：子类使用父类的属性方法时，必须在构造函数中调用
-
-    ```
-    super()
-    ```
-
-    ，否则得不到父类的
-
-    ```
-    this
-    ```
+  - 子类继承父类：子类使用父类的属性方法时，必须在构造函数中调用super()，否则得不到父类的this
 
     - 父类静态属性方法可被子类继承
     - 子类继承父类后，可从`super`上调用父类静态属性方法
-
-- 实例：类相当于
-
-  ```
-  实例的原型
-  ```
+  
+- 实例：类相当于实例的原型
 
   ，所有在类中定义的属性方法都会被实例继承
-
+  
   - 显式指定属性方法：使用`this`指定到自身上(使用`Class.hasOwnProperty()`可检测到)
   - 隐式指定属性方法：直接声明定义在对象原型上(使用`Class.__proto__.hasOwnProperty()`可检测到)
-
+  
 - 表达式
 
   - 类表达式：`const Class = class {}`
@@ -4173,6 +4306,27 @@ person.sayHi();
 
 sayHi函数声明在外部，严格来说并不属于person，但是在调用sayHi时,调用位置会使用person的上下文来引用函数，隐式绑定会把函数调用中的this(即此例sayHi函数中的this)绑定到这个上下文对象（即此例中的person）
 
+注意这种  是在某处进行调用运行  类似于setTimeout的回调  上面是一种引用  这个是一种执行  
+
+```js
+var length = 10;
+function fn() {
+  console.log('this',this)//window
+  console.log(this.length)//10
+}
+var obj = {
+  length: 5,
+  methods: function () {
+    fn();
+  }
+};
+obj.methods();
+```
+
+在obj调用methods方法后，而后调用fn，其中的this具体是值window对象，所以答案为10 ；js中的函数,跟声明的位置有关,跟在哪里调用无关。fn本来就是全局作用域,跟在哪里调用无关
+
+
+
 需要注意的是：对象属性链中只有最后一层会影响到调用位置。
 
 ```js
@@ -4212,6 +4366,8 @@ Hi();
 结果是: Hello,Wiliam.
 
 这是为什么呢，Hi直接指向了sayHi的引用，在调用的时候，跟person没有半毛钱的关系，针对此类问题，我建议大家只需牢牢记住这个格式:XXX.fn();fn()前如果什么都没有，那么肯定不是隐式绑定。
+
+
 
 除了上面这种丢失之外，隐式绑定的丢失是发生在回调函数中(事件回调也是其中一种)，我们来看下面一个例子:
 

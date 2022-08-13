@@ -8,13 +8,13 @@
 <div onClick={this.handleClick.bind(this)}>点我</div>
 ```
 
-React并不是将click事件绑定到了div的真实DOM上，而是在document处监听了所有的事件，当事件发生并且冒泡到document处的时候，React将事件内容封装并交由真正的处理函数运行。这样的方式不仅仅减少了内存的消耗，还能在组件挂在销毁时统一订阅和移除事件。
+React并不是将click事件绑定到了div的真实DOM上，而是在document处监听了所有的事件，当事件发生并且冒泡到document处的时候，React将**事件内容封装并交由真正的处理函数运行**。这样的方式不仅仅减少了内存的消耗，还能在组件挂在销毁时统一订阅和移除事件。
 
-除此之外，冒泡到document上的事件也不是原生的浏览器事件，而是由react自己实现的合成事件（SyntheticEvent）。因此如果不想要是事件冒泡的话应该调用event.preventDefault()方法，而不是调用event.stopProppagation()方法。
+除此之外，冒泡到document上的事件也不是原生的浏览器事件，而是由react自己实现的合成事件（SyntheticEvent）。因此如果不想要是事件冒泡的话应该**调用event.preventDefault()方法**，而不是调用event.stopProppagation()方法。
 
 ![image-20220701085916823](https://s2.loli.net/2022/07/01/4FsyP1ml5Tpgq8w.png)
 
-JSX 上写的事件并没有绑定在对应的真实 DOM 上，而是通过事件代理的方式，将所有的事件都统一绑定在了 `document` 上。这样的方式不仅减少了内存消耗，还能在组件挂载销毁时统一订阅和移除事件。
+JSX 上写的事件并没有绑定在对应的真实 DOM 上，而是通过事件代理的方式，将所有的事件都**统一绑定**在了 `document` 上。这样的方式不仅减少了内存消耗，还能在组件挂载销毁时统一订阅和移除事件。
 
 另外冒泡到 `document` 上的事件也不是原生浏览器事件，而是 React 自己实现的合成事件（SyntheticEvent）。因此我们如果不想要事件冒泡的话，调用 `event.stopPropagation` 是无效的，而应该调用 `event.preventDefault`。
 
@@ -41,11 +41,11 @@ JSX 上写的事件并没有绑定在对应的真实 DOM 上，而是通过事�
 
 ### 3. React.Component 和React.PureComponent 的区别
 
-PureComponent表示一个纯组件，可以用来优化React程序，减少render函数执行的次数，从而提高组件的性能。
+PureComponent表示一个纯组件，可以用来优化React程序，**减少render函数执行的次数，从而提高组件的性能**。
 
-在React中，当prop或者state发生变化时，可以通过在shouldComponentUpdate生命周期函数中执行return false来阻止页面的更新，从而减少不必要的render执行。React.PureComponent会自动执行 shouldComponentUpdate。
+在React中，当prop或者state发生变化时，可以通过在**shouldComponentUpdate**生命周期函数中**执行return false**来阻止页面的更新，从而减少不必要的render执行。React.PureComponent会自动执行 shouldComponentUpdate。
 
-不过，pureComponent中的 shouldComponentUpdate() 进行的是**浅比较**，也就是说如果是引用数据类型的数据，只会比较不是同一个地址，而不会比较这个地址里面的数据是否一致。浅比较会忽略属性和或状态突变情况，其实也就是数据引用指针没有变化，而数据发生改变的时候render是不会执行的。如果需要重新渲染那么就需要重新开辟空间引用数据。PureComponent一般会用在一些纯展示组件上。
+不过，pureComponent中的 shouldComponentUpdate() 进行的是**浅比较**，也就是说如果是引用数据类型的数据，只会比较不是同一个地址，而不会比较这个地址里面的数据是否一致。浅比较会忽略属性和或状态突变情况，其实也就是数据引用指针没有变化，而数据发生改变的时候render是不会执行的。如果需要重新渲染那么就需要重新开辟空间引用数，PureComponent一般会用在一些纯展示组件上。
 
 使用pureComponent的**好处**：当组件更新时，如果组件的props或者state都没有改变，render函数就不会触发。省去虚拟DOM的生成和对比过程，达到提升性能的目的。这是因为react自动做了一层浅比较。
 
@@ -55,7 +55,7 @@ PureComponent表示一个纯组件，可以用来优化React程序，减少rende
 
 > 高阶组件（HOC）是 React 中用于复用组件逻辑的一种高级技巧。HOC 自身不是 React API 的一部分，它是一种基于 React 的组合特性而形成的设计模式。
 
-高阶组件（HOC）就是**一个函数，且该函数接受一个组件作为参数，并返回一个新的组件**，它只是一种组件的设计模式，这种设计模式是由react自身的组合性质必然产生的。我们将它们称为纯组件，因为它们可以接受任何动态提供的子组件，但它们不会修改或复制其输入组件中的任何行为。
+高阶组件（HOC）就是**一个函数，且该函数接受一个组件作为参数，并返回一个新的组件**，它只是一种组件的设计模式，这种设计模式是由react自身的组合性质必然产生的。我们将它们称为纯组件，因为它们可以**接受任何动态提供的子组件**，但它们不会修改或复制其输入组件中的任何行为。
 
 ```js
 // hoc的定义
@@ -259,7 +259,7 @@ class App extends React.Component {
 
 只要父组件重新渲染了，即使传入子组件的 props 未发生变化，那么子组件也会重新渲染，进而触发 render
 
-**（2）重新渲染 render 会做些什么?**
+#### **（2）重新渲染 render 会做些什么?**
 
 - 会对新旧 VNode 进行对比，也就是我们所说的Diff算法。
 - 对新旧两棵树进行一个深度优先遍历，这样每一个节点都会一个标记，在到深度遍历的时候，每遍历到一和个节点，就把该节点和新的节点树进行对比，如果有差异就放到一个对象里面
@@ -267,7 +267,7 @@ class App extends React.Component {
 
 React 的处理 render 的基本思维模式是每次一有变动就会去重新渲染整个应用。在 Virtual DOM 没有出现之前，最简单的方法就是直接调用 innerHTML。Virtual DOM厉害的地方并不是说它比直接操作 DOM 快，而是说不管数据怎么变，都会尽量以最小的代价去更新 DOM。React 将 render 函数返回的虚拟 DOM 树与老的进行比较，从而确定 DOM 要不要更新、怎么更新。当 DOM 树很大时，遍历两棵树进行各种比对还是相当耗性能的，特别是在顶层 setState 一个微小的修改，默认会去遍历整棵树。尽管 React 使用高度优化的 Diff 算法，但是这个过程仍然会损耗性能.
 
-**（3）判断什么时候重新渲染组件**
+#### **（3）判断什么时候重新渲染组件**
 
 组件状态的改变可以因为`props`的改变，或者直接通过`setState`方法改变。组件获得新的状态，然后React决定是否应该重新渲染组件。只要组件的state发生变化，React就会对组件进行重新渲染。这是因为React中的`shouldComponentUpdate`方法默认返回`true`，这就是导致每次更新都重新渲染的原因。
 
@@ -489,11 +489,11 @@ render() {
 }
 ```
 
- 
+
 
 ### 13.对React中Fragment的理解，它的使用场景是什么？
 
-在React中，组件返回的元素只能有一个根元素。为了不添加多余的DOM节点，我们可以使用Fragment标签来包裹所有的元素，Fragment标签不会渲染出任何元素。React官方对Fragment的解释：
+在React中，组件返回的元素只能有一个根元素。**为了不添加多余的DOM节点，我们可以使用Fragment标签来包裹所有的元素，Fragment标签不会渲染出任何元素**。React官方对Fragment的解释：
 
 > React 中的一个常见模式是一个组件返回多个元素。Fragments 允许你将子列表分组，而无需向 DOM 添加额外节点。
 
@@ -747,7 +747,7 @@ Stack Reconciler 没有单独的包，并没有像 Fiber Reconclier 一样抽取
 
 这里的挂载与生命周期一讲中的挂载不同，它是将整个 React 挂载到 ReactDOM.render 之上，就像以下代码中的 App 组件挂载到 root 节点上一样。
 
-```
+```jsx
 class App extends React.Component {
   render() {
     return (
@@ -758,18 +758,18 @@ class App extends React.Component {
 ReactDOM.render(<App />, document.getElementById('root'))
 ```
 
-还记得在 JSX 一讲中所提到的吗？JSX 会被 Babel 编译成 React.creatElemnt 的形式：
+JSX 会被 Babel 编译成 React.creatElemnt 的形式：
 
-```
+```jsx
 ReactDOM.render(React.creatElement(App), document.getElementById('root'))
 ```
 
-但一定要记住，这项工作发生在本地的 Node 进程中，而不是通过浏览器中的 React 完成的。在以往的面试中，就有应聘的同学以为 JSX 是通过 React 完成编译，这是完全不正确的。
+但一定要记住，这项工作发生在本地的 Node 进程中，而不是通过浏览器中的 React 完成的。以为 JSX 是通过 React 完成编译，这是完全不正确的。
 
 ReactDOM.render 调用之后，实际上是**透传参数给 ReactMount.render**。
 
 - ReactDOM 是对外暴露的模块接口；
-- 而 ReactMount 是实际执行者，完成初始化 React 组件的整个过程。
+- 而 **ReactMount** 是实际执行者，完成初始化 React 组件的整个过程。
 
 初始化第一步就是通过 React.creatElement 创建 React Element。不同的组件类型会被构建为不同的 Element：
 
@@ -781,7 +781,7 @@ ReactDOM.render 调用之后，实际上是**透传参数给 ReactMount.render**
 
 这段逻辑在 React 源码中大致是这样的，其中 isInternalComponentType 就是判断当前的组件是否为内部已知类型。
 
-```
+```jsx
 if (typeof element.type === 'string') {
     instance = ReactHostComponent.createInternalComponent(element);
   } else if (isInternalComponentType(element.type)) {
@@ -791,11 +791,11 @@ if (typeof element.type === 'string') {
 }
 ```
 
-到这里仅仅完成了实例化，我们还需要与 React 产生一些联动，比如改变状态、更新界面等。在 setState 一讲中，我们提到在状态变更后，涉及一个变更收集再批量处理的过程。在这里 ReactUpdates 模块就专门**用于批量处理**，而批量处理的前后操作，是由 React 通过建立事务的概念来处理的。
+到这里仅仅完成了实例化，我们还需要与 React 产生一些联动，比如改变状态、更新界面等。在 setState 一讲中，我们提到在状态变更后，涉及一个**变更收集再批量处理**的过程。在这里 **ReactUpdates** 模块就专门**用于批量处理**，而批量处理的前后操作，是由 React 通过**建立事务的概念**来处理的。
 
 React 事务都是基于 Transaction 类继承拓展。每个 Transaction 实例都是一个封闭空间，保持不可变的任务常量，并提供对应的事务处理接口 。一段事务在 React 源码中大致是这样的：
 
-```
+```jsx
 mountComponentIntoNode: function(rootID, container) {
       var transaction = ReactComponent.ReactReconcileTransaction.getPooled();
       transaction.perform(
@@ -817,7 +817,7 @@ mountComponentIntoNode: function(rootID, container) {
 
 上面提到的事务会调用 ReactCompositeComponent.mountComponent 函数进入 React 组件生命周期，它的源码大致是这样的。
 
-```
+```jsx
 if (inst.componentWillMount) {
     inst.componentWillMount();
     if (this._pendingStateQueue) {
@@ -836,7 +836,7 @@ if (inst.componentWillMount) {
 this.updater.enqueueSetState(this, partialState)
 ```
 
-在执行 enqueueSetState 后，会调用 ReactCompositeComponent 实例中的_pendingStateQueue，将新的状态变更加入实例的等待更新状态队列中，再调用ReactUpdates 模块中的 enqueueUpdate 函数执行更新。这个过程会检查更新是否已经在进行中：
+在执行 enqueueSetState 后，会调用 ReactCompositeComponent 实例中的_pendingStateQueue，将**新的状态变更加入实例的等待更新状态队列中**，再调用ReactUpdates 模块中的 enqueueUpdate 函数执行更新。这个过程会检查更新是否已经在进行中：
 
 - 如果是，则把组件加入 dirtyComponents 中；
 - 如果不是，先初始化更新事务，然后把组件加入 dirtyComponents 列表。
@@ -886,7 +886,7 @@ React 的渲染过程大致一致，但协调并不相同，以 React 16 为分�
 
 回到 Stack Reconciler 中，Stack Reconciler 的核心调度方式是递归。调度的基本处理单位是事务，它的事务基类是 Transaction，这里的事务是 React 团队从后端开发中加入的概念。在 React 16 以前，挂载主要通过 ReactMount 模块完成，更新通过 ReactUpdate 模块完成，模块之间相互分离，落脚执行点也是事务。
 
-在 React 16 及以后，协调改为了 Fiber Reconciler。它的调度方式主要有两个特点，第一个是协作式多任务模式，在这个模式下，线程会定时放弃自己的运行权利，交还给主线程，通过requestIdleCallback 实现。第二个特点是策略优先级，调度任务通过标记 tag 的方式分优先级执行，比如动画，或者标记为 high 的任务可以优先执行。Fiber Reconciler的基本单位是 Fiber，Fiber 基于过去的 React Element 提供了二次封装，提供了指向父、子、兄弟节点的引用，为 diff 工作的双链表实现提供了基础。
+在 React 16 及以后，协调改为了 Fiber Reconciler。它的调度方式主要有两个特点，第一个是**协作式多任务模式**，在这个模式下，线程会定时放弃自己的运行权利，交还给主线程，通过requestIdleCallback 实现。第二个特点是策略优先级，调度任务通过标记 tag 的方式分优先级执行，比如动画，或者标记为 high 的任务可以优先执行。Fiber Reconciler的基本单位是 Fiber，Fiber 基于过去的 React Element 提供了二次封装，提供了指向父、子、兄弟节点的引用，为 diff 工作的双链表实现提供了基础。
 
 在新的架构下，整个生命周期被划分为 Render 和 Commit 两个阶段。Render 阶段的执行特点是可中断、可停止、无副作用，主要是通过构造 workInProgress 树计算出 diff。以 current 树为基础，将每个 Fiber 作为一个基本单位，自下而上逐个节点检查并构造 workInProgress 树。这个过程不再是递归，而是基于循环来完成。
 
@@ -1498,7 +1498,7 @@ static getDerivedStateFromProps(nextProps, prevState) {
 
  可以看出，React16 自上而下地对生命周期做了另一种维度的解读：
 
--   **Render 阶段**：用于计算一些必要的状态信息。这个阶段可能会被 React 暂停，这一点和 React16 引入的 Fiber 架构（我们后面会重点讲解）是有关的；
+-   **Render 阶段**：用于计算一些必要的状态信息。这个阶段可能会被 React 暂停，这一点和 React16 引入的 Fiber 架构是有关的；
 -   **Pre-commit阶段**：所谓“commit”，这里指的是“更新真正的 DOM 节点”这个动作。所谓 Pre-commit，就是说我在这个阶段其实还并没有去更新真实的 DOM，不过 DOM 信息已经是可以读取的了；
 -   **Commit 阶段**：在这一步，React 会完成真实 DOM 的更新工作。Commit 阶段，我们可以拿到真实 DOM（包括 refs）。
 
@@ -1970,7 +1970,7 @@ import { Switch, Route} from 'react-router-dom'
 
 ## 状态管理
 
-### 1\.对 Redux 的理解，主要解决什么问题
+### 1\.对Redux的理解，主要解决什么问题
 
 React是视图层框架。Redux是一个用来管理数据状态和UI状态的JavaScript应用工具。随着JavaScript单页应用（SPA）开发日趋复杂， JavaScript需要管理比任何时候都要多的state（状态）， Redux就是降低管理难度的。（Redux支持React、Angular、jQuery甚至纯JavaScript）。
 
@@ -1980,11 +1980,13 @@ React是视图层框架。Redux是一个用来管理数据状态和UI状态的Ja
 
 Redux 提供了一个叫 store 的统一仓储库，组件通过 dispatch 将 state 直接传入store，不用通过其他的组件。并且组件通过 subscribe 从 store获取到 state 的改变。使用了 Redux，所有的组件都可以从 store 中获取到所需的 state，他们也能从store 获取到 state 的改变。这比组件之间互相传递数据清晰明朗的多。
 
-**主要解决的问题：** 单纯的Redux只是一个状态机，是没有UI呈现的，react- redux作用是将Redux的状态机和React的UI呈现绑定在一起，当你dispatch action改变state的时候，会自动更新页面。
+**主要解决的问题：** **单纯的Redux只是一个状态机，是没有UI呈现的，react- redux作用是将Redux的状态机和React的UI呈现绑定在一起**，当你dispatch action改变state的时候，会自动更新页面。
 
 ### 2.Redux 原理及工作流程
 
-**（1）原理** Redux源码主要分为以下几个模块文件
+#### **（1）原理** 
+
+Redux源码主要分为以下几个模块文件
 
 -   compose.js 提供从右到左进行函数式编程
 -   createStore.js 提供作为生成唯一store的函数
@@ -2055,7 +2057,7 @@ export default function createStore(reducer, initialState, middleFunc) {
 
 ```
 
-**（2）工作流程**
+#### **（2）工作流程**
 
 -   const store= createStore（fn）生成数据;
 -   action: {type: Symble('action01), payload:'payload' }定义行为;
@@ -2069,6 +2071,14 @@ export default function createStore(reducer, initialState, middleFunc) {
 -   State—旦有变化，Store就会调用监听函数，来更新View
 
 以 store 为核心，可以把它看成数据存储中心，但是他要更改数据的时候不能直接修改，数据修改更新的角色由Reducers来担任，store只做存储，中间人，当Reducers的更新完成以后会通过store的订阅来通知react component，组件把新的状态重新获取渲染，组件中也能主动发送action，创建action后这个动作是不会执行的，所以要dispatch这个action，让store通过reducers去做更新React Component 就是react的每个组件。
+
+#### 单向数据流
+
+![Redux数据流向图](https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/3/8/170b7ee3c499efaa~tplv-t2oaga2asx-zoom-in-crop-mark:3024:0:0:0.awebp)
+
+图中容易看出所有的东西都是以store为核心,我们把它看成数据存储中心,但是他要更改数据的时候不能直接修改,数据修改**更新的角色由Reducers来担任**,	**store只做存储,中间人**,当**Reducers的更新完成**以后会通过**store的订阅来通知react component** ,组件获取新的状态，进行重新渲染,组件中我们也能**主动发送action,**创建action后这个动作是不会执行的,所以要dispatch这个action,让**store通过reducers去做更新** React Component 就是react的每个组件
+
+
 
 ### 3.Redux 和 Vuex 有什么区别，它们的共同思想
 
@@ -2415,7 +2425,273 @@ connect 通过 context获取 Provider 中的 store，通过 `store.getState()` �
 
 connect缓存了store tree中state的状态，通过当前state状态 和变更前 state 状态进行比较，从而确定是否调用 `this.setState()`方法触发Connect及其子组件的重新渲染
 
-### 11.mobox 和 redux 有什么区别？
+### 11.mobx的使用
+
+#### 响应式对象
+
+MobX 通过 `makeObservable` 方法来构造响应式对象，传入的对象属性会通过  `Proxy` 代理，与 Vue 类似，在 6.0 版本之前使用的是   `Object.defineProperty`  API，当然 6.0 也提供了降级方案。
+
+```js
+import { configure, makeObservable, observable, action, computed } from 'mobx'
+
+// 使用该配置，可以将 Proxy 降级为 Object.defineProperty
+configure({ useProxies: "never" });
+
+// 构造响应对象
+const store = makeObservable(
+  // 需要代理的响应对象
+  {
+    count: 0,
+    get double() {
+      return this.count * 2
+    },
+    increment() {
+      this.count += 1
+    },
+    decrement() {
+      this.count -= 1
+    }
+  },
+  // 对各个属性进行包装，用于标记该属性的作用
+  {
+    count: observable, // 需要跟踪的响应属性
+    double: computed,  // 计算属性
+    increment: action, // action 调用后，会修改响应对象
+    decrement: action, // action 调用后，会修改响应对象
+  }
+)
+```
+
+我们在看看之前版本的 MobX，使用装饰器的写法：
+
+```js
+class Store {
+  @observable count = 0
+  constructor() {
+    makeObservable(this)
+  }
+  @action increment() {
+    this.count++;
+  }
+  @action decrement() {
+    this.count--;
+  }
+  @computed get double() {
+    return this.count * 2
+  }
+}
+
+const store = new Store()
+```
+
+这么看起来，好像写法并没有得到什么简化，好像比写装饰器还要复杂点。下面我们看看 6.0 版本一个更强大的 API：`makeAutoObservable`。
+
+`makeAutoObservable` 是一个更强大的 `makeObservable`，可以自动为属性加上对象的包装函数，上手成本直线下降。
+
+```js
+import { makeAutoObservable } from 'mobx'
+
+const store = makeAutoObservable({
+  count: 0,
+  get double() {
+    return this.count * 2
+  },
+  increment() {
+    this.count += 1
+  },
+  decrement() {
+    this.count -= 1
+  }
+})
+```
+
+#### 计算属性
+
+MobX 的属性与 Vue 的 `computed` 一样，在 `makeAutoObservable` 中就是一个 `getter`，`getter` 依赖的值一旦发生变化，`getter` 本身的返回值也会跟随变化。
+
+```js
+import { makeAutoObservable } from 'mobx'
+
+const store = makeAutoObservable({
+  count: 0,
+  get double() {
+    return this.count * 2
+  }
+})
+```
+
+当 `store.count` 为 1 时，调用 `store.double` 会返回 2。
+
+#### 修改行为
+
+当我们需要修改 store 上的响应属性时，我们可以通过直接重新赋值的方式修改，但是这样会得到 MobX 的警告⚠️。
+
+```js
+const store = makeAutoObservable({
+  count: 0
+});
+
+document.getElementById("increment").onclick = function () {
+  store.count += 1
+}
+```
+
+![warn](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/fb4328c95ca9477b8df74bfa5d484bd9~tplv-k3u1fbpfcp-zoom-in-crop-mark:3024:0:0:0.awebp)
+
+MobX 会提示，在修改响应式对象的属性时，需要通过 action 的方式修改。虽然直接修改也能生效，但是这样会让 MobX 状态的管理比较混乱，而且将状态修改放到 action 中，能够让 MobX 在内部的事务流程中进行修改，以免拿到的某个属性还处于中间态，最后计算的结果不够准确。
+
+`makeAutoObservable` 中的所有方法都会被处理成 **action**。
+
+```js
+import { makeAutoObservable } from 'mobx'
+
+const store = makeAutoObservable({
+  count: 0,
+  get double() {
+    return this.count * 2
+  },
+  increment() { // action
+    this.count += 1
+  },
+  decrement() { // action
+    this.count -= 1
+  }
+})
+```
+
+不同于 Vuex，将状态的修改划分为 mutation 和 action，同步修改放到 mutation 中，异步的操作放到 action 中。在 MobX 中，不管是同步还是异步操作，都可以放到 action 中，只是异步操作在修改属性时，需要将赋值操作放到 `runInAction` 中。
+
+```js
+import { runInAction, makeAutoObservable } from 'mobx'
+
+const store = makeAutoObservable({
+  count: 0,
+  async initCount() {
+    // 模拟获取远程的数据
+    const count = await new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(10)
+      }, 500)
+    })
+    // 获取数据后，将赋值操作放到 runInAction 中
+    runInAction(() => {
+      this.count = count
+    })
+  }
+})
+
+store.initCount()
+```
+
+如果不调用 `runInAction` ，则可以直接调用本身已经存在的 action。
+
+```js
+import { runInAction, makeAutoObservable } from 'mobx'
+
+const store = makeAutoObservable({
+  count: 0,
+  setCount(count) {
+    this.count = count
+  },
+  async initCount() {
+    // 模拟获取远程的数据
+    const count = await new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(10)
+      }, 500)
+    })
+    // 获取数据后，调用已有的 action
+    this.setCount(count)
+  }
+})
+
+store.initCount()
+```
+
+#### 监听对象变更
+
+无论是在 React 还是在小程序中想要引入 MobX，都需要在对象变更的时候，通知调用原生的 `setState/setData` 方法，将状态同步到视图上。
+
+通过 `autorun` 方法可以实现这个能力，我们可以把 `autorun` 理解为 React Hooks 中的 `useEffect`。每当 store 的响应属性发生修改时，传入 `autorun` 的方法（`effect`）就会被调用一次。
+
+```js
+import { autorun, makeAutoObservable } from 'mobx'
+
+const store = makeAutoObservable({
+  count: 0,
+  setCount(count) {
+    this.count = count
+  },
+  increment() {
+    this.count++
+  },
+  decrement() {
+    this.count--
+  }
+})
+
+document.getElementById("increment").onclick = function () {
+  store.count++
+}
+
+const $count = document.getElementById("count")
+$count.innerText = `${store.count}`
+autorun(() => {
+  $count.innerText = `${store.count}`
+})
+复制代码
+```
+
+每当  `button#increment` 按钮被点击的时候，`span#count` 内的值就会自动进行同步。👉[查看完整代码](https://link.juejin.cn?target=https%3A%2F%2Fcodesandbox.io%2Fembed%2Fmobx6-d9bex)。
+
+![效果演示](https://s2.loli.net/2022/08/10/prm9iBeoZyjOEHh.webp)
+
+除了 `autorun` ，MobX 还提供了更精细化的监听方法：`reaction`、 `when`。
+
+```js
+const store = makeAutoObservable({
+  count: 0,
+  setCount(count) {
+    this.count = count
+  },
+  increment() {
+    this.count++
+  },
+  decrement() {
+    this.count--
+  }
+})
+
+// store 发生修改立即调用 effect
+autorun(() => {
+  $count.innerText = `${store.count}`
+});
+
+// 第一个方法的返回值修改后才会调用后面的 effect
+reaction(
+  // 表示 store.count 修改后才会调用
+  () => store.count,
+  // 第一个参数为当前值，第二个参数为修改前的值
+  // 有点类似与 Vue 中的 watch
+  (value, prevValue) => {
+    console.log('diff', value - prevValue)
+  }
+);
+
+// 第一个方法的返回值为真，立即调用后面的 effect
+when(() => store.count > 10, () => {
+  console.log(store.count)
+})
+// when 方法还能返回一个 promise
+(async function() {
+  await when(() => store.count > 10)
+  console.log('store.count > 10')
+})()
+```
+
+
+
+#### mobox 和 redux 有什么区别？
 
 **（1）共同点**
 
@@ -2458,13 +2734,857 @@ Mobx是一个透明函数响应式编程的状态管理库，它使得状态管�
 -   mobx相对来说比较简单，在其中有很多的抽象，mobx更多的使用面向对象的编程思维;redux会比较复杂，因为其中的函数式编程思想掌握起来不是那么容易，同时需要借助一系列的中间件来处理异步和副作用
 -   mobx中有更多的抽象和封装，调试会比较困难，同时结果也难以预测;而redux提供能够进行时间回溯的开发工具，同时其纯函数以及更少的抽象，让调试变得更加的容易
 
-### 12.dva的作用
+### 12.dva的使用
 
-###### [一文彻底搞懂 DvaJS 原理](https://juejin.cn/post/6963466553601835044)
+[一文彻底搞懂 DvaJS 原理](https://juejin.cn/post/6963466553601835044)
+
+#### Dva 是什么
+
+dva 首先是一个基于[redux](https://link.juejin.cn?target=https%3A%2F%2Fgithub.com%2Freduxjs%2Fredux)和[redux-saga](https://link.juejin.cn?target=https%3A%2F%2Fgithub.com%2Fredux-saga%2Fredux-saga)的数据流方案，然后为了简化开发体验，dva 还额外内置了[react-router](https://link.juejin.cn?target=https%3A%2F%2Fgithub.com%2FReactTraining%2Freact-router)和[fetch](https://link.juejin.cn?target=https%3A%2F%2Fgithub.com%2Fgithub%2Ffetch)，所以也可以理解为一个轻量级的应用框架。
+
+#### Dva 解决的问题
+
+> 经过一段时间的自学或培训，大家应该都能理解 redux 的概念，并认可这种数据流的控制可以让应用更可控，以及让逻辑更清晰。但随之而来通常会有这样的疑问：概念太多，并且 reducer, saga, action 都是分离的（分文件）。
+
+- 文件切换问题。redux 的项目通常要分 reducer, action, saga, component 等等，他们的分目录存放造成的文件切换成本较大。
+- 不便于组织业务模型 (或者叫 domain model) 。比如我们写了一个 userlist 之后，要写一个 productlist，需要复制很多文件。
+- saga 创建麻烦，每监听一个 action 都需要走 fork -> watcher -> worker 的流程
+- entry 创建麻烦。可以看下这个[redux entry](https://link.juejin.cn?target=https%3A%2F%2Fgithub.com%2Fant-design%2Fantd-init%2Fblob%2Fmaster%2Fboilerplates%2Fredux%2Fsrc%2Fentries%2Findex.js)的例子，除了 redux store 的创建，中间件的配置，路由的初始化，Provider 的 store 的绑定，saga 的初始化，还要处理 reducer, component, saga 的 HMR 。这就是真实的项目应用 redux 的例子，看起来比较复杂。
+
+#### Dva 的优势
+
+- **易学易用**，仅有 6 个 api，对 redux 用户尤其友好，[配合 umi 使用](https://link.juejin.cn?target=https%3A%2F%2Fumijs.org%2Fguide%2Fwith-dva.html)后更是降低为 0 API
+- **elm 概念**，通过 reducers, effects 和 subscriptions 组织 model
+- **插件机制**，比如[dva-loading](https://link.juejin.cn?target=https%3A%2F%2Fgithub.com%2Fdvajs%2Fdva%2Ftree%2Fmaster%2Fpackages%2Fdva-loading)可以自动处理 loading 状态，不用一遍遍地写 showLoading 和 hideLoading
+- **支持 HMR**，基于[babel-plugin-dva-hmr](https://link.juejin.cn?target=https%3A%2F%2Fgithub.com%2Fdvajs%2Fbabel-plugin-dva-hmr)实现 components、routes 和 models 的 HMR
+
+#### Dva 的劣势
+
+- **未来不确定性高。**[dva@3 前年提出计划后，官方几乎不再维护](https://link.juejin.cn?target=https%3A%2F%2Fgithub.com%2Fdvajs%2Fdva%2Fissues%2F2208)。
+
+- 对于绝大多数不是特别复杂的场景来说，**目前可以被 Hooks 取代**
+
+#### Dva 的适用场景
+
+- 业务场景：组件间通信多，业务复杂，需要引入状态管理的项目
+- 技术场景：使用 React Class Component 写的项目
+
+#### Dva 核心概念
+
+- **基于 Redux 理念的数据流向**。 用户的交互或浏览器行为通过 dispatch 发起一个 action，如果是同步行为会直接通过 Reducers 改变 State，如果是异步行为（可以称为副作用）会先触发 Effects 然后流向 Reducers 最终改变 State。
+
+![img](https://s2.loli.net/2022/08/10/ErdIJVQkACnvy1W.webp)
+
+- **基于 Redux 的基本概念**。包括：
+  - State 数据，通常为一个 JavaScript 对象，操作的时候每次都要当作不可变数据（immutable data）来对待，保证每次都是全新对象，没有引用关系，这样才能保证 State 的独立性，便于测试和追踪变化。
+  - Action 行为，一个普通 JavaScript 对象，它是改变 State 的唯一途径。
+  - dispatch，一个用于触发 action 改变 State 的函数。
+  - Reducer 描述如何改变数据的纯函数，接受两个参数：已有结果和 action 传入的数据，通过运算得到新的 state。
+  - Effects（Side Effects） 副作用，常见的表现为异步操作。dva 为了控制副作用的操作，底层引入了[redux-sagas](https://link.juejin.cn?target=http%3A%2F%2Fsuperraytin.github.io%2Fredux-saga-in-chinese)做异步流程控制，由于采用了[generator 的相关概念](https://link.juejin.cn?target=http%3A%2F%2Fwww.ruanyifeng.com%2Fblog%2F2015%2F04%2Fgenerator.html)，所以将异步转成同步写法，从而将 effects 转为纯函数。
+  - Connect 一个函数，绑定 State 到 View
+- **其他概念**
+  - Subscription，订阅，从**源头**获取数据，然后根据条件 dispatch 需要的 action，概念来源于[elm](https://link.juejin.cn?target=https%3A%2F%2Felm-lang.org%2Fnews%2Ffarewell-to-frp)。数据源可以是当前的时间、服务器的 websocket 连接、keyboard 输入、geolocation 变化、history 路由变化等等。
+  - Router，前端路由，dva 实例提供了 router 方法来控制路由，使用的是[react-router](https://link.juejin.cn?target=https%3A%2F%2Fgithub.com%2Freactjs%2Freact-router)。
+  - Route Components，跟数据逻辑无关的组件。通常需要 connect Model 的组件都是 Route Components，组织在/routes/目录下，而/components/目录下则是纯组件（Presentational Components，详见[组件设计方法](https://link.juejin.cn?target=https%3A%2F%2Fgithub.com%2Fdvajs%2Fdva-docs%2Fblob%2Fmaster%2Fv1%2Fzh-cn%2Ftutorial%2F04-%E7%BB%84%E4%BB%B6%E8%AE%BE%E8%AE%A1%E6%96%B9%E6%B3%95.md)）
+
+#### Dva 应用最简结构
+
+##### 不带 Model
+
+```js
+import dva from 'dva';
+const App = () => <div>Hello dva</div>;
+// 创建应用
+const app = dva();
+// 注册视图
+app.router(() => <App />);
+// 启动应用
+app.start('#root');
+```
+
+##### 带 Model
+
+```js
+// 创建应用
+const app = dva();
+app.use(createLoading()) // 使用插件
+// 注册 Model
+app.model({
+  namespace: 'count',
+  state: 0,
+  reducers: {
+    add(state) { return state + 1 },
+  },
+  effects: {
+    *addAfter1Second(action, { call, put }) {
+      yield call(delay, 1000);
+      yield put({ type: 'add' });
+    },
+  },
+});
+// 注册视图
+app.router(() => <ConnectedApp />);
+// 启动应用
+app.start('#root');
+```
+
+#### Dva底层原理和部分关键实现
+
+##### 背景介绍
+
+1. 整个 dva 项目使用 lerna 管理的，在每个 package 的 package.json 中找到模块对应的入口文件，然后查看对应源码。
+2. dva 是个函数，返回一了个 app 的对象。
+3. 目前 dva 的源码核心部分包含两部分，dva 和 dva-core。前者用高阶组件 React-redux 实现了 view 层，后者是用 redux-saga 解决了 model 层。
+
+##### [dva](https://link.juejin.cn?target=https%3A%2F%2Fgithub.com%2Fdvajs%2Fdva%2Fblob%2Fmaster%2Fpackages%2Fdva%2Fsrc%2Findex.js)
+
+dva 做了三件比较重要的事情：
+
+1. 代理 router 和 start 方法，实例化 app 对象
+2. 调用 dva-core 的 start 方法，同时渲染视图
+3. 使用 react-redux 完成了 react 到 redux 的连接。
+
+```js
+// dva/src/index.js
+export default function (opts = {}) {
+  // 1. 使用 connect-react-router 和 history 初始化 router 和 history
+  // 通过添加 redux 的中间件 react-redux-router，强化了 history 对象的功能
+ const history = opts.history || createHashHistory();
+  const createOpts = {
+    initialReducer: {
+      router: connectRouter(history),
+    },
+    setupMiddlewares(middlewares) {
+      return [routerMiddleware(history), ...middlewares];
+    },
+    setupApp(app) {
+      app._history = patchHistory(history);
+    },
+  };
+  // 2. 调用 dva-core 里的 create 方法 ，函数内实例化一个 app 对象。
+ const app = create(opts, createOpts);
+  const oldAppStart = app.start;
+  // 3. 用自定义的 router 和 start 方法代理
+ app.router = router;
+  app.start = start;
+  return app;
+  // 3.1 绑定用户传递的 router 到 app._router
+ function router(router) {
+    invariant(
+      isFunction(router),
+      `[app.router] router should be function, but got ${typeof router}`,
+    );
+    app._router = router;
+  }
+  // 3.2 调用 dva-core 的 start 方法，并渲染视图
+ function start(container) {
+    // 对 container 做一系列检查，并根据 container 找到对应的DOM节点
+    if (!app._store) {
+      oldAppStart.call(app);
+    }
+    const store = app._store;
+    // 为HMR暴露_getProvider接口
+ // ref: https://github.com/dvajs/dva/issues/469
+ app._getProvider = getProvider.bind(null, store, app);
+    // 渲染视图
+ if (container) {
+      render(container, store, app, app._router);
+      app._plugin.apply('onHmr')(render.bind(null, container, store, app));
+    } else {
+      return getProvider(store, this, this._router);
+    }
+  }
+}
+function getProvider(store, app, router) {
+  const DvaRoot = extraProps => (
+    <Provider store={store}>{router({ app, history: app._history, ...extraProps })}</Provider>
+  );
+  return DvaRoot;
+}
+function render(container, store, app, router) {
+  const ReactDOM = require('react-dom'); // eslint-disable-line
+ ReactDOM.render(React.createElement(getProvider(store, app, router)), container);
+
+}
+```
+
+我们同时可以发现 app 是通过 create(opts, createOpts)进行初始化的，其中 opts 是暴露给使用者的配置，createOpts 是暴露给开发者的配置，真实的 create 方法在 dva-core 中实现
+
+##### [dva-core](https://link.juejin.cn?target=https%3A%2F%2Fgithub.com%2Fdvajs%2Fdva%2Fblob%2Fmaster%2Fpackages%2Fdva-core%2Fsrc%2Findex.js)
+
+dva-core 则完成了核心功能：
+
+1. 通过 create 方法完成 app 实例的构造，并暴露 use、model 和 start 三个接口
+2. 通过 start 方法完成
+
+- store 的初始化
+- models 和 effects 的封装，收集并运行 sagas
+- 运行所有的 model.subscriptions
+- 暴露 app.model、app.unmodel、app.replaceModel 三个接口
+
+dva-core create
+
+**作用：** 完成 app 实例的构造，并暴露 use、model 和 start 三个接口
+
+```js
+// dva-core/src/index.js
+const dvaModel = {
+  namespace: '@@dva',
+  state: 0,
+  reducers: {
+    UPDATE(state) {
+      return state + 1;
+    },
+  },
+};
+export function create(hooksAndOpts = {}, createOpts = {}) {
+  const { initialReducer, setupApp = noop } = createOpts; // 在dva/index.js中构造了createOpts对象
+  const plugin = new Plugin(); // dva-core中的插件机制，每个实例化的dva对象都包含一个plugin对象
+  plugin.use(filterHooks(hooksAndOpts)); // 将dva(opts)构造参数opts上与hooks相关的属性转换成一个插件
+  const app = {
+    _models: [prefixNamespace({ ...dvaModel })],
+    _store: null,
+    _plugin: plugin,
+    use: plugin.use.bind(plugin), // 暴露的use方法，方便编写自定义插件
+    model, // 暴露的model方法，用于注册model
+    start, // 原本的start方法，在应用渲染到DOM节点时通过oldStart调用
+  };
+  return app;
+}
+```
+
+dva-core start
+
+**作用：**
+
+1. 封装models 和 effects ，收集并运行 sagas
+2. 完成store 的初始化
+3. 运行所有的model.subscriptions
+4. 暴露app.model、app.unmodel、app.replaceModel三个接口
+
+```js
+function start() {
+  const sagaMiddleware = createSagaMiddleware();
+  const promiseMiddleware = createPromiseMiddleware(app);
+  app._getSaga = getSaga.bind(null);
+  const sagas = [];
+  const reducers = { ...initialReducer };
+  for (const m of app._models) {
+    // 把每个 model 合并为一个reducer，key 是 namespace 的值，value 是 reducer 函数
+    reducers[m.namespace] = getReducer(m.reducers, m.state, plugin._handleActions);
+    if (m.effects) {
+      // 收集每个 effects 到 sagas 数组
+      sagas.push(app._getSaga(m.effects, m, onError, plugin.get('onEffect'), hooksAndOpts));
+    }
+  }
+  // 初始化 Store
+  app._store = createStore({
+    reducers: createReducer(),
+    initialState: hooksAndOpts.initialState || {},
+    plugin,
+    createOpts,
+    sagaMiddleware,
+    promiseMiddleware,
+  });
+  const store = app._store;
+  // Extend store
+  store.runSaga = sagaMiddleware.run;
+  store.asyncReducers = {};
+  // Execute listeners when state is changed
+  const listeners = plugin.get('onStateChange');
+  for (const listener of listeners) {
+    store.subscribe(() => {
+      listener(store.getState());
+    });
+  }
+  // Run sagas, 调用 Redux-Saga 的 createSagaMiddleware 创建 saga中间件，调用中间件的 run 方法所有收集起来的异步方法
+  // run方法监听每一个副作用action，当action发生的时候，执行对应的 saga
+  sagas.forEach(sagaMiddleware.run);
+  // Setup app
+  setupApp(app);
+  // 运行 subscriptions
+  const unlisteners = {};
+  for (const model of this._models) {
+    if (model.subscriptions) {
+      unlisteners[model.namespace] = runSubscription(model.subscriptions, model, app, onError);
+    }
+  }
+  // 暴露三个 Model 相关的接口，Setup app.model and app.unmodel
+  app.model = injectModel.bind(app, createReducer, onError, unlisteners);
+  app.unmodel = unmodel.bind(app, createReducer, reducers, unlisteners);
+  app.replaceModel = replaceModel.bind(app, createReducer, reducers, unlisteners, onError);
+  /**
+   * Create global reducer for redux.
+   *
+   * @returns {Object}
+   */
+  function createReducer() {
+    return reducerEnhancer(
+      combineReducers({
+        ...reducers,
+        ...extraReducers,
+        ...(app._store ? app._store.asyncReducers : {}),
+      }),
+    );
+  }
+}
+}
+```
+
+#### 路由
+
+在前面的 dva.start 方法中我们看到了 createOpts，并了解到在 dva-core 的 start 中的不同时机调用了对应方法。
+
+```js
+import * as routerRedux from 'connected-react-router';
+const { connectRouter, routerMiddleware } = routerRedux;
+const createOpts = {
+  initialReducer: {
+    router: connectRouter(history),
+  },
+  setupMiddlewares(middlewares) {
+    return [routerMiddleware(history), ...middlewares];
+  },
+  setupApp(app) {
+    app._history = patchHistory(history);
+  },
+};
+```
+
+其中 initialReducer 和 setupMiddlewares 在初始化 store 时调用，然后才调用 setupApp
+
+可以看见针对 router 相关的 reducer 和中间件配置，其中 connectRouter 和 routerMiddleware 均使用了 connected-react-router 这个库，其主要思路是：把路由跳转也当做了一种特殊的 action。
+
+#### Dva 与 React、React-Redux、Redux-Saga 之间的差异
+
+##### 原生 React
+
+![img](https://s2.loli.net/2022/08/10/ezZa3oU6L421trs.webp)按照 React 官方指导意见, 如果多个 Component 之间要发生交互, 那么状态(即: 数据)就维护在这些 Component 的最小公约父节点上, 也即是
+
+以及 本身不维持任何 state, 完全由父节点 传入 props 以决定其展现, 是一个纯函数的存在形式, 即: Pure Component
+
+##### React-Redux
+
+![img](https://s2.loli.net/2022/08/10/Upg4QKf31idrXJ5.webp)与上图相比, 几个明显的改进点:
+
+1. 状态及页面逻辑从 里面抽取出来, 成为独立的 store, 页面逻辑就是 reducer
+2. 及都是 Pure Component, 通过 connect 方法可以很方便地给它俩加一层 wrapper 从而建立起与 store 的联系: 可以通过 dispatch 向 store 注入 action, 促使 store 的状态进行变化, 同时又订阅了 store 的状态变化, 一旦状态变化, 被 connect 的组件也随之刷新
+3. 使用 dispatch 往 store 发送 action 的这个过程是可以被拦截的, 自然而然地就可以在这里增加各种 Middleware, 实现各种自定义功能, eg: logging
+
+这样一来, 各个部分各司其职, 耦合度更低, 复用度更高, 扩展性更好。
+
+##### Redux-Saga
+
+![img](https://s2.loli.net/2022/08/10/GusO4Wo8RqNdltk.webp)因为我们可以使用 Middleware 拦截 action, 这样一来异步的网络操作也就很方便了, 做成一个 Middleware 就行了, 这里使用 redux-saga 这个类库, 举个栗子:
+
+1. 点击创建 Todo 的按钮, 发起一个 type == addTodo 的 action
+2. saga 拦截这个 action, 发起 http 请求, 如果请求成功, 则继续向 reducer 发一个 type == addTodoSucc 的 action, 提示创建成功, 反之则发送 type == addTodoFail 的 action 即可
+
+##### Dva
+
+![img](https://s2.loli.net/2022/08/10/GCQ7J8qT5cjBRlz.webp)有了前面三步的铺垫, Dva 的出现也就水到渠成了, 正如 Dva 官网所言, Dva 是基于 React + Redux + Saga 的最佳实践, 对于提升编码体验有三点贡献：
+
+1. 把 store 及 saga 统一为一个 model 的概念, 写在一个 js 文件里面
+2. 增加了一个 Subscriptions, 用于收集其他来源的 action, 比如键盘操作等
+3. model 写法很简约, 类似于 DSL（领域特定语言），可以提升编程的沉浸感，进而提升效率
+
+**约定大于配置**
+
+```js
+app.model({
+  namespace: 'count',
+  state: {
+    record: 0,
+    current: 0,
+  },
+  reducers: {
+    add(state) {
+      const newCurrent = state.current + 1;
+      return { ...state,
+        record: newCurrent > state.record ? newCurrent : state.record,
+        current: newCurrent,
+      };
+    },
+    minus(state) {
+      return { ...state, current: state.current - 1};
+    },
+  },
+  effects: {
+    *add(action, { call, put }) {
+      yield call(delay, 1000);
+      yield put({ type: 'minus' });
+    },
+  },
+  subscriptions: {
+    keyboardWatcher({ dispatch }) {
+      key('⌘+up, ctrl+up', () => { dispatch({type:'add'}) });
+    },
+  },
+});
+```
 
 
 
 ## Hooks
+
+[React 全部 Hooks 使用大全 （包含 React v18 版本 ）](https://juejin.cn/post/7118937685653192735#heading-5)
+
+### 基本用法和注意事项
+
+#### 数据更新驱动
+
+##### useState
+
+useState 可以使函数组件像类组件一样拥有 state，函数组件通过 useState 可以让组件重新渲染，更新视图。
+
+###### **useState 基础介绍：**
+
+```js
+const [ ①state , ②dispatch ] = useState(③initData)
+```
+
+① state，目的提供给 UI ，作为渲染视图的数据源。
+
+② dispatchAction 改变 state 的函数，可以理解为推动函数组件渲染的渲染函数。
+
+③ initData 有两种情况，第一种情况是非函数，将作为 state 初始化的值。 第二种情况是函数，函数的返回值作为 useState 初始化的值。
+
+###### **useState 基础用法：**
+
+```js
+const DemoState = (props) => {
+   /* number为此时state读取值 ，setNumber为派发更新的函数 */
+   let [number, setNumber] = useState(0) /* 0为初始值 */
+   return (<div>
+       <span>{ number }</span>
+       <button onClick={ ()=> {
+         setNumber(number+1)
+         console.log(number) /* 这里的number是不能够即使改变的  */
+       } } ></button>
+   </div>)
+}
+```
+
+###### **useState 注意事项：**
+
+① **在函数组件一次执行上下文中，state 的值是固定不变的。**
+
+```js
+function Index(){
+    const [ number, setNumber ] = React.useState(0)
+    const handleClick = () => setInterval(()=>{
+        // 此时 number 一直都是 0
+        setNumber(number + 1 ) 
+    },1000)
+    return <button onClick={ handleClick } > 点击 { number }</button>
+}
+```
+
+② 如果两次 dispatchAction 传入相同的 state 值，那么组件就不会更新。
+
+```js
+export default function Index(){
+    const [ state  , dispatchState ] = useState({ name:'alien' })
+    const  handleClick = ()=>{ // 点击按钮，视图没有更新。
+        state.name = 'Alien'
+        dispatchState(state) // 直接改变 `state`，在内存中指向的地址相同。
+    }
+    return <div>
+         <span> { state.name }</span>
+        <button onClick={ handleClick }  >changeName++</button>
+    </div>
+}
+```
+
+③ 当触发 dispatchAction 在当前执行上下文中获取不到最新的 state, 只有再下一次组件 rerender 中才能获取到。
+
+##### useReducer
+
+useReducer 是 react-hooks 提供的能够在无状态组件中运行的类似redux的功能 api 。
+
+###### **useReducer 基础介绍：**
+
+```js
+const [ ①state , ②dispatch ] = useReducer(③reducer)
+```
+
+① 更新之后的 state 值。
+
+② 派发更新的 dispatchAction 函数, 本质上和 useState 的 dispatchAction 是一样的。
+
+③ 一个函数 reducer ，我们可以认为它就是一个 redux 中的 reducer , reducer的参数就是常规reducer里面的state和action, 返回改变后的state, 这里有一个需要注意的点就是：**如果返回的 state 和之前的 state ，内存指向相同，那么组件将不会更新。**
+
+###### **useReducer 基础用法：**
+
+```js
+const DemoUseReducer = ()=>{
+    /* number为更新后的state值,  dispatchNumbner 为当前的派发函数 */
+   const [ number , dispatchNumbner ] = useReducer((state,action)=>{
+       const { payload , name  } = action
+       /* return的值为新的state */
+       switch(name){
+           case 'add':
+               return state + 1
+           case 'sub':
+               return state - 1 
+           case 'reset':
+             return payload       
+       }
+       return state
+   },0)
+   return <div>
+      当前值：{ number }
+      { /* 派发更新 */ }
+      <button onClick={()=>dispatchNumbner({ name:'add' })} >增加</button>
+      <button onClick={()=>dispatchNumbner({ name:'sub' })} >减少</button>
+      <button onClick={()=>dispatchNumbner({ name:'reset' ,payload:666 })} >赋值</button>
+      { /* 把dispatch 和 state 传递给子组件  */ }
+      <MyChildren  dispatch={ dispatchNumbner } State={{ number }} />
+   </div>
+}
+```
+
+
+
+#### 执行副作用
+
+#####  useEffect
+
+React hooks也提供了 api ，用于弥补函数组件没有生命周期的缺陷。其本质主要是运用了 hooks 里面的 useEffect ， useLayoutEffect，还有 useInsertionEffect。其中最常用的就是 useEffect 。我们首先来看一下 useEffect 的使用。
+
+###### **useEffect 基础介绍：**
+
+```js
+useEffect(()=>{
+    return destory
+},dep)
+```
+
+useEffect 第一个参数 callback, 返回的 destory ， destory **作为下一次callback执行之前调用，用于清除上一次 callback 产生的副作用**。
+
+第二个参数作为依赖项，是一个数组，可以有多个依赖项，依赖项改变，执行上一次callback 返回的 destory ，和执行新的 effect 第一个参数 callback 。
+
+对于 useEffect 执行， React 处理逻辑是采用**异步调用** ，对于每一个 effect 的 callback， React 会向 setTimeout回调函数一样，放入任务队列，等到主线程任务完成，DOM 更新，js 执行完成，视图绘制完毕，才执行。所以 effect 回调函数不会阻塞浏览器绘制视图。
+
+###### **useEffect 基础用法：**
+
+```js
+/* 模拟数据交互 */
+function getUserInfo(a){
+    return new Promise((resolve)=>{
+        setTimeout(()=>{ 
+           resolve({
+               name:a,
+               age:16,
+           }) 
+        },500)
+    })
+}
+
+const Demo = ({ a }) => {
+    const [ userMessage , setUserMessage ] :any= useState({})
+    const div= useRef()
+    const [number, setNumber] = useState(0)
+    /* 模拟事件监听处理函数 */
+    const handleResize =()=>{}
+    /* useEffect使用 ，这里如果不加限制 ，会是函数重复执行，陷入死循环*/
+    useEffect(()=>{
+       /* 请求数据 */
+       getUserInfo(a).then(res=>{
+           setUserMessage(res)
+       })
+       /* 定时器 延时器等 */
+       const timer = setInterval(()=>console.log(666),1000)
+       /* 操作dom  */
+       console.log(div.current) /* div */
+       /* 事件监听等 */
+       window.addEventListener('resize', handleResize)
+         /* 此函数用于清除副作用 */
+       return function(){
+           clearInterval(timer) 
+           window.removeEventListener('resize', handleResize)
+       }
+    /* 只有当props->a和state->number改变的时候 ,useEffect副作用函数重新执行 ，如果此时数组为空[]，证明函数只有在初始化的时候执行一次相当于componentDidMount */
+    },[ a ,number ])
+    return (<div ref={div} >
+        <span>{ userMessage.name }</span>
+        <span>{ userMessage.age }</span>
+        <div onClick={ ()=> setNumber(1) } >{ number }</div>
+    </div>)
+}
+
+```
+
+如上在 useEffect 中做的功能如下：
+
+- ① 请求数据。
+- ② 设置定时器,延时器等。
+- ③ 操作 dom , 在 React Native 中可以通过 ref 获取元素位置信息等内容。
+- ④ 注册事件监听器, 事件绑定，在 React Native 中可以注册 NativeEventEmitter 。
+- ⑤ 还可以清除定时器，延时器，解绑事件监听器等。
+
+#####  useLayoutEffect
+
+###### **useLayoutEffect 基础介绍：**
+
+useLayoutEffect 和 useEffect 不同的地方是采用了同步执行，那么和useEffect有什么区别呢？
+
+① 首先 useLayoutEffect 是在 DOM 更新之后，浏览器绘制之前，这样可以方便修改 DOM，获取 DOM 信息，这样浏览器只会绘制一次，如果修改 DOM 布局放在 useEffect ，那 useEffect 执行是在浏览器绘制视图之后，接下来又改 DOM ，就可能会导致浏览器再次回流和重绘。而且由于两次绘制，视图上可能会造成闪现突兀的效果。
+
+② useLayoutEffect callback 中代码执行会阻塞浏览器绘制。
+
+###### **useEffect 基础用法：**
+
+```js
+const DemoUseLayoutEffect = () => {
+    const target = useRef()
+    useLayoutEffect(() => {
+        /*我们需要在dom绘制之前，移动dom到制定位置*/
+        const { x ,y } = getPositon() /* 获取要移动的 x,y坐标 */
+        animate(target.current,{ x,y })
+    }, []);
+    return (
+        <div >
+            <span ref={ target } className="animate"></span>
+        </div>
+    )
+}
+```
+
+##### useInsertionEffect
+
+###### **useInsertionEffect 基础介绍：**
+
+useInsertionEffect 是在 React v18 新添加的 hooks ，它的用法和 useEffect 和 useLayoutEffect 一样。那么这个 hooks 用于什么呢?
+
+在介绍 useInsertionEffect 用途之前，先看一下 useInsertionEffect 的执行时机。
+
+```js
+React.useEffect(()=>{
+    console.log('useEffect 执行')
+},[])
+
+React.useLayoutEffect(()=>{
+    console.log('useLayoutEffect 执行')
+},[])
+
+React.useInsertionEffect(()=>{
+    console.log('useInsertionEffect 执行')
+},[])
+```
+
+打印： useInsertionEffect 执行 -> useLayoutEffect 执行 -> useEffect 执行
+
+可以看到 useInsertionEffect 的执行时机要比 useLayoutEffect 提前，useLayoutEffect 执行的时候 DOM 已经更新了，但是在 useInsertionEffect 的执行的时候，DOM 还没有更新。本质上 useInsertionEffect 主要是解决 CSS-in-JS 在渲染中注入样式的性能问题。这个 hooks 主要是应用于这个场景，在其他场景下 React 不期望用这个 hooks 。
+
+###### **useInsertionEffect 模拟使用：**
+
+```js
+export default function Index(){
+
+  React.useInsertionEffect(()=>{
+     /* 动态创建 style 标签插入到 head 中 */
+     const style = document.createElement('style')
+     style.innerHTML = `
+       .css-in-js{
+         color: red;
+         font-size: 20px;
+       }
+     `
+     document.head.appendChild(style)
+  },[])
+
+  return <div className="css-in-js" > hello , useInsertionEffect </div>
+}
+
+```
+
+如上模拟了 useInsertionEffect 的使用
+
+#### 状态获取与传递
+
+##### useContext
+
+###### **useContext 基础介绍**
+
+可以使用 useContext ，来获取父级组件传递过来的 context 值，这个当前值就是最近的父级组件 Provider 设置的 value 值，useContext 参数一般是由 createContext 方式创建的 ,也可以父级上下文 context 传递的 ( 参数为 context )。useContext 可以代替 context.Consumer 来获取 Provider 中保存的 value 值。
+
+```js
+const contextValue = useContext(context)
+```
+
+useContext 接受一个参数，一般都是 context 对象，返回值为 context 对象内部保存的 value 值。
+
+###### **useContext 基础用法：**
+
+```js
+/* 用useContext方式 */
+const DemoContext = ()=> {
+    const value:any = useContext(Context)
+    /* my name is alien */
+return <div> my name is { value.name }</div>
+}
+
+/* 用Context.Consumer 方式 */
+const DemoContext1 = ()=>{
+    return <Context.Consumer>
+         {/*  my name is alien  */}
+        { (value)=> <div> my name is { value.name }</div> }
+    </Context.Consumer>
+}
+
+export default ()=>{
+    return <div>
+        <Context.Provider value={{ name:'alien' , age:18 }} >
+            <DemoContext />
+            <DemoContext1 />
+        </Context.Provider>
+    </div>
+}
+```
+
+##### useRef
+
+###### **useRef 基础介绍：**
+
+useRef 可以用来获取元素，缓存状态，接受一个状态 initState 作为初始值，返回一个 ref 对象 cur, cur 上有一个 current 属性就是 ref 对象需要获取的内容。
+
+```js
+const cur = React.useRef(initState)
+console.log(cur.current)
+```
+
+###### **useRef 基础用法：**
+
+**useRef 获取 DOM 元**素，在 React Native 中虽然没有 DOM 元素，但是也能够获取组件的节点信息（ fiber 信息 ）。
+
+```js
+const DemoUseRef = ()=>{
+    const dom= useRef(null)
+    const handerSubmit = ()=>{
+        /*  <div >表单组件</div>  dom 节点 */
+        console.log(dom.current)
+    }
+    return <div>
+        {/* ref 标记当前dom节点 */}
+        <div ref={dom} >表单组件</div>
+        <button onClick={()=>handerSubmit()} >提交</button> 
+    </div>
+}
+```
+
+如上通过 useRef 来获取 DOM 节点。
+
+**useRef 保存状态，** 可以利用 useRef 返回的 ref 对象来保存状态，只要当前组件不被销毁，那么状态就会一直存在。
+
+```js
+const status = useRef(false)
+/* 改变状态 */
+const handleChangeStatus = () => {
+  status.current = true
+}
+```
+
+#### 状态派生与保存
+
+##### useMemo
+
+useMemo 可以在函数组件 render 上下文中同步执行一个函数逻辑，这个函数的返回值可以作为一个新的状态缓存起来。那么这个 hooks 的作用就显而易见了：
+
+场景一：在一些场景下，需要在函数组件中进行大量的逻辑计算，那么我们不期望每一次函数组件渲染都执行这些复杂的计算逻辑，所以就需要在 useMemo 的回调函数中执行这些逻辑，然后把得到的产物（计算结果）缓存起来就可以了。
+
+场景二：React 在整个更新流程中，diff 起到了决定性的作用，比如 Context 中的 provider 通过 diff value 来判断是否更新
+
+**useMemo 基础介绍：**
+
+```js
+const cacheSomething = useMemo(create,deps)
+```
+
+- ① create：第一个参数为一个函数，函数的返回值作为缓存值，如上 demo 中把 Children 对应的 element 对象，缓存起来。
+- ② deps： 第二个参数为一个数组，存放当前 useMemo 的依赖项，在函数组件下一次执行的时候，会对比 deps 依赖项里面的状态，是否有改变，如果有改变重新执行 create ，得到新的缓存值。
+- ③ acheSomething：返回值，执行 create 的返回值。如果 deps 中有依赖项改变，返回的重新执行 create 产生的值，否则取上一次缓存值。
+
+**useMemo 基础用法：**
+
+派生新状态：
+
+```js
+function Scope() {
+    const keeper = useKeep()
+    const { cacheDispatch, cacheList, hasAliveStatus } = keeper
+   
+    /* 通过 useMemo 得到派生出来的新状态 contextValue  */
+    const contextValue = useMemo(() => {
+        return {
+            cacheDispatch: cacheDispatch.bind(keeper),
+            hasAliveStatus: hasAliveStatus.bind(keeper),
+            cacheDestory: (payload) => cacheDispatch.call(keeper, { type: ACTION_DESTORY, payload })
+        }
+      
+    }, [keeper])
+    return <KeepaliveContext.Provider value={contextValue}>
+    </KeepaliveContext.Provider>
+}
+```
+
+如上通过 useMemo 得到派生出来的新状态 contextValue ，只有 keeper 变化的时候，才改变 Provider 的 value 。
+
+缓存计算结果：
+
+```js
+function Scope(){
+    const style = useMemo(()=>{
+      let computedStyle = {}
+      // 经过大量的计算
+      return computedStyle
+    },[])
+    return <div style={style} ></div>
+}
+```
+
+缓存组件,减少子组件 rerender 次数：
+
+```js
+function Scope ({ children }){
+   const renderChild = useMemo(()=>{ children()  },[ children ])
+   return <div>{ renderChild } </div>
+}
+```
+
+##### useCallback
+
+###### **useCallback 基础介绍：**
+
+useMemo 和 useCallback 接收的参数都是一样，都是在其依赖项发生变化后才执行，都是返回缓存的值，区别在于 useMemo 返回的是**函数运行的结果**，useCallback **返回的是函数**，这个回调函数是经过处理后的也就是说父组件传递一个函数给子组件的时候，由于是无状态组件每一次都会重新生成新的 props 函数，这样就使得每一次传递给子组件的函数都发生了变化，这时候就会触发子组件的更新，这些更新是没有必要的，此时我们就可以通过 usecallback 来处理此函数，然后作为 props 传递给子组件。
+
+###### **useCallback 基础用法：**
+
+```js
+/* 用react.memo */
+const DemoChildren = React.memo((props)=>{
+   /* 只有初始化的时候打印了 子组件更新 */
+    console.log('子组件更新')
+   useEffect(()=>{
+       props.getInfo('子组件')
+   },[])
+   return <div>子组件</div>
+})
+
+const DemoUseCallback=({ id })=>{
+    const [number, setNumber] = useState(1)
+    /* 此时usecallback的第一参数 (sonName)=>{ console.log(sonName) }
+     经过处理赋值给 getInfo */
+    const getInfo  = useCallback((sonName)=>{
+          console.log(sonName)
+    },[id])
+    return <div>
+        {/* 点击按钮触发父组件更新 ，但是子组件没有更新 */}
+        <button onClick={ ()=>setNumber(number+1) } >增加</button>
+        <DemoChildren getInfo={getInfo} />
+    </div>
+}
+```
 
 ### 1.对 React Hook 的理解，它的实现原理是什么
 
@@ -2472,7 +3592,7 @@ React-Hooks 是 React 团队在 React 组件开发实践中，逐渐认知到的
 
 **（1）类组件：** 所谓类组件，就是基于 ES6 Class 这种写法，通过继承 React.Component 得来的 React 组件。以下是一个类组件：
 
-```
+```js
 class DemoClass extends React.Component {
   state = {
     text: ""
@@ -2495,8 +3615,6 @@ class DemoClass extends React.Component {
     );
   }
 }
-
-
 ```
 
 可以看出，React 类组件内部预置了相当多的“现成的东西”等着我们去调度/定制，state 和生命周期就是这些“现成东西”中的典型。要想得到这些东西，难度也不大，只需要继承一个 React.Component 即可。
@@ -2979,6 +4097,865 @@ export default Users;
 
 第三点就是 useEffect 的第二个参数容易被错误使用。很多同学习惯在第二个参数放置引用类型的变量，通常的情况下，引用类型的变量很容易被篡改，难以判断开发者的真实意图，所以更推荐使用值类型的变量。当然有个小技巧是 JSON 序列化引用类型的变量，也就是通过 JSON.stringify 将引用类型变量转换为字符串来解决。但不推荐这个操作方式，比较消耗性能
 
+### 9.hooks原理
+
+#### function组件和class组件本质的区别
+
+在解释`react-hooks`原理的之前，我们要加深理解一下， **函数组件和类组件到底有什么区别**，废话不多说，我们先看 两个代码片段。
+
+```jsx
+class Index extends React.Component<any,any>{
+    constructor(props){
+        super(props)
+        this.state={
+            number:0
+        }
+    }
+    handerClick=()=>{
+       for(let i = 0 ;i<5;i++){
+           setTimeout(()=>{
+               this.setState({ number:this.state.number+1 })
+               console.log(this.state.number)
+           },1000)
+       }
+    }
+
+    render(){
+        return <div>
+            <button onClick={ this.handerClick } >num++</button>
+        </div>
+    }
+}
+```
+
+打印结果？
+
+再来看看函数组件中：
+
+```jsx
+function Index(){
+    const [ num ,setNumber ] = React.useState(0)
+    const handerClick=()=>{
+        for(let i=0; i<5;i++ ){
+           setTimeout(() => {
+                setNumber(num+1)
+                console.log(num)
+           }, 1000)
+        }
+    }
+    return <button onClick={ handerClick } >{ num }</button>
+}
+```
+
+打印结果？
+
+\------------公布答案-------------  
+
+在第一个例子🌰打印结果： 1 2 3 4 5
+
+在第二个例子🌰打印结果： 0 0 0 0 0
+
+这个问题实际很蒙人，我们来一起分析一下,第一个类组件中，由于执行上`setState`没有在`react`正常的函数执行上下文上执行，而是`setTimeout`中执行的，**批量更新**条件被破坏。原理这里我就不讲了,所以可以直接获取到变化后的`state`。
+
+但是在无状态组件中，似乎没有生效。原因很简单，在`class`状态中，通过一个实例化的`class`，去维护组件中的各种状态；但是在`function`组件中，没有一个状态去保存这些信息，每一次函数上下文执行，所有变量，常量都重新声明，执行完毕，再被垃圾机制回收。所以如上，无论`setTimeout`执行多少次，都是在当前函数上下文执行,此时`num = 0`不会变，之后`setNumber`执行，函数组件重新执行之后，`num`才变化。
+
+所以， 对于`class`组件，我们只需要实例化一次，实例中保存了组件的`state`等状态。对于每一次更新只需要调用`render`方法就可以。但是在`function`组件中，每一次更新都是一次新的函数执行,为了保存一些状态,执行一些副作用钩子,`react-hooks`应运而生，去帮助记录组件的状态，处理一些额外的副作用。
+
+#### 一 初识：揭开hooks的面纱
+
+##### 1.引入hooks时候发生了什么
+
+我们从引入 `hooks`开始，以`useState`为例子，当我们从项目中这么写：
+
+```js
+import { useState } from 'react'
+```
+
+于是乎我们去找`useState`,看看它到底是哪路神仙？
+
+`react/src/ReactHooks.js`
+
+**useState**
+
+```js
+export function useState(initialState){
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useState(initialState);
+}
+```
+
+`useState()` 的执行等于 `dispatcher.useState(initialState)` 这里面引入了一个`dispatcher`，我们看一下`resolveDispatcher`做了些什么？
+
+**resolveDispatcher**
+
+```js
+function resolveDispatcher() {
+  const dispatcher = ReactCurrentDispatcher.current
+  return dispatcher
+}
+```
+
+**ReactCurrentDispatcher**
+
+`react/src/ReactCurrentDispatcher.js`
+
+```js
+const ReactCurrentDispatcher = {
+  current: null,
+};
+```
+
+我们看到`ReactCurrentDispatcher.current`初始化的时候为`null`，然后就没任何下文了。我们暂且只能把`ReactCurrentDispatcher`\记下来。看看`ReactCurrentDispatcher`什么时候用到的 ？
+
+##### 2.从无状态组件的函数执行说起
+
+想要彻底弄明白`hooks`，就要从其根源开始，上述我们在引入`hooks`的时候，最后以一个`ReactCurrentDispatcher`草草收尾，线索全部断了，所以接下来我们只能从函数组件执行开始。
+
+###### renderWithHooks 执行函数
+
+对于`function`组件是什么时候执行的呢？
+
+`react-reconciler/src/ReactFiberBeginWork.js`
+
+`function`组件初始化：
+
+```jsx
+renderWithHooks(
+    null,                // current Fiber
+    workInProgress,      // workInProgress Fiber
+    Component,           // 函数组件本身
+    props,               // props
+    context,             // 上下文
+    renderExpirationTime,// 渲染 ExpirationTime
+);
+```
+
+对于初始化是没有`current`树的，之后完成一次组件更新后，会把当前`workInProgress`树赋值给`current`树。
+
+`function`组件更新：
+
+```jsx
+renderWithHooks(
+    current,
+    workInProgress,
+    render,
+    nextProps,
+    context,
+    renderExpirationTime,
+);
+```
+
+我们从上边可以看出来，`renderWithHooks`函数作用是**调用`function`组件函数**的主要函数。我们重点看看`renderWithHooks`做了些什么？
+
+**renderWithHooks** `react-reconciler/src/ReactFiberHooks.js`
+
+```jsx
+export function renderWithHooks(
+  current,
+  workInProgress,
+  Component,
+  props,
+  secondArg,
+  nextRenderExpirationTime,
+) {
+  renderExpirationTime = nextRenderExpirationTime;
+  currentlyRenderingFiber = workInProgress;
+
+  workInProgress.memoizedState = null;
+  workInProgress.updateQueue = null;
+  workInProgress.expirationTime = NoWork;
+
+  ReactCurrentDispatcher.current =
+      current === null || current.memoizedState === null
+        ? HooksDispatcherOnMount
+        : HooksDispatcherOnUpdate;
+
+  let children = Component(props, secondArg);
+
+  if (workInProgress.expirationTime === renderExpirationTime) { 
+       // ....这里的逻辑我们先放一放
+  }
+
+  ReactCurrentDispatcher.current = ContextOnlyDispatcher;
+
+  renderExpirationTime = NoWork;
+  currentlyRenderingFiber = null;
+
+  currentHook = null
+  workInProgressHook = null;
+
+  didScheduleRenderPhaseUpdate = false;
+
+  return children;
+}
+```
+
+**所有的函数组件执行，都是在这里方法中**,首先我们应该明白几个感念，这对于后续我们理解`useState`是很有帮助的。
+
+`current fiber树`: 当完成一次渲染之后，会产生一个`current`树,`current`会在`commit`阶段替换成真实的`Dom`树。
+
+`workInProgress fiber树`: 即将调和渲染的 `fiber` 树。再一次新的组件更新过程中，会从`current`复制一份作为`workInProgress`,更新完毕后，将当前的`workInProgress`树赋值给`current`树。
+
+`workInProgress.memoizedState`: 在`class`组件中，`memoizedState`存放`state`信息，在`function`组件中，**这里可以提前透漏一下，`memoizedState`在一次调和渲染过程中，以链表的形式存放`hooks`信息。**
+
+`workInProgress.expirationTime`: `react`用不同的`expirationTime`,来确定更新的优先级。
+
+`currentHook` : 可以理解 `current`树上的指向的当前调度的 `hooks`节点。
+
+`workInProgressHook` : 可以理解 `workInProgress`树上指向的当前调度的 `hooks`节点。
+
+**`renderWithHooks`函数主要作用:**
+
+首先先置空即将调和渲染的`workInProgress`树的`memoizedState`和`updateQueue`，为什么这么做，因为在接下来的函数组件执行过程中，要把新的`hooks`信息挂载到这两个属性上，然后在组件`commit`阶段，将`workInProgress`树替换成`current`树，替换真实的`DOM`元素节点。并在`current`树保存`hooks`信息。
+
+然后根据当前函数组件是否是第一次渲染，赋予`ReactCurrentDispatcher.current`不同的`hooks`,终于和上面讲到的`ReactCurrentDispatcher`联系到一起。对于第一次渲染组件，那么用的是`HooksDispatcherOnMount` hooks对象。 对于渲染后，需要更新的函数组件，则是`HooksDispatcherOnUpdate`对象，那么两个不同就是通过`current`树上是否`memoizedState`（hook信息）来判断的。如果`current`不存在，证明是第一次渲染函数组件。
+
+接下来，**调用`Component(props, secondArg);`执行我们的函数组件，我们的函数组件在这里真正的被执行了，然后，我们写的`hooks`被依次执行，把`hooks`信息依次保存到`workInProgress`树上。** 至于它是怎么保存的，我们马上会讲到。
+
+接下来，也很重要，将`ContextOnlyDispatcher`赋值给 `ReactCurrentDispatcher.current`，由于`js`是单线程的，也就是说我们没有在函数组件中，调用的`hooks`，都是`ContextOnlyDispatcher`对象上`hooks`,我们看看`ContextOnlyDispatcher`hooks，到底是什么。
+
+```jsx
+const ContextOnlyDispatcher = {
+    useState:throwInvalidHookError
+}
+function throwInvalidHookError() {
+  invariant(
+    false,
+    'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
+      ' one of the following reasons:\n' +
+      '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
+      '2. You might be breaking the Rules of Hooks\n' +
+      '3. You might have more than one copy of React in the same app\n' +
+      'See https://fb.me/react-invalid-hook-call for tips about how to debug and fix this problem.',
+  );
+}
+```
+
+原来如此，`react-hooks`就是通过这种函数组件执行赋值不同的`hooks`对象方式，判断在`hooks`执行是否在函数组件内部，捕获并抛出异常的。
+
+最后，重新置空一些变量比如`currentHook`，`currentlyRenderingFiber`,`workInProgressHook`等。
+
+##### 3.不同的`hooks`对象
+
+上述讲到在函数第一次渲染组件和更新组件分别调用不同的`hooks`对象，我们现在就来看看`HooksDispatcherOnMount` 和 `HooksDispatcherOnUpdate`。
+
+**第一次渲染(我这里只展示了常用的`hooks`)：**
+
+```jsx
+const HooksDispatcherOnMount = {
+  useCallback: mountCallback,
+  useEffect: mountEffect,
+  useLayoutEffect: mountLayoutEffect,
+  useMemo: mountMemo,
+  useReducer: mountReducer,
+  useRef: mountRef,
+  useState: mountState,
+};
+```
+
+**更新组件：**
+
+```jsx
+const HooksDispatcherOnUpdate = {
+  useCallback: updateCallback,
+  useEffect: updateEffect,
+  useLayoutEffect: updateLayoutEffect,
+  useMemo: updateMemo,
+  useReducer: updateReducer,
+  useRef: updateRef,
+  useState: updateState
+};
+```
+
+看来对于第一次渲染组件，和更新组件，`react-hooks`采用了两套`Api`，本文的第二部分和第三部分，将重点两者的联系。
+
+我们用流程图来描述整个过程：
+
+![17AC0A26-745A-4FD8-B91B-7CADB717234C.jpg](https://s2.loli.net/2022/08/12/Bg5IemuDhxFCNj1.webp)
+
+#### 二 hooks初始化，我们写的hooks会变成什么样子
+
+本文将重点围绕四个中重点`hooks`展开，分别是负责组件更新的`useState`，负责执行副作用`useEffect` ,负责保存数据的`useRef`,负责缓存优化的`useMemo`， 至于`useCallback`,`useReducer`,`useLayoutEffect`原理和那四个重点`hooks`比较相近，就不一一解释了。
+
+我们先写一个组件，并且用到上述四个主要`hooks`：
+
+**请记住如下代码片段，后面讲解将以如下代码段展开**
+
+```jsx
+import React , { useEffect , useState , useRef , useMemo  } from 'react'
+function Index(){
+    const [ number , setNumber ] = useState(0)
+    const DivDemo = useMemo(() => <div> hello , i am useMemo </div>,[])
+    const curRef  = useRef(null)
+    useEffect(()=>{
+       console.log(curRef.current)
+    },[])
+    return <div ref={ curRef } >
+        hello,world { number } 
+        { DivDemo }
+        <button onClick={() => setNumber(number+1) } >number++</button>
+     </div>
+}
+```
+
+接下来我们一起研究一下我们上述写的四个`hooks`最终会变成什么？
+
+##### 1 mountWorkInProgressHook
+
+在组件初始化的时候,每一次`hooks`执行，如`useState()`,`useRef()`,都会调用`mountWorkInProgressHook`,`mountWorkInProgressHook`到底做了写什么，让我们一起来分析一下：
+
+`react-reconciler/src/ReactFiberHooks.js -> mountWorkInProgressHook`
+
+```jsx
+function mountWorkInProgressHook() {
+  const hook: Hook = {
+    memoizedState: null,  // useState中 保存 state信息 ｜ useEffect 中 保存着 effect 对象 ｜ useMemo 中 保存的是缓存的值和deps ｜ useRef中保存的是ref 对象
+    baseState: null,
+    baseQueue: null,
+    queue: null,
+    next: null,
+  };
+  if (workInProgressHook === null) { // 例子中的第一个`hooks`-> useState(0) 走的就是这样。
+    currentlyRenderingFiber.memoizedState = workInProgressHook = hook;
+  } else {
+    workInProgressHook = workInProgressHook.next = hook;
+  }
+  return workInProgressHook;
+}
+```
+
+`mountWorkInProgressHook`这个函数做的事情很简单，首先每次执行一个`hooks`函数，都产生一个`hook`对象，里面保存了当前`hook`信息,然后将每个`hooks`以链表形式串联起来，并赋值给`workInProgress`的`memoizedState`。也就证实了上述所说的，函数组件用`memoizedState`存放`hooks`链表。
+
+至于`hook`对象中都保留了那些信息？我这里先分别介绍一下 :  
+
+**memoizedState**： `useState中` 保存 `state` 信息 ｜ `useEffect` 中 保存着 `effect` 对象 ｜ `useMemo` 中 保存的是缓存的值和 `deps` ｜ `useRef` 中保存的是 `ref` 对象。
+
+**baseQueue** : `usestate`和`useReducer`中 保存最新的更新队列。
+
+**baseState** ： `usestate`和`useReducer`中,一次更新中 ，产生的最新`state`值。
+
+**queue** ： 保存待更新队列 `pendingQueue` ，更新函数 `dispatch` 等信息。
+
+**next**: 指向下一个 `hooks`对象。
+
+那么当我们函数组件执行之后，四个`hooks`和`workInProgress`将是如图的关系。
+
+![shunxu.jpg](https://s2.loli.net/2022/08/12/oDUnd9GiwV6k5Q7.webp)
+
+知道每个`hooks`关系之后，我们应该理解了，为什么不能条件语句中，声明`hooks`。
+
+我们用一幅图表示如果在条件语句中声明会出现什么情况发生。
+
+如果我们将上述`demo`其中的一个 `useRef` 放入条件语句中，
+
+```jsx
+ let curRef  = null
+ if(isFisrt){
+  curRef = useRef(null)
+ }
+```
+
+![hoo11.jpg](https://s2.loli.net/2022/08/12/P7Dzl5XmVMUxCAE.webp)
+
+**因为一旦在条件语句中声明`hooks`，在下一次函数组件更新，`hooks`链表结构，将会被破坏，`current`树的`memoizedState`缓存`hooks`信息，和当前`workInProgress`不一致，如果涉及到读取`state`等操作，就会发生异常。**
+
+上述介绍了 `hooks`通过什么来证明唯一性的，答案 ，通过`hooks`链表顺序。和为什么不能在条件语句中，声明`hooks`，接下来我们按照四个方向，分别介绍初始化的时候发生了什么？
+
+##### 2 初始化useState -> mountState
+
+###### **mountState**
+
+```jsx
+function mountState(
+  initialState
+){
+  const hook = mountWorkInProgressHook();
+  if (typeof initialState === 'function') {
+    // 如果 useState 第一个参数为函数，执行函数得到state
+    initialState = initialState();
+  }
+  hook.memoizedState = hook.baseState = initialState;
+  const queue = (hook.queue = {
+    pending: null,  // 带更新的
+    dispatch: null, // 负责更新函数
+    lastRenderedReducer: basicStateReducer, //用于得到最新的 state ,
+    lastRenderedState: initialState, // 最后一次得到的 state
+  });
+
+  const dispatch = (queue.dispatch = (dispatchAction.bind( // 负责更新的函数
+    null,
+    currentlyRenderingFiber,
+    queue,
+  )))
+  return [hook.memoizedState, dispatch];
+}
+```
+
+`mountState`到底做了些什么，首先会得到初始化的`state`，将它赋值给`mountWorkInProgressHook`产生的`hook`对象的 `memoizedState`和`baseState`属性，然后创建一个`queue`对象，里面保存了负责更新的信息。
+
+这里先说一下，在无状态组件中，`useState`和`useReducer`触发函数更新的方法都是`dispatchAction`,`useState`，可以看成一个简化版的`useReducer`,至于`dispatchAction`怎么更新`state`，更新组件的，我们接着往下研究`dispatchAction`。
+
+在研究之前 我们**先要弄明白`dispatchAction`是什么?**
+
+```jsx
+function dispatchAction<S, A>(
+  fiber: Fiber,
+  queue: UpdateQueue<S, A>,
+  action: A,
+)
+```
+
+```jsx
+const [ number , setNumber ] = useState(0)
+```
+
+**`dispatchAction` 就是 `setNumber`** , `dispatchAction` 第一个参数和第二个参数，已经被`bind`给改成`currentlyRenderingFiber`和 `queue`,我们传入的参数是第三个参数`action`
+
+###### dispatchAction 无状态组件更新机制
+
+作为更新的主要函数，我们一下来研究一下，我把 `dispatchAction` 精简，精简，再精简，
+
+```
+function dispatchAction(fiber, queue, action) {
+
+  // 计算 expirationTime 过程略过。
+  /* 创建一个update */
+  const update= {
+    expirationTime,
+    suspenseConfig,
+    action,
+    eagerReducer: null,
+    eagerState: null,
+    next: null,
+  }
+  /* 把创建的update */
+  const pending = queue.pending;
+  if (pending === null) {  // 证明第一次更新
+    update.next = update;
+  } else { // 不是第一次更新
+    update.next = pending.next;
+    pending.next = update;
+  }
+  
+  queue.pending = update;
+  const alternate = fiber.alternate;
+  /* 判断当前是否在渲染阶段 */
+  if ( fiber === currentlyRenderingFiber || (alternate !== null && alternate === currentlyRenderingFiber)) {
+    didScheduleRenderPhaseUpdate = true;
+    update.expirationTime = renderExpirationTime;
+    currentlyRenderingFiber.expirationTime = renderExpirationTime;
+  } else { /* 当前函数组件对应fiber没有处于调和渲染阶段 ，那么获取最新state , 执行更新 */
+    if (fiber.expirationTime === NoWork && (alternate === null || alternate.expirationTime === NoWork)) {
+      const lastRenderedReducer = queue.lastRenderedReducer;
+      if (lastRenderedReducer !== null) {
+        let prevDispatcher;
+        try {
+          const currentState = queue.lastRenderedState; /* 上一次的state */
+          const eagerState = lastRenderedReducer(currentState, action); /**/
+          update.eagerReducer = lastRenderedReducer;
+          update.eagerState = eagerState;
+          if (is(eagerState, currentState)) { 
+            return
+          }
+        } 
+      }
+    }
+    scheduleUpdateOnFiber(fiber, expirationTime);
+  }
+}
+```
+
+无论是类组件调用`setState`,还是函数组件的`dispatchAction` ，都会产生一个 `update`对象，里面记录了此次更新的信息，然后将此`update`放入待更新的`pending`队列中，`dispatchAction`第二步就是判断当前函数组件的`fiber`对象是否处于渲染阶段，如果处于渲染阶段，那么不需要我们在更新当前函数组件，只需要更新一下当前`update`的`expirationTime`即可。
+
+如果当前`fiber`没有处于更新阶段。那么通过调用`lastRenderedReducer`获取最新的`state`,和上一次的`currentState`，进行浅比较，如果相等，那么就退出，这就证实了为什么`useState`，两次值相等的时候，组件不渲染的原因了，这个机制和`Component`模式下的`setState`有一定的区别。
+
+如果两次`state`不相等，那么调用`scheduleUpdateOnFiber`调度渲染当前`fiber`，`scheduleUpdateOnFiber`是`react`渲染更新的主要函数。
+
+我们把**初始化`mountState`**和**无状态组件更新机制**讲明白了，接下来看一下其他的**hooks**初始化做了些什么操作？
+
+##### 3 初始化useEffect -> mountEffect
+
+上述讲到了无状态组件中`fiber`对象`memoizedState`保存当前的`hooks`形成的链表。那么`updateQueue`保存了什么信息呢，我们会在接下来探索`useEffect`过程中找到答案。 当我们调用`useEffect`的时候，在组件第一次渲染的时候会调用`mountEffect`方法，这个方法到底做了些什么？
+
+###### mountEffect
+
+```jsx
+function mountEffect(
+  create,
+  deps,
+) {
+  const hook = mountWorkInProgressHook();
+  const nextDeps = deps === undefined ? null : deps;
+  hook.memoizedState = pushEffect(
+    HookHasEffect | hookEffectTag, 
+    create, // useEffect 第一次参数，就是副作用函数
+    undefined,
+    nextDeps, // useEffect 第二次参数，deps
+  );
+}
+```
+
+每个`hooks`初始化都会创建一个`hook`对象，然后将hook的`memoizedState`保存当前`effect hook`信息。
+
+**有两个`memoizedState`大家千万别混淆了，我这里再友情提示一遍**
+
+-   `workInProgress / current` 树上的 `memoizedState` 保存的是当前函数组件每个`hooks`形成的链表。
+
+-   每个`hooks`上的`memoizedState` 保存了当前`hooks`信息，不同种类的`hooks`的`memoizedState`内容不同。上述的方法最后执行了一个`pushEffect`，我们一起看看`pushEffect`做了些什么？
+
+###### pushEffect 创建effect对象，挂载updateQueue
+
+```jsx
+function pushEffect(tag, create, destroy, deps) {
+  const effect = {
+    tag,
+    create,
+    destroy,
+    deps,
+    next: null,
+  };
+  let componentUpdateQueue = currentlyRenderingFiber.updateQueue
+  if (componentUpdateQueue === null) { // 如果是第一个 useEffect
+    componentUpdateQueue = {  lastEffect: null  }
+    currentlyRenderingFiber.updateQueue = componentUpdateQueue
+    componentUpdateQueue.lastEffect = effect.next = effect;
+  } else {  // 存在多个effect
+    const lastEffect = componentUpdateQueue.lastEffect;
+    if (lastEffect === null) {
+      componentUpdateQueue.lastEffect = effect.next = effect;
+    } else {
+      const firstEffect = lastEffect.next;
+      lastEffect.next = effect;
+      effect.next = firstEffect;
+      componentUpdateQueue.lastEffect = effect;
+    }
+  }
+  return effect;
+}
+```
+
+这一段实际很简单，首先创建一个 `effect` ，判断组件如果第一次渲染，那么创建 `componentUpdateQueue` ，就是`workInProgress`的`updateQueue`。然后将`effect`放入`updateQueue`中。
+
+假设我们在一个函数组件中这么写：
+
+```jsx
+useEffect(()=>{
+    console.log(1)
+},[ props.a ])
+useEffect(()=>{
+    console.log(2)
+},[])
+useEffect(()=>{
+    console.log(3)
+},[])
+```
+
+最后`workInProgress.updateQueue`会以这样的形式保存：
+
+![7B8889E7-05B3-4BC4-870A-0D4C1CDF6981.jpg](https://s2.loli.net/2022/08/12/ENyeHgbQ5Z6knRJ.webp)
+
+###### 拓展:effectList
+
+`effect list` 可以理解为是一个存储 `effectTag` 副作用列表容器。它是由 `fiber` 节点和指针 `nextEffect` 构成的单链表结构，这其中还包括第一个节点 `firstEffect` ，和最后一个节点 `lastEffect`。 `React` 采用深度优先搜索算法，在 `render` 阶段遍历 `fiber` 树时，把每一个有副作用的 `fiber` 筛选出来，最后构建生成一个只带副作用的 `effect list` 链表。 在 `commit` 阶段，`React` 拿到 `effect list` 数据后，通过遍历 `effect list`，并根据每一个 `effect` 节点的 `effectTag` 类型，执行每个`effect`，从而对相应的 `DOM` 树执行更改。
+
+##### 4 初始化useMemo -> mountMemo
+
+不知道大家是否把 `useMemo` 想象的过于复杂了，实际相比其他 `useState` , `useEffect`等，它的逻辑实际简单的很。
+
+```
+function mountMemo(nextCreate,deps){
+  const hook = mountWorkInProgressHook();
+  const nextDeps = deps === undefined ? null : deps;
+  const nextValue = nextCreate();
+  hook.memoizedState = [nextValue, nextDeps];
+  return nextValue;
+}
+```
+
+初始化`useMemo`，就是创建一个`hook`，然后执行`useMemo`的第一个参数,得到需要缓存的值，然后将值和`deps`记录下来，赋值给当前`hook`的`memoizedState`。整体上并没有复杂的逻辑。
+
+###### 5 初始化useRef -> mountRef
+
+对于`useRef`初始化处理，似乎更是简单，我们一起来看一下：
+
+```jsx
+function mountRef(initialValue) {
+  const hook = mountWorkInProgressHook();
+  const ref = {current: initialValue};
+  hook.memoizedState = ref;
+  return ref;
+}
+```
+
+`mountRef`初始化很简单, 创建一个ref对象， 对象的`current` 属性来保存初始化的值，最后用`memoizedState`保存`ref`，完成整个操作。
+
+###### 6 mounted 阶段 hooks 总结
+
+我们来总结一下初始化阶段,`react-hooks`做的事情，在一个函数组件第一次渲染执行上下文过程中，每个`react-hooks`执行，都会产生一个`hook`对象，并形成链表结构，绑定在`workInProgress`的`memoizedState`属性上，然后`react-hooks`上的状态，绑定在当前`hooks`对象的`memoizedState`属性上。对于`effect`副作用钩子，会绑定在`workInProgress.updateQueue`上，等到`commit`阶段，`dom`树构建完成，在执行每个 `effect` 副作用钩子。
+
+#### 三 hooks更新阶段
+
+上述介绍了第一次渲染函数组件，`react-hooks`初始化都做些什么，接下来，我们分析一下，
+
+对于更新阶段，说明上一次 `workInProgress` 树已经赋值给了 `current` 树。存放`hooks`信息的`memoizedState`，此时已经存在`current`树上，`react`对于`hooks`的处理逻辑和`fiber`树逻辑类似。
+
+对于一次函数组件更新，当再次执行`hooks`函数的时候，比如 `useState(0)` ，首先要从`current`的`hooks`中找到与当前`workInProgressHook`，对应的`currentHooks`，然后复制一份`currentHooks`给`workInProgressHook`,接下来`hooks`函数执行的时候,把最新的状态更新到`workInProgressHook`，保证`hooks`状态不丢失。
+
+所以函数组件每次更新，每一次`react-hooks`函数执行，都需要有一个函数去做上面的操作，这个函数就是`updateWorkInProgressHook`,我们接下来一起看这个`updateWorkInProgressHook`。
+
+##### 1 updateWorkInProgressHook
+
+```jsx
+function updateWorkInProgressHook() {
+  let nextCurrentHook;
+  if (currentHook === null) {  /* 如果 currentHook = null 证明它是第一个hooks */
+    const current = currentlyRenderingFiber.alternate;
+    if (current !== null) {
+      nextCurrentHook = current.memoizedState;
+    } else {
+      nextCurrentHook = null;
+    }
+  } else { /* 不是第一个hooks，那么指向下一个 hooks */
+    nextCurrentHook = currentHook.next;
+  }
+  let nextWorkInProgressHook
+  if (workInProgressHook === null) {  //第一次执行hooks
+    // 这里应该注意一下，当函数组件更新也是调用 renderWithHooks ,memoizedState属性是置空的
+    nextWorkInProgressHook = currentlyRenderingFiber.memoizedState;
+  } else { 
+    nextWorkInProgressHook = workInProgressHook.next;
+  }
+
+  if (nextWorkInProgressHook !== null) { 
+      /* 这个情况说明 renderWithHooks 执行 过程发生多次函数组件的执行 ，我们暂时先不考虑 */
+    workInProgressHook = nextWorkInProgressHook;
+    nextWorkInProgressHook = workInProgressHook.next;
+    currentHook = nextCurrentHook;
+  } else {
+    invariant(
+      nextCurrentHook !== null,
+      'Rendered more hooks than during the previous render.',
+    );
+    currentHook = nextCurrentHook;
+    const newHook = { //创建一个新的hook
+      memoizedState: currentHook.memoizedState,
+      baseState: currentHook.baseState,
+      baseQueue: currentHook.baseQueue,
+      queue: currentHook.queue,
+      next: null,
+    };
+    if (workInProgressHook === null) { // 如果是第一个hooks
+      currentlyRenderingFiber.memoizedState = workInProgressHook = newHook;
+    } else { // 重新更新 hook
+      workInProgressHook = workInProgressHook.next = newHook;
+    }
+  }
+  return workInProgressHook;
+}
+```
+
+这一段的逻辑大致是这样的：
+
+-   首先如果是第一次执行`hooks`函数，那么从`current`树上取出`memoizedState` ，也就是旧的`hooks`。
+-   然后声明变量`nextWorkInProgressHook`，这里应该值得注意，正常情况下，一次`renderWithHooks`执行，`workInProgress`上的`memoizedState`会被置空，`hooks`函数顺序执行，`nextWorkInProgressHook`应该一直为`null`，那么什么情况下`nextWorkInProgressHook`不为`null`,也就是当一次`renderWithHooks`执行过程中，执行了多次函数组件，也就是在`renderWithHooks`中这段逻辑。
+
+```jsx
+  if (workInProgress.expirationTime === renderExpirationTime) { 
+       // ....这里的逻辑我们先放一放
+  }
+```
+
+这里面的逻辑，实际就是判定，如果当前函数组件执行后，当前函数组件的还是处于渲染优先级，说明函数组件又有了新的更新任务，那么循坏执行函数组件。这就造成了上述的，`nextWorkInProgressHook`不为 `null` 的情况。
+
+-   最后复制`current`的`hooks`，把它赋值给`workInProgressHook`,用于更新新的一轮`hooks`状态。
+
+接下来我们看一下四个种类的`hooks`，在一次组件更新中，分别做了那些操作。
+
+##### 2 updateState
+
+useState
+
+```jsx
+function updateReducer(
+  reducer,
+  initialArg,
+  init,
+){
+  const hook = updateWorkInProgressHook();
+  const queue = hook.queue;
+  queue.lastRenderedReducer = reducer;
+  const current = currentHook;
+  let baseQueue = current.baseQueue;
+  const pendingQueue = queue.pending;
+  if (pendingQueue !== null) {
+     // 这里省略... 第一步：将 pending  queue 合并到 basequeue
+  }
+  if (baseQueue !== null) {
+    const first = baseQueue.next;
+    let newState = current.baseState;
+    let newBaseState = null;
+    let newBaseQueueFirst = null;
+    let newBaseQueueLast = null;
+    let update = first;
+    do {
+      const updateExpirationTime = update.expirationTime;
+      if (updateExpirationTime < renderExpirationTime) { //优先级不足
+        const clone  = {
+          expirationTime: update.expirationTime,
+          ...
+        };
+        if (newBaseQueueLast === null) {
+          newBaseQueueFirst = newBaseQueueLast = clone;
+          newBaseState = newState;
+        } else {
+          newBaseQueueLast = newBaseQueueLast.next = clone;
+        }
+      } else {  //此更新确实具有足够的优先级。
+        if (newBaseQueueLast !== null) {
+          const clone= {
+            expirationTime: Sync, 
+             ...
+          };
+          newBaseQueueLast = newBaseQueueLast.next = clone;
+        }
+        /* 得到新的 state */
+        newState = reducer(newState, action);
+      }
+      update = update.next;
+    } while (update !== null && update !== first);
+    if (newBaseQueueLast === null) {
+      newBaseState = newState;
+    } else {
+      newBaseQueueLast.next = newBaseQueueFirst;
+    }
+    hook.memoizedState = newState;
+    hook.baseState = newBaseState;
+    hook.baseQueue = newBaseQueueLast;
+    queue.lastRenderedState = newState;
+  }
+  const dispatch = queue.dispatch
+  return [hook.memoizedState, dispatch];
+}
+```
+
+这一段看起来很复杂，让我们慢慢吃透，首先将上一次更新的`pending queue` 合并到 `basequeue`，为什么要这么做，比如我们再一次点击事件中这么写，
+
+```jsx
+function Index(){
+   const [ number ,setNumber ] = useState(0)
+   const handerClick = ()=>{
+    //    setNumber(1)
+    //    setNumber(2)
+    //    setNumber(3)
+       setNumber(state=>state+1)
+       // 获取上次 state = 1 
+       setNumber(state=>state+1)
+       // 获取上次 state = 2
+       setNumber(state=>state+1)
+   }
+   console.log(number) // 3 
+   return <div>
+       <div>{ number }</div>
+       <button onClick={ ()=> handerClick() } >点击</button>
+   </div>
+}
+```
+
+**点击按钮， 打印 3**
+
+三次`setNumber`产生的`update`会暂且放入`pending queue`，在下一次函数组件执行时候，三次 `update`被合并到 `baseQueue`。结构如下图：
+
+![setState.jpg](https://s2.loli.net/2022/08/12/9xtm18ZSBqcX3ky.webp)
+
+接下来会把当前`useState`或是`useReduer`对应的`hooks`上的`baseState`和`baseQueue`更新到最新的状态。会循环`baseQueue`的`update`，复制一份`update`,更新 `expirationTime`，对于有足够优先级的`update`（上述三个`setNumber`产生的`update`都具有足够的优先级），我们要获取最新的`state`状态。，会一次执行`useState`上的每一个`action`。得到最新的`state`。
+
+**更新state**
+
+![sset1.jpg](https://s2.loli.net/2022/08/12/gE2LDf3raUGOlCm.webp)
+
+这里有会有两个疑问🤔️:
+
+-   问题一：这里不是执行最后一个`action`不就可以了嘛? 答案： 原因很简单，上面说了 `useState`逻辑和`useReducer`差不多。如果第一个参数是一个函数，会引用上一次 `update`产生的 `state`, 所以需要**循环调用，每一个`update`的`reducer`**，如果`setNumber(2)`是这种情况，那么只用更新值，如果是`setNumber(state=>state+1)`,那么传入上一次的 `state` 得到最新`state`。
+
+-   问题二：什么情况下会有优先级不足的情况(`updateExpirationTime < renderExpirationTime`)？
+
+答案： 这种情况，一般会发生在，当我们调用`setNumber`时候，调用`scheduleUpdateOnFiber`渲染当前组件时，又产生了一次新的更新，所以把最终执行`reducer`更新`state`任务交给下一次更新。
+
+##### 3 updateEffect
+
+```jsx
+function updateEffect(create, deps): void {
+  const hook = updateWorkInProgressHook();
+  const nextDeps = deps === undefined ? null : deps;
+  let destroy = undefined;
+  if (currentHook !== null) {
+    const prevEffect = currentHook.memoizedState;
+    destroy = prevEffect.destroy;
+    if (nextDeps !== null) {
+      const prevDeps = prevEffect.deps;
+      if (areHookInputsEqual(nextDeps, prevDeps)) {
+        pushEffect(hookEffectTag, create, destroy, nextDeps);
+        return;
+      }
+    }
+  }
+  currentlyRenderingFiber.effectTag |= fiberEffectTag
+  hook.memoizedState = pushEffect(
+    HookHasEffect | hookEffectTag,
+    create,
+    destroy,
+    nextDeps,
+  );
+}
+```
+
+`useEffect` 做的事很简单，判断两次`deps` 相等，如果相等说明此次更新不需要执行，则直接调用 `pushEffect`,这里注意 `effect`的标签，`hookEffectTag`,如果不相等，那么更新 `effect` ,并且赋值给`hook.memoizedState`，这里标签是 `HookHasEffect | hookEffectTag`,然后在`commit`阶段，`react`会通过标签来判断，是否执行当前的 `effect` 函数。
+
+##### 4 updateMemo
+
+```jsx
+function updateMemo(
+  nextCreate,
+  deps,
+) {
+  const hook = updateWorkInProgressHook();
+  const nextDeps = deps === undefined ? null : deps; // 新的 deps 值
+  const prevState = hook.memoizedState; 
+  if (prevState !== null) {
+    if (nextDeps !== null) {
+      const prevDeps = prevState[1]; // 之前保存的 deps 值
+      if (areHookInputsEqual(nextDeps, prevDeps)) { //判断两次 deps 值
+        return prevState[0];
+      }
+    }
+  }
+  const nextValue = nextCreate();
+  hook.memoizedState = [nextValue, nextDeps];
+  return nextValue;
+}
+```
+
+在组件更新过程中，我们执行`useMemo`函数，做的事情实际很简单，就是判断两次 `deps`是否相等，如果不想等，证明依赖项发生改变，那么执行 `useMemo`的第一个函数，得到新的值，然后重新赋值给`hook.memoizedState`,如果相等 证明没有依赖项改变，那么直接获取缓存的值。
+
+不过这里有一点，值得注意，`nextCreate()`执行，如果里面引用了`usestate`等信息，变量会被引用，无法被垃圾回收机制回收，就是闭包原理，那么访问的属性有可能不是最新的值，所以需要把引用的值，添加到依赖项 `dep` 数组中。每一次`dep`改变，重新执行，就不会出现问题了。
+
+**温馨小提示： 有很多同学说 `useMemo`怎么用，到底什么场景用，用了会不会起到反作用，通过对源码原理解析，我可以明确的说，基本上可以放心使用，说白了就是可以定制化缓存，存值取值而已。**
+
+##### 5 updateRef
+
+```jsx
+function updateRef(initialValue){
+  const hook = updateWorkInProgressHook()
+  return hook.memoizedState
+}
+```
+
+函数组件更新useRef做的事情更简单，就是返回了缓存下来的值，也就是无论函数组件怎么执行，执行多少次，`hook.memoizedState`内存中都指向了一个对象，所以解释了`useEffect`,`useMemo` 中，为什么`useRef`不需要依赖注入，就能访问到最新的改变值。
+
+##### 一次点击事件更新
+
+![91A72028-3A38-4491-9375-0895F420B7CD.jpg](https://s2.loli.net/2022/08/12/iZRp1JIADzOsQ5h.webp)
+
 
 
 ## 虚拟dom
@@ -3329,7 +5306,7 @@ SPN、SRT、HRRN都需要对进程时间进行评估和统计，实现比较复�
 
 反馈法仍然可能导致长进程饥饿，所以操作系统可以统计长进程的等待时间，当等待时间超过一定的阈值，可以选择提高它们的优先级。
 
-![img](https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2019/10/21/16deecc24dfd080c~tplv-t2oaga2asx-zoom-in-crop-mark:3024:0:0:0.awebp)
+![img](https://s2.loli.net/2022/08/07/GhC8L3Fj7cQUHYA.webp)
 
 
 
@@ -4085,7 +6062,484 @@ React 17 中没有新特性，这是由它的定位决定的。React 17 的定�
 
 除此之外，React 17 中还有一些细节层面的变化，比如调整了 useEffect 钩子中清理副作用的时机，强化了组件返回 undefined 的错误校验等
 
+### 6.react单向数据流
 
+单向数据流，指的就是当前组件的 state 以 props 的形式流动时，只能流向组件树中比自己层级更低的组件。 比如在父-子组件这种嵌套关系中，只能由父组件传 props 给子组件，而不能反过来。
+
+ React 数据流管理方案：
+
+- 使用基于 props 的单向数据流串联父子、兄弟组件；
+- 使用第三方数据流Redux
+- 使用 Context API 维护全局状态
+- 利用“发布-订阅”模式驱动 React 数据在任意组件间流动。
+
+#### 组件间通信方式
+
+![image.png](https://s2.loli.net/2022/08/07/Hyk8m7p5xJhfZto.webp)
+
+#### props的几种模式
+
+##### props chidren模式
+
+```jsx
+<Container>
+    <Children>
+</Container>
+  
+  
+function Container(props){
+ 	return props.children
+}  
+```
+
+作用：
+
+- 可以根据需要控制 Chidren 是否渲染。
+- Container 可以用 React.cloneElement 强化 props (混入新的 props )，或者修改 Chidren 的子元素。
+
+##### render props模式
+
+```jsx
+<Container>
+   { (ContainerProps)=> <Children {...ContainerProps}  /> }
+</Container>
+
+
+function Container(props) {
+   const ContainerProps = {
+      name: 'xiaoming',
+      mes:'hello'
+   }
+   return props.children(ContainerProps)
+}
+复制代码
+```
+
+作用：
+
+- 根据需要控制 Chidren 渲染与否。
+- 可以将需要传给 Children 的 props 直接通过函数参数的方式传递给执行函数 children 。
+
+##### 混合模式
+
+```jsx
+<Container>
+    <Children />
+    { (ContainerProps)=> <Children {...ContainerProps} name={'haha'}  />  }
+</Container>
+复制代码
+```
+
+这种情况需要先遍历 children ，判断 children 元素类型：
+
+- 针对 element 节点，通过 cloneElement 混入 props ；
+- 针对函数，直接传递参数，执行函数。
+
+```jsx
+const Children = (props)=> (<div>
+    <div>hello, my name is {  props.name } </div>
+    <div> { props.mes } </div>
+</div>)
+
+function  Container(props) {
+    const ContainerProps = {
+        name: 'xiaoming',
+        mes:'hello'
+    }
+     return props.children.map(item=>{
+        if(React.isValidElement(item)){ // 判断是 react elment  混入 props
+            return React.cloneElement(item,{ ...ContainerProps },item.props.children)
+        }else if(typeof item === 'function'){
+            return item(ContainerProps)
+        }else return null
+     })
+}
+
+const Index = ()=>{
+    return <Container>
+        <Children />
+        { (ContainerProps)=> <Children {...ContainerProps} name={'haha'}  />  }
+    </Container>
+}
+```
+
+#### Redux
+
+在 Redux 的整个工作过程中，数据流是严格单向的。
+
+如果你想对数据进行修改，只有一种途径：派发 action。action 会被 reducer 读取，进而根据 action 内容的不同对数据进行修改、生成新的 state（状态），这个新的 state 会更新到 store 对象里，进而驱动视图层面做出对应的改变。
+
+对于组件来说，任何组件都可以通过约定的方式从 store 读取到全局的状态，任何组件也都可以通过合理地派发 action 来修改全局的状态。Redux 通过提供一个统一的状态容器，使得数据能够自由而有序地在任意组件之间穿梭。
+
+![image.png](https://s2.loli.net/2022/08/07/AU3YtWJ8fHc4DsT.webp)
+
+1.使用 createStore 来完成 store 对象的创建
+
+```jsx
+// 引入 redux
+import { createStore } from 'redux'
+// 创建 store
+const store = createStore(
+    reducer,
+    initial_state,
+    applyMiddleware(middleware1, middleware2, ...)
+);
+```
+
+2.reducer 的作用是将新的 state 返回给 store
+
+```jsx
+const reducer = (state, action) => {
+    // 此处是各种样的 state处理逻辑
+    return new_state
+}
+```
+
+3.action 的作用是通知 reducer “让改变发生”
+
+```jsx
+const action = {
+  type: "ADD_ITEM",
+  payload: '<li>text</li>'
+}
+```
+
+4.派发 action，靠的是 dispatch
+
+```jsx
+import { createStore } from 'redux'
+// 创建 reducer
+const reducer = (state, action) => {
+    // 此处是各种样的 state处理逻辑
+    return new_state
+}
+// 基于 reducer 创建 state
+const store = createStore(reducer)
+// 创建一个 action，这个 action 用 “ADD_ITEM” 来标识 
+const action = {
+  type: "ADD_ITEM",
+  payload: '<li>text</li>'
+}
+
+// 订阅
+store.subscribe(() => console.log(store.getState()))
+
+// 使用 dispatch 派发 action，action 会进入到 reducer 里触发对应的更新
+store.dispatch(action)
+```
+
+#### Context
+
+Context 提供了一个无需为每层组件手动添加 props，就能在组件树间进行数据传递的方法。
+
+![image.png](https://s2.loli.net/2022/08/07/lYZIyvcsm3EPxdD.webp)
+
+基本用法：
+
+```javascript
+const ThemeContext = React.createContext("light") //
+const ThemeProvider = ThemeContext.Provider  //提供者
+const ThemeConsumer = ThemeContext.Consumer // 订阅消费者
+```
+
+Provider：
+
+```javascript
+const ThemeProvider = ThemeContext.Provider  //提供者
+import ConsumerComponent form './ConsumerComponent'
+
+
+function ProviderComponent(){
+    const [ theme , setTheme ] = React.useState({ theme: "light" })
+    return <div>
+        <ThemeProvider value={ theme } > 
+           <ConsumerComponent />
+        </ThemeProvider>
+    </div>
+}
+
+export default ProviderComponent
+```
+
+provider 作用有两个：
+
+- value 属性传递 context，供给 Consumer 使用。
+- value 属性改变，ThemeProvider 会让消费 Provider value 的组件重新渲染。
+
+Consumer：
+
+类组件：
+
+```javascript
+// 类组件 - contextType 方式
+class ConsumerComponent extends React.Component{
+   render(){
+       const { theme } = this.context
+       return <div style={{ color: theme } }>消费者</div> 
+   }
+}
+
+ConsumerComponent.contextType = ThemeContext
+
+export default ConsumerComponent
+```
+
+函数组件：
+
+（1）使用useContext：
+
+```javascript
+export default function ConsumerComponent(){
+    const  contextValue = React.useContext(ThemeContext)
+    const { theme } = contextValue
+    return <div style={{ color: theme } } >消费者</div> 
+}
+```
+
+（2）使用订阅者：
+
+```javascript
+const ThemeConsumer = ThemeContext.Consumer // 订阅消费者
+
+export default const ConsumerComponent = () => {
+  return (
+    <ThemeConsumer>
+       { (contextValue)=> // todo }
+    </ThemeConsumer>
+	) 
+}
+```
+
+#### 发布订阅
+
+事件的监听（订阅）和事件的触发（发布）
+
+- on()：负责注册事件的监听器，指定事件触发时的回调函数。
+- emit()：负责触发事件，可以通过传参使其在触发的时候携带数据 。
+
+##### 映射
+
+事件和监听函数的对应关系“映射”，处理“映射”我们大部分情况下都是用对象来做的。所以说在全局我们需要设置一个对象，来存储事件和监听函数之间的关系：
+
+```javascript
+ constructor() {
+   // eventMap 用来存储事件和监听函数之间的关系
+   this.eventMap = {};
+ }
+```
+
+##### 订阅
+
+把事件和对应的监听函数写入到 eventMap 里面去：
+
+```javascript
+// type 这里就代表事件的名称
+on(type, handler) {
+  // hanlder 必须是一个函数，如果不是直接报错
+  if(!(handler instanceof Function)) {
+    throw new Error("需要传一个函数")
+  }
+  // 判断 type 事件对应的队列是否存在
+  if(!this.eventMap[type]) {
+   // 若不存在，新建该队列
+    this.eventMap[type] = []
+  }
+  // 若存在，直接往队列里推入 handler
+  this.eventMap[type].push(handler)
+}
+
+```
+
+##### 发布
+
+发布操作就是一个“读”操作。
+
+```javascript
+// 别忘了我们前面说过触发时是可以携带数据的，params 就是数据的载体
+emit(type, params) {
+  // 假设该事件是有订阅的（对应的事件队列存在）
+  if(this.eventMap[type]) {
+    // 将事件队列里的 handler 依次执行出队
+    this.eventMap[type].forEach((handler, index)=> {
+      // 注意别忘了读取 params
+      handler(params)
+    })
+  }
+}
+
+```
+
+##### 关闭
+
+关闭就是一个出队列的操作。
+
+```javascript
+off(type, handler) {
+  if(this.eventMap[type]) {
+    this.eventMap[type].splice(this.eventMap[type].indexOf(handler)>>>0,1)
+  }
+}
+
+```
+
+##### 测试
+
+完整代码
+
+```javascript
+class myEventEmitter {
+    constructor() {
+        this.eventMap = {};
+    }
+
+    on(type, handler) {
+        if (!handler instanceof Function) {
+            throw new Error("请传一个函数");
+        }
+        if (!this.eventMap[type]) {
+            this.eventMap[type] = []
+        }
+        this.eventMap[type].push(handler)
+    }
+
+    emit(type, params) {
+        if (this.eventMap[type]) {
+            this.eventMap[type].forEach((handler) => {
+                handler(params);
+            })
+        }
+    }
+
+    off(type, handler) {
+        if (this.eventMap[type]) {
+            // 位运算 负数返回无限大的数，否则返回本身
+            this.eventMap[type].splice(this.eventMap[type].indexOf(handler) >>> 0, 1);
+        }
+    }
+}
+
+const myEvent = new myEventEmitter();
+// 编写一个简单的 handler
+const testHandler = function (params) {
+    console.log(`test事件被触发了，testHandler 接收到的入参是${params}`);
+};
+// 监听 test 事件
+myEvent.on("test", testHandler);
+// 在触发 test 事件的同时，传入希望 testHandler 感知的参数
+myEvent.emit("test", "123");
+
+// myEvent.off("test", testHandler);
+
+console.log(`object`, myEvent.eventMap)
+
+```
+
+![image.png](https://s2.loli.net/2022/08/07/nFzy1pr5CatVZ3h.webp)
+
+##### 在React中应用
+
+```javascript
+// index.jsx
+import React, { Component } from 'react'
+import A from './A'
+import B from './B'
+import event from './event.js'
+
+class index extends Component {
+    render() {
+        React.$myEvent = new event()
+        return (
+            <div>
+                <A></A>
+                <B></B>
+            </div>
+        )
+    }
+}
+
+export default index
+
+
+// event.js
+class myEventEmitter {
+    constructor() {
+        this.eventMap = {};
+    }
+
+    on(type, handler) {
+        if (!handler instanceof Function) {
+            throw new Error("请传一个函数");
+        }
+        if (!this.eventMap[type]) {
+            this.eventMap[type] = []
+        }
+        this.eventMap[type].push(handler)
+    }
+
+    emit(type, params) {
+        if (this.eventMap[type]) {
+            this.eventMap[type].forEach((handler) => {
+                handler(params);
+            })
+        }
+    }
+
+    off(type, handler) {
+        if (this.eventMap[type]) {
+            this.eventMap[type].splice(this.eventMap[type].indexOf(handler) >>> 0, 1);
+        }
+    }
+}
+export default myEventEmitter
+
+
+// A
+import React from "react";
+
+class A extends React.Component {
+  state = {
+    newParams: "",
+  };
+  handler = (params) => {
+    this.setState({
+      newParams: params,
+    });
+  };
+  bindHandler = () => {
+    React.$myEvent.on("someEvent", this.handler);
+  };
+  render() {
+    return (
+      <div>
+        <button onClick={this.bindHandler}>点我监听A的动作</button>
+        <div>A传入的内容是[{this.state.newParams}]</div>
+      </div>
+    );
+  }
+}
+
+export default A;
+
+// B
+import React from "react";
+
+class B extends React.Component {
+  state = {
+    infoToB: "哈哈哈哈我来自A",
+  };
+  reportToB = () => {
+    React.$myEvent.emit("someEvent", this.state.infoToB);
+  };
+  render() {
+    return <button onClick={this.reportToB}>点我把state传递给B</button>;
+  }
+}
+
+export default B;
+
+```
+
+![image.png](https://s2.loli.net/2022/08/07/vImzEbAJyiRTwoe.webp)
 
 ## Demo实现
 
@@ -4268,6 +6722,133 @@ export default function Count() {
       <Timer n={10} />
     </div>
   );
+}
+```
+
+
+
+```js
+import React ,{useState,useEffect,useRef} from 'react'
+import { ReactDOM } from 'react-dom'
+export default function App(){
+	const [cansend,setCansend]=useState(true)
+	const [timer,setTimer] =useState(0)
+	const time=useRef(null)
+
+	const send=()=>{
+		setTimer(60)
+		setCansend(false)
+		time.current=setTimeout(() => {
+			setTimer((timer)=>timer-1)
+		}, 1000);
+	}
+	useEffect(()=>{
+		console.log(timer);
+		if(timer==0){
+			setCansend(true)
+			clearInterval(time.current)
+		}
+	},[timer])
+	return (
+		<div>
+			<input>  </input>
+			<button disabled={!cansend} onClick={send}>{cansend ? '发送验证码' : timer + '秒后重发'}</button>
+		</div>
+	)
+}
+ReactDOM.render(<App />, document.getElementById('root'))
+```
+
+
+
+### 3.hooks实现防抖节流
+
+utils.js
+
+```js
+import {useEffect,useCallback,useRef } from 'react'
+// 防抖
+export function useDebounce(fn, delay, dep = []) {
+  const { current } = useRef({ fn, timer: null });
+  useEffect(function () {
+    current.fn = fn;
+  }, [fn]);
+  return useCallback(function f(...args) {
+    if (current.timer) {
+      clearTimeout(current.timer);
+    }
+    current.timer = setTimeout(() => {
+      current.fn.call(this, ...args);
+    }, delay);
+  }, dep)
+}
+
+// 节流
+export function useThrottle(fn, delay, dep = []) {
+  const { current } = useRef({ fn, timer: null })
+  useEffect(
+    function () {
+      current.fn = fn
+    },
+    [fn]
+  )
+  return useCallback(function f(...args) {
+    if (!current.timer) {
+      current.timer = setTimeout(() => {
+        delete current.timer
+      }, delay)
+      current.fn.call(this, ...args)
+    }
+  }, dep)
+}
+```
+
+导入
+
+```js
+import { useThrottle,useDebounce } from "../utils";
+const handlerSearch = useThrottle(() => {console.log('小太阳')},1000)
+const handlerSearch = useDebounce(() => {console.log('小太阳')},1000)
+```
+
+
+
+
+
+```jsx
+useThrottle
+
+import { useCallback, useRef } from "react";
+
+export default function useThrottle(fn, delay) {
+  const timer = useRef(-1);
+  const throttle = useCallback(() => {
+    if (timer.current > -1) {
+      return;
+    }
+    timer.current = setTimeout(() => {
+      fn();
+      timer.current = -1;
+      clearTimeout(timer.current);
+    }, delay);
+  }, [fn, delay]);
+  return throttle;
+}
+useDebounce
+
+import { useEffect, useState } from "react";
+
+export default function useDebounce(value, delay) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+  return debouncedValue;
 }
 ```
 

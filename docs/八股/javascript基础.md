@@ -208,7 +208,7 @@ let a = {
     }
 }
 a == 1 && a == 2 && a == 3       => true
-复制代码
+
 表达式执行，从左到右执行 a == 1 时 a 会转化为原始值(ToPrimitive(a, Number)) 找到自己构造函数原型上的 valueOf ，我们 a 创建了一个 valueOf 方法，根据原型链查找机制使用的是我们定义的valueOf , 执行 a.valueOf 返回结果时 1 所以 a == 1` `第二次执行 a == 2 , 因为我们 valueOf return a.x++ 先赋值后自增 第一次执行完a.x的之久发生改变 a == 2 成立,依次往后比较...
 ```
 
@@ -558,6 +558,8 @@ JS 整数是怎么表示的
 
 > 通过 Number 类型来表示，遵循 IEEE754 标准，通过 64 位来表示一个数字，（1 + 11 + 52），最大安全数字是 Math.pow(2, 53) - 1，对于 16 位十进制。（符号位 + 指数位 + 小数部分有效位）
 
+Math.pow(2, 53) ，53 为有效数字，会发生截断，等于 JS 能支持的最大数字
+
 **什么是BigInt?**
 
 > `BigInt`是一种新的数据类型，用于当整数值大于Number数据类型支持的范围时。这种数据类型允许我们安全地对大整数执行算术操作，表示高分辨率的时间戳，使用大整数id，等等，而不需要使用库。
@@ -751,6 +753,47 @@ console.log(a.call(null));		    //[object Null]
 同样是检测对象obj调用toString方法，`obj.toString()`的结果和`Object.prototype.toString.call(obj)`的结果不一样，这是为什么？
 
 这是因为toString是Object的原型方法，而Array、function等**类型作为Object的实例，都重写了toString方法**。**不同的对象类型调用toString方法时，根据原型链的知识，调用的是对应的重写之后的toString方法**（function类型返回内容为函数体的字符串，Array类型返回元素组成的字符串…），而不会去调用Object上原型toString方法（返回对象的具体类型），所以采用obj.toString()不能得到其对象类型，只能将obj转换为字符串类型；因此，在想要得到对象的具体类型时，应该调用Object原型上的toString方法。
+
+```js
+function getDataType(data){  
+    var getType=Object.prototype.toString;  
+    var myType=getType.call(data);//调用call方法判断类型，结果返回形如[object Function]  
+    var typeName=myType.slice(8,-1);// [object Function],即取除了“[object ”的字符串。  ]"
+    var copyInfo='';//复制后的数据  
+    //console.log(data+" is "+myType);  
+    switch(typeName){  
+        case 'Number': copyInfo=data-0;  
+                break;  
+        case 'String': copyInfo="'"+data+"'";  
+                break;  
+        case 'Function': copyInfo=data;  
+                break;  
+        case 'Null': copyInfo=null;  
+                break;  
+        case 'Undefined': copyInfo="Undefined";  
+                break;  
+        case 'Array':   
+                    copyInfo=[];//先将copyInfo变为空数组  
+                    for(var i=0;i<data.length;i++){  
+                        copyInfo[i]=data[i];//将data数组数据逐个写入copyInfo  
+                    }  
+                break;  
+        case 'Object':   
+                    copyInfo={};//先将copyInfo变为空对象  
+                    for(var x in data){  
+                        copyInfo[x]=data[x];  
+                    }  
+                break;  
+        case 'Boolean': copyInfo=data;  
+                break;  
+        default : copyInfo=data;  
+                break;  
+    }  
+    return copyInfo;  
+} 
+```
+
+
 
 ### 3.判断数组方法有哪些
 
@@ -965,6 +1008,109 @@ a > -1 // true
 
 > 在以上代码中，因为 `a` 是对象，所以会通过 `valueOf` 转换为原始类型再比较值
 
+### 7.“`==`”和“`===`”的区别
+
+两者都是判断等式两边是否相等，最大的区别就是==会进行类型的转换之后再判断两者是否相等，而=====不会进行数据类型的转换，先判断两边的数据类型是否相等，如果数据类型相等的话才会进行接下来的判断，再进行等式两边值得判断，可以理解为只有等式两边是全等（数据类型相同，值相同）的时候结果才会是true，否则全为false。
+
+`==`判断等式两边是否相等的情况：
+
+（1）null、undefined和不同类型比较，都是false（null和undefined结果为true）
+
+（2）NaN和任何数据进行比较，都是false（包括NaN和NaN相比较也为false）
+
+（3）布尔值是转换为数字1或0再和其他数据进行比较
+
+拓展：   不同数据转换成布尔值的结果：   
+
+```js
+    console.log(Boolean(''));       //false
+    console.log(Boolean({}));       //true
+    console.log(Boolean([]));       //true
+    console.log(Boolean(null));     //false
+    console.log(Boolean(undefined)); //false
+    console.log(Boolean(NaN));      //false
+    console.log(Boolean(Object));   //true
+```
+
+（4）数字和其他简单数据类型进行比较时，会尝试将其他数据类型转换成数值型再进行比较
+
+其他数据类型默认转数字使用的是Number()  
+
+```js
+    console.log(""==false);     //true
+    console.log(parseInt(""));   //NaN
+    console.log(Number(""));   //0
+    console.log(""==0);         //true
+```
+
+（5）对象和其他简单数据类型进行比较的时候，会尝试使用对象的valueOf()和toString()方法将对象转换为原始值进行比较：
+
+①对象.toString()返回值只有`[ object Object ]`     
+
+```js
+let obj = {
+        name:'leon',
+        age:18
+    };
+    console.log(obj.toString());    //[object Object]
+    console.log(obj.valueOf());     //{name: 'leon', age: 18}
+    let obj = {};
+    console.log(obj.toString());    //[object Object]
+    console.log(obj.valueOf());     //{}
+```
+
+②数组  [ ].toString()返回值是空  其他数组.toString()返回值是字符 ，一个成员一个字符逗号分隔 
+
+```js
+    let arr1=[1,2,3];
+    console.log(arr1.toString());    //1,2,3
+    console.log(arr1.valueOf());     //[1, 2, 3]
+ 
+    let arr=[];       
+    console.log(arr.toString());    //空
+    console.log(arr.valueOf());     //[]
+```
+
+③其他的对象function  reg  返回字符串 
+
+```js
+function fn(){
+        console.log("你是最棒的！");
+    }
+    console.log(fn.toString());    
+    console.log(fn.valueOf());   
+    
+    let reg = /^[^_$]\w{5,}@(163|126|qq|sina)\.(com|cn|net)$/;
+    console.log(reg.toString());    
+    console.log(reg.valueOf()); 
+```
+
+![image-20220813225221118](https://s2.loli.net/2022/08/13/jCslhNowUYz3d7M.png)
+
+（6）两者同为引用类型时，必须是指向同一个引用地址才相等，否则不相等
+
+（7）-0 == +0   结果为：true
+
+全等比较（===）不转换数据类型，数据类型和内容必须完全一致才是相等
+
+全等比较（===）两边是否相等的情况：
+
+（1）类型不同，一定不相等
+
+（2）两个同为数值，并且相等，则相等；若其中一个为NaN，一定不相等
+
+（3）两个都为字符串，每个位置的字符都一样，则相等
+
+（4）两个同为true,或是false，则相等
+
+（5）两个值都引用同一个对象或函数，则相等，否则不相等（引用类型地址空间可能不一样）
+
+（6）两个值都为null，或undefined，则相等
+
+（7）两者同为引用类型时，必须是指向同一个引用地址才相等，否则不相等（5的补充）
+
+（8）-0 === +0   结果为：true
+
 ------
 
 ## Js基础
@@ -1129,7 +1275,29 @@ console.log(obj.valueOf()) //1
 
 
 
-### 2.怎么判断对象属于哪个类
+### 2.js全局变量和全局函数
+
+#### 全局变量
+
+Infinity 代表正的无穷大的数值。
+NaN 指示某个值是不是数字值。
+undefined 指示未定义的值。
+
+#### 全局函数
+
+decodeURI() 解码某个编码的 URI。
+decodeURIComponent() 解码一个编码的 URI 组件。
+encodeURI() 把字符串编码为 URI。
+encodeURIComponent() 把字符串编码为 URI 组件。
+escape() 对字符串进行编码。
+eval() 计算 JavaScript 字符串，并把它作为脚本代码来执行。
+isFinite() 检查某个值是否为有穷大的数。
+isNaN() 检查某个值是否是数字。
+Number() 把对象的值转换为数字。
+parseFloat() 解析一个字符串并返回一个浮点数。
+parseInt() 解析一个字符串并返回一个整数。
+String() 把对象的值转换为字符串。
+unescape() 对由escape() 编码的字符串进行解码
 
 ### 3.for in和for of有什么区别
 
@@ -1172,6 +1340,82 @@ for (var key of Object.keys(myObject)) {
 }
 //a:1 b:2 c:3
 ```
+
+#### 实现for of 遍历对象
+
+for-of在object对象上暂时没有实现，但是我们可以通过Symbol.iterator给对象添加这个塑性，我们就可以使用for-of了
+
+```js
+var p={
+	name:'kevin',
+	age:2,
+	sex:'male'
+}
+Object.defineProperty(p,Symbol.iterator,{
+	enumberable:false,
+	configurable:false,
+	writable:false,
+	value:function(){
+		var _this=this;
+		var nowIndex=-1;
+		var key=Object.keys(_this);
+		return {
+			next:function(){
+				nowIndex++;
+				return {
+					value:_this[key[nowIndex]],
+					done:(nowIndex+1>key.length)
+				}
+			}
+		}
+	}
+})
+}
+//这样的话就可以直接通过for-of来遍历对象了
+for(var i of p){
+  console.log(i)
+}
+//kevin,2,male
+```
+
+其实for-of的原理最终也是通过调用p[Symbol.iterator]()这个函数，这个迭代器函数返回一个next函数，for循环会不断调用next 那么知道原理之后，我们可以自己来调用iterator.next来实现循环
+
+```js
+var students = {}
+students[Symbol.iterator] = function() {
+  let index = 1;
+  return {
+    next() {
+      return {done: index>100, value: index++}
+    }
+  }
+}
+var iterator = students[Symbol.iterator]();
+var s=iterator.next();
+while(!s.done) {
+  console.log(s.value);
+  s=iterator.next();
+}
+
+```
+
+上例中使用 iterator.next 和 while 结合实现了 for循环。 除了使用iterator 之外，我们还可以使用 yield 语法来实现循环，yield相对简单一些，只要通过 yield 语句把值返回即可：
+
+```js
+let students = {
+  [Symbol.iterator]: function*() {
+    for(var i=0;i<=100;i++) {
+      yield i;
+    }
+  }
+}
+for(var s of students) {
+  console.log(s);
+}
+//这个yield其实最后返回的就是iterator函数
+```
+
+
 
 #### 总结
 
@@ -3147,7 +3391,7 @@ string.match(regexp)
 ```javascript
 let str = "abcdef";
 console.log(str.match("c")) // ["c", index: 2, input: "abcdef", groups: undefined]
-复制代码
+
 ```
 
 ##### （3）search()
@@ -3325,7 +3569,6 @@ parseInt() 方法用于可解析一个字符串，并返回一个整数。其语
 
 ```javascript
 parseInt(string, radix)
-
 ```
 
 该方法有两个参数：
@@ -3405,7 +3648,7 @@ parseFloat("40.5 years") // 输出结果：40.5
 parseFloat("new40.5")    // 输出结果：NaN
 ```
 
-#### 14.编码生成字符
+#### 14. 编码生成字符
 
 fromCharCode() 可接受一个指定的 Unicode 值，然后返回一个字符串
 
@@ -4155,9 +4398,50 @@ console.log(Object.entries(simuArray)); // [ ['0', 'a'], ['1', 'b'], ['2', 'c'] 
 判断对象自身属性中是否具有指定的属性。
 `obj.hasOwnProperty('name')`
 
+`hasOwnProperty`是Object.prototype的一个方法
+他能判断一个对象是否包含自定义属性而不是原型链上的属性
+`hasOwnProperty` 是 JavaScript 中唯一一个处理属性但是不查找原型链的函数
+
+JavaScript 不会保护 hasOwnProperty 被非法占用，因此如果一个对象碰巧存在这个属性，就需要使用外部的 hasOwnProperty 函数来获取正确的结果
+
+```js
+
+var foo = {
+    hasOwnProperty: function() {    //已经存在的 
+        return false;
+    },
+    chang: '收购腾讯'
+};
+foo.hasOwnProperty('chang'); // 总是返回 false
+// 使用{}对象的 hasOwnProperty，并将其上下为设置为foo
+{}.hasOwnProperty.call(foo, 'chang'); // true
+```
+
+当检查对象上某个属性是否存在时，hasOwnProperty 是唯一可用的方法。同时在使用 for in loop 遍历对象时，推荐总是使用 hasOwnProperty 方法，这将会避免原型对象扩展带来的干扰
+
+```js
+Object.prototype.chang = 1;
+var foo = {oo: 2};
+for(var i in foo) {        //for … in 循环不仅可以遍历数字键名,还会遍历原型上的值和手动添加的其他键
+    console.log(i);        // 输出两个属性：chang 和 oo
+}
+                           // 没办法改变for in语句的行为，所以想过滤结果就只能使用hasOwnProperty 方法
+                           // 修改代码如下
+for(var i in foo) {
+    if (foo.hasOwnProperty(i)) { //判断去掉原型上的
+        console.log(i);
+    }
+}                  
+  //使用了 hasOwnProperty，所以这次只输出 oo。
+  //如果不使用 hasOwnProperty，则这段代码在原生对象原型（比如 Object.prototype）被扩展时可能会出错 
+  //注意通过判断一个属性是否undifined 是不够的 因为一个属性确实存在 只不过它的值被设置为undefined 
+```
+
+
+
 #### 9.Object.getOwnPropertyNames()
 
-返回一个由指定对象的所有自身属性的属性名（包括不可枚举属性但不包括Symbol值作为名称的属性）组成的数组。
+返回一个由指定对象的所有自身属性的属性名（**包括不可枚举属性但不包括Symbol值作为名称的属性**）组成的数组。
 
 ```js
 var obj = { 0: "a", 1: "b", 2: "c"};
@@ -4174,6 +4458,40 @@ Object.defineProperty(obj,'z',{
 })
 console.log(Object.getOwnPropertyNames(obj))  // ["x", "y", "z"] 包含不可枚举属性 。
 console.log(Object.keys(obj))                 // ["x", "y"]      只包含可枚举属性 。
+```
+
+```js 
+console.log(Object.getOwnPropertyNames(''))  //['length']
+```
+
+可以枚举属性  遍历键名  是按照顺序进行遍历的  是字典顺序
+
+```js
+let str='111'
+let num=['1','3','2','4']
+console.log(Object.getOwnPropertyNames(str))
+//['0', '1', '2', 'length']
+console.log(Object.getOwnPropertyNames(num))
+//['0', '1', '2', '3', 'length']
+```
+
+```js
+let obj={
+ 1:'a',
+ 3:'b',
+ 4:'c',
+ 2:'d'
+}
+let obj2={
+ 'e':'a',
+ '3':'b',
+ 'f':'c',
+ '2':'d'
+}
+console.log(Object.getOwnPropertyNames(obj))
+//['1', '2', '3', '4']
+console.log(Object.getOwnPropertyNames(obj2))
+//['2', '3', 'e', 'f']
 ```
 
 
@@ -4471,6 +4789,698 @@ ES6的新方法, 返回值也是对象中属性名组成的数组
 var data = {};
 var arr = Object.keys(data);
 alert(arr.length == 0);//true
+```
+
+### 18.js对象遍历顺序
+
+[细谈 JS 对象遍历的顺序问题](https://juejin.cn/post/6998831933736108039)
+
+对待遍历顺序，对象有一套自己既定的规则，在此规则下呢，对象的遍历顺序会受插入元素顺序的影响，但是不完全受插入元素先后顺序的影响。如果您有「必须按插入元素顺序遍历」的场景，可以考虑使用 `Map`。
+
+遍历对象的方法有很多种，我们经常会使用的有 `for...in` ，除此之外，还有：
+
+1. `Object.keys`
+2. `Object.entries`
+3. `Obejct.getOwnerProPertyNames`
+4. `Reflect.ownKeys`
+5. ......
+
+上面我们列的几个方法，都按照一样的规则去遍历对象。而实际的遍历规则会根据 key 值类型的不同而不同。
+
+在一个对象中，如果我们的 key 值是像 `'1'`、`'200'`这种正整数格式的字符串。 遍历的顺序是按照 key 值的大小来排列的。
+
+比如我们看这样的一个例子：
+
+```js
+const obj = {}
+
+obj['10'] = 'a';
+obj['9'] = 'b';
+obj[8] = 'c';
+obj[7] = 'd';
+
+console.log(Object.keys(obj)) //  ["7", "8", "9", "10"]
+```
+
+我们最后的遍历顺序完全忽视了插入顺序，并且，值得我们注意的是，在对象中，就算我们添加属性时的索引值是 Number 类型，最后的结果还是会被隐式的转为字符串。
+
+数组作为对象的一种，也符合上面的规则，又或许，有上面的表现就是因为要兼容数组的缘故呢。除此之外，通过上面的规则，我们还可以推断出，对类数组（key 值是正整数且有 `length` 属性）进行遍历也是按照索引顺序的。
+
+另外，如果我们的 key 值是不能转为正整数的字符串，这其中包括了可以转换为负数的字符串（ 如 `'-1'` ）、小数格式的字符串(如 `'1.0'` ) 和其他的字符串。他们的遍历顺序会比较符合直觉，就是插入对象的顺序：
+
+```js
+const obj2 = {}
+
+obj2['1.1'] = 'a';
+obj2['1.0'] = 'b';
+obj2['-1'] = 'c';
+obj2['jack'] = 'd'
+
+console.log(Object.keys(obj2)); //  ["1.1", "1.0", "-1", "jack"]
+```
+
+事实上，对象的索引值的类型不仅可以是字符串，还可以是 `Symbol` 类型。对于 `Symbol` 类型而言，它的遍历顺序也是单纯的按照插入对象的顺序。
+
+如果我们的对象综合了上面所有的情况，即一个对象的索引值出现了所有的类型（各种形式的字符串、`Symbol` 类型），它会：
+
+1. 先按照我们上面提的关于正整数的规则遍历正整数部分
+2. 按接下来会插入顺序遍历剩下的字符串
+3. 最后再按照插入顺序遍历 `Symbol` 类型
+
+相信到这里，大家已经完全明白了对象的遍历顺序问题，最后还有一点值得大家注意的点，是 `for...in` 的遍历顺序问题。
+
+最开始的时候，`for...in` 的遍历顺序并没有一个统一的标准，浏览器厂商会按照他们的喜好去设置 `for...in` 的遍历顺序。如果您对遍历顺序有要求并且要兼容老的浏览器版本，建议不使用它。后来 ES 2019 的 [一个提案](https://link.juejin.cn?target=https%3A%2F%2Fgithub.com%2Ftc39%2Fproposal-for-in-order) 对此现象进行了规范，现在 `for...in` 的顺序也遵循上面的规则。
+
+尽管会遵循上面的规则，但是 `for...in` 还会遍历原型的属性。所以 `for...in` 的变量元素的规则是先按照我们上面讲的对象遍历规则去变量对象本身，接下来再按照此规则去遍历对象的原型，以此类推，直到遍历到顶部。
+
+### 19.Object.create()、new Object()和{}的区别
+
+平时代码中必定会使用对象，通常是用最直接的字面量方法创建`var obj = {}`，最近在整理[JS继承方式](https://link.juejin.cn/?target=https%3A%2F%2Flijing0906.github.io%2Fpost%2FjsInherit "https://lijing0906.github.io/post/jsInherit")时遇到`Object.create()`也可以创建对象，另外，也可以用`new Object()`关键字创建。 那这三种方式有差别吗？
+
+#### **直接字面量创建**
+
+```js
+var objA = {};
+objA.name = 'a';
+objA.sayName = function() {
+    console.log(`My name is ${this.name} !`);
+}
+// var objA = {
+//     name: 'a',
+//     sayName: function() {
+//         console.log(`My name is ${this.name} !`);
+//     }
+// }
+objA.sayName();
+console.log(objA.__proto__ === Object.prototype); // true
+console.log(objA instanceof Object); // true
+```
+
+#### **new关键字创建**
+
+```js
+var objB = new Object();
+// var objB = Object();
+objB.name = 'b';
+objB.sayName = function() {
+    console.log(`My name is ${this.name} !`);
+}
+objB.sayName();
+console.log(objB.__proto__ === Object.prototype); // true
+console.log(objB instanceof Object); // true
+```
+
+在[JS的指向问题](https://link.juejin.cn/?target=https%3A%2F%2Flijing0906.github.io%2Fpost%2FJSthis "https://lijing0906.github.io/post/JSthis")中讲**new绑定**时讲了`new`操作符其实做了以下四步：
+
+```js
+var obj = new Object(); // 创建一个空对象
+obj.__proto__ = Object.prototype; // obj的__proto__指向构造函数Object的prototype
+var result = Object.call(obj); // 把构造函数Object的this指向obj，并执行构造函数Object把结果赋值给result
+if (typeof(result) === 'object') {
+    objB = result; // 构造函数Object的执行结果是引用类型，就把这个引用类型的对象返回给objB
+} else {
+    objB = obj; // 构造函数Object的执行结果是值类型，就返回obj这个空对象给objB
+}
+```
+
+这样一比较，其实字面量创建和new关键字创建并没有区别，创建的新对象的`__proto__`都指向`Object.prototype`，只是字面量创建更高效一些，少了`__proto__`指向赋值和`this`。
+
+#### **Object.create()**
+
+> `Object.create()`方法创建一个新对象，使用现有的对象来提供新创建的对象的`__proto__`。 [MDN](https://link.juejin.cn/?target=https%3A%2F%2Fdeveloper.mozilla.org%2Fzh-CN%2Fdocs%2FWeb%2FJavaScript%2FReference%2FGlobal_Objects%2FObject%2Fcreate "https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Object/create")
+
+```
+const person = {
+  isHuman: false,
+  printIntroduction: function () {
+    console.log(`My name is ${this.name}. Am I human? ${this.isHuman}`);
+  }
+};
+const me = Object.create(person); // me.__proto__ === person
+me.name = "Matthew"; // name属性被设置在新对象me上，而不是现有对象person上
+me.isHuman = true; // 继承的属性可以被重写
+me.printIntroduction(); // My name is Matthew. Am I human? true
+
+```
+
+> Object.create(proto\[, propertiesObject\])
+
+-   `proto`必填参数，是新对象的原型对象，如上面代码里新对象`me`的`__proto__`指向`person`。注意，如果这个参数是`null`，那新对象就彻彻底底是个空对象，没有继承`Object.prototype`上的任何属性和方法，如`hasOwnProperty()、toString()`等。
+
+```js
+var a = Object.create(null);
+console.dir(a); // {}
+console.log(a.__proto__); // undefined
+console.log(a.__proto__ === Object.prototype); // false
+console.log(a instanceof Object); // false 没有继承`Object.prototype`上的任何属性和方法，所以原型链上不会出现Object
+```
+
+-   `propertiesObject`是可选参数，指定要添加到新对象上的可枚举的属性（即其自定义的属性和方法，可用`hasOwnProperty()`获取的，而不是原型对象上的）的描述符及相应的属性名称。
+
+```js
+var bb = Object.create(null, {
+    a: {
+        value: 2,
+        writable: true,
+        configurable: true
+    }
+});
+console.dir(bb); // {a: 2}
+console.log(bb.__proto__); // undefined
+console.log(bb.__proto__ === Object.prototype); // false
+console.log(bb instanceof Object); // false 没有继承`Object.prototype`上的任何属性和方法，所以原型链上不会出现Object
+
+// ----------------------------------------------------------
+
+var cc = Object.create({b: 1}, {
+    a: {
+        value: 3,
+        writable: true,
+        configurable: true
+    }
+});
+console.log(cc); // {a: 3}
+console.log(cc.hasOwnProperty('a'), cc.hasOwnProperty('b')); // true false 说明第二个参数设置的是新对象自身可枚举的属性
+console.log(cc.__proto__); // {b: 1} 新对象cc的__proto__指向{b: 1}
+console.log(cc.__proto__ === Object.protorype); // false
+console.log(cc instanceof Object); // true cc是对象，原型链上肯定会出现Object
+```
+
+`Object.create()`创建的对象的原型指向传入的对象。跟字面量和`new`关键字创建有区别。
+
+-   自己实现一个Object.create()
+
+```js
+Object.mycreate = function(proto, properties) {
+    function F() {};
+    F.prototype = proto;
+    if(properties) {
+        Object.defineProperties(F, properties);
+    }
+    return new F();
+}
+var hh = Object.mycreate({a: 11}, {mm: {value: 10}});
+console.dir(hh);
+```
+
+#### **总结**
+
+-   字面量和`new`关键字创建的对象是`Object`的实例，原型指向`Object.prototype`，继承内置对象`Object`
+-   `Object.create(arg, pro)`创建的对象的原型取决于`arg`，`arg`为`null`，新对象是空对象，没有原型，不继承任何对象；`arg`为指定对象，新对象的原型指向指定对象，继承指定对象
+
+### 20.Js中的JSON
+
+#### 什么是JSON
+
+JSON的英文全称是JavaScript object notation
+JSON是一种轻量级的文本数据交换格式
+JSON是独立的语言：JSON 使用 Javascript语法来描述数据对象，但是 JSON 仍然独立于语言和平台。JSON 解析器和 JSON 库支持许多不同的编程语言。 目前非常多的动态（PHP，JSP，.NET）编程语言都支持JSON。
+JSON 具有自我描述性，更易理解
+
+#### JSON语法规则
+
+- 数据为 键/值 对。
+- 数据由逗号分隔。
+- 大括号保存对象
+- 方括号保存数组
+
+##### JSON 数据
+
+JSON 数据格式为 键/值 对，就像 JavaScript 对象属性。
+
+键/值对包括字段名称（在双引号中），后面一个冒号，然后是值：
+
+```json
+"name":"Runoob"
+```
+
+##### JSON对象
+
+JSON 对象保存在大括号内。
+
+就像在 JavaScript 中, 对象可以保存多个 键/值 对：
+
+```json
+{"name":"Runoob", "url":"www.runoob.com"}
+```
+
+##### JSON 数组
+
+JSON 数组保存在中括号内。
+
+就像在 JavaScript 中, 数组可以包含对象：
+
+```json
+"sites":[    {"name":"Runoob", "url":"www.runoob.com"},     {"name":"Google", "url":"www.google.com"},    {"name":"Taobao", "url":"www.taobao.com"} ]
+```
+
+在以上实例中，对象 "sites" 是一个数组，包含了三个对象。
+
+#### JSON.parse
+
+在ES5中，增加了一个JSON对象，专门用来处理JSON格式的数据。
+JSON是一个对象，但只有两个方法：`parse` 和 `stringify`，不能作为构造函数，也无属性。
+
+```js
+typeof JSON === 'object'
+```
+
+`JSON.parse()` 用来解析JSON字符串，得到对应的JavaScript值或对象。
+
+```js
+JSON.parse('{}') // {}
+JSON.parse('true') // true
+JSON.parse('null') // null
+```
+
+##### JSON.parse 语法
+
+```js
+JSON.parse(text[, reviver])
+```
+
+- text：要被解析成的字符串。
+   如果传入数字则会转换成十进制数字输出。
+   如果传入布尔值则直接输出。
+   如果传入null则输出null。
+   不支持其他类型的值，否则报错。
+- reviver： 可选，转换器, 可以用来修改解析生成的原始值。 **返回值：** JavaScript对象/值, 对应给定JSON文本的对象/值。
+
+##### reviver 参数
+
+reviver函数，用于转换处理解析到的JavaScript值，处理完后返回最终的结果。
+
+转换过程：
+
+- 解析的值本身和它可能包含的所有属性，按照一定遍历顺序分别调用reviver函数，属性名和值作为参数两个参数 `key` 和 `value` 传入。
+   遍历顺序：按照层级，从内往外遍历，最终到达最顶层，则是解析值本身。
+- reviver返回undefined，则删除该对象，如果返回了其他值，则该值会成为当前属性的新值。
+- 当遍历到最顶层时，因为没有属性了，参数key是空字符串`''`，参数value则是当前解析值。
+
+对于reviver函数的两个参数 `key` 和 `value`，不同的数据类型：
+
+- 基本值类型数据（string、number、boolean）和null，以及空对象`{}`和空数组`[]`：
+   则key是空字符串，value是对应解析值；
+   因为已经是最顶层，并没有别的属性。
+- Object对象：
+   则key和value都存在，与属性名和值各自对应；
+   最顶层会返回一个参数key为空的值。
+- 数组：
+   key对应数组索引，value对应元素值；
+   最顶层会返回一个参数key为空的值。
+
+基本类型的转换：
+
+```js
+JSON.parse('5', function (key, value) {
+  console.log(`key:${key}, value:${value}`)
+})
+// key:, value:5
+JSON.parse('null', function (key, value) {
+  console.log(`key:${key}, value:${value}`)
+})
+// key:, value:null
+JSON.parse('{}', function (key, value) {
+  console.log(`key:${key}, value:`, value)
+})
+// key:, value:{}
+```
+
+Object对象和数组：
+
+```js
+JSON.parse('[1, 2]', function (key, value) {
+  console.log(`key:${key}, value:`, value)
+})
+// key:0, value: 1
+// key:1, value: 2
+// key:, value: (2) [empty × 2]
+
+JSON.parse('{ "user": "张三", "info": { "age": 25, "sex": 1 } }', function (key, value) {
+  console.log(`key:${key}, value::`, value)
+})
+// key:user, value:: 张三
+// key:age, value:: 25
+// key:sex, value:: 1
+// key:info, value:: {}
+// key:, value:: {}
+```
+
+数据处理：
+
+```js
+JSON.parse('[1, 2]', function (key, value) {
+  if(key === '') {
+    return value
+  }
+  return value + 3
+})
+// [4, 5]
+```
+
+##### JSON.parse 特性
+
+在解析JSON字符串的时候，需要注意到JSON格式的一些规范，不然就容易报错。
+ JSON数据对值的类型和格式，都有严格的规定，具体的规则如下：
+
+该方法使用字符串类型JSON格式数据。
+ 该方法也支持数字、布尔值和null三个类型的值，转换出对应的字面值。
+ 不支持其他类型。
+
+```js
+JSON.parse('"中国"')
+// '中国'
+JSON.parse(null) // null
+JSON.parse(111.) // 111
+JSON.parse(0x12) // 18
+JSON.parse(true) // true
+JSON.parse([])
+// Uncaught SyntaxError: Unexpected end of JSON input
+```
+
+**字符串必须使用双引号，不能使用单引号。**
+
+```js
+JSON.parse('"String"')
+// 'String'
+JSON.parse('\'String\'')
+// Uncaught SyntaxError: Unexpected token ' in JSON at position 0
+```
+
+只支持十进制的字符串，但小数点后必须跟上数字。
+
+```js
+JSON.parse('111') // 111
+JSON.parse('0x12')
+// Uncaught SyntaxError: Unexpected token x in JSON at position 1
+JSON.parse('111.232') // 111.232
+JSON.parse('111.')
+// Uncaught SyntaxError: Unexpected end of JSON input
+
+```
+
+不能使用undefined、Symbol和BigInt，数字也不支持NaN、Infinity和-Infinity，都会报错。
+
+```js
+JSON.parse(undefined)
+// Uncaught SyntaxError: Unexpected token u in JSON at position 0
+JSON.parse(Symbol())
+// Uncaught TypeError: Cannot convert a Symbol value to a string
+JSON.parse('12n')
+// Uncaught SyntaxError: Unexpected token n in JSON at position 2
+```
+
+复合类型，只能是：`[]` 和 `{}` 这样的字面量。
+ 不能使用对象构造函数，因为会当作执行语句，不支持。
+ 不能使用Object和Array，也不能是函数、RegExp对象、Date对象、Error对象等。
+
+```js
+JSON.parse('[]')
+// []
+JSON.parse('Object()')
+// Uncaught SyntaxError: Unexpected token O in JSON at position 0
+```
+
+对象的属性名必须使用双引号。
+
+```js
+JSON.parse('{"key": 1 }')
+// {key: 1}
+JSON.parse('{key: 1 }')
+// Uncaught SyntaxError: Unexpected token k in JSON at position 1
+```
+
+数组或对象最后一个成员的后面，不能加逗号。
+
+```js
+JSON.parse('[1, 2, 3, 4, ]')
+// VM2771:1 Uncaught SyntaxError: Unexpected token ] in JSON at position 13
+JSON.parse('{"key" : 1, }')
+// VM2779:1 Uncaught SyntaxError: Unexpected token } in JSON at position 12
+```
+
+支持unicode转义。
+
+```js
+JSON.parse('{"\u0066":333}')
+// {f: 333}
+```
+
+部分控制字符、转义字符不支持，如'\n'、'\t'等。
+
+```js
+JSON.parse('"\n"')
+// Uncaught SyntaxError: Unexpected token 
+```
+
+##### 解析的其他方法
+
+将json字符串转成json对象(js对象值)，还可以使用其他方法，但是非安全代码。
+
+```js
+  const str = '{"name":"json","age":18}'
+  const json = JSON.parse(str)
+  const json = eval("(" + str + ")")
+  const json = (new Function("return " + str))()
+
+```
+
+#### JSON.stringify
+
+`JSON.stringify()` 将一个JavaScript对象或值转换为JSON格式字符串。
+
+##### JSON.stringify 语法
+
+```js
+JSON.stringify(value[, replacer [, space]])
+```
+
+- value：将要序列化成 一个JSON字符串的JavaScript对象或值。
+- replacer 可选，用于处理将要序列化的值。
+- space 可选，指定缩进用的空白字符串，用于美化输出。
+
+**返回值：** 一个表示给定值的JSON格式字符串。
+
+##### replacer参数
+
+replacer参数可以以下三种情况：
+
+如果是null、undefined或其他类型，则被忽略，不做处理；
+
+```js
+JSON.stringify({key: 'json'}, null, null) // '{"key":"json"}'
+JSON.stringify({key: 'json'}, true) // '{"key":"json"}'
+```
+
+如果是一个数组，则只有包含在这个数组中的属性名，才会最终被序列化到结果字符串中。
+ **只对对象的属性有效，对数组无效。**
+
+```js
+const obj = {
+  json: 'JSON',
+  parse: 'PARSE',
+  stringify: 'STRINGIFY'
+}
+JSON.stringify(obj, ['parse', 'stringify'])
+// '{"parse":"PARSE","stringify":"STRINGIFY"}'
+```
+
+如果是一个函数，被序列化的值的每个属性都会经过该函数的转换和处理；
+
+处理过程：
+
+- 函数有两个参数，属性名(key)和属性值(value)，都会被序列化；
+- 第一次调用时，key为空字符串，value则为需要序列化的整个对象；
+- 第二次处理时，会把第一次的的结果传过来，后续的每一次的处理都将接收上一次处理的结果；
+- 后面，将依次处理每个属性名和属性值，完成后返回。
+
+```js
+JSON.stringify({ json: 1, stringify: { val: 'rr'} }, (key, value) => {
+  console.log(`key：${key}，value：`, value)
+  return value
+}) 
+// key：，value： {json: 1, stringify: {…}}
+// key：json，value： 1
+// key：stringify，value： {val: 'rr'}
+// key：val，value： rr
+// '{"json":1,"stringify":{"val":"rr"}}'
+```
+
+value的类型处理：
+
+- 如果返回基本类型字符串、数字、布尔值、null，则直接被添加到序列化后的JSON字符串中；
+- 如果返回其他对象，则会在后续依次序列化该对象的属性，如果是函数则不作处理；
+- 如果返回或undefined，则不会输出该属性。
+- 序列化数组时，如果value返回undefined或者一个函数，将会被null取代。
+
+```js
+JSON.stringify({ json: 1, stringify: 'rr' }, (key, value) => {
+  if (typeof value === 'number') {
+    return 'ss'
+  }
+  return value
+}) 
+// '{"json":"ss","stringify":"rr"}'
+
+JSON.stringify({ json: 1, stringify: 'rr' }, (key, value) => {
+  if (typeof value === 'number') {
+    value = undefined
+  }
+  return value
+}) 
+// '{"stringify":"rr"}'
+
+```
+
+下面示例，是返回对象值时的处理：
+
+```js
+JSON.stringify({ json: 1, stringify: 'rr' }, (key, value) => {
+  if (typeof value === 'object') { // 第一次返回整个对象时，类型是object
+    return { parse: 'dd' }
+  }
+  return value
+}) 
+'{"parse":"dd"}'
+```
+
+##### space 参数
+
+space参数用来控制结果字符串里面的间距，美化输出。可以输入的值有以下三种情况：
+
+- 如果是数字, 序列化时每一层级比上一层级多缩进对应数字值的空格，范围在1-10，即最小1个最大10个空格；
+- 如果是字符串，序列化时该字符串会添加在每行前面，每一层级比上一层级多缩进该字符串，最多是个字符，超过则截取字符串；
+- 如果是null、undefined或其他类型，则被忽略，不做处理。
+
+```js
+JSON.stringify({key: 'json'}, null, 2)
+// '{\n  "key": "json"\n}'
+JSON.stringify({key: 'json', list: { str: 'str' } }, null, '|-')
+// '{\n|-"key": "json",\n|-"list": {\n|-|-"str": "str"\n|-}\n}'
+JSON.stringify({key: 'json'}, null, null)
+// '{"key":"json"}'
+```
+
+##### JSON.stringify 特性
+
+基本类型值字符串、数字、布尔值，以及String、Boolean、Number对象值，都会转成原始值字符串输出。
+
+```js
+JSON.stringify(333) // '333'
+JSON.stringify(true) // 'true'
+JSON.stringify(new String('333')) //'"333"'
+JSON.stringify(Boolean(true)) // 'true'
+```
+
+基本类型的字符串，转换结果会带双引号。 因为在还原时，双引号会让JavaScript知道是字符串，而不是变量。
+
+```js
+JSON.stringify('json') === 'json' // false
+JSON.stringify('json') === '"json"' // true
+```
+
+undefined、函数、symbol以及XML对象：
+
+- 出现在Object对象中时，会被忽略；
+- 出现在数组中时，会被序列化成null；
+- 单独出现时，会返回undefined。
+
+```js
+JSON.stringify(Symbol()) // undefined
+JSON.stringify([Symbol(), Math.abs, undefined]) // '[null,null,null]'
+JSON.stringify({ [Symbol()]: Math.abs, key: undefined }) // '{}'
+```
+
+NaN、Infinity和-Infinity等值，还有null，都会被序列化成null。
+
+```js
+JSON.stringify(null) // 'null'
+JSON.stringify(NaN) // 'null'
+
+```
+
+Object对象，以及`Map/Set/WeakMap/WeakSet`等复合类型对象，序列化时会忽略对象的不可遍历属性。
+
+```js
+const obj = {}
+Object.defineProperties(obj, {
+  'json': { value: 'JSON', enumerable: true },
+  'stringify': { value: 'STRINGIFY', enumerable: false }
+})
+JSON.stringify(obj)
+// '{"json":"JSON"}'
+```
+
+以symbol为属性名的属性将被忽略。
+
+```js
+JSON.stringify({[Symbol()]: 333}) // '{}'
+```
+
+除了数组，其他对象的属性在序列化时，顺序可能会乱。
+
+```js
+const a = { '1': 911, 'r': 822, '11': 9922}
+JSON.stringify(a)
+// '{"1":911,"11":9922,"r":822}'
+```
+
+转换的对象如果定义了 `toJSON()` 方法，则该方法的返回值就是转换对象的序列化结果。
+ 该过程会忽略其他属性。
+
+```js
+const a = { key: 'json' }
+a.toJSON = () => 'JSON'
+JSON.stringify(a)
+// '"JSON"'
+```
+
+RegExp对象、Error对象都会序列化为空对象字符串。
+
+```js
+JSON.stringify(/\d/) // "{}"
+JSON.stringify(new Error())  // "{}"
+```
+
+想要序列化相应对象，需要设置实现toJSON方法才行。
+
+```js
+RegExp.prototype.toJSON = RegExp.prototype.toString
+JSON.stringify(/\d/) // '"/\\\\d/"'
+```
+
+Date对象已经定义了toJSON()，并将其转换为string字符串，因此可被序列化。
+ 同`Date.toISOString()`。
+
+```js
+JSON.stringify(new Date())
+// '"2021-12-31T02:24:05.477Z"'
+```
+
+循环引用的对象执行此方法，会抛出错误。
+ 对象之间相互引用，形成无限循环。
+
+```js
+const a = {}
+a.key = a
+JSON.stringify(a)
+// Uncaught TypeError: Converting circular structure to JSON
+```
+
+转换BigInt类型的值会抛出TypeError错误。
+ BigInt值不能JSON序列化
+
+```js
+JSON.stringify(12n)
+// Uncaught TypeError: Do not know how to serialize a BigInt
+```
+
+更好的支持unicode转义符
+
+```js
+const a = {'\u0066': 333}
+JSON.stringify(a)
+// '{"f":333}'
 ```
 
 
@@ -4812,6 +5822,7 @@ import用于引入外部模块， 其他脚本等的函数， 对象或者基本
 > `commonjs` 是运行时加载，`es6`是编译时输出接口；
 
 
+
 ### 7.require原理
 
 #### 查找规则
@@ -4846,7 +5857,7 @@ import用于引入外部模块， 其他脚本等的函数， 对象或者基本
 
 结论一：模块在被第一次引入时，模块中的js代码会被运行一次 
 
- 结论二：模块被多次引入时，会缓存，最终只加载（运行）一次 
+结论二：模块被多次引入时，会缓存，最终只加载（运行）一次 
 
 为什么只会加载运行一次呢？ 这是因为每个模块对象module都有一个属性：loaded。 为false表示还没有加载，为true表示已经加载； 
 
@@ -4878,3 +5889,219 @@ import用于引入外部模块， 其他脚本等的函数， 对象或者基本
 
 求值步骤相对简单，只要运行代码把计算出来的值填入之前记录的内存地址就可以了，这里就不展开说明了。
 
+### 9.CommonJS和ES6模块循环加载处理的区别
+
+CommonJS模块规范使用require语句导入模块，module.exports导出模块，输出的是值的拷贝，模块导入的也是输出值的拷贝，也就是说，一旦输出这个值，这个值在模块内部的变化是监听不到的。
+
+ES6模块的规范是使用import语句导入模块，export语句导出模块，输出的是对值的引用。ES6模块的运行机制和CommonJS不一样，遇到模块加载命令import时不去执行这个模块，只会生成一个动态的只读引用，等真的需要用到这个值时，再到模块中取值，也就是说原始值变了，那输入值也会发生变化。
+
+循环加载指的是a脚本的执行依赖b脚本，b脚本的执行依赖a脚本。
+
+#### 1. CommonJS模块的加载原理
+
+CommonJS模块就是一个脚本文件，require命令第一次加载该脚本时就会执行整个脚本，然后在内存中生成该模块的一个说明对象。
+
+```java
+{
+    id: '',  //模块名，唯一
+    exports: {  //模块输出的各个接口
+        ...
+    },
+    loaded: true,  //模块的脚本是否执行完毕
+    ...
+}
+```
+
+以后用到这个模块时，就会到对象的exports属性中取值。即使再次执行require命令，也不会再次执行该模块，而是到缓存中取值。
+
+CommonJS模块是加载时执行，即脚本代码在require时就全部执行。一旦出现某个模块被“循环加载”，就只输出已经执行的部分，没有执行的部分不会输出。
+
+**案例说明：**
+
+案例来源于Node官方说明：[nodejs.org/api/modules…](https://link.juejin.cn/?target=https%3A%2F%2Fnodejs.org%2Fapi%2Fmodules.html%23modules_cycles)
+
+```javascript
+//a.js
+exports.done = false;
+
+var b = require('./b.js');
+console.log('在a.js中，b.done = %j', b.done);
+
+exports.done = true;
+console.log('a.js执行完毕！')
+
+//b.js
+exports.done = false;
+
+var a = require('./a.js');
+console.log('在b.js中，a.done = %j', a.done);
+
+exports.done = true;
+console.log('b.js执行完毕！')
+
+//main.js
+var a = require('./a.js');
+var b = require('./b.js');
+
+console.log('在main.js中，a.done = %j, b.done = %j', a.done, b.done);
+```
+
+**输出结果如下：**
+
+```js
+//node环境下运行main.js
+node main.js
+
+在b.js中，a.done = false
+b.js执行完毕！
+在a.js中，b.done = true
+a.js执行完毕！
+在main.js中，a.done = true, b.done = true
+```
+
+**JS代码执行顺序如下：**
+
+1）main.js中先加载a.js，a脚本先输出done变量，值为false，然后加载b脚本，a的代码停止执行，等待b脚本执行完成后，才会继续往下执行。
+
+2）b.js执行到第二行会去加载a.js，这时发生循环加载，系统会去a.js模块对应对象的exports属性取值，因为a.js没执行完，从exports属性只能取回已经执行的部分，未执行的部分不返回，所以取回的值并不是最后的值。
+
+3）a.js已执行的代码只有一行，exports.done = false;所以对于b.js来说，require a.js只输出了一个变量done，值为false。往下执行console.log('在b.js中，a.done = %j', a.done);控制台打印出：
+
+```ini
+在b.js中，a.done = false
+
+```
+
+4）b.js继续往下执行，done变量设置为true，console.log('b.js执行完毕！')，等到全部执行完毕，将执行权交还给a.js。此时控制台输出：
+
+```css
+b.js执行完毕！
+
+```
+
+5）执行权交给a.js后，a.js接着往下执行，执行console.log('在a.js中，b.done = %j', b.done);控制台打印出：
+
+```ini
+在a.js中，b.done = true
+```
+
+6）a.js继续执行，变量done设置为true，直到a.js执行完毕。
+
+```css
+a.js执行完毕！
+```
+
+7）main.js中第二行不会再次执行b.js，直接输出缓存结果。最后控制台输出：
+
+```ini
+在main.js中，a.done = true, b.done = true
+
+```
+
+**总结：**
+
+1）在b.js中，a.js没有执行完毕，只执行了第一行，所以循环加载中，只输出已执行的部分。
+
+2）main.js第二行不会再次执行，而是输出缓存b.js的执行结果。exports.done = true;
+
+#### 2. ES6模块的循环加载
+
+ES6模块与CommonJS有本质区别，ES6模块对导出变量，方法，对象是动态引用，遇到模块加载命令import时不会去执行模块，只是生成一个指向被加载模块的引用，需要开发者保证真正取值时能够取到值，只要引用是存在的，代码就能执行。
+
+**案例说明：**
+
+```javascript
+//even.js
+import {odd} from './odd';
+
+var counter = 0;
+export function even(n){
+    counter ++;
+    console.log(counter);
+    
+    return n == 0 || odd(n-1);
+}
+
+//odd.js
+import {even} from './even.js';
+
+export function odd(n){
+    return n != 0 && even(n-1);
+}
+
+//index.js
+import * as m from './even.js';
+
+var x = m.even(5);
+console.log(x);
+
+var y = m.even(4);
+console.log(y);
+```
+
+**执行index.js，输出结果如下：**
+
+```js
+babel-node index.js
+
+1
+2
+3
+false
+4
+5
+6
+true
+```
+
+可以看出counter的值是累加的，ES6是动态引用。如果上面的引用改为CommonJS代码，会报错，因为在odd.js里，even.js代码并没有执行。改成CommonJS规范加载的代码为：
+
+```js
+//even.js
+var odd = require('./odd.js');
+
+var counter = 0;
+module.exports = function even(n){
+    counter ++;
+    console.log(counter);
+
+    return n == 0 || odd(n-1);
+}
+
+//odd.js
+var even = require('./even.js');
+
+module.exports = function odd(n){
+    return n != 0 && even(n-1);
+}
+
+//index.js
+var even = require('./even.js');
+
+var x = even(5);
+console.log(x);
+
+var y = even(5);
+console.log(y);
+```
+
+**执行index.js，输出结果如下：**
+
+```bash
+$ babel-node index.js
+1
+/Users/name/Projects/node/ES6/odd.1.js:6
+    return n != 0 && even(n - 1);
+                     ^
+
+TypeError: even is not a function
+    at odd (/Users/name/Projects/node/ES6/odd.1.js:4:22)
+```
+
+#### 3. 总结
+
+1）CommonJS模块是加载时执行。一旦出现某个模块被“循环加载”，就只输出已经执行的部分，没有执行的部分不会输出。
+
+2）ES6模块对导出模块，变量，对象是动态引用，遇到模块加载命令import时不会去执行模块，只是生成一个指向被加载模块的引用。
+
+CommonJS模块规范主要适用于后端Node.js，后端Node.js是同步模块加载，所以在模块循环引入时模块已经执行完毕。推荐前端工程中使用ES6的模块规范，通过安装Babel转码插件支持ES6模块引入的语法。
