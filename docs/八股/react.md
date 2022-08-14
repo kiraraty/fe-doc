@@ -1117,6 +1117,488 @@ Greeting.propTypes = {
 
 当然，如果项目中使用了TypeScript，那么就可以不用PropTypes来校验，而使用TypeScript定义接口来校验props.
 
+### 10.React如何获取上一轮的props和state？
+
+react获取上一轮的props和state ,有的时候 需要 获取 改变前的 state,和props 做个对比处理，或者其它处理。
+
+效果图：
+
+![](https://s2.loli.net/2022/08/14/1Am7bjDYKHOisal.png)
+
+如果只是 想实现 这个效果 下面的代码 也行 。就不用借助其它的了。 这个思路就是，在 改变 state之前 就 备份一下 值 。
+
+####  **hook**
+
+```jsx
+import React, { useState, useEffect } from 'react'
+import { Select } from 'antd';
+const { Option } = Select;
+function Index() {
+ 
+    
+    const [val, setVal] = useState("--")//name
+    const [val2, setVal2] = useState("--")//name
+   
+    const handleChange = (value) => {
+        console.log(val,value)
+        setVal2(val)
+        setVal(value);
+    };
+ 
+ 
+    return (
+        <div>
+            <Select
+                defaultValue="lucy"
+                style={{
+                    width: 120,
+                }}
+                onChange={handleChange}
+            >
+                <Option value="jack">Jack</Option>
+                <Option value="lucy">Lucy</Option>
+                <Option value="disabled" disabled>
+                    Disabled
+                </Option>
+                <Option value="Yiminghe">yiminghe</Option>
+            </Select>
+            <h1>现在的值: {val}, 之前的值: {val2}</h1>
+        </div >
+    )
+}
+ 
+export default Index
+```
+
+#### **class** 
+
+  不借助生命周期
+
+```jsx
+import React, { Component } from 'react';
+import { Select } from 'antd';
+const { Option } = Select;
+class Index extends Component {
+    constructor(props) {
+        super(props)
+        this.state = {
+            val: "--",
+            val2: "--"
+        }
+    }
+    componentDidMount() {
+ 
+    }
+ 
+    handleChange = (value) => {
+       
+        this.setState({
+            val: value,
+            val2:this.state.val
+        })
+    }
+   
+    render() {
+        let { val,val2 } = this.state;
+        return (
+            <div>
+ 
+                <Select
+                    defaultValue="lucy"
+                    style={{
+                        width: 120,
+                    }}
+                    onChange={this.handleChange}
+                >
+                    <Option value="jack">Jack</Option>
+                    <Option value="lucy">Lucy</Option>
+                    <Option value="disabled" disabled>
+                        Disabled
+                    </Option>
+                    <Option value="Yiminghe">yiminghe</Option>
+                </Select>
+                <h1>现在的值: {val}, 之前的值: {val2}</h1>
+            </div>
+        );
+    }
+}
+ 
+export default Index
+```
+
+借助生命周期 componentDidUpdate
+
+```jsx
+import React, { Component } from 'react';
+import { Select } from 'antd';
+const { Option } = Select;
+class Index extends Component {
+    constructor(props) {
+        super(props)
+        this.state = {
+            val: "--",
+            val2:"--"
+        }
+    }
+    componentDidMount() {
+ 
+    }
+ 
+    handleChange = (value) => {
+        this.setState({
+            val: value
+        })
+    }
+    componentDidUpdate(prevProps, prevState, snapshot){
+        console.log(prevProps, prevState, snapshot,"10")
+        if(prevState.val!=this.state.val){
+            this.setState({
+                val2:prevState.val
+            })
+        }
+        
+    }
+    // getSnapshotBeforeUpdate(prevProps, prevState) {
+    //     console.log(prevProps, prevState,"09")
+    //     return null;
+    //   }
+    render() {
+        let { val ,val2} = this.state;
+        return (
+            <div>
+ 
+                <Select
+                    defaultValue="lucy"
+                    style={{
+                        width: 120,
+                    }}
+                    onChange={this.handleChange}
+                >
+                    <Option value="jack">Jack</Option>
+                    <Option value="lucy">Lucy</Option>
+                    <Option value="disabled" disabled>
+                        Disabled
+                    </Option>
+                    <Option value="Yiminghe">yiminghe</Option>
+                </Select>
+                <h1>现在的值: {val}, 之前的值: { val2}</h1>
+            </div>
+        );
+    }
+}
+ 
+export default Index
+```
+
+下面的方法是 获取到整个 state 和 props 
+
+#### react 类组(class)件实现 
+
+react Class 组件 很好实现因为有生命周期，可以用 componentDidUpdate(prevProps, prevState, snapshot) 和 getSnapshotBeforeUpdate(prevProps, prevState) 获取到
+
+**`componentDidUpdate()介绍`**
+
+```jsx
+componentDidUpdate(prevProps, prevState, snapshot)
+```
+
+`componentDidUpdate()` 会在更新后会被立即调用。首次渲染不会执行此方法。
+
+当组件更新后，可以在此处对 DOM 进行操作。如果你对更新前后的 props 进行了比较，也可以选择在此处进行网络请求。（例如，当 props 未发生变化时，则不会执行网络请求）。
+
+```jsx
+componentDidUpdate(prevProps) {if (this.props.userID !== prevProps.userID) {this.fetchData(this.props.userID);  }}
+```
+
+你也可以在 `componentDidUpdate()` 中**直接调用 `setState()`**，但请注意**它必须被包裹在一个条件语句里**，正如上述的例子那样进行处理，否则会导致死循环。它还会导致额外的重新渲染，虽然用户不可见，但会影响组件性能。不要将 props “镜像”给 state，请考虑直接使用 props。 欲了解更多有关内容，请参阅[为什么 props 复制给 state 会产生 bug](https://zh-hans.reactjs.org/blog/2018/06/07/you-probably-dont-need-derived-state.html "为什么 props 复制给 state 会产生 bug")。
+
+如果组件实现了 `getSnapshotBeforeUpdate()` 生命周期（不常用），则它的返回值将作为 `componentDidUpdate()` 的第三个参数 “snapshot” 参数传递。否则此参数将为 undefined。
+
+> 注意
+>
+> 如果 [shouldComponentUpdate()](https://zh-hans.reactjs.org/docs/react-component.html#shouldcomponentupdate "shouldComponentUpdate()") 返回值为 false，则不会调用 `componentDidUpdate()`。
+
+___
+
+**getSnapshotBeforeUpdate 介绍**
+
+```jsx
+getSnapshotBeforeUpdate(prevProps, prevState)
+```
+
+`getSnapshotBeforeUpdate()` 在最近一次渲染输出（提交到 DOM 节点）之前调用。它使得组件能在发生更改之前从 DOM 中捕获一些信息（例如，滚动位置）。此生命周期方法的任何返回值将作为参数传递给 `componentDidUpdate()`。
+
+此用法并不常见，但它可能出现在 UI 处理中，如需要以特殊方式处理滚动位置的聊天线程等。
+
+应返回 snapshot 的值（或 `null`）。
+
+例如：
+
+```jsx
+class ScrollingList extends React.Component {
+  constructor(props) {
+    super(props);
+    this.listRef = React.createRef();
+  }
+ 
+  getSnapshotBeforeUpdate(prevProps, prevState) {
+    // 我们是否在 list 中添加新的 items ？
+    // 捕获滚动​​位置以便我们稍后调整滚动位置。
+    if (prevProps.list.length < this.props.list.length) {
+      const list = this.listRef.current;
+      return list.scrollHeight - list.scrollTop;
+    }
+    return null;
+  }
+ 
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    // 如果我们 snapshot 有值，说明我们刚刚添加了新的 items，
+    // 调整滚动位置使得这些新 items 不会将旧的 items 推出视图。
+    //（这里的 snapshot 是 getSnapshotBeforeUpdate 的返回值）
+    if (snapshot !== null) {
+      const list = this.listRef.current;
+      list.scrollTop = list.scrollHeight - snapshot;
+    }
+  }
+ 
+  render() {
+    return (
+      <div ref={this.listRef}>{/* ...contents... */}</div>
+    );
+  }
+}
+```
+
+在上述示例中，重点是从 `getSnapshotBeforeUpdate` 读取 `scrollHeight` 属性，因为 “render” 阶段生命周期（如 `render`）和 “commit” 阶段生命周期（如 `getSnapshotBeforeUpdate` 和 `componentDidUpdate`）之间可能存在延迟。
+
+   上面参考于：[react 官网 -生命周期](https://zh-hans.reactjs.org/docs/react-component.html#mounting "react 官网 -生命周期") 
+
+    实现代码如下：
+
+```jsx
+import React, { Component } from 'react';
+import { Select } from 'antd';
+const { Option } = Select;
+class Index extends Component {
+    constructor(props) {
+        super(props)
+        this.state = {
+            val: "--"
+        }
+    }
+    componentDidMount() {
+ 
+    }
+ 
+    handleChange = (value) => {
+        this.setState({
+            val: value
+        })
+    }
+    componentDidUpdate(prevProps, prevState, snapshot){
+        console.log(prevProps, prevState, snapshot,"10")
+    }
+    getSnapshotBeforeUpdate(prevProps, prevState) {
+        console.log(prevProps, prevState,"09")
+        return null;
+      }
+    render() {
+        let { val } = this.state;
+        return (
+            <div>
+ 
+                <Select
+                    defaultValue="lucy"
+                    style={{
+                        width: 120,
+                    }}
+                    onChange={this.handleChange}
+                >
+                    <Option value="jack">Jack</Option>
+                    <Option value="lucy">Lucy</Option>
+                    <Option value="disabled" disabled>
+                        Disabled
+                    </Option>
+                    <Option value="Yiminghe">yiminghe</Option>
+                </Select>
+                <h1>现在的值: {val}, 之前的值: { }</h1>
+            </div>
+        );
+    }
+}
+ 
+export default Index
+```
+
+#### 函数组件（react Hook实现）
+
+ 借用useEffect, useRef 实现 。
+
+**`useEffect`**
+
+```jsx
+useEffect(didUpdate);
+```
+
+该 Hook 接收一个包含命令式、且可能有副作用代码的函数。
+
+在函数组件主体内（这里指在 React 渲染阶段）改变 DOM、添加订阅、设置定时器、记录日志以及执行其他包含副作用的操作都是不被允许的，因为这可能会产生莫名其妙的 bug 并破坏 UI 的一致性。
+
+使用 `useEffect` 完成副作用操作。赋值给 `useEffect` 的函数会在组件渲染到屏幕之后执行。你可以把 effect 看作从 React 的纯函数式世界通往命令式世界的逃生通道。
+
+默认情况下，effect 将在每轮渲染结束后执行，但你可以选择让它 [在只有某些值改变的时候](https://zh-hans.reactjs.org/docs/hooks-reference.html#conditionally-firing-an-effect "在只有某些值改变的时候") 才执行。
+
+清除 effect
+
+通常，组件卸载时需要清除 effect 创建的诸如订阅或计时器 ID 等资源。要实现这一点，`useEffect` 函数需返回一个清除函数。以下就是一个创建订阅的例子：
+
+```jsx
+useEffect(() => {const subscription = props.source.subscribe();return () => {    subscription.unsubscribe();  };});
+```
+
+为防止内存泄漏，清除函数会在组件卸载前执行。另外，如果组件多次渲染（通常如此），则**在执行下一个 effect 之前，上一个 effect 就已被清除**。在上述示例中，意味着组件的每一次更新都会创建新的订阅。若想避免每次更新都触发 effect 的执行，请参阅下一小节。
+
+effect 的执行时机
+
+与 `componentDidMount`、`componentDidUpdate` 不同的是，传给 `useEffect` 的函数会在浏览器完成布局与绘制**之后**，在一个延迟事件中被调用。这使得它适用于许多常见的副作用场景，比如设置订阅和事件处理等情况，因为绝大多数操作不应阻塞浏览器对屏幕的更新。
+
+然而，并非所有 effect 都可以被延迟执行。例如，一个对用户可见的 DOM 变更就必须在浏览器执行下一次绘制前被同步执行，这样用户才不会感觉到视觉上的不一致。（概念上类似于被动监听事件和主动监听事件的区别。）React 为此提供了一个额外的 [useLayoutEffect](https://zh-hans.reactjs.org/docs/hooks-reference.html#uselayouteffect "useLayoutEffect") Hook 来处理这类 effect。它和 `useEffect` 的结构相同，区别只是调用时机不同。
+
+此外，从 React 18 开始，当它是离散的用户输入（如点击）的结果时，或者当它是由 [flushSync](https://zh-hans.reactjs.org/docs/react-dom.html#flushsync "flushSync") 包装的更新结果时，传递给 `useEffect` 的函数将在屏幕布局和绘制**之前**同步执行。这种行为便于事件系统或 [flushSync](https://zh-hans.reactjs.org/docs/react-dom.html#flushsync "flushSync") 的调用者观察该效果的结果。
+
+> 注意
+>
+> 这只影响传递给 `useEffect` 的函数被调用时 — 在这些 effect 中执行的更新仍会被推迟。这与 [useLayoutEffect](https://zh-hans.reactjs.org/docs/hooks-reference.html#uselayouteffect "useLayoutEffect") 不同，后者会立即启动该函数并处理其中的更新。
+
+即使在 `useEffect` 被推迟到浏览器绘制之后的情况下，它也能保证在任何新的渲染前启动。React 在开始新的更新前，总会先刷新之前的渲染的 effect。
+
+effect 的条件执行
+
+默认情况下，effect 会在每轮组件渲染完成后执行。这样的话，一旦 effect 的依赖发生变化，它就会被重新创建。
+
+然而，在某些场景下这么做可能会矫枉过正。比如，在上一章节的订阅示例中，我们不需要在每次组件更新时都创建新的订阅，而是仅需要在 `source` prop 改变时重新创建。
+
+要实现这一点，可以给 `useEffect` 传递第二个参数，它是 effect 所依赖的值数组。更新后的示例如下：
+
+```jsx
+useEffect(() => {const subscription = props.source.subscribe();return () => {      subscription.unsubscribe();    };  },  [props.source],);
+```
+
+此时，只有当 `props.source` 改变后才会重新创建订阅。
+
+> 注意
+>
+> 如果你要使用此优化方式，请确保数组中包含了**所有外部作用域中会发生变化且在 effect 中使用的变量**，否则你的代码会引用到先前渲染中的旧变量。请参阅文档，了解更多关于[如何处理函数](https://zh-hans.reactjs.org/docs/hooks-faq.html#is-it-safe-to-omit-functions-from-the-list-of-dependencies "如何处理函数") 以及[数组频繁变化时的措施](https://zh-hans.reactjs.org/docs/hooks-faq.html#what-can-i-do-if-my-effect-dependencies-change-too-often "数组频繁变化时的措施") 的内容。
+>
+> 如果想执行只运行一次的 effect（仅在组件挂载和卸载时执行），可以传递一个空数组（`[]`）作为第二个参数。这就告诉 React 你的 effect 不依赖于 props 或 state 中的任何值，所以它永远都不需要重复执行。这并不属于特殊情况 —— 它依然遵循输入数组的工作方式。
+>
+> 如果你传入了一个空数组（`[]`），effect 内部的 props 和 state 就会一直持有其初始值。尽管传入 `[]` 作为第二个参数有点类似于 `componentDidMount` 和 `componentWillUnmount` 的思维模式，但我们有 [更好的](https://zh-hans.reactjs.org/docs/hooks-faq.html#is-it-safe-to-omit-functions-from-the-list-of-dependencies "更好的") [方式](https://zh-hans.reactjs.org/docs/hooks-faq.html#what-can-i-do-if-my-effect-dependencies-change-too-often "方式") 来避免过于频繁的重复调用 effect。除此之外，请记得 React 会等待浏览器完成画面渲染之后才会延迟调用 `useEffect`，因此会使得处理额外操作很方便。
+>
+> 我们推荐启用 [eslint-plugin-react-hooks](https://www.npmjs.com/package/eslint-plugin-react-hooks#installation "eslint-plugin-react-hooks") 中的 [exhaustive-deps](https://github.com/facebook/react/issues/14920 "exhaustive-deps") 规则。此规则会在添加错误依赖时发出警告并给出修复建议。
+
+依赖项数组不会作为参数传给 effect 函数。虽然从概念上来说它表现为：所有 effect 函数中引用的值都应该出现在依赖项数组中。未来编译器会更加智能，届时自动创建数组将成为可能。
+
+**`useRef`**
+
+```
+const refContainer = useRef(initialValue);
+```
+
+`useRef` 返回一个可变的 ref 对象，其 `.current` 属性被初始化为传入的参数（`initialValue`）。返回的 ref 对象在组件的整个生命周期内持续存在。
+
+一个常见的用例便是命令式地访问子组件：
+
+```jsx
+function TextInputWithFocusButton() {
+  const inputEl = useRef(null);
+  const onButtonClick = () => {
+    // `current` 指向已挂载到 DOM 上的文本输入元素
+    inputEl.current.focus();
+  };
+  return (
+    <>
+      <input ref={inputEl} type="text" />
+      <button onClick={onButtonClick}>Focus the input</button>
+    </>
+  );
+}
+```
+
+本质上，`useRef` 就像是可以在其 `.current` 属性中保存一个可变值的“盒子”。
+
+你应该熟悉 ref 这一种[访问 DOM](https://zh-hans.reactjs.org/docs/refs-and-the-dom.html "访问 DOM") 的主要方式。如果你将 ref 对象以 `<div ref={myRef} />` 形式传入组件，则无论该节点如何改变，React 都会将 ref 对象的 `.current` 属性设置为相应的 DOM 节点。
+
+然而，`useRef()` 比 `ref` 属性更有用。它可以[很方便地保存任何可变值](https://zh-hans.reactjs.org/docs/hooks-faq.html#is-there-something-like-instance-variables "很方便地保存任何可变值")，其类似于在 class 中使用实例字段的方式。
+
+这是因为它创建的是一个普通 Javascript 对象。而 `useRef()` 和自建一个 `{current: ...}` 对象的唯一区别是，`useRef` 会在每次渲染时返回同一个 ref 对象。
+
+请记住，当 ref 对象内容发生变化时，`useRef` 并_不会_通知你。变更 `.current` 属性不会引发组件重新渲染。如果想要在 React 绑定或解绑 DOM 节点的 ref 时运行某些代码，则需要使用[回调 ref](https://zh-hans.reactjs.org/docs/hooks-faq.html#how-can-i-measure-a-dom-node "回调 ref") 来实现。
+
+实现代码如下：
+
+```jsx
+ 
+import React, { useState, useEffect, useRef } from 'react'
+import { Select } from 'antd';
+const { Option } = Select;
+function Index() {
+ 
+    const prevCountRef = useRef();
+    const [val, setVal] = useState("--")//name
+    useEffect(() => {
+        prevCountRef.current = val;
+    });
+ 
+    const handleChange = (value) => {
+        setVal(value);
+    };
+ 
+ 
+    return (
+        <div>
+            <Select
+                defaultValue="lucy"
+                style={{
+                    width: 120,
+                }}
+                onChange={handleChange}
+            >
+                <Option value="jack">Jack</Option>
+                <Option value="lucy">Lucy</Option>
+                <Option value="disabled" disabled>
+                    Disabled
+                </Option>
+                <Option value="Yiminghe">yiminghe</Option>
+            </Select>
+            <h1>现在的值: {val}, 之前的值: {prevCountRef.current}</h1>
+        </div >
+    )
+}
+ 
+export default Index
+ 
+```
+
+#### 如何获取上一轮的 props 或 state？官方的示例
+
+```jsx
+function Counter() {
+  const [count, setCount] = useState(0);
+ 
+  const prevCountRef = useRef();
+  useEffect(() => {
+    prevCountRef.current = count;
+  });
+  const prevCount = prevCountRef.current;
+ 
+  return <h1>Now: {count}, before: {prevCount}</h1>;
+}
+```
+
+ 
+
+
+
 ## 生命周期
 
 ### 1\.React的生命周期有哪些？
@@ -3863,6 +4345,8 @@ const TableDeail = ({
 
 ### 7\.React Hooks 和生命周期的关系？
 
+#### 对应关系
+
 **函数组件** 的本质是函数，没有 state 的概念的，因此**不存在生命周期**一说，仅仅是一个 **render 函数**而已。 但是引入 **Hooks** 之后就变得不同了，它能让组件在不使用 class 的情况下拥有 state，所以就有了生命周期的概念，所谓的生命周期其实就是 `useState`、 `useEffect()` 和 `useLayoutEffect()` 。
 
 即：**Hooks 组件（使用了Hooks的函数组件）有生命周期，而函数组件（未使用Hooks的函数组件）是没有生命周期的**。
@@ -3945,6 +4429,160 @@ useEffect(()=>{
 | componentWillUnmount     | useEffect 里面返回的函数  |
 | componentDidCatch        | 无                        |
 | getDerivedStateFromError | 无                        |
+
+#### [**React Hooks 如何模拟生命周期**](https://blog.csdn.net/sinat_17775997/article/details/123838210)
+
+
+
+在 React 16.8 之前，函数组件只能是无状态组件，也不能访问 react 生命周期。hook 做为 react 新增特性，可以让我们在不编写 class 的情况下使用 state 以及其他的 react 特性，例如生命周期。接下来我们便举例说明如何使用 hooks 来模拟比较常见的 class 组件生命周期。
+
+##### constructor
+
+class 组件
+
+```js
+class Example extends Component {
+    constructor() {
+        super();
+        this.state = {
+            count: 0
+        }
+    }
+    render() {
+      return null;
+  }
+}
+```
+
+函[数组](https://so.csdn.net/so/search?q=数组&spm=1001.2101.3001.7020)件不需要构造函数,可以通过调用 useState 来初始化 state
+
+```javascript
+function Example() {
+  const [count, setCount] = useState(0);
+  return null;
+}
+```
+
+##### componentDidMount
+
+class 组件访问 componentDidMount
+
+```js
+class Example extends React.Component {
+  componentDidMount() {
+    console.log('I am mounted!');
+  }
+  render() {
+    return null;
+  }
+}
+```
+
+使用 hooks 模拟 componentDidMount
+
+```javascript
+function Example() {
+  useEffect(() => console.log('mounted'), []);
+  return null;
+}
+```
+
+useEffect 拥有两个参数，第一个参数作为回调函数会在浏览器布局和绘制完成后调用，因此它不会阻碍浏览器的渲染进程。
+第二个参数是一个数组
+
+- 当数组存在并有值时，如果数组中的任何值发生更改，则每次渲染后都会触发回调。
+- 当它不存在时，每次渲染后都会触发回调。
+- 当它是一个空列表时，回调只会被触发一次，类似于 componentDidMount。
+
+##### shouldComponentUpdate
+
+class 组件访问 shouldComponentUpdate
+
+```javascript
+shouldComponentUpdate(nextProps, nextState){
+  console.log('shouldComponentUpdate')
+  // return true 更新组件
+  // return false 则不更新组件
+}
+```
+
+hooks 模拟 shouldComponentUpdate
+
+```javascript
+const MyComponent = React.memo(
+    _MyComponent, 
+    (prevProps, nextProps) => nextProps.count !== prevProps.count
+)
+```
+
+React.memo 包裹一个组件来对它的 props 进行浅比较,但这不是一个 hooks，因为它的写法和 hooks 不同,其实React.memo 等效于 PureComponent，但它只比较 props。
+
+##### componentDidUpdate
+
+class 组件访问 componentDidUpdate
+
+```javascript
+componentDidMount() {
+  console.log('mounted or updated');
+}
+ 
+componentDidUpdate() {
+  console.log('mounted or updated');
+}
+```
+
+使用 hooks 模拟 componentDidUpdate
+
+```js
+useEffect(() => console.log('mounted or updated'));
+```
+
+值得注意的是，这里的回调函数会在每次渲染后调用，因此不仅可以访问 componentDidUpdate，还可以访问componentDidMount，如果只想模拟 componentDidUpdate，我们可以这样来实现。
+
+```javascript
+const mounted = useRef();
+useEffect(() => {
+  if (!mounted.current) {
+    mounted.current = true;
+  } else {
+   console.log('I am didUpdate')
+  }
+});
+```
+
+useRef 在组件中创建“实例变量”。它作为一个标志来指示组件是否处于挂载或更新阶段。当组件更新完成后在会执行 else 里面的内容，以此来单独模拟 componentDidUpdate。
+
+##### componentWillUnmount
+
+class 组件访问 componentWillUnmount
+
+```javascript
+componentWillUnmount() {
+  console.log('will unmount');
+}
+```
+
+hooks 模拟 componentWillUnmount
+
+```javascript
+useEffect(() => {
+  return () => {
+    console.log('will unmount');
+  }
+}, []);
+```
+
+当在 useEffect 的回调函数中返回一个函数时，这个函数会在组件卸载前被调用。我们可以在这里面清除定时器或事件监听器。
+
+##### 总结
+
+引入 hooks 的函数组件功能越来越完善，在多数情况下，我们完全可以使用 hook 来替代 class 组件。并且使用函数组件也有以下几点好处。
+
+- 纯函数概念，同样的 props 会得到同样的渲染结果。
+- 可以使用函数组合，嵌套，实现功能更加强大的组件。
+- 组件不会被实例化，整体渲染性能得到提升。
+
+但是 hooks 模拟的[生命周期](https://so.csdn.net/so/search?q=生命周期&spm=1001.2101.3001.7020)与class中的生命周期不尽相同，我们在使用时，还是需要思考业务场景下那种方式最适合。
 
 ### 8.**谈谈 React Hook 的设计模式**
 
@@ -4097,7 +4735,41 @@ export default Users;
 
 第三点就是 useEffect 的第二个参数容易被错误使用。很多同学习惯在第二个参数放置引用类型的变量，通常的情况下，引用类型的变量很容易被篡改，难以判断开发者的真实意图，所以更推荐使用值类型的变量。当然有个小技巧是 JSON 序列化引用类型的变量，也就是通过 JSON.stringify 将引用类型变量转换为字符串来解决。但不推荐这个操作方式，比较消耗性能
 
-### 9.hooks原理
+### 9.Hooks中如何获取上一轮的state
+
+我们可以通过ref来保存上一轮获取到的state，代码如下
+
+```js
+function Counter() {
+  const [count, setCount] = useState(0);
+
+  const prevCountRef = useRef();
+  useEffect(() => {
+    prevCountRef.current = count;
+  });
+  const prevCount = prevCountRef.current;
+
+  return <h1>Now: {count}, before: {prevCount}</h1>;
+}
+```
+
+为了方便复用我们可以把它封装成一个hooks进行使用：
+
+```js
+function usePrevious(value) {
+  const ref = useRef();
+  useEffect(() => {
+    ref.current = value;
+  });
+  return ref.current;
+}
+```
+
+> 解决的办法确实是找到了，但是凡事都的问一个为什么。我们需要理解一下为什么这么做就可以实现。
+
+我们知道在react中useEffect中的操作表现的像是**异步**的，就是说每次执行useEffect代码块的时候都会将它放到一个链表中，等到同步的代码执行完成后再统一执行链表中的内容。所以此时useRef中的值还没有被修改，还是保存的上一轮的值，所以能够被访问到
+
+### hooks原理
 
 #### function组件和class组件本质的区别
 
@@ -6540,6 +7212,8 @@ export default B;
 ```
 
 ![image.png](https://s2.loli.net/2022/08/07/vImzEbAJyiRTwoe.webp)
+
+
 
 ## Demo实现
 

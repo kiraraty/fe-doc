@@ -7480,7 +7480,7 @@ function install() {
 
 通过生命周期给每个组件单独挂载`$store`，而不是直接`Vue.prototype.$store =`，这样可以防止声明多个`vuex`实例后覆盖
 
-```
+```js
 vue3`中挂载`vuex`要执行`app.use(store)`。最终会执行到`Store.prototype.install
 function install (app, injectKey) {
     // globalProperties属性上挂载的属性可以在app下所有组件实例中访问到
@@ -11581,3 +11581,156 @@ body{
 }
 ```
 
+8.实现一个计时器
+
+HTML代码
+
+```js
+<div class="father">
+
+  <ul>
+
+   <li>{{one}}<span>:</span></li>
+
+   <li>{{two}}<span>:</span></li>
+
+   <li>{{three}}</li>
+
+  </ul>
+
+  <el-button type="primary" @click="startHandler">开始</el-button>
+
+  <el-button type="primary" @click="endHandler">暂停</el-button>
+
+</div>
+```
+
+JAVASCRIPT代码
+
+```js
+<script>
+export default {
+  name: 'HelloWorld',
+  data(){
+   return {
+
+  flag: null,
+
+  one : '00', // 时
+
+  two : '00', // 分
+
+  three : '00', // 秒
+
+  abc : 0, // 秒的计数
+
+  cde : 0, // 分的计数
+
+  efg : 0, // 时的计数
+
+   }
+
+  },
+
+  props: {
+
+    msg: String
+
+  },
+
+  mounted() {
+
+  },
+
+  methods:{
+
+  // 开始计时
+
+ startHandler(){
+
+  this.flag = setInterval(()=>{
+
+   if(this.three === 60 || this.three === '60'){
+
+    this.three = '00';
+
+    this.abc = 0;
+
+    if(this.two === 60 || this.two === '60'){
+
+     this.two = '00';
+
+     this.cde = 0;
+
+     if(this.efg+1 <= 9){
+
+      this.efg++;
+
+      this.one = '0' + this.efg;
+
+     }else{
+
+      this.efg++;
+
+      this.one = this.efg;
+
+     }
+
+    }else{
+
+     if(this.cde+1 <= 9){
+
+      this.cde++;
+
+      this.two = '0' + this.cde;
+
+     }else{
+
+      this.cde++;
+
+      this.two = this.cde;
+
+     }
+
+    }
+
+   }else{
+
+    if(this.abc+1 <= 9){
+
+     this.abc++;
+
+     this.three = '0' + this.abc;
+
+    }else{
+
+     this.abc++;
+
+     this.three=this.abc;
+
+    }
+
+   }
+
+  },100)
+
+ },
+
+ // 暂停计时
+
+ endHandler(){
+
+  this.flag = clearInterval(this.flag)
+
+ }
+
+  }
+
+}
+
+</script>
+```
+
+效果如下：
+
+![img](https://s2.loli.net/2022/08/14/N2cHQvg4oLbE9rU.jpg)

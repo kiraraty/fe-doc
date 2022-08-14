@@ -1111,7 +1111,7 @@ function fn(){
 
 （8）-0 === +0   结果为：true
 
-### 8.JavaScript梗图详解](https://blog.csdn.net/weixin_46170034/article/details/107029540)
+### 8.[JavaScript梗图详解](https://blog.csdn.net/weixin_46170034/article/details/107029540)
 
 ![在这里插入图片描述](https://s2.loli.net/2022/08/14/7zxUZC1qWw4uaOY.png)
 
