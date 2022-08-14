@@ -1111,6 +1111,162 @@ function fn(){
 
 （8）-0 === +0   结果为：true
 
+### 8.JavaScript梗图详解](https://blog.csdn.net/weixin_46170034/article/details/107029540)
+
+![在这里插入图片描述](https://s2.loli.net/2022/08/14/7zxUZC1qWw4uaOY.png)
+
+#### 1.typeof NaN === "number"
+
+NaN 同 Number.NaN 一样，都是表示 Not A Number。从 Number.NaN 可以推测 NaN 是数字类型。
+
+但实际上 NaN 不是 JavaScript 创造的。[IEEE 754](https://link.juejin.cn/?target=https%3A%2F%2Fen.wikipedia.org%2Fwiki%2FIEEE_754) 中将 NaN 定义为一种“特殊”的数字。
+
+#### 2.9999999999999999 === 10000000000000000
+
+- JavaScript 对于数据储存使用的是 IEEE754 标准里的 双精度存储数字 (64位)
+- IEEE754 标准里面有符号位 1 位，指数位 11 位，有效数 52 位，这样就导致在十进制和二进制转化的时候会出现问题
+
+JavaScript 中所有算数都是 IEEE 754 定义的双精度浮点数（[链接](https://link.juejin.cn/?target=https%3A%2F%2Ftc39.es%2Fecma262%2F%23sec-ecmascript-language-types-number-type)），其可以表示的最大整数和浮点数分别在 JavaScript 中定义为 Number.MAX_SAFE_INTEGER（9007199254740991, 2^53-1） 和 Number.MAX_VALUE。
+
+超出 9007199254740991 后，双精度浮点数只能表示偶数了，而且在不同范围内，步进还不相同。例如在 2^53 到 2^54，步进为 2。
+
+```javascript
+> Number.MAX_SAFE_INTEGER
+< 9007199254740991
+> Number.MAX_SAFE_INTEGER + 1
+< 9007199254740992
+> Number.MAX_SAFE_INTEGER + 2
+< 9007199254740992
+> Number.MAX_SAFE_INTEGER + 3
+< 9007199254740994
+> Number.MAX_SAFE_INTEGER + 4
+< 9007199254740996
+> Number.MAX_SAFE_INTEGER + 5
+< 9007199254740996
+```
+
+所以双精度浮点数无法表示 9999999999999999，只能将 9999999999999999 近似为 10000000000000000。
+
+1. 0.1 + 0.2 != 0.3
+
+同样是浮点数的问题。双精度浮点数除了不能准确表示 9999999999999999 之类的整数，也不能准确表示 0.1 之类的小数。
+
+就此我们也可以推知我们不发生大数精度的问题最大存储的数字大小 2^53 = 9007199254740992，大于这个数都有可能发生大数精度问题
+
+小数的加减法，往往都是“随缘”算法。将 0.1 到 0.5 的几个小数打印为二进制：
+
+```vbscript
+> (0.1).toString(2)
+< "0.0001100110011001100110011001100110011001100110011001101"
+> (0.2).toString(2)
+< "0.001100110011001100110011001100110011001100110011001101"
+> (0.3).toString(2)
+< "0.010011001100110011001100110011001100110011001100110011"
+> (0.4).toString(2)
+< "0.01100110011001100110011001100110011001100110011001101"
+> (0.5).toString(2)
+< "0.1"
+```
+
+除了 0.5，其余几个在二进制下都是无限不循环小数，在浮点数表示法中都会损失精度。
+
+#### 3.Math.max() === -Infinity
+
+这个其实不算是坑，只是粗略看起来有点惊人，以为 max 容易理解为 max value。可以将 Math.max 理解为有一个隐参数 `-Infinity` 的函数，`-Infinity` 决定了返回值的下限。
+
+#### 4.加号问题
+
+JavaScript 中加号有三个用途，一元运算符、二元运算符的算数加法和字符串拼接。无论是什么用途，都要求运算的值为**原始类型**，或可被转换成原始类型的对象。
+
+依据**提示**，对象可转化为 string 或 number。提示分为 **string** 和 **number** 和 **default**，其中 default 会以 number 进行处理。在两元运算中，运算值既可以是 string 也可以是 number，所以转换的提示为 default。具体的转换还依赖于对象的 `toString` 和 `valueOf` 方法。详细的算法可以可以在[这里](https://link.juejin.cn/?target=https%3A%2F%2Fwww.ecma-international.org%2Fecma-262%2F6.0%2F%23sec-toprimitive)找到。
+
+```js
+// 1. 两个空数组相加等于一个空字符串
+[] + [] = ""
+// 2. 数组加对象等于 "[object Object]"
+[] + {} = "[object Object]"
+// 3. 对象加数组等于 0
+{} + [] = 0
+// 4. 三个 true 相加和 3 全等
+true + true + true === 3
+// 5. !+[]+[]+![]
+(!+[]+[]+![]).length = 9
+// 6. 数字加字符串
+9 + "1" = "91"
+```
+
+一些例子：
+
+```javascript
+> ({ valueOf() { return 1 }}) + 1
+< 2
+> ({ toString() { return '2' }}) + 1
+< "21"
+> ({ valueOf() { return 1 }}) + ({ valueOf() { return 2 } })
+< 3
+> ({ toString() { return '2' }, valueOf() { return 1 } }) + 1
+< 2
+> ({ toString() { return '2' }, valueOf() { return 1 } }) + '1'
+< "11"
+```
+
+所以 `[]+[]` → `""+""` → `""`; `[]+{}` → `"" + "[object Object]"` → `"[object Object]"`。
+
+当加号的左右的运算值都为原始类型时，并且其中一个为 string，则应用字符串拼接算法，否则应用算数加法。运算过程中还可能发生原始类型之间的隐式转换。
+
+所以 `true+true+true` → `1+1+1` → `3`； `!+[]+[]+![]` → `(!+[])+[]+(![])` → `(!0)+[]+(![])` → `true+""+false` → `"truefalse"`。
+
+这里比较费解的是，为何 `{}+[]` 等于 `0`？原因是这里的 `{}` 会识别为空语句块，从而 `+` 用为一元运算符，其含义是将运算值转换为 number。所以 `{}+[]` → `+[]` → `+""` → `0`。
+
+{}` 识别为空对象还是空语句块，有一个**大体**的规则：若语句（statement）以 `{` 开头，则识别为语句块，否则识别为对象。当然生成中应当避免这类有歧义的写法，况且`{}`在各个 JavaScript 引擎中也有些差异，例如 `{}+{}` 在 Firefox 下可能输出 `NaN`，而在 Safari 下可能输出为 `"[object Object][object Object]"
+
+**js里的减号默认是转化为 Number 类型然后计算的**
+
+```js
+// 1.
+true - true = 0
+// 2.
+91 - "1" = 90
+```
+
+
+
+#### 5.相等问题
+
+JavaScript 提供了 `==` 和 `===` 两个比较运算符。前者会将运算值转化为相同类型后再应用 `===` 的算法，后者等价于 C Java 等编程语言中的 `==`，是严格地相等。
+
+所以 `==` 甚至可以进行对象和原始类型的比较：
+
+```javascript
+> 1 == { valueOf() { return  1 } }
+< true
+> 1 == { toString() { return  '1' } }
+< true
+> [] == 0
+< true
+```
+
+值得一提的是，JavaScript 中还存在其他的比较算法 `SameValue` 和 `SameValueZero`。前者可通过 `Object.is` 来直接使用，后者可以通过 `Array.prototype.includes` 的方法来间接使用。
+
+具体的例子如下：
+
+```js
+> NaN == NaN
+< false
+> NaN === NaN
+< false
+> Object.is(NaN, NaN)
+< true
+> [NaN].includes(NaN)
+< true
+> Object.is(0, -0)
+< false
+> [0].includes(-0)
+< true
+```
+
+
+
 ------
 
 ## Js基础

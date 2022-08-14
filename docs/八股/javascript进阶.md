@@ -3026,6 +3026,25 @@ await需要等待结果  然后跳出函数  执行外面的代码  然后 resol
 -   当await 接收的值非Promise 对象时，它会将返回值包装成Promise.then(返回值)将值和恢复执行的消息一起添加到消息队列中；
 -   如果是Promise对象，**先添加到消息队列，等待可用值**；等有可用值后**再把恢复执行的消息添加到消息队列**；有两个添加到消息队列的操作。
 
+```js
+(async ()=>{
+	console.log(1);
+	setTimeout(()=>{
+	console.log(2);	
+	})
+	await new Promise((resolve,reject)=>{
+		console.log(3);
+		resolve()
+	}).then(()=>{
+		console.log(4);
+	})
+	console.log(5);
+})()
+//1 3 4 5 2
+```
+
+这个 4在5之前就很好得说明了 await会阻塞后面的代码
+
 #### await等到之后，做了什么事情
 
 右侧表达式的结果，就是await要等的东西  等待的就是async的返回值
