@@ -1111,7 +1111,7 @@ function fn(){
 
 （8）-0 === +0   结果为：true
 
-### 8.[JavaScript梗图详解](https://blog.csdn.net/weixin_46170034/article/details/107029540)
+### 8.JavaScript梗图详解](https://blog.csdn.net/weixin_46170034/article/details/107029540)
 
 ![在这里插入图片描述](https://s2.loli.net/2022/08/14/7zxUZC1qWw4uaOY.png)
 
@@ -1299,19 +1299,32 @@ Math常用内置属性和方法
 
 Date()对象是一个构造函数，必须使用new来调用创建我们的日期对象，即为需要**实例化**后才能使用。
 
-- 如果没有输入任何参数，则Date的构造器会依据系统设置的当前时间来创建一个Date对象。
+如果没有输入任何参数，则Date的构造器会依据系统设置的当前时间来创建一个Date对象。
+
+
+
+| Date Creation                                                | Output                                              |
+| ------------------------------------------------------------ | --------------------------------------------------- |
+| `new Date()`                                                 | Current date and time                               |
+| `new Date(timestamp)`                                        | Creates date based on milliseconds since Epoch time |
+| `new Date(date string)`                                      | Creates date based on date string                   |
+| `new Date(year, month, day, hours, minutes, seconds, milliseconds)` | Creates date based on specified date and time       |
 
 #### 日期格式化
 
-| 方法名        | 说明                   |
-| ------------- | ---------------------- |
-| getFullyear() | 获取当年               |
-| getMonth()    | 获取当月 0~11 要+1     |
-| getDate()     | 获取当前日期           |
-| getDay()      | 获取星期几 周日0~周六6 |
-| getHours()    | 获取当前小时           |
-| getMinutes()  | 获取当前分钟           |
-| getSeconds    | 获取当前秒钟           |
+| 方法名            | 说明                          |
+| ----------------- | ----------------------------- |
+| getFullyear()     | 获取当年                      |
+| getMonth()        | 获取当月 0~11 要+1            |
+| getDate()         | 获取当前日期                  |
+| getDay()          | 获取星期几 周日0~周六6 需要+1 |
+| getHours()        | 获取当前小时                  |
+| getMinutes()      | 获取当前分钟                  |
+| getSeconds        | 获取当前秒钟                  |
+| getMilliseconds() | 获取当前毫秒                  |
+| getTime()         | 获取时间戳                    |
+
+
 
 #### 字符串对象
 
@@ -1435,25 +1448,87 @@ console.log(obj.valueOf()) //1
 
 #### 全局变量
 
-Infinity 代表正的无穷大的数值。
-NaN 指示某个值是不是数字值。
-undefined 指示未定义的值。
+**Infinity** 代表正的无穷大的数值。
+**NaN** 指示某个值是不是数字值。
+**undefined** 指示未定义的值。
 
 #### 全局函数
 
-decodeURI() 解码某个编码的 URI。
-decodeURIComponent() 解码一个编码的 URI 组件。
-encodeURI() 把字符串编码为 URI。
-encodeURIComponent() 把字符串编码为 URI 组件。
-escape() 对字符串进行编码。
-eval() 计算 JavaScript 字符串，并把它作为脚本代码来执行。
-isFinite() 检查某个值是否为有穷大的数。
-isNaN() 检查某个值是否是数字。
-Number() 把对象的值转换为数字。
-parseFloat() 解析一个字符串并返回一个浮点数。
-parseInt() 解析一个字符串并返回一个整数。
-String() 把对象的值转换为字符串。
-unescape() 对由escape() 编码的字符串进行解码
+##### decodeURI()
+
+ 解码某个编码的 URI。
+
+##### decodeURIComponent() 
+
+解码一个编码的 URI 组件。
+
+##### encodeURI()
+
+ 把字符串编码为 URI。
+
+##### encodeURIComponent()
+
+ 把字符串编码为 URI 组件。
+
+##### escape()
+
+ 对字符串进行编码。
+
+##### unescape() 
+
+对由escape() 编码的字符串进行解码
+
+##### eval() 
+
+计算 JavaScript 字符串，并把它作为脚本代码来执行。
+
+##### isFinite()
+
+ 检查某个值是否为有穷大的数。
+
+##### isNaN() 
+
+检查某个值是否是数字。isNaN()的缺点就在于 null、空格以及空串会被按照0来处理
+
+##### Number() 
+
+把对象的值转换为数字。如果对象的值无法转换为数字，那么 Number() 函数返回 NaN
+
+```js
+var test1= new Boolean(true); //1
+var test2= new Boolean(false); //
+var test3= new Date(); //1660652058234
+var test4= new String("999"); //999
+var test5= new String("999 888");  //NaN
+```
+
+
+
+##### parseFloat()
+
+ 解析一个字符串并返回一个浮点数。
+
+##### parseInt()
+
+ 解析一个字符串并返回一个整数。
+
+##### String() 
+
+把对象的值转换为字符串。
+
+String() 函数返回与字符串对象的toString()方法值一样
+
+```js
+var test1 = new Boolean(1);
+var test2 = new Boolean(0);
+var test3 = new Boolean(true);
+var test4 = new Boolean(false);
+var test5 = new Date();
+var test6 = new String("999 888");
+var test7 = 12345;
+```
+
+
 
 ### 3.for in和for of有什么区别
 
@@ -3853,7 +3928,7 @@ function foo(name, age, sex) {
 foo('jack', '18', 'male');
 ```
 
-打印结果如下： ![image.png](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/e544ade128794a88a6583be9c2ff75b8~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp) 可以看到，typeof 这个 arguments 返回的是 object，通过 Object.prototype.toString.call 返回的结果是 [object arguments]，而不是 [object array]，说明 arguments 和数组还是有区别的。
+打印结果如下： ![image.png](https://s2.loli.net/2022/08/14/j2dOygokLEHiTQe.webp) 可以看到，typeof 这个 arguments 返回的是 object，通过 Object.prototype.toString.call 返回的结果是 [object arguments]，而不是 [object array]，说明 arguments 和数组还是有区别的。
 
 length 属性就是函数参数的长度。另外 arguments 还有一个 callee 属性，下面看看这个 callee 是干什么的：
 
@@ -3892,7 +3967,7 @@ console.log(typeof elem1);
 console.log(Object.prototype.toString.call(elem1));
 ```
 
-打印结果如下： ![image.png](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/1f594359e4b8423bb5b09e3e7d4ba09f~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp)
+打印结果如下： ![image.png](https://s2.loli.net/2022/08/14/Kmr7LZG6YCpkySj.webp)
 
 可以看到，这里打印出来了页面第一个 form 表单元素，同时也打印出来了判断类型的结果，说明打印的判断的类型和 arguments 返回的也比较类似，typeof 返回的都是 object，和上面的类似。
 
@@ -3912,7 +3987,7 @@ console.log(typeof list);
 console.log(Object.prototype.toString.call(list));
 ```
 
-打印结果如下： ![image.png](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/87ad9d211da14d56a2156c96b5df73ed~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp)
+打印结果如下： ![image.png](https://s2.loli.net/2022/08/14/Hq9Sy3QJN8EhlIC.webp)
 
 #### 2. 类数组应用场景
 
