@@ -518,11 +518,11 @@ module.exports = {
 
 `vue-lodaer` 现将读取的源文件，然后通过 `@vue/component-compiler-utils`中的 `parse` 解析器将得到源文件的描述符。对每个 `block` 进行处理，生成对应的模块请求。由 `normalizer` 函数把每个 `block` 拼接到一起，形成一个 `vue` 组件
 
-![vue-loader1.png](https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/051b3536a7904de9a2554d19ce8a0aa8~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp)
+![vue-loader1.png](https://s2.loli.net/2022/08/06/YCl9FnbrpJgowxc.webp)
 
 第二个阶段：通过 `pitcher-loader`(这个`loader`是通过 `vueloaderplugin`注入到`webpack`中的) 将第一阶段中间产物转化为另一阶段产物
 
-![vue-loader2.png](https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/1e400262d8b64b849038488ce41396df~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp)
+![vue-loader2.png](https://s2.loli.net/2022/08/06/DLMhSAWxtRjnpbU.webp)
 
 通过 `pitcher-loader`(这个`loader`是通过 `vueloaderplugin`注入到`webpack`中的) 将第一阶段中间产物转化为另一阶段产物。 就以 `import { render, staticRenderFns } from "./test.vue?vue&type=template&id=13429420&scoped=true&"` 为例，会被转化为 `-!./lib/vue-loader/loaders/templateLoader.js??vue-loader-options!./lib/vue-loader/index.js??vue-loader-options!./test.vue?vue&type=template&id=13429420&scoped=true&`
 
@@ -532,7 +532,7 @@ module.exports = {
 
 第三个阶段：第二阶段转化 `request` 请求，通过对应的 `loader` 进行处理
 
-![vue-loader3.png](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/db9b19c085b9457e8defbc68671a158e~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp)
+![vue-loader3.png](https://s2.loli.net/2022/08/06/ZDX9TwFIQc432Ae.webp)
 
 在得到上述的`request` 之后，`webpack`会先使用`vue-loader`处理，然后再使用`template-loader`来处理，然后得到最后模块
 
@@ -1260,7 +1260,7 @@ devServer.proxy可以代理开发环境中的url
 
 devServer中的proxy就相当于charles进行url的代理，在`sxx()`执行后发送的请求是`http://0.0.0.0:8080/robot/send?XXXXXXXX`，我们是在0.0.0.0:8080下，当然不会限制这样的请求的发送，然后devServer的proxy通过配置将host更改为`oapi.dingtalk.com`，该请求就能正常进行
 
-![img](https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/5/17/172218f8ef3f7e3d~tplv-t2oaga2asx-zoom-in-crop-mark:1304:0:0:0.awebp)
+![img](https://s2.loli.net/2022/08/06/cVgWkbo6yA3ZmIn.webp)
 
 ```js
 proxy: {
@@ -1397,7 +1397,7 @@ Webpack 中，Tree-shaking 的实现一是先**标记**出模块导出值中哪�
 
 ### 7.webpack 中，module，chunk 和 bundle 的区别是什么？
 
-![image-20200518210532171](https://image-1255652541.cos.ap-shanghai.myqcloud.com/uPic/image-20200518210532171.png)
+![image-20200518210532171](https://s2.loli.net/2022/08/06/priKYSX62vJOZ8d.png)
 
 看这个图就很明白了：
 
@@ -1507,7 +1507,7 @@ module.exports = {
 -   **require内的是inline-loader**
 -   **webpack中通过enforce来配置是normal(可以不写，默认值)还是post还是pre**
 
-```
+```js
 //定在require方法里的 inline Loader
 let filecontent = require(`!!inline1-loader!inline2-loader!${filePath}`); //inline-loader是这么写的！！！
 //不同的loader并不决定loader的类型属性，而是你在使用 的使用了什么样的enforce
@@ -1569,7 +1569,7 @@ let rules = [
 
 > babel-loader的主要原理`(面试点)`就是：调动@babel/core这个包下面的transform方法，将源码通过presets预设来进行转换，然后生成新的代码、map和ast语法树传给下一个loader。这里的presets，比如@babel/preset-env这个预设其实就是各类插件的集合，基本上一个插件转换一个语法，比如箭头函数转换，有箭头函数转换的插件，这些插件集合就组成了预设。
 
-```
+```js
 const babel = require('@babel/core');
 const path = require('path')
 
@@ -1595,7 +1595,7 @@ module.exports = loader;
 
 > file-loader的原理`(面试点)`就是通过laoder的参数拿到文件的内容，然后解析出file-loader配置中的名字，解析名字其实就是替换\[hash\]、\[ext\]等，然后向输出目录里输出一个文件，这个文件的内容就是loader的参数，名字就是刚刚说的解析出的名字。但是，实际上，并不是在loader里输出文件的，loader只是向webpack的complication的assets中，添加的文件id和内容，最终还是webpack将文件写进硬盘的。
 
-```
+```js
 const { getOptions, interpolateName } = require("loader-utils");
 
 /*
@@ -1624,7 +1624,7 @@ module.exports = loader;
 >
 > 所以，url-loader主要就是先判断大小(内容的buffer的lenth)是否大于limit，大于就走file-loader，否则就用`toStrng('base64')`转成base64。
 
-```
+```js
 const { getOptions, interpolateName } = require("loader-utils");
 const mime = require('mime');
 
@@ -1659,7 +1659,7 @@ module.exports = loader;
 
 一般我们处理像是的loader配置为：
 
-```
+```js
 {
 test:/\.less$/,
     loaders: [
@@ -1682,7 +1682,7 @@ test:/\.less$/,
 >
 > 
 
-```
+```js
 let less = require('less')
 
 function loader(inputSource){
@@ -1710,7 +1710,7 @@ module.exports = loader;
 
 > 见less-loader的笔记`(面试点)`
 
-```
+```js
 const { Console } = require("console");
 const loaderUtils = require('loader-utils');
 
@@ -1778,8 +1778,6 @@ loader.pitch方法中有三个参数，分别是`remainingRequest`、`previousRe
 - 传给每个插件的 `compiler` 和 `compilation` 对象都是同一个引用，若在一个插件中修改了它们身上的属性，会影响后面的插件;
 - 异步的事件需要在插件处理完任务时调用回调函数通知 `Webpack` 进入下一个流程，不然会卡住;
 
-
-
 怎么开发的
 
 -   一般来说，插件是一个类
@@ -1825,6 +1823,32 @@ module.exports = JsZip;
 
 
 ### 11.Babel使用和原理
+
+#### Babel的用途
+
+##### 转译 esnext、typescript、flow 等到目标环境支持的 js
+
+这个是最常用的功能，用来把代码中的 esnext 的新的语法、typescript 和 flow 的语法转成基于目标环境支持的语法的实现。并且还可以把目标环境不支持的 api 进行 polyfill。
+
+babel7 支持了 preset-env，可以指定 targets 来进行按需转换，转换更加的精准，产物更小。
+
+##### 一些特定用途的代码转换
+
+babel 是一个转译器，暴露了很多 api，用这些 api 可以完成代码到 AST 的解析、转换、以及目标代码的生成。
+
+开发者可以用它来来完成一些特定用途的转换，比如函数插桩（函数中自动插入一些代码，例如埋点代码）、自动国际化等。这些都是后面的实战案例。
+
+现在比较流行的小程序转译工具 taro，就是基于 babel 的 api 来实现的。
+
+##### 代码的静态分析
+
+对代码进行 parse 之后，能够进行转换，是因为通过 AST 的结构能够理解代码。理解了代码之后，除了进行转换然后生成目标代码之外，也同样可以用于分析代码的信息，进行一些检查。
+
+- linter 工具就是分析 AST 的结构，对代码规范进行检查。
+- api 文档自动生成工具，可以提取源码中的注释，然后生成文档。
+- type checker 会根据从 AST 中提取的或者推导的类型信息，对 AST 进行类型是否一致的检查，从而减少运行时因类型导致的错误。
+- 压缩混淆工具，这个也是分析代码结构，进行删除死代码、变量名混淆、常量折叠等各种编译优化，生成体积更小、性能更优的代码。
+- js 解释器，除了对 AST 进行各种信息的提取和检查以外，我们还可以直接解释执行 AST。
 
 #### 常见`plugin`和`Preset`
 
@@ -1887,6 +1911,54 @@ function babelLoader (sourceCode,options) {
 >`babel-core`其实相当于`@babel/parse`和`@babel/generator`这两个包的合体，接触过`js`编译的同学可能有了解`esprima`和`escodegen`这两个库，你可以将`babel-core`的作用理解称为这两个库的合体。
 
 `babel-preset-env`在这里充当的就是这个作用：**告诉`babel`我需要以为什么样的规则进行代码转移**
+
+#### Babel的编译流程
+
+babel 是 source to source 的转换，整体编译流程分为三步：
+
+- parse：通过 parser 把源码转成抽象语法树（AST）
+- transform：遍历 AST，调用各种 transform 插件对 AST 进行增删改
+- generate：把转换后的 AST 打印成目标代码，并生成 sourcemap
+
+![img](https://s2.loli.net/2022/08/06/fpSJs6Vo92MCBZO.webp)
+
+##### 为什么 babel 的编译流程会分 parse、transform、generate 这 3 步呢？
+
+源码是一串按照语法格式来组织的字符串，人能够认识，但是计算机并不认识，想让计算机认识就要转成一种数据结构，通过不同的对象来保存不同的数据，并且按照依赖关系组织起来，这种数据结构就是抽象语法树（abstract syntax tree）。之所以叫“抽象”语法树是因为数据结构中省略掉了一些无具体意义的分隔符比如 `;` `{` `}` 等。
+
+有了 AST，计算机就能理解源码字符串的意思，而理解是能够转换的前提，所以编译的第一步需要把源码 parse 成 AST。
+
+转成 AST 之后就可以通过修改 AST 的方式来修改代码，这一步会遍历 AST 并进行各种增删改，这一步也是 babel 最核心的部分。
+
+经过转换以后的 AST 就是符合要求的代码，就可以再转回字符串，转回字符串的过程中把之前删掉的一些分隔符再加回来。
+
+简单总结一下就是：**为了让计算机理解代码需要先对源码字符串进行 parse，生成 AST，把对代码的修改转为对 AST 的增删改，转换完 AST 之后再打印成目标代码字符串**
+
+##### 这三步都做了什么？
+
+###### parse
+
+parse 阶段的目的是把源码字符串转换成机器能够理解的 AST，这个过程分为词法分析、语法分析。
+
+比如 `let name = 'guang';` 这样一段源码，我们要先把它分成一个个不能细分的单词（token），也就是 `let`, `name`, `=`, `'guang'`，这个过程是词法分析，按照单词的构成规则来拆分字符串成单词。
+
+之后要把 token 进行递归的组装，生成 AST，这个过程是语法分析，按照不同的语法结构，来把一组单词组合成对象，比如声明语句、赋值表达式等都有对应的 AST 节点。
+
+![img](https://s2.loli.net/2022/08/06/lPt2xZQvrJpawbf.webp)
+
+###### transform
+
+transform 阶段是对 parse 生成的 AST 的处理，会进行 AST 的遍历，遍历的过程中处理到不同的 AST 节点会调用注册的相应的 visitor 函数，visitor 函数里可以对 AST 节点进行增删改，返回新的 AST（可以指定是否继续遍历新生成的 AST）。这样遍历完一遍 AST 之后就完成了对代码的修改。
+
+![img](https://s2.loli.net/2022/08/06/NYIgVz8QewsmpdX.webp)
+
+###### generate
+
+generate 阶段会把 AST 打印成目标代码字符串，并且会生成 sourcemap。不同的 AST 对应的不同结构的字符串。比如 `IfStatement` 就可以打印成 `if(test) {}` 格式的代码。这样从 AST 根节点进行递归的字符串拼接，就可以生成目标代码的字符串。
+
+![img](https://s2.loli.net/2022/08/06/yQE4oZOD5wvgJkj.webp)
+
+sourcemap 记录了源码到目标代码的转换关系，通过它我们可以找到目标代码中每一个节点对应的源码位置，用于调试的时候把编译后的代码映射回源码，或者线上报错的时候把报错位置映射到源码。
 
 
 
