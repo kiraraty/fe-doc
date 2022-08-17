@@ -4510,11 +4510,9 @@ export default vCopy;
   }
 ```
 
+## 生命周期
 
-
-## 生命周期![b1493c640d7e4cf2bd7785cea7c86789](https://s2.loli.net/2022/07/14/mXbkqBsVgAYinc1.png)
-
-
+![b1493c640d7e4cf2bd7785cea7c86789](https://s2.loli.net/2022/07/14/mXbkqBsVgAYinc1.png)
 
 ### 1.生命周期有哪些，vue2和vue3有什么区别
 
