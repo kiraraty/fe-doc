@@ -22,9 +22,9 @@ Model和View并无直接关联，而是通过ViewModel来进行联系的，Model
 
 
 
-### 2.双向绑定是怎么实现的？ 如何通过发布订阅模式实现数据的双向绑定？
+### 2.vue的响应式原理
 
-![0_tB3MJCzh_cB6i3mS-1.png](https://s2.loli.net/2022/08/01/CSIUz46ZvGE38ja.webp)
+![4.png](https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2019/8/1/16c4a3ce0cc709da~tplv-t2oaga2asx-zoom-in-crop-mark:3024:0:0:0.awebp)
 
 当一个Vue实例创建时，Vue会遍历data中的属性，用 Object.defineProperty（vue3.0使用proxy ）将它们转为 getter/setter，并且在内部追踪相关依赖，在属性被访问和修改时通知变化。 每个组件实例都有相应的 watcher 程序实例，它会在组件渲染的过程中把属性记录为依赖，之后当依赖项的setter被调用时，会通知watcher重新计算，从而致使它关联的组件得以更新。 
 
@@ -66,7 +66,251 @@ vue接收一个模板和data参数。
 -   再调用CompilerUtil.getValue，获取该data的当前值，此时就以及触发了getter。然后我们在getter函数里面获取该静态变量Dep.target，并添加到对应的依赖数组dep中了，就完成了一次收集。
 -   因为每次触发getter之前都对该静态变量赋值，所以不存在收集错依赖的情况。
 
-#### 实现视图驱动数据
+- 1.我们如何知道哪里用了data里面的数据？
+- 2.数据变更了，如何通知render更新视图？
+
+在视图渲染过程中，被使用的数据需要被记录下来，并且只针对这些数据的变化触发视图更新
+
+这就需要做依赖收集，需要为属性创建 dep 用来收集渲染 watcher
+
+我们可以来看下官方介绍图，这里的`collect as Dependency`就是源码中的`dep.depend()`依赖收集，`Notify`就是源码中的`dep.notify()`通知订阅者
+
+![响应式原理.png](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/f3d6e75830bd4e878f160b58617f6cba~tplv-k3u1fbpfcp-zoom-in-crop-mark:3024:0:0:0.awebp?)
+
+##### 依赖收集中的各个类
+
+Vue源码中负责依赖收集的类有三个：
+
+- Observer：`可观测类`，将数组/对象转成可观测数据，每个`Observer`的实例成员中都有一个`Dep`的实例（上一篇文章实现过这个类）
+- Dep：`观察目标类`，每一个数据都会有一个`Dep`类实例，它内部有个subs队列，subs就是subscribers的意思，保存着依赖本数据的`观察者`，当本数据变更时，调用`dep.notify()`通知观察者
+- Watcher：`观察者类`，进行`观察者函数`的包装处理。如`render()`函数，会被进行包装成一个`Watcher`实例
+
+依赖就是`Watcher`,只有`Watcher`触发的`getter`才会收集依赖，哪个`Watcher`触发了`getter`，就把哪个`watcher`收集到`Dep`中。Dep使用发布订阅模式，当数据发生变化时，会循环依赖列表，把所有的`watcher`都通知一遍，这里我自己画了一张更清晰的图：
+
+![vue响应式原理.png](https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/7455057cc80a4436883825f72f8f6e60~tplv-k3u1fbpfcp-zoom-in-crop-mark:3024:0:0:0.awebp?)
+
+##### Observer类
+
+这个类我们上一期已经实现过了，这一期我们主要增加的是`defineReactive`在劫持数据`gētter`时进行依赖收集，劫持数据`setter`时进行通知依赖更新，这里就是Vue收集依赖的入口
+
+```js
+class Observer {
+     constructor(v){
+         // 每一个Observer实例身上都有一个Dep实例
+         this.dep = new Dep()
+        // 如果数据层次过多，需要递归去解析对象中的属性，依次增加set和get方法
+        def(v,'__ob__',this)  //给数据挂上__ob__属性，表明已观测
+        if(Array.isArray(v)) {
+            // 把重写的数组方法重新挂在数组原型上
+            v.__proto__ = arrayMethods
+            // 如果数组里放的是对象，再进行监测
+            this.observerArray(v)
+        }else{
+            // 非数组就直接调用defineReactive将数据定义成响应式对象
+            this.walk(v)
+        }
+        
+     }
+     observerArray(value) {
+         for(let i=0; i<value.length;i++) {
+             observe(value[i])
+         }
+     }
+     walk(data) {
+         let keys = Object.keys(data); //获取对象key
+         keys.forEach(key => {
+            defineReactive(data,key,data[key]) // 定义响应式对象
+         })
+     }
+ }
+
+ function  defineReactive(data,key,value){
+     const dep = new Dep() //实例化dep,用于收集依赖，通知订阅者更新
+     observe(value) // 递归实现深度监测，注意性能
+     Object.defineProperty(data,key,{
+         configurable:true,
+         enumerable:true,
+         get(){
+             //获取值
+             // 如果现在处于依赖的手机阶段
+             if(Dep.target) {
+                 dep.depend()
+             }
+            //  依赖收集
+            return value
+         },
+         set(newV) {
+             //设置值
+            if(newV === value) return
+            observe(newV) //继续劫持newV,用户有可能设置的新值还是一个对象
+            value = newV
+            console.log('值变化了:',value)
+            // 发布订阅模式，通知
+            dep.notify()
+            // cb() //订阅者收到消息回调
+         }
+     })
+ }
+```
+
+将`Observer`类的实例挂在`__ob__`属性上，提供后期数据观察时使用，实例化`Dep`类实例，并且将`对象/数组`作为value属性保存下来 - 如果value是个对象，就执行`walk()`过程，遍历对象把每一项数据都变为可观测数据（调用`defineReactive`方法处理） - 如果value是个数组，就执行`observeArray()`过程，递归地对数组元素调用`observe()`。
+
+##### Dep类（订阅者）
+
+`Dep`类的角色是一个`订阅者`，它主要作用是用来存放`Watcher`观察者对象，每一个数据都有一个`Dep`类实例，在一个项目中会有多个观察者，但由于JavaScript是单线程的，所以在同一时刻，只能有一个`观察者`在执行，此刻正在执行的那个`观察者`所对应的`Watcher`实例就会赋值给`Dep.target`这个变量，从而只要访问`Dep.target`就能知道当前的观察者是谁。
+
+```js
+var uid = 0
+export default class Dep {
+    constructor() {
+        this.id = uid++
+        this.subs = [] // subscribes订阅者，存储订阅者，这里放的是Watcher的实例
+    }
+
+    //收集观察者
+    addSub(watcher) {
+        this.subs.push(watcher)
+    }
+    // 添加依赖
+    depend() {
+        // 自己指定的全局位置，全局唯一
+      //自己指定的全局位置，全局唯一,实例化Watcher时会赋值Dep.target = Watcher实例
+        if(Dep.target) {
+            this.addSub(Dep.target)
+        }
+    }
+    //通知观察者去更新
+    notify() {
+        console.log('通知观察者更新～')
+        const subs = this.subs.slice() // 复制一份
+        subs.forEach(w=>w.update())
+    }
+}
+```
+
+`Dep`实际上就是对`Watcher`的管理，`Dep`脱离`Watcher`单独存在是没有意义的。
+
+- `Dep`是一个发布者，可以订阅多个观察者，依赖收集之后`Dep`中会有一个`subs`存放一个或多个观察者，在数据变更的时候通知所有的`watcher`。
+- `Dep`和`Observer`的关系就是`Observer`监听整个data，遍历data的每个属性给每个属性绑定`defineReactive`方法劫持`getter`和`setter`, 在`getter`的时候往`Dep`类里塞依赖`（dep.depend）`，在`setter`的时候通知所有`watcher`进行`update(dep.notify)`。
+
+##### Watcher类（观察者）
+
+`Watcher`类的角色是`观察者`，它关心的是数据，在数据变更之后获得通知，通过回调函数进行更新。
+
+由上面的`Dep`可知，`Watcher`需要实现以下两个功能：
+
+- `dep.depend()`的时候往subs里面添加自己
+- `dep.notify()`的时候调用`watcher.update()`，进行更新视图
+
+**同时要注意的是，watcher有三种：render watcher、 computed watcher、user watcher(就是vue方法中的那个watch)**
+
+```js
+var uid = 0
+import {parsePath} from "../util/index"
+import Dep from "./dep"
+export default class Watcher{
+    constructor(vm,expr,cb,options){
+        this.vm = vm // 组件实例
+        this.expr = expr // 需要观察的表达式
+        this.cb = cb // 当被观察的表达式发生变化时的回调函数
+        this.id = uid++ // 观察者实例对象的唯一标识
+        this.options = options // 观察者选项
+        this.getter = parsePath(expr)
+        this.value = this.get()
+    }
+
+    get(){
+        // 依赖收集,把全局的Dep.target设置为Watcher本身
+        Dep.target = this
+        const obj = this.vm
+        let val
+        // 只要能找就一直找
+        try{
+            val = this.getter(obj)
+        } finally{
+            // 依赖收集完需要将Dep.target设为null，防止后面重复添加依赖。
+            Dep.target = null
+        }
+        return val
+        
+    }
+    // 当依赖发生变化时，触发更新
+    update() {
+        this.run()
+    }
+    run() {
+        this.getAndInvoke(this.cb)
+    }
+    getAndInvoke(cb) {
+        let val = this.get()
+
+        if(val !== this.value || typeof val == 'object') {
+            const oldVal = this.value
+            this.value = val
+            cb.call(this.target,val, oldVal)
+        }
+    }
+}
+```
+
+要注意的是，`watcher`中有个`sync`属性，绝大多数情况下，`watcher`并不是同步更新的，而是采用异步更新的方式，也就是调用`queueWatcher(this)`推送到观察者队列当中，待`nextTick`的时候进行调用。
+
+这里的`parsePath`函数比较有意思，它是一个高阶函数，用于把表达式解析成getter，也就是取值，我们可以试着写写看：
+
+```js
+export function parsePath (str) {
+   const segments = str.split('.') // 先将表达式以.切割成一个数据
+  // 它会返回一个函数
+  	return obj = > {
+      for(let i=0; i< segments.length; i++) {
+        if(!obj) return
+        // 遍历表达式取出最终值
+        obj = obj[segments[i]]
+      }
+      return obj
+    }
+}
+```
+
+##### Dep与Watcher的关系
+
+watcher 中实例化了 dep 并向 dep.subs 中添加了订阅者, dep 通过 notify 遍历了 dep.subs 通知每个 watcher 更新。
+
+##### 总结
+
+###### 依赖收集
+
+1. `initState `时,对` computed` 属性初始化时,触发 `computed watcher` 依赖收集
+2. `initState` 时,对侦听属性初始化时,触发 `user watcher` 依赖收集(这里就是我们常写的那个watch)
+3. `render()`时,触发 `render watcher` 依赖收集
+4. `re-render` 时,`render()`再次执行,会移除所有 `subs` 中的 `watcer` 的订阅,重新赋值。
+
+```js
+observe->walk->defineReactive->get->dep.depend()->
+watcher.addDep(new Dep()) -> 
+watcher.newDeps.push(dep) -> 
+dep.addSub(new Watcher()) -> 
+dep.subs.push(watcher)
+```
+
+###### 派发更新
+
+1. 组件中对响应的数据进行了修改,触发`defineReactive`中的 `setter` 的逻辑
+2. 然后调用 `dep.notify()`
+3. 最后遍历所有的 `subs（Watcher 实例）`,调用每一个 `watcher` 的 `update` 方法。
+
+```js
+set -> 
+dep.notify() -> 
+subs[i].update() -> 
+watcher.run() || queueWatcher(this) -> 
+watcher.get() || watcher.cb -> 
+watcher.getter() -> 
+vm._update() -> 
+vm.__patch__()
+```
+
+###### 实现视图驱动数据
 
 监听输入框的input、change事件。修改CompilerUtil的model方法
 
@@ -84,8 +328,6 @@ model: function (node, value, vm) {
     })
 },
 ```
-
-
 
 #### 如何将watcher放在dep数组中？
 
@@ -4510,9 +4752,11 @@ export default vCopy;
   }
 ```
 
-## 生命周期
 
-![b1493c640d7e4cf2bd7785cea7c86789](https://s2.loli.net/2022/07/14/mXbkqBsVgAYinc1.png)
+
+## 生命周期![b1493c640d7e4cf2bd7785cea7c86789](https://s2.loli.net/2022/07/14/mXbkqBsVgAYinc1.png)
+
+
 
 ### 1.生命周期有哪些，vue2和vue3有什么区别
 
@@ -7478,7 +7722,7 @@ function install() {
 
 通过生命周期给每个组件单独挂载`$store`，而不是直接`Vue.prototype.$store =`，这样可以防止声明多个`vuex`实例后覆盖
 
-```js
+```
 vue3`中挂载`vuex`要执行`app.use(store)`。最终会执行到`Store.prototype.install
 function install (app, injectKey) {
     // globalProperties属性上挂载的属性可以在app下所有组件实例中访问到
@@ -10019,7 +10263,7 @@ data 中的每一个属性都会被处理为存取器属性，同时每一个属
 
 4.  最后在 `_update` 方法中，进行 `patch` 操作
 
-### 如何设计vue的生命周期
+
 
 
 
@@ -11579,156 +11823,3 @@ body{
 }
 ```
 
-8.实现一个计时器
-
-HTML代码
-
-```js
-<div class="father">
-
-  <ul>
-
-   <li>{{one}}<span>:</span></li>
-
-   <li>{{two}}<span>:</span></li>
-
-   <li>{{three}}</li>
-
-  </ul>
-
-  <el-button type="primary" @click="startHandler">开始</el-button>
-
-  <el-button type="primary" @click="endHandler">暂停</el-button>
-
-</div>
-```
-
-JAVASCRIPT代码
-
-```js
-<script>
-export default {
-  name: 'HelloWorld',
-  data(){
-   return {
-
-  flag: null,
-
-  one : '00', // 时
-
-  two : '00', // 分
-
-  three : '00', // 秒
-
-  abc : 0, // 秒的计数
-
-  cde : 0, // 分的计数
-
-  efg : 0, // 时的计数
-
-   }
-
-  },
-
-  props: {
-
-    msg: String
-
-  },
-
-  mounted() {
-
-  },
-
-  methods:{
-
-  // 开始计时
-
- startHandler(){
-
-  this.flag = setInterval(()=>{
-
-   if(this.three === 60 || this.three === '60'){
-
-    this.three = '00';
-
-    this.abc = 0;
-
-    if(this.two === 60 || this.two === '60'){
-
-     this.two = '00';
-
-     this.cde = 0;
-
-     if(this.efg+1 <= 9){
-
-      this.efg++;
-
-      this.one = '0' + this.efg;
-
-     }else{
-
-      this.efg++;
-
-      this.one = this.efg;
-
-     }
-
-    }else{
-
-     if(this.cde+1 <= 9){
-
-      this.cde++;
-
-      this.two = '0' + this.cde;
-
-     }else{
-
-      this.cde++;
-
-      this.two = this.cde;
-
-     }
-
-    }
-
-   }else{
-
-    if(this.abc+1 <= 9){
-
-     this.abc++;
-
-     this.three = '0' + this.abc;
-
-    }else{
-
-     this.abc++;
-
-     this.three=this.abc;
-
-    }
-
-   }
-
-  },100)
-
- },
-
- // 暂停计时
-
- endHandler(){
-
-  this.flag = clearInterval(this.flag)
-
- }
-
-  }
-
-}
-
-</script>
-```
-
-效果如下：
-
-![img](https://s2.loli.net/2022/08/14/N2cHQvg4oLbE9rU.jpg)
