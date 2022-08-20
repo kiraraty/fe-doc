@@ -39,7 +39,7 @@ webpack解决了什么问题？
 - Mode：模式，告知 webpack 使用相应模式的内置优化
 - Browser Compatibility：浏览器兼容性，Webpack 支持所有符合 ES5 标准 的浏览器（IE8以上版本）
 
-![img](https://s2.loli.net/2022/07/28/Gve1RziaKNVSuDw.webp)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201840522.webp)
 
 #### loader特点
 
@@ -76,7 +76,7 @@ Babel是一个Javscript编译器，可以将高级语法(主要是ECMAScript 201
 
 webpack通过babel-loader使用Babel。
 
-***\*用法\****：
+用法
 
 ```shell
 # 环境要求:
@@ -92,20 +92,20 @@ Babel配置里的两大核心：插件数组(plugins) 和 预设数组(presets)�
 
 Babel 的预设（preset）可以被看作是一组Babel插件的集合，由一系列插件组成。
 
-***\*常用预设：\****
+常用预设：
 
 - @babel/preset-env       ES2015+ 语法
 - @babel/preset-typescript  TypeScript
 - @babel/preset-react      React
 - @babel/preset-flow       Flow
 
-***\*插件和预设的执行顺序：\****
+插件和预设的执行顺序：
 
 - 插件比预设先执行
 - 插件执行顺序是插件数组从前向后执行
 - 预设执行顺序是预设数组从后向前执行
 
-***\*webpack配置代码：\****
+webpack配置代码：
 
 ```javascript
 // webpack.config.js
@@ -160,7 +160,7 @@ module.exports = (api) => {
 
 ```
 
-***\*推荐阅读：\****
+推荐阅读：
 
 - [babel配置文件相关文档](https://link.juejin.cn/?target=https%3A%2F%2Fwww.babeljs.cn%2Fdocs%2Fconfiguration)
 - [插件手册](https://link.juejin.cn/?target=https%3A%2F%2Fgithub.com%2Fjamiebuilds%2Fbabel-handbook%2Fblob%2Fmaster%2Ftranslations%2Fzh-Hans%2Fplugin-handbook.md)
@@ -169,14 +169,14 @@ module.exports = (api) => {
 
 为webpack提供的 TypeScript loader，打包编译Typescript
 
-***\*安装依赖：\****
+安装依赖：
 
 ```
 npm install ts-loader --save-dev
 npm install typescript --dev
 ```
 
-***\*webpack配置如下：\****
+webpack配置如下：
 
 ```javascript
 // webpack.config.json
@@ -200,7 +200,7 @@ module.exports = {
 };
 ```
 
-还需要typescript编译器的配置文件***\*tsconfig.json\****：
+还需要typescript编译器的配置文件tsconfig.json：
 
 ```json
 {
@@ -237,11 +237,11 @@ module.exports = {
 
 markdown编译器和解析器
 
-***\*用法：\****
+用法：
 
 只需将 loader 添加到您的配置中，并设置 options。
 
-***\*js代码里引入markdown文件：\****
+js代码里引入markdown文件：
 
 ```javascript
 // file.js
@@ -251,7 +251,7 @@ import md from 'markdown-file.md';
 console.log(md);
 ```
 
-***\*webpack配置：\****
+webpack配置：
 
 ```javascript
 // wenpack.config.js
@@ -371,11 +371,11 @@ module.exports = {
 
 会把引用的 svg文件 塞到一个个 symbol 中，合并成一个大的SVG sprite，使用时则通过 SVG 的 <use> 传入图标 id 后渲染出图标。最后将这个大的 svg 放入 body 中。symbol的id如果不特别指定，就是你的文件名。
 
-该loader可以搭配***\*svgo-loader\**** 一起使用，svgo-loader是svg的优化器，它可以删除和修改SVG元素，折叠内容，移动属性等
+该loader可以搭配svgo-loader 一起使用，svgo-loader是svg的优化器，它可以删除和修改SVG元素，折叠内容，移动属性等
 
 **用途：可以用来开发统一的图标管理库**
 
-![svg-sprite-loader.png](https://s2.loli.net/2022/07/28/RsF5XpgqPEwGhA2.webp)
+![svg-sprite-loader.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs202208201817093.webp)
 
 **示例代码：**
 
@@ -419,7 +419,7 @@ module.exports = {
 
 通过注入`<style>`标签将CSS插入到DOM中
 
-***\*注意：\****
+注意：
 
 - 如果因为某些原因你需要将CSS提取为一个文件(即不要将CSS存储在JS模块中)，此时你需要使用插件 ***\*mini-css-extract-plugin\****(后面的Pugin部分会介绍)；
 - 对于development模式(包括 webpack-dev-server)你可以使用style-loader，因为它是通过`<style></style>`标签的方式引入CSS的，加载会更快；
@@ -437,13 +437,13 @@ PostCSS 在业界被广泛地应用。PostCSS 的 ***\*autoprefixer\**** 插件�
 
 autoprefixer 添加了浏览器前缀，它使用 Can I Use 上面的数据。
 
-***\*安装\****
+安装
 
 ```js
 npm install postcss-loader autoprefixer --save-dev
 ```
 
-***\*代码示例：\****
+代码示例：
 
 ```javascript
 // webpack.config.js
@@ -518,11 +518,11 @@ module.exports = {
 
 `vue-lodaer` 现将读取的源文件，然后通过 `@vue/component-compiler-utils`中的 `parse` 解析器将得到源文件的描述符。对每个 `block` 进行处理，生成对应的模块请求。由 `normalizer` 函数把每个 `block` 拼接到一起，形成一个 `vue` 组件
 
-![vue-loader1.png](https://s2.loli.net/2022/08/06/YCl9FnbrpJgowxc.webp)
+![vue-loader1.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201840750.webp)
 
 第二个阶段：通过 `pitcher-loader`(这个`loader`是通过 `vueloaderplugin`注入到`webpack`中的) 将第一阶段中间产物转化为另一阶段产物
 
-![vue-loader2.png](https://s2.loli.net/2022/08/06/DLMhSAWxtRjnpbU.webp)
+![vue-loader2.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201841133.webp)
 
 通过 `pitcher-loader`(这个`loader`是通过 `vueloaderplugin`注入到`webpack`中的) 将第一阶段中间产物转化为另一阶段产物。 就以 `import { render, staticRenderFns } from "./test.vue?vue&type=template&id=13429420&scoped=true&"` 为例，会被转化为 `-!./lib/vue-loader/loaders/templateLoader.js??vue-loader-options!./lib/vue-loader/index.js??vue-loader-options!./test.vue?vue&type=template&id=13429420&scoped=true&`
 
@@ -532,7 +532,7 @@ module.exports = {
 
 第三个阶段：第二阶段转化 `request` 请求，通过对应的 `loader` 进行处理
 
-![vue-loader3.png](https://s2.loli.net/2022/08/06/ZDX9TwFIQc432Ae.webp)
+![vue-loader3.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201841161.webp)
 
 在得到上述的`request` 之后，`webpack`会先使用`vue-loader`处理，然后再使用`template-loader`来处理，然后得到最后模块
 
@@ -700,12 +700,12 @@ module.exports = {
 - 只更新变更内容，以节省宝贵的开发时间。
 - 在源代码中 CSS/JS 产生修改时，会立刻在浏览器中进行更新，这几乎相当于在浏览器 devtools 直接更改样式。
 
-***\*启动方式有2种：\****
+启动方式有2种：
 
 - 引入插件webpack.HotModuleReplacementPlugin 并且设置devServer.hot: true
 - 命令行加 --hot参数
 
-***\*package.json配置：\****
+package.json配置：
 
 ```json
 {
@@ -715,7 +715,7 @@ module.exports = {
 }
 ```
 
-***\*webpack的配置如下：\****
+webpack的配置如下：
 
 ```javascript
 // scripts/dev.config.js文件
@@ -759,7 +759,7 @@ module.exports = {
 }
 ```
 
-***\*注意：HMR 绝对不能被用在生产环境。\****
+注意：HMR 绝对不能被用在生产环境。
 
 ##### 6. webpack.DefinePlugin
 
@@ -801,14 +801,14 @@ module.exports = {
 }
 ```
 
-***\*启动服务：\****
+启动服务：
 
 - 生产环境查看：NODE_ENV=production npm run build
 - 开发环境查看：NODE_ENV=development npm run start
 
-***\*最终效果：\****
+最终效果：
 
-![analyzer.gif](https://s2.loli.net/2022/07/28/dAVuzsblDkrjI6h.webp)
+![analyzer.gif](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201834680.webp)
 
 ##### 8. SplitChunksPlugin
 
@@ -865,7 +865,7 @@ module.exports = {
 
 `__webpack_require__`模块引入函数，我们在模块化开发的时候，通常会使用`ES Module`或者`CommonJS`规范导出/引入依赖模块，`webpack`打包编译的时候，会统一替换成自己的`__webpack_require__`来实现模块的引入和导出，从而实现模块缓存机制，以及抹平不同模块规范之间的一些差异性
 
-![[外链图片转存失败,源站可能有防盗链机制,建议将图片保存下来直接上传(img-jhSt0Krc-1628146374846)(C:\Users\yuhua7\AppData\Roaming\Typora\typora-user-images\image-20210805143154871.png)]](https://s2.loli.net/2022/07/28/JsXxaoQ4rheByIR.png)
+![](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201834433.png)
 
 工作流程
 
@@ -1186,11 +1186,11 @@ exports.chunk2=chunk2;
 
 #### 热更新原理
 
-![image-20220330160910633](https://s2.loli.net/2022/03/30/XJh4lPRMTBOE6Zz.png)
+![image-20220330160910633](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201835657.png)
 
 `HMR`即`Hot Module Replacement`是指当你对代码修改并保存后，`webpack`将会对代码进行重新打包，并将改动的模块发送到浏览器端，浏览器用新的模块替换掉旧的模块，去实现局部更新页面而非整体刷新页面。
 
-![core](https://s2.loli.net/2022/07/28/kOezDG5nwEKqWRo.webp)
+![core](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201835072.webp)
 
 如上图所示，右侧`Server`端使用`webpack-dev-server`去启动本地服务，内部实现主要使用了`webpack`、`express`、`websocket`。
 
@@ -1260,7 +1260,7 @@ devServer.proxy可以代理开发环境中的url
 
 devServer中的proxy就相当于charles进行url的代理，在`sxx()`执行后发送的请求是`http://0.0.0.0:8080/robot/send?XXXXXXXX`，我们是在0.0.0.0:8080下，当然不会限制这样的请求的发送，然后devServer的proxy通过配置将host更改为`oapi.dingtalk.com`，该请求就能正常进行
 
-![img](https://s2.loli.net/2022/08/06/cVgWkbo6yA3ZmIn.webp)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201835425.webp)
 
 ```js
 proxy: {
@@ -1397,7 +1397,7 @@ Webpack 中，Tree-shaking 的实现一是先**标记**出模块导出值中哪�
 
 ### 7.webpack 中，module，chunk 和 bundle 的区别是什么？
 
-![image-20200518210532171](https://s2.loli.net/2022/08/06/priKYSX62vJOZ8d.png)
+![image-20200518210532171](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201835066.png)
 
 看这个图就很明白了：
 
@@ -1920,7 +1920,7 @@ babel 是 source to source 的转换，整体编译流程分为三步：
 - transform：遍历 AST，调用各种 transform 插件对 AST 进行增删改
 - generate：把转换后的 AST 打印成目标代码，并生成 sourcemap
 
-![img](https://s2.loli.net/2022/08/06/fpSJs6Vo92MCBZO.webp)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201835440.webp)
 
 ##### 为什么 babel 的编译流程会分 parse、transform、generate 这 3 步呢？
 
@@ -1944,19 +1944,19 @@ parse 阶段的目的是把源码字符串转换成机器能够理解的 AST，�
 
 之后要把 token 进行递归的组装，生成 AST，这个过程是语法分析，按照不同的语法结构，来把一组单词组合成对象，比如声明语句、赋值表达式等都有对应的 AST 节点。
 
-![img](https://s2.loli.net/2022/08/06/lPt2xZQvrJpawbf.webp)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201835693.webp)
 
 ###### transform
 
 transform 阶段是对 parse 生成的 AST 的处理，会进行 AST 的遍历，遍历的过程中处理到不同的 AST 节点会调用注册的相应的 visitor 函数，visitor 函数里可以对 AST 节点进行增删改，返回新的 AST（可以指定是否继续遍历新生成的 AST）。这样遍历完一遍 AST 之后就完成了对代码的修改。
 
-![img](https://s2.loli.net/2022/08/06/NYIgVz8QewsmpdX.webp)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201842643.webp)
 
 ###### generate
 
 generate 阶段会把 AST 打印成目标代码字符串，并且会生成 sourcemap。不同的 AST 对应的不同结构的字符串。比如 `IfStatement` 就可以打印成 `if(test) {}` 格式的代码。这样从 AST 根节点进行递归的字符串拼接，就可以生成目标代码的字符串。
 
-![img](https://s2.loli.net/2022/08/06/yQE4oZOD5wvgJkj.webp)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201842150.webp)
 
 sourcemap 记录了源码到目标代码的转换关系，通过它我们可以找到目标代码中每一个节点对应的源码位置，用于调试的时候把编译后的代码映射回源码，或者线上报错的时候把报错位置映射到源码。
 
@@ -2144,11 +2144,11 @@ vite的特点
 
 webpack dev server 在启动时需要先build一遍，而这个过程需要消耗很多时间
 
-![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/e3fecbe47be9400ea4cf206d71a34f9c~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201843513.webp)
 
 而Vite 不同的是 执行vite serve 时，内部直接启动了web Server, 并不会先编译所有的代码文件。
 
-![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/6dce39d902264a5a8aba4936b48c65ec~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201843092.webp)
 
 但是webpack 这类工具的做法是将所有模块提前编译、打包进bundle里，换句话说，不管模块是否会被执行，都要被编译和打包到bundle里。随着项目越来越大，打包后的bundle也越来越大，打包的速度自然会越来越慢。
 
@@ -2261,7 +2261,7 @@ Vite在冷启动的时候，将代码分为依赖和源码两部分，源码部�
 
 1.  语言优势，Esbuild使用Go语言开发，相对于JavaScript，Go语言是一种编译型语言，在编译阶段就已经将源码转译为机器码。
 
-![image.png](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/894e8c3136944c049dd0d22d95eb4494~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp?) 2. 多线程，Rollup和webpack都没有使用多线程的能力，而Esbuild在算法上进行了大量的优化，充分的利用了多CPU的优势。
+![image.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201843138.webp) 2. 多线程，Rollup和webpack都没有使用多线程的能力，而Esbuild在算法上进行了大量的优化，充分的利用了多CPU的优势。
 
 以上这些原因，导致Esbuild构建模块的速度比webpack快到10-100倍。
 
@@ -2269,7 +2269,7 @@ Vite在冷启动的时候，将代码分为依赖和源码两部分，源码部�
 
 以我们上面的读技术文章的例子来看，我们不关心webpack，Rollup和Parcel相关链接的内容是什么，这些内容不影响我们阅读当前的文章，只有当我们需要使用到相关链接内容的时候，我们才去点击链接查看对应的内容。
 
-![image.png](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/c34d0fa22cfa43f78b6205b8bc408112~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp?)
+<img src="https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201843429.webp" alt="image.png" style="zoom:150%;" />
 
 这两方面加起来，让Vite的冷启动快到不可思议。
 
@@ -2289,7 +2289,7 @@ Vite在冷启动的时候，将代码分为依赖和源码两部分，源码部�
 
 ### 13.如何进行css的抽离
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20210218161436641.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzM5MjA3OTQ4,size_16,color_FFFFFF,t_70)
+![在这里插入图片描述](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201843447.png)
 
 **直接引用样式文件，没有使用任何相关插件时，会出现`css in js`的情况，即打包到了一块**
 
@@ -2469,7 +2469,7 @@ plugins: [
 
 ##### 使用DllPlugin
 
-![在这里插入图片描述](https://s2.loli.net/2022/07/28/gtXVFmWrYi7DsMG.png)
+![在这里插入图片描述](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201843616.png)
 
 就是通过将引入的模块，打到一个dll文件下，生成模块包和整体包产物文件的对应关系，再次打包时，如果能在映射关系中找到该模块，便直接使用产物中的包，不在进行模块分割打包，以此来提高Webpack的打包速度。
 
@@ -2655,7 +2655,7 @@ Vue\React等成熟的库会自动删掉调试代码比如开发环境的warning
 
 假设我们不使用 production mode，而是用 development mode，那么我们需要在配置文件中新增：
 
-```text
+```js
 module.exports = {
   mode: 'development',
   //...
@@ -2685,7 +2685,7 @@ false 告诉 Webpack 没有文件有副作用，所有文件都可以 tree-shaki
 
 配置resolve：
 
-```text
+```js
 resolve: {
     mainFields: ['jsnext:main', 'browser', 'main']
 }
@@ -2781,7 +2781,7 @@ npm install webpack webpack-cli --save-dev
 
 **index.js：**
 
-```ini
+```js
 const module1 = require("./module1");
 
 const num = module1.status + 12;
@@ -2793,7 +2793,7 @@ module.exports = {
 
 **module1.js：**
 
-```ini
+```js
 const status = 0;
 
 module.exports = {
@@ -2822,11 +2822,11 @@ module.exports = {
 
 到目前为止一切准备就绪，我们在根目录执行`webpack`命令：
 
-![image.png](https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/9911f708064049f4a5bb339ed135276e~tplv-k3u1fbpfcp-zoom-in-crop-mark:3024:0:0:0.awebp)
+![image.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201844678.webp)
 
 可以看到生成了一个`dist`文件夹，里面有一个`index.js`的文件，让我们来看看它究竟是什么。因为打包后的代码粗略的看上去，非常的凌乱，所以我这里把大部分注释先给去掉。我们将代码分为三部分来看：
 
-![image.png](https://s2.loli.net/2022/07/28/qdgx4BCwLfibE2e.webp)
+![image.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201844432.webp)
 
 #### 第一部分
 
@@ -2848,7 +2848,7 @@ var __webpack_modules__ = {
 
 首先，我们可以看到它是一个`自执行函数`，能看到有一个`__webpack_modules__`的对象，他就是我们写的所有的模块（上面的`index.js`和`module1.js`）的一个集合。这个对象的键名是`引用路径`，值则是一个函数，这个函数有三个入参`module`、`__unused_webpack_exports`、`__webpack_require__`，函数体里面则是一个`eval`函数执行了我们写的代码。其实我们的js文件，被`webpack`加工打包了一层函数上去：
 
-![image.png](https://s2.loli.net/2022/07/28/zehGaZRUJDQiwnB.webp)
+![image.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201844994.webp)
 
 `webpack`会把我们写的所有的**js文件打包成一个函数**，这样我们的js文件就是在一个**函数作用域下面的，不会污染全局环境**。再在打包之后，赋值给一个`__webpack_modules__`对象，把所有的模块引入。
 
@@ -2959,7 +2959,6 @@ export default {
 		Object.defineProperty(exports, '__esModule', { value: true });
 	};
 })();
-复制代码
 ```
 
 我们看多出来的部分，了解一下它的用法：
@@ -2970,11 +2969,11 @@ export default {
 
 让我们结合打包后的代码来看下，我们看下编译前后的`index.js`：
 
-![image.png](https://s2.loli.net/2022/07/28/8fbi2soF5NMapjO.webp)
+![image.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201844920.webp)
 
 再看看编译前后的`module1.js`：
 
-![image.png](https://s2.loli.net/2022/07/28/lqcQOGZjCsd2R6J.webp)
+![image.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201845808.webp)
 
 #### 总结
 
@@ -2982,13 +2981,13 @@ export default {
 
 在值的导出的部分，`CommonJS`使用的是赋值操作，也就是拷贝了导出对象的引用地址：
 
-![image.png](https://s2.loli.net/2022/07/28/ipy26dZJbTxMsW4.webp)
+![image.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201845525.webp)
 
 这样做会产生的影响是，其模块内部改变这个值，是影响不到导出结果的。**因为导出的是这个值的拷贝，两个值不是同一个！**
 
 而`ES6Module`的导出，我们来看一个更为直观的栗子：
 
-![image.png](https://s2.loli.net/2022/07/28/vdLI4l9F1o6KGts.webp)
+![image.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201845728.webp)
 
 `ES6Module`的导出，并不是直接赋值，而是导出一个函数，这个**函数引用的是模块内部值，这样就导致了模块内部改变其中一个值，导出模块的值也会发生改变，因为两个值都是同一个！**
 
@@ -3388,7 +3387,7 @@ require.ensure("title") // 先加载代码块,这里的参数"title"就是魔法
 
 > 有了这个extensions后，在`require`和`import`的时候不需要加文件扩展名，会一次添加扩展名进行匹配
 
-```
+```js
 resolve: {
   extensions: [".js",".jsx",".json",".css"]
 },
@@ -3400,7 +3399,7 @@ resolve: {
 >
 > 不需要从`node_modules`文件夹中按模块的查找规则查找
 
-```
+```js
 const bootstrap = path.resolve(__dirname,'node_modules/_bootstrap@3.3.7@bootstrap/dist/css/bootstrap.css');
 resolve: {
     alias:{
@@ -3413,7 +3412,7 @@ resolve: {
 
 > `modules` 字段指定第三方模块的查找目录
 
-```
+```js
 // 默认是查找node_modules，但是会类似Nodejs一样的路径进行搜索,一层一层网上找node_modules
 resolve: {
 modules: ['node_modules'],// 先当当前目录下的node_modules，找不到找上层目录的node_moudles，直到全局的node_modules
@@ -3426,7 +3425,7 @@ modules: [path.resolve(__dirname, 'node_modules')], // 确定查找目录就是�
 
 ##### 1.4 mainFilds和mainFiles
 
-```
+```js
 resolve: {
   // 配置 target === "web" 或者 target === "webworker" 时 mainFields 默认值是：
   mainFields: ['browser', 'module', 'main'],
@@ -3437,7 +3436,7 @@ resolve: {
 
 -   这里的mainFileds代表了一个包解析入口文件应该看的字段，按照上面代码的顺序查找
 
-```
+```js
 resolve: {
   mainFiles: ['index'], // 你可以添加其他默认使用的文件名
 },
@@ -3454,7 +3453,7 @@ resolve: {
 
 > 用于配置解析loader时的resolve，默认配置:
 
-```
+```js
 module.exports = {
   resolveLoader: {
     modules: [ 'node_modules' ],
@@ -3470,7 +3469,7 @@ module.exports = {
 
 > 比如：
 
-```
+```js
 import jq from 'jquery'
 ```
 
@@ -3478,7 +3477,7 @@ import jq from 'jquery'
 
 > 但是，如果配置了`noParse`，那么就不需要再去解析jquery中的依赖库了，这样能够增加打包速率。
 
-```
+```js
 module:{
     noParse:/jquery/,//不去解析jquery中的依赖库
     rules: [
@@ -3491,7 +3490,7 @@ module:{
 
 > 创建一些在编译时可以配置的全局变量，在编译的时候会直接替换掉，不需要再去查找
 
-```
+```js
 let webpack = require('webpack');
 new webpack.DefinePlugin({
     PRODUCTION: JSON.stringify(true),
@@ -3525,7 +3524,7 @@ console.log(COPYRIGHT);
 
 -   使用：
 
-```
+```js
 const path = require("path");
 +const glob = require("glob");
 +const PurgecssPlugin = require("purgecss-webpack-plugin");
@@ -3578,7 +3577,7 @@ module.exports = {
 
 > 把这个 loader 放置在其他 loader 之前， 放置在这个 loader 之后的 loader 就会在一个单独的 worker 池(worker pool)中运行
 
-```
+```js
 module.exports = {
   mode: "development",
   entry: "./src/index.js",
@@ -3630,7 +3629,7 @@ module.exports = {
     -   开启缓存和上传到CDN是为了能够读取更快，加上hash是因为文件会随着内容而变化，只要文件内容变化，那么对应的url就会变化，那么就会重新下载，无论缓存时间有多长。这样能保证文件一更新，读取的就是最新的文件，文件不更新，读取的就是缓存。
 -   启用CDN后，所有的相对路径都改成指向CDN服务器的绝对路径。通过webpack的publicPath可以设置。
 
-```
+```js
 {
         output: {
         path: path.resolve(__dirname, 'dist'),
@@ -3646,7 +3645,7 @@ module.exports = {
 
   - `link`标签一般会有一个`rel`属性，值为`dns-prefetch`，代表dns预拉取，拉取的地址是`href`属性的值，比如：
 
-    ```
+    ```js
     <link rel="dns-prefetch" href="http://img.aiqiyi.cn">
     ```
 
@@ -3660,7 +3659,7 @@ module.exports = {
 
   - 代码不会被执行，不可到达的不会被打包
 
-    ```
+    ```js
     import a from 'a'if(false){console.log(a) // 不会达到，所以a不会打包进来}
     ```
 
@@ -3678,7 +3677,7 @@ module.exports = {
 
 > 使用`import()`函数配合`魔法注释`，代表按需加载，`魔法注释`一样的会打成一个包
 
-```
+```js
 import(/* webpackChunkName: "title" */ "./components/Title")
 ```
 
@@ -3693,19 +3692,19 @@ import(/* webpackChunkName: "title" */ "./components/Title")
         -   然后会发现，原先按需加载的权重应该是Low，但是现在变成了Hight(图1-3)
         -   从html发现，还没点击按钮，已经插入了link标签，也就是资源已经被预先加载了(图1-4)
 
-![[外链图片转存失败,源站可能有防盗链机制,建议将图片保存下来直接上传(img-BjvRDjCw-1629171039573)(C:\Users\yuhua7\AppData\Roaming\Typora\typora-user-images\image-20210816135829395.png)]](https://img-blog.csdnimg.cn/974f7bd555a24d0495c9b96ad05eb100.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzE3MTc1MDEz,size_16,color_FFFFFF,t_70)
+![](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201847694.png)
 
  (图1-1)
 
-![[外链图片转存失败,源站可能有防盗链机制,建议将图片保存下来直接上传(img-z5vloiCC-1629171039579)(C:\Users\yuhua7\AppData\Roaming\Typora\typora-user-images\image-20210816140132788.png)]](https://img-blog.csdnimg.cn/3a22728def0b401a95d55e029c5bf092.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzE3MTc1MDEz,size_16,color_FFFFFF,t_70)
+![](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201847260.png)
 
  (图1-2)
 
-![[外链图片转存失败,源站可能有防盗链机制,建议将图片保存下来直接上传(img-kCFq7pWC-1629171039582)(C:\Users\yuhua7\AppData\Roaming\Typora\typora-user-images\image-20210816140241992.png)]](https://img-blog.csdnimg.cn/e251f1e6b6344925bb0e20b0f6bf83ad.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzE3MTc1MDEz,size_16,color_FFFFFF,t_70)
+![](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201848667.png)
 
 (图1-3)
 
-![[外链图片转存失败,源站可能有防盗链机制,建议将图片保存下来直接上传(img-3Yw6ogfC-1629171039584)(C:\Users\yuhua7\AppData\Roaming\Typora\typora-user-images\image-20210816140214366.png)]](https://img-blog.csdnimg.cn/e913bed7ed6e468a872a6902805fd88e.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzE3MTc1MDEz,size_16,color_FFFFFF,t_70)
+![](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201848412.png)
 
 (图1-4)
 
@@ -3715,7 +3714,7 @@ import(/* webpackChunkName: "title" */ "./components/Title")
 
 -   prefetch 跟 preload 不同，它的作用是告诉浏览器未来可能会使用到的某个资源，浏览器就会在闲时去加载对应的资源，若能预测到用户的行为，比如懒加载，点击到其它页面等则相当于提前预加载了需要的资源
 
-```
+```js
 <link rel="prefetch" href="utils.js" as="script">
 button.addEventListener('click', () => {
   import(
@@ -3762,7 +3761,7 @@ button.addEventListener('click', () => {
 
   -   答：在page3.js中。因为如果一个模块被两个或两个以上引用，那么会单独打包出一个bundle，如果只有被一个引用，那么就会打包到引用方的包中。
 
-![[外链图片转存失败,源站可能有防盗链机制,建议将图片保存下来直接上传(img-nxseuTvw-1629171039586)(C:\Users\yuhua7\AppData\Roaming\Typora\typora-user-images\image-20210816201901360.png)]](https://img-blog.csdnimg.cn/8f526b4f2a0342ffa89a6de39a995b15.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzE3MTc1MDEz,size_16,color_FFFFFF,t_70)
+![](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201848772.png)
 
 - 分包是什么意思？
 
@@ -3774,7 +3773,7 @@ button.addEventListener('click', () => {
 
   > 应该在webpack配置文件的optimization属性的splitChunks属性中配置
 
-```
+```js
 module.exports = {
    optimization: {
      splitChunks: {
@@ -3829,7 +3828,7 @@ module.exports = {
   >
   > 但其实，我只是在index.js中使用了一下a模块的导出结果，也就是字符串a，那么我只要把index.js中用到a的地方替换成字符串’a’就可以了，没必要把整个a模块都打包进来。`scope hosting`就是用来做到这一点的。
 
-```
+```js
 // a.js
 export default 'a';
 // index.js
@@ -3857,7 +3856,7 @@ console.log(a);
 
 -   **Babel在转义js文件过程中消耗性能较高（语法树解析啥的），将babel-loader执行的结果缓存起来，当重新打包构建时会尝试读取缓存，从而提高打包构建速度、降低消耗**
 
-```
+```js
  {
     test: /\.js$/,
     exclude: /node_modules/,
@@ -3875,7 +3874,7 @@ console.log(a);
 -   在一些性能开销较大的 loader 之前添加此 loader,以将结果缓存到磁盘里
 -   存和读取这些缓存文件会有一些时间开销,所以请只对性能开销较大的 loader 使用此 loader
 
-```
+```js
 const loaders = ['babel-loader'];
 module.exports = {
   module: {
@@ -3901,7 +3900,7 @@ module.exports = {
 >
 > 也正是一个只匹配一个，所以oneOf中不能两个配置处理同一种类型的文件。
 
-```
+```js
 module.exports = {
   module: {
     rules: [
@@ -3934,7 +3933,7 @@ module.exports = {
 
 -   使用：在module.exports导出的内容外包一层wrap函数即可。
 
-```
+```js
 const SpeedMeasureWebpackPlugin = require('speed-measure-webpack-plugin');
 const smw = new SpeedMeasureWebpackPlugin();
 module.exports =smw.wrap({
@@ -3943,27 +3942,27 @@ module.exports =smw.wrap({
 
 -   结果：可以看到每个步骤、每个loader、plugin等消耗的时间
 
-![[外链图片转存失败,源站可能有防盗链机制,建议将图片保存下来直接上传(img-Yc8Yri4u-1629171039588)(C:\Users\yuhua7\AppData\Roaming\Typora\typora-user-images\image-20210817111627463.png)]](https://s2.loli.net/2022/07/28/OuYgRVhGxXbcEAq.png)
+![](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201849168.png)
 
 #### 2.webpack-bundle-analyzer
 
 > webpack-bundle-analyzer是一个webpack的插件，需要配合webpack和webpack-cli一起使用。这个插件的功能是生成代码分析报告，帮助提升代码质量和网站性能
 
-![[外链图片转存失败,源站可能有防盗链机制,建议将图片保存下来直接上传(img-iPWd01JB-1629171039589)(C:\Users\yuhua7\AppData\Roaming\Typora\typora-user-images\image-20210816213421749.png)]](https://s2.loli.net/2022/07/28/nTrePEXpomaAt2i.png)
+![](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201849571.png)
 
-![[外链图片转存失败,源站可能有防盗链机制,建议将图片保存下来直接上传(img-iRfEQ2YR-1629171039589)(C:\Users\yuhua7\AppData\Roaming\Typora\typora-user-images\image-20210813102850017.png)]](https://s2.loli.net/2022/07/28/7XOjSzcsCxD45Zu.png)
+![](https://s2.loli.net/2022/07/28/7XOjSzcsCxD45Zu.png)
 
-上面这个插件的用法改了…
+上面这个插件的用法改了
 
 #### 耗时分析
 
-```
+```js
 const SpeedMeasureWebpackPlugin = require('speed-measure-webpack-plugin');const smw = new SpeedMeasureWebpackPlugin();module.exports =smw.wrap({    ...});
 ```
 
 -   可以看到每个步骤、每个loader、plugin等消耗的时间
 
-![[外链图片转存失败,源站可能有防盗链机制,建议将图片保存下来直接上传(img-JP3aEcTB-1629171039590)(C:\Users\yuhua7\AppData\Roaming\Typora\typora-user-images\image-20210813135009488.png)]](https://s2.loli.net/2022/07/28/86WBVxmP5wEHJAu.png)
+![](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201849748.png)
 
 #### webpack打包文件分析工具webpack-bundle-analyzer
 
@@ -4391,7 +4390,7 @@ hook.call('yuhua');
 
   -   错误示例：
 
-  ```
+  ```js
   // webpack.config.js
   module.exports = {
       entry: {
@@ -4459,7 +4458,7 @@ hook.call('yuhua');
 
 ##### hash是如何生成的，这里指得是对某个文件生成一个hash？
 
-```
+```js
 let crypto = require('crypto');
 let content = fs.readFileSync('a.jpg'); // 读取文件
 let hash = crypto.createHash('md5').update(content).digest('hex').slice(0, 10); // 生成10位hash
@@ -4467,7 +4466,7 @@ let hash = crypto.createHash('md5').update(content).digest('hex').slice(0, 10); 
 
 ##### webpack中的hash是如何生成的？
 
-```
+```js
 let crypto = require('crypto');
 
 // 伪代码
@@ -4494,7 +4493,7 @@ let hash = crypto.createHash('md5')
 
 ##### chunkhash是如何生成的？
 
-```
+```js
 let crypto = require('crypto');
 
 // 伪代码
@@ -4523,7 +4522,7 @@ let chunkhash_of_entry2 = crypto.createHash('md5')
 
 ##### contenthash是如何生成的？
 
-```
+```js
 let crypto = require('crypto');
 
 // 伪代码
@@ -4544,7 +4543,7 @@ let contenthash_of_entry1 = crypto.createHash('md5')
                             .digest('hex');
 ```
 
-#### 4\. 各类哈希的区别，或，各类哈希如何选择？（面试题）
+#### 4\. 各类哈希的区别，或，各类哈希如何选择？
 
 > **hash、chunkhash、contenthash，首先生成效率越来越低，成本越来越高，影响范围越来越小，精度越来越细。**
 >
@@ -4562,7 +4561,7 @@ let contenthash_of_entry1 = crypto.createHash('md5')
 
     > 不能，因为这是多入口文件打包，会生成多个文件，但是由于hash是根据项目生成的，一个项目对应一个hash，所以会导致生成的文件同名，webpack不允许这么做，所以不能打包成功。
 
-  ```
+  ```js
   module.exports = {
       entry: {
           main: './src/index.js',
@@ -4581,7 +4580,7 @@ let contenthash_of_entry1 = crypto.createHash('md5')
 
     > 能，因为虽然是多入口文件打包，会生成多个文件，并且即便hash一样，由于filename是根据name和hash共同决定的，name是entry的key，key不同，所以生成的文件不同，所以可以打包成功。
 
-  ```
+  ```js
   module.exports = {
       entry: {
           main: './src/index.js',
@@ -4622,7 +4621,7 @@ let contenthash_of_entry1 = crypto.createHash('md5')
     >
     > 所以，这里的css的哈希就可以使用contenthash，根据css的内容来变化，内容变了哈希就变，内容不变哈希就不变。
 
-  ```
+  ```js
   module.exports = {
       entry: {
           main: './src/index.js', // 这里有引入a.css
@@ -4658,7 +4657,7 @@ let contenthash_of_entry1 = crypto.createHash('md5')
     >
     > **.update(a).update(b)相当于.update(a+b)**
 
-  ```
+  ```js
   let hash1 = crypto.createHash('md5').update(content).digest('hex')
   let hash2 = crypto.createHash('md5').update(content).update(content).digest('hex')
   
