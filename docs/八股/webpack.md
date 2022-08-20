@@ -171,14 +171,14 @@ module.exports = (api) => {
 
 安装依赖：
 
-```
+```bash
 npm install ts-loader --save-dev
 npm install typescript --dev
 ```
 
 webpack配置如下：
 
-```javascript
+```json
 // webpack.config.json
 module.exports = {
   mode: "development",
@@ -421,8 +421,8 @@ module.exports = {
 
 注意：
 
-- 如果因为某些原因你需要将CSS提取为一个文件(即不要将CSS存储在JS模块中)，此时你需要使用插件 ***\*mini-css-extract-plugin\****(后面的Pugin部分会介绍)；
-- 对于development模式(包括 webpack-dev-server)你可以使用style-loader，因为它是通过`<style></style>`标签的方式引入CSS的，加载会更快；
+- 如果因为某些原因你需要将CSS提取为一个文件(即不要将CSS存储在JS模块中)，此时你需要使用插件 mini-css-extract-plugin
+- 对于development模式(包括 webpack-dev-server)你可以使用style-loader，因为它是通过`style`标签的方式引入CSS的，加载会更快；
 - 不要将 style-loader 和 mini-css-extract-plugin 针对同一个CSS模块一起使用！
 
 ##### 9. css-loader
