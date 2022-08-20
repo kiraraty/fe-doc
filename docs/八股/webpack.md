@@ -39,7 +39,7 @@ webpack解决了什么问题？
 - Mode：模式，告知 webpack 使用相应模式的内置优化
 - Browser Compatibility：浏览器兼容性，Webpack 支持所有符合 ES5 标准 的浏览器（IE8以上版本）
 
-![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201840522.webp)
+<img src="https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201840522.webp" alt="img" style="zoom:50%;" />
 
 #### loader特点
 
@@ -417,7 +417,7 @@ module.exports = {
 
 ##### 8. style-loader
 
-通过注入`<style>`标签将CSS插入到DOM中
+通过注入`style`标签将CSS插入到DOM中
 
 注意：
 
