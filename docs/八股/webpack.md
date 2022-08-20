@@ -417,7 +417,7 @@ module.exports = {
 
 ##### 8. style-loader
 
-通过注入<style>标签将CSS插入到DOM中
+通过注入`<style>`标签将CSS插入到DOM中
 
 ***\*注意：\****
 
