@@ -6,7 +6,9 @@
 
 **（1）MVC**
 
-MVC 通过分离 Model、View 和 Controller 的方式来组织代码结构。其中 View 负责页面的显示逻辑，Model 负责存储页面的业务数据，以及对相应数据的操作。并且 View 和 Model 应用了观察者模式，当 Model 层发生改变的时候它会通知有关 View 层更新页面。Controller 层是 View 层和 Model 层的纽带，它主要负责用户与应用的响应操作，当用户与页面产生交互的时候，Controller 中的事件触发器就开始工作了，通过调用 Model 层，来完成对 Model 的修改，然后 Model 层再去通知 View 层更新。 ![image.png](https://s2.loli.net/2022/08/01/dqt1JA4BczpgH6T.webp)
+MVC 通过分离 Model、View 和 Controller 的方式来组织代码结构。其中 View 负责页面的显示逻辑，Model 负责存储页面的业务数据，以及对相应数据的操作。并且 View 和 Model 应用了观察者模式，当 Model 层发生改变的时候它会通知有关 View 层更新页面。Controller 层是 View 层和 Model 层的纽带，它主要负责用户与应用的响应操作，当用户与页面产生交互的时候，Controller 中的事件触发器就开始工作了，通过调用 Model 层，来完成对 Model 的修改，然后 Model 层再去通知 View 层更新。
+
+ ![image.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202258494.webp)
 
 （2）MVVM
 
@@ -18,13 +20,13 @@ MVVM 分为 Model、View、ViewModel：
 
 Model和View并无直接关联，而是通过ViewModel来进行联系的，Model和ViewModel之间有着双向数据绑定的联系。因此当Model中的数据改变时会触发View层的刷新，View中由于用户交互操作而改变的数据也会在Model中同步。
 
-这种模式实现了 Model和View的数据自动同步，因此开发者只需要专注于数据的维护操作即可，而不需要自己操作DOM。 ![image.png](https://s2.loli.net/2022/08/01/vlNPyh5tKBi6DEq.webp)
+这种模式实现了 Model和View的数据自动同步，因此开发者只需要专注于数据的维护操作即可，而不需要自己操作DOM。 ![image.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202258529.webp)
 
 
 
 ### 2.vue的响应式原理
 
-![4.png](https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2019/8/1/16c4a3ce0cc709da~tplv-t2oaga2asx-zoom-in-crop-mark:3024:0:0:0.awebp)
+![4.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202258995.webp)
 
 当一个Vue实例创建时，Vue会遍历data中的属性，用 Object.defineProperty（vue3.0使用proxy ）将它们转为 getter/setter，并且在内部追踪相关依赖，在属性被访问和修改时通知变化。 每个组件实例都有相应的 watcher 程序实例，它会在组件渲染的过程中把属性记录为依赖，之后当依赖项的setter被调用时，会通知watcher重新计算，从而致使它关联的组件得以更新。 
 
@@ -35,9 +37,9 @@ Vue.js 是采用**数据劫持**结合**发布者-订阅者模式**的方式，�
 3. Watcher订阅者是Observer和Compile之间通信的桥梁，主要做的事情是: ①在自身实例化时往属性订阅器(dep)里面添加自己 ②自身必须有一个update()方法 ③待属性变动dep.notice()通知时，能调用自身的update()方法，并触发Compile中绑定的回调，则功成身退。
 4. MVVM作为数据绑定的入口，整合Observer、Compile和Watcher三者，通过Observer来监听自己的model数据变化，通过Compile来解析编译模板指令，最终利用Watcher搭起Observer和Compile之间的通信桥梁，达到数据变化 -> 视图更新；视图交互变化(input) -> 数据model变更的双向绑定效果。
 
-![img](https://s2.loli.net/2022/08/01/vJqDf8jF2ZYPXhV.webp)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202259163.webp)
 
-![img](https://s2.loli.net/2022/08/01/m45AlJpInHQkC3b.webp)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202259845.webp)
 
 
 
@@ -75,7 +77,7 @@ vue接收一个模板和data参数。
 
 我们可以来看下官方介绍图，这里的`collect as Dependency`就是源码中的`dep.depend()`依赖收集，`Notify`就是源码中的`dep.notify()`通知订阅者
 
-![响应式原理.png](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/f3d6e75830bd4e878f160b58617f6cba~tplv-k3u1fbpfcp-zoom-in-crop-mark:3024:0:0:0.awebp?)
+![响应式原理.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202259404.webp)
 
 ##### 依赖收集中的各个类
 
@@ -87,7 +89,7 @@ Vue源码中负责依赖收集的类有三个：
 
 依赖就是`Watcher`,只有`Watcher`触发的`getter`才会收集依赖，哪个`Watcher`触发了`getter`，就把哪个`watcher`收集到`Dep`中。Dep使用发布订阅模式，当数据发生变化时，会循环依赖列表，把所有的`watcher`都通知一遍，这里我自己画了一张更清晰的图：
 
-![vue响应式原理.png](https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/7455057cc80a4436883825f72f8f6e60~tplv-k3u1fbpfcp-zoom-in-crop-mark:3024:0:0:0.awebp?)
+![vue响应式原理.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202259194.webp)
 
 ##### Observer类
 
@@ -355,7 +357,7 @@ model: function (node, value, vm) {
 
 
 
-![img](https://s2.loli.net/2022/08/01/2KnDAfRqP1mYQ85.webp)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202259705.webp)
 
 [代码实现](https://juejin.cn/post/6844903903822086151)
 
@@ -4754,13 +4756,13 @@ export default vCopy;
 
 
 
-## 生命周期![b1493c640d7e4cf2bd7785cea7c86789](https://s2.loli.net/2022/07/14/mXbkqBsVgAYinc1.png)
-
-
+## 生命周期
 
 ### 1.生命周期有哪些，vue2和vue3有什么区别
 
 #### Vue2生命周期
+
+<img src="https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202300568.png" alt="b1493c640d7e4cf2bd7785cea7c86789" style="zoom: 50%;" />
 
 Vue 实例有⼀个完整的⽣命周期，也就是从开始创建、初始化数据、编译模版、挂载Dom -> 渲染、更新 -> 渲染、卸载 等⼀系列过程，称这是Vue的⽣命周期。
 
@@ -4900,7 +4902,7 @@ export default {
 
 截图如下:
 
-<img src="https://s2.loli.net/2022/07/29/LMqTznvaVtNOYGE.png" alt="clipboard.png" style="zoom:150%;" />
+<img src="https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202300173.png" alt="clipboard.png" style="zoom:150%;" />
 在`main.js`中 **state** 状态发生了变化，由`false` => `true`, 触发了**自身**与**子组件**的render方法。
 
 ### 6.生命周期源码分析
@@ -6744,13 +6746,13 @@ new Router({
 
 只有一张Web页面的应用，是一种从Web服务器加载的富客户端，单页面跳转仅刷新局部资源 ，公共资源(js、css等)仅需加载一次，常用于PC端官网、购物等网站
 
-![单页面应用结构视图](https://s2.loli.net/2022/07/30/QKYvAmIRnBDxsyh.webp)
+![单页面应用结构视图](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202301546.webp)
 
 #### 多页面应用（MultiPage Application，MPA）
 
 多页面跳转刷新所有资源，每个公共资源(js、css等)需选择性重新加载，常用于 app 或 客户端等
 
-![多页面应用结构视图](https://s2.loli.net/2022/07/30/NFhZKr7Hnziya63.webp)
+![多页面应用结构视图](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202301146.webp)
 
 #### 具体对比分析：
 
@@ -6836,7 +6838,7 @@ Keywords：掘金,稀土,Vue.js,前端面试题,nginx配置,Kotlin,RxJava,React 
 
 Description：掘金是一个帮助开发者成长的社区,是给开发者用的 `Hacker News`,给设计师用的 `Designer News`,和给产品经理用的 `Medium`。掘金的技术文章由稀土上聚集的技术大牛和极客共同编辑为你筛选出最优质的干货,其中包括：`Android、iOS`、前端、后端等方面的内容。用户每天都可以在这里找到技术世界的头条内容。与此同时,掘金内还有沸点、掘金翻译计划、线下活动、专栏文章等内容。即使你是 `GitHub、StackOverflow、`开源中国的用户,我们相信你也可以在这里有所收获。
 
-![image.png](https://s2.loli.net/2022/07/30/SpfjhWUvBALYsQ4.webp)
+![image.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202301134.webp)
 
 ##### 2. 页面内容优化
 
@@ -7097,7 +7099,7 @@ use`方法需要的参数可以是一个函数或者是对象，如果传递的�
 
 如果传递的是一个对象，那么在`use`内部会调用该对象的`install`方法。
 
-![类图](https://s2.loli.net/2022/04/30/ILdSwKy4FH1oVYv.png)
+![类图](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202301604.png)
 
 上半部分是`VueRouter`的属性，而下半部分是`VueRouter`的方法
 
@@ -7453,7 +7455,7 @@ Vuex 是一个专为 Vue.js 应用程序开发的状态管理模式。每一个 
 - Vuex 的状态存储是响应式的。当 Vue 组件从 store 中读取状态的时候，若 store 中的状态发生变化，那么相应的组件也会相应地得到高效更新。
 - 改变 store 中的状态的唯一途径就是显式地提交 (commit) mutation。这样可以方便地跟踪每一个状态的变化。
 
-![b025e120ca3d0bd2ded3d038d58cacf4.jpg](https://s2.loli.net/2022/08/01/6qLd1kKUZ7PFaQ8.webp) 
+![b025e120ca3d0bd2ded3d038d58cacf4.jpg](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202301928.webp) 
 
 Vuex为Vue Components建立起了一个完整的生态圈，包括开发中的API调用一环。 
 
@@ -8051,7 +8053,7 @@ vue2跟vue3实现方式不同：
 
 >   **`Map`** 对象保存键值对，并且能够记住键的原始插入顺序。任何值(对象或者[原始值](https://link.juejin.cn/?target=https%3A%2F%2Fdeveloper.mozilla.org%2Fzh-CN%2Fdocs%2FGlossary%2FPrimitive)) 都可以作为一个键或一个值。
 
-![image.png](https://s2.loli.net/2022/08/06/wHfd9aMEv3WUN5r.webp)
+![image.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202301735.webp)
 
 ```js
 const targetMap = new WeakMap()
@@ -8270,7 +8272,7 @@ export default function Count () {
 
 reactive的作用和ref的作用是类似的，都是将数据变成可相应的对象，其实ref的底层其实利用了reactive。 两者的区别，ref包装的对象需要.value ,而reactive中的不需要
 
-![image-20220316213837203](https://s2.loli.net/2022/04/03/298TSq6sEyKnQIX.png)
+![image-20220316213837203](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202301420.png)
 
 `toRefs`会将我们一个`响应式`的对象转变为一个`普通`对象，然后将这个`普通对象`里的每一个属性变为一个响应式的数据
 
@@ -8626,7 +8628,7 @@ export default defineComponent({
 
 ## Virtual DOM
 
-所谓的virtual dom，也就是虚拟节点。它通过JS的Object对象模拟DOM中的节点，然后再通过特定的render方法将其渲染成真实的DOM节点 dom diff 则是通过JS层面的计算，返回一个patch对象，即补丁对象，在通过特定的操作解析patch对象，完成页面的重新渲染![img](https://s2.loli.net/2022/08/01/hW21fdtuYQ4ZoO8.webp)
+所谓的virtual dom，也就是虚拟节点。它通过JS的Object对象模拟DOM中的节点，然后再通过特定的render方法将其渲染成真实的DOM节点 dom diff 则是通过JS层面的计算，返回一个patch对象，即补丁对象，在通过特定的操作解析patch对象，完成页面的重新渲染![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202301988.webp)
 
 
 
@@ -8749,7 +8751,7 @@ svelte便实现了这种优化，通过将数据和真实dom的映射关系，�
 
 #### VNode分类
 
-![clipboard.png](https://s2.loli.net/2022/08/01/jgi8nv5XW3yMsq9.png)
+![clipboard.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202301734.png)
 
 `VNode`可以理解为vue框架的虚拟dom的基类，通过`new`实例化的`VNode`大致可以分为几类
 
@@ -8862,7 +8864,7 @@ _c('div', {
 
 虚拟DOM通过调用`render`函数中的`_c`、`_v`等函数创建,最终形式如下图
 
-![image.png](https://s2.loli.net/2022/08/06/CoSe4EH1MQdsKNF.webp)
+![image.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202302640.webp)
 
 
 
@@ -8881,11 +8883,11 @@ _c('div', {
 
 在diff中，只对同层的子节点进行比较，放弃跨级的节点比较，使得时间复杂从O(n3)降低值O(n)，也就是说，只有当新旧children都为多个子节点时才需要用核心的Diff算法进行同层级比较。
 
-![img](https://s2.loli.net/2022/07/29/9hujPrWTm7C5fKO.webp)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202302417.webp)
 
 > Diff算法真的很美，整个流程如下图所示：
 
-![diffvue2](https://s2.loli.net/2022/04/23/SBxVQguP9j8MyJF.png)
+![diffvue2](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202302162.png)
 
 **一、 首先比较一下新旧节点是不是同一个节点（可通过比较sel（选择器）和key（唯一标识）值是不是相同），不是同一个节点则进行暴力删除（注：先以旧节点为基准插入新节点，然后再删除旧节点）。**
 
@@ -8935,7 +8937,7 @@ function vue2Diff(prevChildren, nextChildren, parent) {
 
 使用以上四步进行对比，去寻找`key`相同的可复用的节点，当在某一步中找到了则停止后面的寻找。具体对比顺序如下图
 
-![img](https://s2.loli.net/2022/07/29/l934S67nmNPreZH.webp)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202302431.webp)
 
 对比顺序代码结构如下:
 
@@ -9095,7 +9097,7 @@ text2: 'y'
 
 接下来换成`vnode`，我们以下图为例。
 
-![img](https://s2.loli.net/2022/08/01/aLZ9OAqFBSpoeKm.webp)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202302522.webp)
 
 图中的被绿色框起来的节点，他们是不需要移动的，只需要进行打补丁`patch`就可以了。我们把该逻辑写成代码。
 
@@ -9129,7 +9131,7 @@ function vue3Diff(prevChildren, nextChildren, parent) {
 
 这时候，我们就需要考虑边界情况了，这里有两种情况。一种是`j > prevEnd`；另一种是`j > nextEnd`。
 
-![img](https://s2.loli.net/2022/08/01/kZxuC6HrA7Koajv.webp)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202302866.webp)
 
 我们以这张图为例，此时`j > prevEnd`且`j <= nextEnd`，我们只需要把**新列表**中`j`到`nextEnd`之间剩下的节点**插入**进去就可以了。相反， 如果`j > nextEnd`时，我们把**旧列表**中`j`到`prevEnd`之间的节点**删除**就可以了。
 
@@ -9205,7 +9207,7 @@ function vue3Diff(prevChildren, nextChildren, parent) {
 
 当`前/后置`的预处理结束后，我们进入真正的`diff`环节。首先，我们先根据**新列表**剩余的节点数量，创建一个`source`数组，并将数组填满`-1`。
 
-![img](https://s2.loli.net/2022/07/29/9hXlTeUGFP7WMsi.webp)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202302428.webp)
 
 我们先写这块逻辑。
 
@@ -9282,7 +9284,7 @@ function vue3Diff(prevChildren, nextChildren, parent) {
 }
 ```
 
-![img](https://s2.loli.net/2022/08/01/KClbqSrIa9i2PFE.webp)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202302039.webp)
 
 找到位置后，我们观察这个重新赋值后的`source`，我们可以看出，如果是全新的节点的话，其在`source`数组中对应的值就是初始的`-1`，通过这一步我们可以区分出来哪个为全新的节点，哪个是可复用的。
 
@@ -9369,7 +9371,7 @@ function vue3Diff(prevChildren, nextChildren, parent) {
 2. 当前的索引为`最长递增子序列`中的值，也就是`i === seq[j]`，这说说明该节点不需要移动
 3. 当前的索引不是`最长递增子序列`中的值，那么说明该DOM节点需要移动，这里也很好理解，我们也是直接将DOM节点插入到队尾就可以了，因为队尾是排好序的。
 
-![image.png](https://s2.loli.net/2022/08/01/ePrT5FSGBI2h9uK.webp)
+![image.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202302120.webp)
 
 ```js
 function vue3Diff(prevChildren, nextChildren, parent) {
@@ -9418,7 +9420,7 @@ function vue3Diff(prevChildren, nextChildren, parent) {
 
 ### 3.虚拟DOM怎么解析
 
-![DOM的流程图 (1).png](https://s2.loli.net/2022/08/06/PWVyCU5BtrkQKjS.webp)
+![DOM的流程图 (1).png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202303863.webp)
 
 虚拟DOM的解析过程：
 
@@ -9485,16 +9487,16 @@ patch
    - 如果`oldVnode`和`vnode`都有子节点，且2方的子节点不完全一致，就执行更新子节点的操作（这一部分其实是在`updateChildren`函数中实现），算法如下
      - 分别获取`oldVnode`和`vnode`的`firstChild`、`lastChild`，赋值给`oldStartVnode`、`oldEndVnode`、`newStartVnode`、`newEndVnode`
      - 如果`oldStartVnode`和`newStartVnode`是同一节点，调用`patchVnode`进行`patch`，然后将`oldStartVnode`和`newStartVnode`都设置为下一个子节点，重复上述流程
-       ![clipboard.png](https://s2.loli.net/2022/08/01/um3DX7ZKG9jkseA.png)
+       ![clipboard.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202303863.webp)
      - 如果`oldEndVnode`和`newEndVnode`是同一节点，调用`patchVnode`进行`patch`，然后将`oldEndVnode`和`newEndVnode`都设置为上一个子节点，重复上述流程
        ![clipboard.png](https://s2.loli.net/2022/08/01/YaKR9NTWAMDEuwZ.png)
      - 如果`oldStartVnode`和`newEndVnode`是同一节点，调用`patchVnode`进行`patch`，如果`removeOnly`是`false`，那么可以把`oldStartVnode.elm`移动到`oldEndVnode.elm`之后，然后把`oldStartVnode`设置为下一个节点，`newEndVnode`设置为上一个节点，重复上述流程
-       ![clipboard.png](https://s2.loli.net/2022/08/01/i1MnTtwIpCK3qrk.png)
+       ![clipboard.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202303851.png)
      - 如果`newStartVnode`和`oldEndVnode`是同一节点，调用`patchVnode`进行`patch`，如果`removeOnly`是`false`，那么可以把`oldEndVnode.elm`移动到`oldStartVnode.elm`之前，然后把`newStartVnode`设置为下一个节点，`oldEndVnode`设置为上一个节点，重复上述流程
-       ![clipboard.png](https://s2.loli.net/2022/08/01/2fd7KqGxAVTzMZJ.png)
+       ![clipboard.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202303304.png)
      - 如果以上都不匹配，就尝试在`oldChildren`中寻找跟`newStartVnode`具有相同`key`的节点，如果找不到相同`key`的节点，说明`newStartVnode`是一个新节点，就创建一个，然后把`newStartVnode`设置为下一个节点
      - 如果上一步找到了跟`newStartVnode`相同`key`的节点，那么通过其他属性的比较来判断这2个节点是否是同一个节点，如果是，就调用`patchVnode`进行`patch`，如果`removeOnly`是`false`，就把`newStartVnode.elm`插入到`oldStartVnode.elm`之前，把`newStartVnode`设置为下一个节点，重复上述流程
-       ![clipboard.png](https://s2.loli.net/2022/08/01/zGLnVqlWgb2rx36.png)
+       ![clipboard.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202303574.png)
      - 如果在`oldChildren`中没有寻找到`newStartVnode`的同一节点，那就创建一个新节点，把`newStartVnode`设置为下一个节点，重复上述流程
      - 如果`oldStartVnode`跟`oldEndVnode`重合了，并且`newStartVnode`跟`newEndVnode`也重合了，这个循环就结束了
    - 如果只有`oldVnode`有子节点，那就把这些节点都删除
@@ -9920,7 +9922,7 @@ oldCh 和 ch 是代表旧和新两个 Vnode 节点序列，oldStartIdx、newStar
 通过以上流程，视图再次得到了更新。同时，新的 vnode 和 elm 也会被保存，供下一次视图更新时使用。
 
 以上分析了 Vnode 渲染和更新过程中的主要方法和流程，下面是本例中涉及到的主要方法的流程图：
-![Vnode 流程图](https://s2.loli.net/2022/07/29/aoKSYQ4J5CxHzkA.png)
+![Vnode 流程图](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202303671.png)
 
 ## vue源码分析
 
@@ -9970,7 +9972,7 @@ oldCh 和 ch 是代表旧和新两个 Vnode 节点序列，oldStartIdx、newStar
 
 **第二步：修改数据，执行 diff 算法，并将变化的部分 patch 到真实 DOM**
 
-![img](https://s2.loli.net/2022/08/01/FAjOU59oHZla8Rs.png)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202303860.png)
 
 diff 算法的逻辑比较复杂，可以单独摘出来研究，由于我们的目的是理解框架的核心逻辑，因此代码实现里只考虑了最简单的情形。
 
@@ -9980,7 +9982,7 @@ diff 算法的逻辑比较复杂，可以单独摘出来研究，由于我们的
 
 **第三步：对数据做响应式处理，当数据变化时，自动执行更新方法**
 
-![img](https://s2.loli.net/2022/08/01/ko6HUJlIaB7vj5x.jpg)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202304012.jpeg)
 
 data 中的每一个属性都会被处理为存取器属性，同时每一个属性都会在闭包中维护一个属于自己的 dep 对象，用于存放该属性的依赖项。当属性被赋予新的值时，就会触发 set 方法，并通知所有依赖项进行更新。
 
@@ -10132,7 +10134,7 @@ data 中的每一个属性都会被处理为存取器属性，同时每一个属
     ```
 
 6.  `Watcher` 的 `get()` 里会去读取数据，触发 `initData` 时使用 `Object.defineProperty` 为数据设置的 `get`，在这里进行依赖收集。我们知道Vue中每个响应式属性都有一个 `__ob__` 属性，存放的是一个Observe实例，这里的 `childOb` 就是这个 `__ob__`，通过 `childOb.dep.depend()` 往这个属性的`__ob__`中的dep里收集依赖，如下图。
-    ![WX20220315-161349@2x.png](https://s2.loli.net/2022/08/01/nBlLOq57NrxUhAY.png)
+    ![WX20220315-161349@2x.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202304631.png)
 
     ```javascript
     export function defineReactive (
