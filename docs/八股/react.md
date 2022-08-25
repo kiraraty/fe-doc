@@ -2181,6 +2181,10 @@ class Parent extends Component {
 
 ## 路由
 
+https://blog.csdn.net/hsany330/article/details/106198493
+
+https://www.baidu.com/link?url=xVUW5vULvLnkKTAkWVzeozk3z8Bpn3_mF6madkH4tdG8Rd9r_73HaHAu4LHkQJ2kIQN-1LTeDYKl3LVfTBNkHa&wd=&eqid=f8b943f70001978a00000006630474e8
+
 ### 1\. React-Router的实现原理是什么？
 
 客户端路由实现的思想：
@@ -2447,6 +2451,8 @@ import { Switch, Route} from 'react-router-dom'
    <Route exact path="/login" component={Login}></Route>
 </Switch>
 ```
+
+### 9. Router Hooks的使用
 
 
 
@@ -4769,6 +4775,10 @@ function usePrevious(value) {
 
 我们知道在react中useEffect中的操作表现的像是**异步**的，就是说每次执行useEffect代码块的时候都会将它放到一个链表中，等到同步的代码执行完成后再统一执行链表中的内容。所以此时useRef中的值还没有被修改，还是保存的上一轮的值，所以能够被访问到
 
+### hooks案例
+
+[hooks的典型案例](https://blog.csdn.net/jiaojsun/article/details/105298510)
+
 ### hooks原理
 
 #### function组件和class组件本质的区别
@@ -4877,11 +4887,11 @@ const ReactCurrentDispatcher = {
 };
 ```
 
-我们看到`ReactCurrentDispatcher.current`初始化的时候为`null`，然后就没任何下文了。我们暂且只能把`ReactCurrentDispatcher`\记下来。看看`ReactCurrentDispatcher`什么时候用到的 ？
+我们看到**`ReactCurrentDispatcher.current`初始化的时候为`null`**，然后就没任何下文了。我们暂且只能把`ReactCurrentDispatcher`记下来。看看`ReactCurrentDispatcher`什么时候用到的 ？
 
 ##### 2.从无状态组件的函数执行说起
 
-想要彻底弄明白`hooks`，就要从其根源开始，上述我们在引入`hooks`的时候，最后以一个`ReactCurrentDispatcher`草草收尾，线索全部断了，所以接下来我们只能从函数组件执行开始。
+想要彻底弄明白`hooks`，就要从其根源开始，上述我们在引入`hooks`的时候，最后以一个`ReactCurrentDispatcher`草草收尾，线索全部断了，所以接下来我们只能从**函数组件执行**开始。
 
 ###### renderWithHooks 执行函数
 
@@ -4902,7 +4912,7 @@ renderWithHooks(
 );
 ```
 
-对于初始化是没有`current`树的，之后完成一次组件更新后，会把当前`workInProgress`树赋值给`current`树。
+**对于初始化是没有`current`树的，之后完成一次组件更新后，会把当前`workInProgress`树赋值给`current`树。**
 
 `function`组件更新：
 
@@ -4964,27 +4974,27 @@ export function renderWithHooks(
 
 **所有的函数组件执行，都是在这里方法中**,首先我们应该明白几个感念，这对于后续我们理解`useState`是很有帮助的。
 
-`current fiber树`: 当完成一次渲染之后，会产生一个`current`树,`current`会在`commit`阶段替换成真实的`Dom`树。
+`current fiber树`: 当**完成一次渲染之后**，会产生一个`current`树,`current`会在`commit`阶段替换成真实的`Dom`树。
 
-`workInProgress fiber树`: 即将调和渲染的 `fiber` 树。再一次新的组件更新过程中，会从`current`复制一份作为`workInProgress`,更新完毕后，将当前的`workInProgress`树赋值给`current`树。
+`workInProgress fiber树`: 即将**调和渲染**的 `fiber` 树。在一次新的组件更新过程中，会从`current`复制一份作为`workInProgress`,更新完毕后，将当前的`workInProgress`树赋值给`current`树。
 
-`workInProgress.memoizedState`: 在`class`组件中，`memoizedState`存放`state`信息，在`function`组件中，**这里可以提前透漏一下，`memoizedState`在一次调和渲染过程中，以链表的形式存放`hooks`信息。**
+`workInProgress.memoizedState`: 在`class`组件中，`memoizedState`存放`state`信息，在`function`组件中，**`memoizedState`在一次调和渲染过程中，以链表的形式存放`hooks`信息。**
 
 `workInProgress.expirationTime`: `react`用不同的`expirationTime`,来确定更新的优先级。
 
-`currentHook` : 可以理解 `current`树上的指向的当前调度的 `hooks`节点。
+`currentHook` : 可以理解 `current`树上的**指向的当前调度**的 `hooks`节点。
 
 `workInProgressHook` : 可以理解 `workInProgress`树上指向的当前调度的 `hooks`节点。
 
 **`renderWithHooks`函数主要作用:**
 
-首先先置空即将调和渲染的`workInProgress`树的`memoizedState`和`updateQueue`，为什么这么做，因为在接下来的函数组件执行过程中，要把新的`hooks`信息挂载到这两个属性上，然后在组件`commit`阶段，将`workInProgress`树替换成`current`树，替换真实的`DOM`元素节点。并在`current`树保存`hooks`信息。
+首先先**置空**即将调和渲染的`workInProgress`树的`memoizedState`和`updateQueue`，为什么这么做，因为在**接下来的函数组件执行过程**中，要把新的`hooks`信息挂载到这两个属性上，然后在组件`commit`阶段，将`workInProgress`树替换成`current`树，替换真实的`DOM`元素节点。并在`current`树保存`hooks`信息。
 
-然后根据当前函数组件是否是第一次渲染，赋予`ReactCurrentDispatcher.current`不同的`hooks`,终于和上面讲到的`ReactCurrentDispatcher`联系到一起。对于第一次渲染组件，那么用的是`HooksDispatcherOnMount` hooks对象。 对于渲染后，需要更新的函数组件，则是`HooksDispatcherOnUpdate`对象，那么两个不同就是通过`current`树上是否`memoizedState`（hook信息）来判断的。如果`current`不存在，证明是第一次渲染函数组件。
+然后根据当前函数组件**是否是第一次渲染**，赋予`ReactCurrentDispatcher.current`不同的`hooks`,终于和上面讲到的`ReactCurrentDispatcher`联系到一起。对于第一次渲染组件，那么用的是`HooksDispatcherOnMount` hooks对象。 对于渲染后，需要更新的函数组件，则是`HooksDispatcherOnUpdate`对象，那么两个不同就是通过`current`树上是否`memoizedState`（hook信息）来判断的。如果`current`不存在，证明是第一次渲染函数组件。
 
-接下来，**调用`Component(props, secondArg);`执行我们的函数组件，我们的函数组件在这里真正的被执行了，然后，我们写的`hooks`被依次执行，把`hooks`信息依次保存到`workInProgress`树上。** 至于它是怎么保存的，我们马上会讲到。
+接下来，调用`Component(props, secondArg);`执行我们的函数组件，我们的函数组件在这里真正的被执行了，然后，我们写的`hooks`被依次执行，把`hooks`信息依次保存到`workInProgress`树上。
 
-接下来，也很重要，将`ContextOnlyDispatcher`赋值给 `ReactCurrentDispatcher.current`，由于`js`是单线程的，也就是说我们没有在函数组件中，调用的`hooks`，都是`ContextOnlyDispatcher`对象上`hooks`,我们看看`ContextOnlyDispatcher`hooks，到底是什么。
+接下来，也很重要，将`ContextOnlyDispatcher`赋值给 `ReactCurrentDispatcher.current`，由于`js`是单线程的，也就是说我们**没有**在函数组件中，调用的`hooks`，都是`ContextOnlyDispatcher`对象上`hooks`,我们看看`ContextOnlyDispatcher`hooks，到底是什么。
 
 ```jsx
 const ContextOnlyDispatcher = {
@@ -5003,13 +5013,13 @@ function throwInvalidHookError() {
 }
 ```
 
-原来如此，`react-hooks`就是通过这种函数组件执行赋值不同的`hooks`对象方式，判断在`hooks`执行是否在函数组件内部，捕获并抛出异常的。
+原来如此，`react-hooks`就是通过这种**函数组件执行赋值不同**的`hooks`对象方式，判断在`hooks`执行是否在函数组件内部，捕获并抛出异常的。
 
 最后，重新置空一些变量比如`currentHook`，`currentlyRenderingFiber`,`workInProgressHook`等。
 
 ##### 3.不同的`hooks`对象
 
-上述讲到在函数第一次渲染组件和更新组件分别调用不同的`hooks`对象，我们现在就来看看`HooksDispatcherOnMount` 和 `HooksDispatcherOnUpdate`。
+上述讲到在函数**第一次渲染组件**和**更新组件**分别调用不同的`hooks`对象，我们现在就来看看`HooksDispatcherOnMount` 和 `HooksDispatcherOnUpdate`。
 
 **第一次渲染(我这里只展示了常用的`hooks`)：**
 
@@ -5043,11 +5053,11 @@ const HooksDispatcherOnUpdate = {
 
 我们用流程图来描述整个过程：
 
-![17AC0A26-745A-4FD8-B91B-7CADB717234C.jpg](https://s2.loli.net/2022/08/12/Bg5IemuDhxFCNj1.webp)
+<img src="https://s2.loli.net/2022/08/12/Bg5IemuDhxFCNj1.webp" alt="17AC0A26-745A-4FD8-B91B-7CADB717234C.jpg" style="zoom:150%;" />
 
 #### 二 hooks初始化，我们写的hooks会变成什么样子
 
-本文将重点围绕四个中重点`hooks`展开，分别是负责组件更新的`useState`，负责执行副作用`useEffect` ,负责保存数据的`useRef`,负责缓存优化的`useMemo`， 至于`useCallback`,`useReducer`,`useLayoutEffect`原理和那四个重点`hooks`比较相近，就不一一解释了。
+本文将重点围绕四个重点`hooks`展开，分别是负责组件更新的`useState`，负责执行副作用`useEffect` ,负责保存数据的`useRef`,负责缓存优化的`useMemo`， 至于`useCallback`,`useReducer`,`useLayoutEffect`原理和那四个重点`hooks`比较相近，就不一一解释了。
 
 我们先写一个组件，并且用到上述四个主要`hooks`：
 
@@ -5074,7 +5084,7 @@ function Index(){
 
 ##### 1 mountWorkInProgressHook
 
-在组件初始化的时候,每一次`hooks`执行，如`useState()`,`useRef()`,都会调用`mountWorkInProgressHook`,`mountWorkInProgressHook`到底做了写什么，让我们一起来分析一下：
+在**组件初始化**的时候,每一次`hooks`执行，如`useState()`,`useRef()`,都会调用`mountWorkInProgressHook`,`mountWorkInProgressHook`到底做了些什么，让我们一起来分析一下：
 
 `react-reconciler/src/ReactFiberHooks.js -> mountWorkInProgressHook`
 
@@ -5096,13 +5106,13 @@ function mountWorkInProgressHook() {
 }
 ```
 
-`mountWorkInProgressHook`这个函数做的事情很简单，首先每次执行一个`hooks`函数，都产生一个`hook`对象，里面保存了当前`hook`信息,然后将每个`hooks`以链表形式串联起来，并赋值给`workInProgress`的`memoizedState`。也就证实了上述所说的，函数组件用`memoizedState`存放`hooks`链表。
+`mountWorkInProgressHook`这个函数做的事情很简单，首先**每次执行**一个`hooks`函数，都产生一个`hook`对象，里面保存了当前`hook`信息,然后将每个`hooks`以**链表形式串联**起来，并赋值给`workInProgress`的`memoizedState`。也就证实了上述所说的，**函数组件用`memoizedState`存放`hooks`链表**。
 
 至于`hook`对象中都保留了那些信息？我这里先分别介绍一下 :  
 
-**memoizedState**： `useState中` 保存 `state` 信息 ｜ `useEffect` 中 保存着 `effect` 对象 ｜ `useMemo` 中 保存的是缓存的值和 `deps` ｜ `useRef` 中保存的是 `ref` 对象。
+**memoizedState**： `useState`中保存 `state` 信息 ｜ `useEffect` 中 保存着 `effect` 对象 ｜ `useMemo` 中 保存的是缓存的值和 `deps` ｜ `useRef` 中保存的是 `ref` 对象。
 
-**baseQueue** : `usestate`和`useReducer`中 保存最新的更新队列。
+**baseQueue** : `usestate`和`useReducer`中 保存**最新的更新队列**。
 
 **baseState** ： `usestate`和`useReducer`中,一次更新中 ，产生的最新`state`值。
 
@@ -5116,7 +5126,7 @@ function mountWorkInProgressHook() {
 
 知道每个`hooks`关系之后，我们应该理解了，为什么不能条件语句中，声明`hooks`。
 
-我们用一幅图表示如果在条件语句中声明会出现什么情况发生。
+我们用一幅图表示如果**在条件语句中声明会出现什么情况发生**。
 
 如果我们将上述`demo`其中的一个 `useRef` 放入条件语句中，
 
@@ -5131,7 +5141,7 @@ function mountWorkInProgressHook() {
 
 **因为一旦在条件语句中声明`hooks`，在下一次函数组件更新，`hooks`链表结构，将会被破坏，`current`树的`memoizedState`缓存`hooks`信息，和当前`workInProgress`不一致，如果涉及到读取`state`等操作，就会发生异常。**
 
-上述介绍了 `hooks`通过什么来证明唯一性的，答案 ，通过`hooks`链表顺序。和为什么不能在条件语句中，声明`hooks`，接下来我们按照四个方向，分别介绍初始化的时候发生了什么？
+上述介绍了 **`hooks`通过什么来证明唯一性的，答案 ，通过`hooks`链表顺序**。和为什么不能在条件语句中，声明`hooks`，接下来我们按照四个方向，分别介绍初始化的时候发生了什么？
 
 ##### 2 初始化useState -> mountState
 
@@ -5163,9 +5173,9 @@ function mountState(
 }
 ```
 
-`mountState`到底做了些什么，首先会得到初始化的`state`，将它赋值给`mountWorkInProgressHook`产生的`hook`对象的 `memoizedState`和`baseState`属性，然后创建一个`queue`对象，里面保存了负责更新的信息。
+`mountState`到底做了些什么，首先会得到**初始化**的`state`，将它赋值给`mountWorkInProgressHook`产生的`hook`对象的 `memoizedState`和`baseState`属性，然后**创建一个`queue`对象**，里面保存了**负责更新**的信息。
 
-这里先说一下，在无状态组件中，`useState`和`useReducer`触发函数更新的方法都是`dispatchAction`,`useState`，可以看成一个简化版的`useReducer`,至于`dispatchAction`怎么更新`state`，更新组件的，我们接着往下研究`dispatchAction`。
+这里先说一下，在**无状态组件**中，`useState`和`useReducer`触发**函数更新的方法**都是`dispatchAction`,`useState`，可以看成一个简化版的`useReducer`,至于`dispatchAction`怎么更新`state`，更新组件的，我们接着往下研究`dispatchAction`。
 
 在研究之前 我们**先要弄明白`dispatchAction`是什么?**
 
@@ -5187,7 +5197,7 @@ const [ number , setNumber ] = useState(0)
 
 作为更新的主要函数，我们一下来研究一下，我把 `dispatchAction` 精简，精简，再精简，
 
-```
+```js
 function dispatchAction(fiber, queue, action) {
 
   // 计算 expirationTime 过程略过。
@@ -5237,9 +5247,9 @@ function dispatchAction(fiber, queue, action) {
 }
 ```
 
-无论是类组件调用`setState`,还是函数组件的`dispatchAction` ，都会产生一个 `update`对象，里面记录了此次更新的信息，然后将此`update`放入待更新的`pending`队列中，`dispatchAction`第二步就是判断当前函数组件的`fiber`对象是否处于渲染阶段，如果处于渲染阶段，那么不需要我们在更新当前函数组件，只需要更新一下当前`update`的`expirationTime`即可。
+无论是类组件调用`setState`,还是函数组件的`dispatchAction` ，都会**产生一个 `update`对象**，里面记录了**此次更新的信息，**然后将此`update`放入**待更新的`pending`队列中**，`dispatchAction`第二步就是判断当前函数组件的`fiber`对象**是否处于渲染阶段**，如果**处于渲染阶段**，那么不需要我们在更新当前函数组件，只需要更新一下当前`update`的`expirationTime`即可。
 
-如果当前`fiber`没有处于更新阶段。那么通过调用`lastRenderedReducer`获取最新的`state`,和上一次的`currentState`，进行浅比较，如果相等，那么就退出，这就证实了为什么`useState`，两次值相等的时候，组件不渲染的原因了，这个机制和`Component`模式下的`setState`有一定的区别。
+如果当前`fiber`**没有处于更新阶段**。那么通过调用`lastRenderedReducer`获取最新的`state`,和上一次的`currentState`，进行**浅比较**，如果相等，那么就退出，这就证实了为什么`useState`，两次值相等的时候，组件不渲染的原因了，这个机制和`Component`模式下的`setState`有一定的区别。
 
 如果两次`state`不相等，那么调用`scheduleUpdateOnFiber`调度渲染当前`fiber`，`scheduleUpdateOnFiber`是`react`渲染更新的主要函数。
 
@@ -5328,13 +5338,13 @@ useEffect(()=>{
 
 ###### 拓展:effectList
 
-`effect list` 可以理解为是一个存储 `effectTag` 副作用列表容器。它是由 `fiber` 节点和指针 `nextEffect` 构成的单链表结构，这其中还包括第一个节点 `firstEffect` ，和最后一个节点 `lastEffect`。 `React` 采用深度优先搜索算法，在 `render` 阶段遍历 `fiber` 树时，把每一个有副作用的 `fiber` 筛选出来，最后构建生成一个只带副作用的 `effect list` 链表。 在 `commit` 阶段，`React` 拿到 `effect list` 数据后，通过遍历 `effect list`，并根据每一个 `effect` 节点的 `effectTag` 类型，执行每个`effect`，从而对相应的 `DOM` 树执行更改。
+`effect list` 可以理解为是一个存储 `effectTag` 副作用列表容器。它是由 `fiber` 节点和指针 `nextEffect` 构成的**单链表结构**，这其中还包括第一个节点 `firstEffect` ，和最后一个节点 `lastEffect`。 `React` 采用**深度优先搜索算法**，在 `render` 阶段遍历 `fiber` 树时，**把每一个有副作用的 `fiber` 筛选出来**，最后**构建生成一个只带副作用的 `effect list` 链表**。 在 `commit` 阶段，`React` 拿到 `effect list` 数据后，通过遍历 `effect list`，并根据每一个 `effect` 节点的 `effectTag` 类型，执行每个`effect`，从而对相应的 `DOM` 树执行更改。
 
 ##### 4 初始化useMemo -> mountMemo
 
 不知道大家是否把 `useMemo` 想象的过于复杂了，实际相比其他 `useState` , `useEffect`等，它的逻辑实际简单的很。
 
-```
+```js
 function mountMemo(nextCreate,deps){
   const hook = mountWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
@@ -5363,17 +5373,17 @@ function mountRef(initialValue) {
 
 ###### 6 mounted 阶段 hooks 总结
 
-我们来总结一下初始化阶段,`react-hooks`做的事情，在一个函数组件第一次渲染执行上下文过程中，每个`react-hooks`执行，都会产生一个`hook`对象，并形成链表结构，绑定在`workInProgress`的`memoizedState`属性上，然后`react-hooks`上的状态，绑定在当前`hooks`对象的`memoizedState`属性上。对于`effect`副作用钩子，会绑定在`workInProgress.updateQueue`上，等到`commit`阶段，`dom`树构建完成，在执行每个 `effect` 副作用钩子。
+我们来总结一下初始化阶段,`react-hooks`做的事情，在**一个函数组件第一次渲染执行上下文过程**中，每个`react-hooks`执行，都会产生一个`hook`对象，并形成**链表结构**，绑定在`workInProgress`的`memoizedState`属性上，然后`react-hooks`上的状态，绑定在当前`hooks`对象的`memoizedState`属性上。对于`effect`副作用钩子，会绑定在`workInProgress.updateQueue`上，等到`commit`阶段，`dom`树构建完成，再执行每个 `effect` 副作用钩子。
 
 #### 三 hooks更新阶段
 
-上述介绍了第一次渲染函数组件，`react-hooks`初始化都做些什么，接下来，我们分析一下，
+上述介绍了第一次**渲染函数组件**，`react-hooks`初始化都做些什么，接下来，我们分析一下，
 
 对于更新阶段，说明上一次 `workInProgress` 树已经赋值给了 `current` 树。存放`hooks`信息的`memoizedState`，此时已经存在`current`树上，`react`对于`hooks`的处理逻辑和`fiber`树逻辑类似。
 
-对于一次函数组件更新，当再次执行`hooks`函数的时候，比如 `useState(0)` ，首先要从`current`的`hooks`中找到与当前`workInProgressHook`，对应的`currentHooks`，然后复制一份`currentHooks`给`workInProgressHook`,接下来`hooks`函数执行的时候,把最新的状态更新到`workInProgressHook`，保证`hooks`状态不丢失。
+对于一次**函数组件更新**，当再次执行`hooks`函数的时候，比如 `useState(0)` ，首先要从`current`的`hooks`中找到与当前`workInProgressHook`，对应的`currentHooks`，然后**复制一份**`currentHooks`给`workInProgressHook`,接下来`hooks`函数执行的时候,把最新的状态更新到`workInProgressHook`，保证`hooks`状态不丢失。
 
-所以函数组件每次更新，每一次`react-hooks`函数执行，都需要有一个函数去做上面的操作，这个函数就是`updateWorkInProgressHook`,我们接下来一起看这个`updateWorkInProgressHook`。
+所以**函数组件每次更新，每一次`react-hooks`函数执行，都需要有一个函数去做上面的操作，这个函数就是`updateWorkInProgressHook`**,我们接下来一起看这个`updateWorkInProgressHook`。
 
 ##### 1 updateWorkInProgressHook
 
@@ -5428,7 +5438,7 @@ function updateWorkInProgressHook() {
 
 这一段的逻辑大致是这样的：
 
--   首先如果是第一次执行`hooks`函数，那么从`current`树上取出`memoizedState` ，也就是旧的`hooks`。
+-   首先如果是**第一次执行**`hooks`函数，那么从`current`树上取出`memoizedState` ，也就是旧的`hooks`。
 -   然后声明变量`nextWorkInProgressHook`，这里应该值得注意，正常情况下，一次`renderWithHooks`执行，`workInProgress`上的`memoizedState`会被置空，`hooks`函数顺序执行，`nextWorkInProgressHook`应该一直为`null`，那么什么情况下`nextWorkInProgressHook`不为`null`,也就是当一次`renderWithHooks`执行过程中，执行了多次函数组件，也就是在`renderWithHooks`中这段逻辑。
 
 ```jsx
@@ -5437,9 +5447,9 @@ function updateWorkInProgressHook() {
   }
 ```
 
-这里面的逻辑，实际就是判定，如果当前函数组件执行后，当前函数组件的还是处于渲染优先级，说明函数组件又有了新的更新任务，那么循坏执行函数组件。这就造成了上述的，`nextWorkInProgressHook`不为 `null` 的情况。
+这里面的逻辑，实际就是判定，如果当前函数组件执行后，当前函数组件的**还是处于渲染优先级，说明函数组件又有了新的更新任务**，那么循坏执行函数组件。这就造成了上述的，`nextWorkInProgressHook`不为 `null` 的情况。
 
--   最后复制`current`的`hooks`，把它赋值给`workInProgressHook`,用于更新新的一轮`hooks`状态。
+最后复制`current`的`hooks`，把它赋值给`workInProgressHook`,用于更新新的一轮`hooks`状态。
 
 接下来我们看一下四个种类的`hooks`，在一次组件更新中，分别做了那些操作。
 
@@ -5510,7 +5520,7 @@ function updateReducer(
 }
 ```
 
-这一段看起来很复杂，让我们慢慢吃透，首先将上一次更新的`pending queue` 合并到 `basequeue`，为什么要这么做，比如我们再一次点击事件中这么写，
+首先将上一次更新的`pending queue` 合并到 `basequeue`，为什么要这么做，比如我们再一次点击事件中这么写，
 
 ```jsx
 function Index(){
@@ -5539,7 +5549,7 @@ function Index(){
 
 ![setState.jpg](https://s2.loli.net/2022/08/12/9xtm18ZSBqcX3ky.webp)
 
-接下来会把当前`useState`或是`useReduer`对应的`hooks`上的`baseState`和`baseQueue`更新到最新的状态。会循环`baseQueue`的`update`，复制一份`update`,更新 `expirationTime`，对于有足够优先级的`update`（上述三个`setNumber`产生的`update`都具有足够的优先级），我们要获取最新的`state`状态。，会一次执行`useState`上的每一个`action`。得到最新的`state`。
+接下来会把当前`useState`或是`useReduer`对应的`hooks`上的`baseState`和`baseQueue`更新到最新的状态。会循环`baseQueue`的`update`，复制一份`update`,更新 `expirationTime`，对于**有足够优先级**的`update`（上述三个`setNumber`产生的`update`都具有足够的优先级），我们要获取最新的`state`状态。，会一次执行`useState`上的每一个`action`。得到最新的`state`。
 
 **更新state**
 
@@ -5581,7 +5591,7 @@ function updateEffect(create, deps): void {
 }
 ```
 
-`useEffect` 做的事很简单，判断两次`deps` 相等，如果相等说明此次更新不需要执行，则直接调用 `pushEffect`,这里注意 `effect`的标签，`hookEffectTag`,如果不相等，那么更新 `effect` ,并且赋值给`hook.memoizedState`，这里标签是 `HookHasEffect | hookEffectTag`,然后在`commit`阶段，`react`会通过标签来判断，是否执行当前的 `effect` 函数。
+`useEffect` 做的事很简单，**判断两次`deps` 相等**，如果**相等说明此次更新不需要执行，则直接调用 `pushEffect`**,这里注意 `effect`的标签，`hookEffectTag`,如果不相等，那么更新 `effect` ,并且赋值给`hook.memoizedState`，这里标签是 `HookHasEffect | hookEffectTag`,然后在`commit`阶段，`react`会通过标签来判断，是否执行当前的 `effect` 函数。
 
 ##### 4 updateMemo
 
@@ -5626,7 +5636,7 @@ function updateRef(initialValue){
 
 ##### 一次点击事件更新
 
-![91A72028-3A38-4491-9375-0895F420B7CD.jpg](https://s2.loli.net/2022/08/12/iZRp1JIADzOsQ5h.webp)
+<img src="https://s2.loli.net/2022/08/12/iZRp1JIADzOsQ5h.webp" alt="91A72028-3A38-4491-9375-0895F420B7CD.jpg" style="zoom:150%;" />
 
 
 
@@ -7217,7 +7227,7 @@ export default B;
 
 ## Demo实现
 
-### 1.react 实现一个全局的 dialog
+### 1.react实现一个全局的 dialog
 
 ```jsx
 import React, { Component } from 'react';
@@ -7525,4 +7535,6 @@ export default function useDebounce(value, delay) {
   return debouncedValue;
 }
 ```
+
+
 

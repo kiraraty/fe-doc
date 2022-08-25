@@ -3163,6 +3163,46 @@ let app = new Vue({
 })
 ```
 
+#### vue的h函数
+
+在vue脚手架中，我们经常会看到这样一段代码：
+
+```javascript
+  const app = new Vue({
+    ··· ···
+    render: h => h(App)
+  })
+```
+
+这个render方法也可以写成这样：
+
+```javascript
+  const app = new Vue({
+    ··· ···
+    render:function(createElement){
+        return createElment(App)
+    }
+  })
+```
+
+**h函数就是vue中的createElement方法，这个函数作用就是创建虚拟dom，追踪dom变化**
+
+![img](https://img-blog.csdnimg.cn/20190715150357696.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQyNzc4MDAx,size_16,color_FFFFFF,t_70)
+
+**上边代码：最终html代码会被编译成h函数的渲染形式。返回的是一个虚拟DOM对象，通过diff算法，来追踪自己要如何改变真实DOM**
+
+```js
+function h(tag,props,...children){//h函数，返回一个虚拟dom对象
+    return {
+        tag,
+        props:props || {},
+        children:children.flat()//扁平化数组，降至一维数组
+    }
+}
+```
+
+**createElement函数，它返回的实际上不是一个DOM元素，更准确的名字是：createNodeDescription（直译为——创建节点描述），因为它所包含的信息会告诉vue页面上需要渲染什么样的节点，包括其子节点的描述信息**
+
 #### 理解&使用render函数
 
 render 函数即渲染函数，它接收一个`createElement` 方法作为第一个参数用来创建 `VNode`。（简单的说就是 render函数的参数也是一个函数）
@@ -4754,7 +4794,74 @@ export default vCopy;
   }
 ```
 
+### 28.Vue中的vm和VueComponent
 
+关于vm和vc,vm为Vue的实例对象，vc为VueComponent的是对象
+
+#### 1、Vue的实例对象，以后简称vm。
+
+(1) vm的隐式原型属性指向Vue的原型对象。
+
+(2) VueComponent的原型对象的隐式原型属性指向Vue的原型对象。
+
+#### 2、Vue解析时会帮我们创建school组件的实例对象
+
+我们只需要写`<school></school>`，，
+即Vue帮我们执行的：new VueComponent(options)
+
+#### 3、**特别注意**：
+
+每次调用Vue.extend，返回的都是一个全新的VueComponent
+
+```js
+//定义school组件
+const school = Vue.extend({
+	name: 'school',
+	data(){
+		name:'ycu',
+		address:'学府路576号',
+	}, 
+	methods:{}
+})
+```
+
+在非单文件组件中，组件可以定义多个
+
+#### 4、关于this指向
+
+##### 1.组件配置中：
+
+data函数、methods中的函数、watch中的函数、computed中的函数 它们的this均是VueComponent实例对象（也就是天禹老师课堂上的vc，也可称之为组件实例对象）。
+
+###### (1)：VueComponent的实例对象，我们暂且记为vc。
+
+![在这里插入图片描述](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs0277b0039eb545ef98c9e58288b88986.png)
+
+###### (2)：Vue的实例对象 vm
+
+![在这里插入图片描述](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs62b50a8434594125b290afd86fa9b467.png)
+
+##### 2.new Vue(options)配置中：
+
+data函数、methods中的函数、watch中的函数、computed中的函数 它们的this均是Vue实例对象。
+
+#### 5、vc 与 vm 的区别：
+
+vm和vc在某种程度上确实有很多相像之处，但又有着本质的区别，vc差不多像是vm的小弟，可以理解为类似生活中的一对双胞胎，一个稍微早出生几分钟的是大哥，也就是vm，另外一个就是小弟vc，虽然会很像，但是还是有区别的。
+
+总体上来说，vm身上有的，vc基本也有。
+
+data函数、methods中的函数、watch中的函数、computed中的函数在vm和vc里边都有，生命周期也都是一样的，以及相同的数据代理模式。
+
+**vc有的vm都有，vm可以通过el决定为哪一个容器服务，但是vc是没有 el 的！且 vc 的data要写成函数式，在vm中的data写成对象或者函数都行**
+
+#### 6、Vue和VueComponent的内置关系
+
+VueComponent.prototype.**proto** === Vue.prototype (这里的proto前后都是有__的，编辑器误以为是加粗的标识了)
+
+**即构造函数的显示原型属性 === 实例对象的隐式原型属性**
+
+![在这里插入图片描述](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsf76c327ba18b49f391b9cafd498a7d03.png)
 
 ## 生命周期
 
