@@ -4687,3 +4687,51 @@ const leak = [];
 
 使用对象池的机制，对这种频繁需要创建和销毁的对象保存在一个对象池中。每次用到该对象时，就取对象池空闲的对象，并对它进行初始化操作，从而提高框架的性能
 
+### 8.获取一个目录下面所有文件
+
+```js
+const fs = require("fs");
+const path = require("path");
+
+function readDir(pathUrl) {
+	fs.readdir(pathUrl, (err, fileName) => {
+		if (err) {
+			console.log('文件夹读取错误', err)
+		} else {
+			for (let i = 0; i < fileName.length; i++) {
+				if (fs.statSync(`${pathUrl}/${fileName[i]}`).isFile() === true) {
+					let extent = fileName[i].split('.')[1]
+					if (extent == "json") {
+						fs.readFile(`${pathUrl}/${fileName[i]}`, 'utf-8', (err, content) => {
+							if (err) {
+								console.log('读取文件内容失败', err);
+							} else {
+								let copyJson = JSON.parse(JSON.stringify(content));
+								let copyObj = JSON.parse(copyJson)
+								let itemsArr = copyObj.items
+								for (let i = 0; i < itemsArr.length; i++) {
+									let str = itemsArr[i].evaluate_text
+									let reg = /[\u3002|\uff1f|\uff01|\uff1b]$/g  //判断是否为
+									if (reg.test(str)) {
+										itemsArr[i].category = "read_sentence"
+									}
+								}
+								copyObj.items = itemsArr
+								let result = JSON.stringify(copyObj)
+							 fs.writeFile(`${pathUrl}/${fileName[i]}`,result,(err)=>{
+									if(!err) console.log("修改成功");
+								})
+							}
+						});
+					}
+				}
+				else {
+					readDir(`${pathUrl}/${fileName[i]}`);
+				}
+			}
+		}
+	});
+};
+readDir('./classification');
+```
+

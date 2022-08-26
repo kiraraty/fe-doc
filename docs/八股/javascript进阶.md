@@ -3035,6 +3035,48 @@ let  b=await async2()  b拿到的是async2的返回的promise的resolve的值
 
 await需要等待结果  然后跳出函数  执行外面的代码  然后 resolve之后再去执行await后面的代码
 
+```js
+ async queryTextbookRes() {
+     //正常的请求过程就相当于new Promise后面
+  const data= await new Promise((resolve)=>{
+        setTimeout(()=>{
+          let result = []
+          resolve(result)
+        },2000)
+      })
+       return data
+ }
+ async queryTextbookRes() {
+  return  await new Promise((resolve)=>{
+        setTimeout(()=>{
+          let result = []
+          resolve(result)
+        },2000)
+      })
+      
+ }
+ async queryTextbookRes() {
+  return  new Promise((resolve)=>{
+        setTimeout(()=>{
+          let result = []
+          resolve(result)
+        },2000)
+      })
+      
+ }
+this.queryTextbookRes().then((res) => {
+        resolveres(res);
+      });
+```
+
+await实际上相当于过一段时间resolve（value)   返回value
+
+await接受普通值 会直接返回
+
+await接受new Promise或者promise对象 会返回resoLve的值
+
+也await可以接受一个函数  函数返回的是一个promise
+
 -   当await 接收的值非Promise 对象时，它会将返回值包装成Promise.then(返回值)将值和恢复执行的消息一起添加到消息队列中；
 -   如果是Promise对象，**先添加到消息队列，等待可用值**；等有可用值后**再把恢复执行的消息添加到消息队列**；有两个添加到消息队列的操作。
 
