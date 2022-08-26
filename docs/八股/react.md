@@ -12,7 +12,7 @@ React并不是将click事件绑定到了div的真实DOM上，而是在document�
 
 除此之外，冒泡到document上的事件也不是原生的浏览器事件，而是由react自己实现的合成事件（SyntheticEvent）。因此如果不想要是事件冒泡的话应该**调用event.preventDefault()方法**，而不是调用event.stopProppagation()方法。
 
-![image-20220701085916823](https://s2.loli.net/2022/07/01/4FsyP1ml5Tpgq8w.png)
+![image-20220701085916823](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs4FsyP1ml5Tpgq8w.png)
 
 JSX 上写的事件并没有绑定在对应的真实 DOM 上，而是通过事件代理的方式，将所有的事件都**统一绑定**在了 `document` 上。这样的方式不仅减少了内存消耗，还能在组件挂载销毁时统一订阅和移除事件。
 
@@ -718,7 +718,7 @@ export default withWindowWidth(MyComponent);
 
 ### 20.react渲染流程
 
-![image-20220712105045979](https://s2.loli.net/2022/07/12/AY26fwZWbCOvnli.png)
+![image-20220712105045979](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsAY26fwZWbCOvnli.png)
 
 ![image-20220712111025690](https://s2.loli.net/2022/07/12/ms5WQ6ZxHoIXnAw.png)
 
@@ -777,7 +777,7 @@ ReactDOM.render 调用之后，实际上是**透传参数给 ReactMount.render**
 - div 标签作为 React 内部的已知 DOM 类型，会实例化为 ReactDOMComponent；
 - "Hello World" 会被直接判断是否为字符串，实例化为 ReactDOMComponent。
 
-![image-20220712111330887](https://s2.loli.net/2022/07/12/58BHPtXjbEaLmZl.png)
+![image-20220712111330887](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs58BHPtXjbEaLmZl.png)
 
 这段逻辑在 React 源码中大致是这样的，其中 isInternalComponentType 就是判断当前的组件是否为内部已知类型。
 
@@ -898,13 +898,13 @@ React 的渲染过程大致一致，但协调并不相同，以 React 16 为分�
 
 如果只是一般的应用场景，比如管理后台、H5 展示页等，两者性能差距并不大，但在动画、画布及手势等场景下，Stack Reconciler 的设计会占用占主线程，造成卡顿，而 fiber reconciler 的设计则能带来高性能的表现。
 
-![image-20220712111542109](https://s2.loli.net/2022/07/12/tJYXI2FsGgw3cdk.png)
+![image-20220712111542109](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgstJYXI2FsGgw3cdk.png)
 
 ## 数据管理
 
 ### 1\.React setState 调用的原理
 
-![image-20220701204358623](https://s2.loli.net/2022/07/01/gfEvcmzMYtxnBAs.png)
+![image-20220701204358623](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsgfEvcmzMYtxnBAs.png)
 
 
 
@@ -1123,7 +1123,7 @@ react获取上一轮的props和state ,有的时候 需要 获取 改变前的 st
 
 效果图：
 
-![](https://s2.loli.net/2022/08/14/1Am7bjDYKHOisal.png)
+![](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs1Am7bjDYKHOisal.png)
 
 如果只是 想实现 这个效果 下面的代码 也行 。就不用借助其它的了。 这个思路就是，在 改变 state之前 就 备份一下 值 。
 
@@ -1595,9 +1595,207 @@ function Counter() {
 }
 ```
 
- 
+### 11.setSate的缺点
 
+调用时机不恰当的话可能引起循环调用的问题：比如在componentWillUpdate render componentDidUpdate调用都有可能引起这种问题
+setState可能会引用不必要的re-render：setState任何值都会引起组件的render函数执行，可能导致性能的浪费
 
+#### setState更新数组
+
+你会发现，如果直接使用push等方法改变state，按理来说，push会改变原数组，数组应该更新，但渲染出来的state并不会更改
+
+```js
+let newValue = 1;
+const [array, setArray] = useState([]);
+const handleChange = (newValue: number) =>{
+	array.push(newValue);
+	setState(array);//array更新了，但无法触发渲染
+	console.log(array);//[1]
+	//array增加了newValue，但渲染并未发生改变
+}
+
+render:
+<p>This array is {JSON.stringify(array)}</p> //[]
+```
+
+这是由于js中，数组的赋值是引用传递的，array.push相当于直接更改了数组对应的内存块，但react内部用于对比的array的内存并没有更改，是指向同一个内存的，setState只做shallow compare，因此没有触发re-render。
+可以使用扩展运算符，创建一个新数组，更改内存引用
+
+```js
+const handleChange = (newValue: number) =>{
+	const newArray = [...array, newValue];
+	setState(newArray);//此处本质上是改变了引用
+	console.log(array);//[]
+	//array并未改变，但渲染改变了
+}
+
+render:
+<p>This array is {JSON.stringify(array)}</p> //[1]
+```
+
+或者触发展示组件的re-render，这样即使不改变数组的引用，依然可以正确显示变动。
+
+```js
+const handleChange = (newValue: number) =>{
+	setValue(newValue);
+	setState(array.push(newValue));//其他更新触发了组件的re-render，此时可以正常显示变动
+	console.log(array);//[1]
+	//array改变，且渲染改变
+}
+
+render:
+<p>This array is {JSON.stringify(array)}</p> //[1]
+```
+
+再给一个直观的例子（感谢我的同事@ling）
+直接尝试：https://codepen.io/ling-cao/pen/NWrMRrq
+
+```js
+const { useRef, useEffect, useState } = React
+
+const useMemoryState = (init) => {
+  const [arr, setArr] = useState(init)
+  const lastArrRef = useRef(null)
+  const updateArr = next => {
+    lastArrRef.current = [...arr];
+    console.log(next);
+    setArr(next)
+  }
+  return [arr, updateArr, lastArrRef.current]
+}
+
+let i = 0;
+const App = () => {
+  const [arr, setArr, lastArr] = useMemoryState([0])
+  const [updateSign, setUpdateSign] = useState(false)
+  
+  return(
+    <>
+      <div className="text"><label>Current array :</label> {JSON.stringify(arr)}</div>
+      <div className="box-container">
+        <div className="box">
+          <h1>Push a number to array</h1>
+          <pre>setArr(arr.push(i) && arr)</pre>
+          <br />
+          <button
+            onClick={() => {
+              i++;
+              setArr(arr.push(i) && arr)
+            }}
+            className="btn btn-2 btn-2c">
+              Try it
+           </button>
+        </div>
+        <div className="box">
+          <h1>Push a number to array and renew array</h1> 
+          <pre>setArr(arr.push(i) && [...arr])</pre>
+          <br />
+          <button
+            onClick={() => {
+              i++;
+              setArr(arr.push(i) && [...arr])
+            }}
+            className="btn btn-2 btn-2c">
+              Try it
+           </button>
+        </div>
+        <div className="box">
+          <h1>Push a number to array and update another state</h1>
+          <pre>setArr(arr.push(i) && arr); setUpdateSign(x => !x)</pre>
+          <br />
+          <button
+            onClick={() => {
+              i++;
+              {
+                setArr(arr.push(i) && arr)
+                setUpdateSign(x => !x)
+              }
+            }}
+            className="btn btn-2 btn-2c">
+              Try it
+           </button>
+        </div>
+      </div>
+      </>
+  );
+}
+```
+
+逐次点击第二个按钮或第三个按钮都可以正常更新渲染。
+
+点击第一个按钮，通过console可以看出来，array数组值有更新，但没有渲染（Current array 没变）；再点其他两个按钮时，会把第一个按钮点击更新的结果一起渲染出来。
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs1337511-20201220185158312-33093066.gif)
+
+侧面展示并不是没有更新数组，而是更新后未渲染。
+
+#### setState不会立即改变数据
+
+setState某种意义上是类似于异步函数的。
+
+```js
+// name is ""
+this.setState({
+    name: "name"
+})
+console.log(`name is ${this.state.name}`)
+```
+
+这样写，name是不能正常显示。
+最常用的办法就是使用回调函数
+
+```js
+this.setState({
+    name: "name"
+}, () => {
+  console.log(`name is ${this.state.name}`)
+})
+```
+
+#### 多个setState的更新
+
+setState的“异步”是本身执行的过程和代码是同步的，只是合成事件和钩子函数的调用顺序在更新之前，导致在合成事件和钩子函数中没办法立马拿到更新后的值，形成了所谓的异步。批量更新优化也是建立在“异步”之上的，如果对同一个值进行多次setState，setState的批量更新策略会对其进行覆盖，取最后一次执行；如果是同时setState多个不同的值，在更新时会对其合并批量更新。
+
+#### setState异步回调获取不到最新值
+
+```js
+  useEffect(() => {
+    const newModel = {
+      name: props.name,
+      datasetId: props.datasetId,
+      modelId: null,
+      trainingStatus: TrainingStatus.Init,
+      modelStatus: Status.NotStarted,
+    } as TrainingModel;
+    setModels([...models, newModel]);
+    startTraining(newModel);
+  }, [props.datasetId]);
+
+  const startTraining = async (newModel: TrainingModel) => {
+    const dataset = await getDataset(newModel.datasetId);
+    let newModels = [...models];
+    let currModel = newModels.find(x => x.datasetId == newModels.datasetId);
+    currModel.trainingStatus = TrainingStatus.CreateDataset;
+    //此时可通过页面的渲染效果知道models中已有值，但此处断点models为空
+    setModels(newModels);
+  };
+```
+
+类似的，老生常谈的，在useEffect里面设置一个Interval，过了Interval time，也同样是useEffect更新时的state值，而得不到最新的state值。
+为解决异步导致的获取不到最新state的问题，使用setState的回调函数获取state的当前最新值
+
+```javascript
+  const startTraining = async (newModel: TrainingModel) => {
+    const dataset = await getDataset(newModel.datasetId);
+      setModels(lastModels => { //此时的lastModels是models的最新值
+        const nextModels = [...lastModels];
+        let currModel = nextModels.find(x => x.datasetId == newModel.datasetId);
+        currModel.trainingStatus = TrainingStatus.CreateDataset;
+        return nextModels;
+      });
+  };
+```
+
+原因是，**组件内部的任何函数，包括事件处理函数和effect，都是从它被创建的那次渲染中被[看到]的**，也就是说，组件内部的函数拿到的总是定义它的那次渲染中的props和state。想要解决，一般两种方法，一种是上述的使用setState回调函数获取state最新值，一种是**使用ref**保存修改并读取state。
 
 ## 生命周期
 
@@ -1607,7 +1805,7 @@ function Counter() {
 
 React15 生命周期
 
-![image-20220710144706498](https://s2.loli.net/2022/07/10/SmsniRfZalLIEdj.png)
+![image-20220710144706498](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsSmsniRfZalLIEdj.png)
 
 React 通常将组件生命周期分为三个阶段：
 
@@ -1615,7 +1813,7 @@ React 通常将组件生命周期分为三个阶段：
 -   更新过程（Update），组件状态发生变化，重新更新渲染的过程；
 -   卸载过程（Unmount），组件从DOM树中被移除的过程；
 
-![image-20220701205623153](https://s2.loli.net/2022/07/01/p8JywQrYdEvAkUs.png)
+![image-20220701205623153](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsp8JywQrYdEvAkUs.png)
 
 #### 1）组件挂载阶段
 
@@ -1847,7 +2045,7 @@ componentDidCatch(error, info)，此生命周期在后代组件抛出错误后�
 
 React常见的生命周期如下：
 
-![image-20220701210106222](https://s2.loli.net/2022/07/01/QG5YaiAczNrgWol.png)
+![image-20220701210106222](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsQG5YaiAczNrgWol.png)
 
 ### 2.生命周期过程
 
@@ -1915,7 +2113,7 @@ const o2 = JSON.parse(JSON.stringify(this.state.obj))
 
 **state 更新流程：** 
 
-![image-20220701210537329](https://s2.loli.net/2022/07/01/emzZkdM6cTqIhHN.png)
+<img src="https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsemzZkdM6cTqIhHN.png" alt="image-20220701210537329" style="zoom:67%;" />
 
 这个过程当中涉及的函数：
 
@@ -1974,7 +2172,7 @@ static getDerivedStateFromProps(nextProps, prevState) {
 
 关于 React16 开始应用的新生命周期： 
 
-![image-20220701212035138](https://s2.loli.net/2022/07/01/dT7qgQS41Liojhk.png)
+![image-20220701212035138](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsdT7qgQS41Liojhk.png)
 
 
 
@@ -2453,6 +2651,95 @@ import { Switch, Route} from 'react-router-dom'
 ```
 
 ### 9. Router Hooks的使用
+
+Router hooks 可以让我们更加容易地访问到 `history`,`location`,路由参数 等等
+
+#### useHistory
+
+`useHistory` 帮助我们直接访问到`history`,而不再需要通过 props 访问
+
+```tsx
+import { useHistory } from "react-router-dom";
+
+const Contact = () => {
+  const history = useHistory();
+  return (
+    <Fragment>
+      <h1>Contact</h1>
+      <button onClick={() => history.push("/")}>Go to home</button>
+    </Fragment>
+  );
+};
+```
+
+#### useParams
+
+`useParams` 帮助我们直接访问到路由参数,而不再需要通过 props 访问
+
+```tsx
+import {
+  BrowserRouter as Router,
+  Route,
+  Link,
+  Switch,
+  useParams,
+} from "react-router-dom";
+
+export default function App() {
+  const name = "John Doe";
+  return (
+    <Router>
+      <main>
+        <nav>
+          <ul>
+            <li>
+              <Link to="/">Home</Link>
+            </li>
+            <li>
+              <Link to={`/about/${name}`}>About</Link>
+            </li>
+          </ul>
+        </nav>
+        <Switch>
+          <Route path="/" exact component={Home} />
+          <Route path="/about/:name" component={About} />
+        </Switch>
+      </main>
+    </Router>
+  );
+}
+
+const About = () => {
+  const { name } = useParams();
+  return (
+    // props.match.params.name
+    <Fragment>
+      {name !== "John Doe" ? <Redirect to="/" /> : null}
+      <h1>About {name}</h1>
+      <Route component={Contact} />
+    </Fragment>
+  );
+};
+```
+
+#### useLocation
+
+`useLocation` 会返回当前 URL 的 location 对象
+
+```tsx
+import { useLocation } from "react-router-dom";
+
+const Contact = () => {
+  const { pathname } = useLocation();
+
+  return (
+    <Fragment>
+      <h1>Contact</h1>
+      <p>Current URL: {pathname}</p>
+    </Fragment>
+  );
+};
+```
 
 
 
@@ -4779,6 +5066,175 @@ function usePrevious(value) {
 
 [hooks的典型案例](https://blog.csdn.net/jiaojsun/article/details/105298510)
 
+#### 清除 effect
+
+通常，组件卸载时需要清除 effect 创建的诸如订阅或计时器 ID 等资源。要实现这一点，useEffect 函数需返回一个清除函数。也就是说，要想在组件销毁的时候搞一些事情，需要useEffect 末尾返回一个函数，在这个函数里面可以写具体销毁的内容。
+
+看下面的例子，在当前页面里面，页面的标题是'测试title'，当切换到其他页面时，页面的标题变成‘前端精读’
+
+```js
+import React, { useEffect } from 'react';
+
+function useDocumentTitle(title) {
+  useEffect(() => {
+    document.title = title;
+    return () => {
+      console.log('销毁1————————————————');
+      document.title = '前端精读';
+    };
+  }, [title]);
+}
+
+export default function CheckboxDemo() {
+  useDocumentTitle('测试title');
+
+  return <div />;
+}
+```
+
+#### 监听页面大小变化，网络是否断开
+
+效果：在组件调用 useWindowSize 时，可以拿到页面大小，并且在浏览器缩放时自动触发组件更新。
+
+```js
+import React, { useEffect, useState } from 'react';
+
+function getSize() {
+  return {
+    innerHeight: window.innerHeight,
+    innerWidth: window.innerWidth,
+    outerHeight: window.outerHeight,
+    outerWidth: window.outerWidth,
+  };
+}
+
+function useWindowSize() {
+  const [windowSize, setWindowSize] = useState(getSize());
+
+  function handleResize() {
+    setWindowSize(getSize());
+  }
+
+  useEffect(() => {
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+
+  }, []);
+  return windowSize;
+}
+
+export default function Demo() {
+  const windowSize = useWindowSize();
+  return <div>页面宽度{windowSize.innerWidth}</div>;
+}
+
+动态注入 css
+效果：在页面注入一段 class，并且当组件销毁时，移除这个 class。
+
+const className = useCss({
+  color: "red"
+});
+
+return <div className={className}>Text.</div>;
+```
+
+实现：可以看到，Hooks 方便的地方是在组件销毁时移除副作用，所以我们可以安心的利用 Hooks 做一些副作用。注入 css 自然不必说了，而销毁 css 只要找到注入的那段引用进行销毁即可，具体可以看这个 代码片段。
+
+DOM 副作用修改 / 监听场景有一些现成的库了，从名字上就能看出来用法： document-visibility、 network-status、 online-status、 window-scroll-position、 window-size、 document-title。
+组件辅助
+Hooks 还可以增强组件能力，比如拿到并监听组件运行时宽高等。
+
+#### 获取组件宽高
+
+效果：通过调用 useComponentSize 拿到某个组件 ref 实例的宽高，并且在宽高变化时，rerender 并拿到最新的宽高。
+
+```js
+import React, { useLayoutEffect, useState, useRef } from 'react';
+
+function getSize(el) {
+  if (!el) {
+    return {};
+  }
+
+  return {
+    width: el.offsetWidth,
+    height: el.offsetHeight,
+  };
+}
+
+function useComponentSize(ref) {
+  const [ComponentSize, setComponentSize] = useState(getSize(ref.current));
+
+  function handleResize() {
+    if (ref && ref.current) {
+      setComponentSize(getSize(ref.current));
+    }
+  }
+
+  useLayoutEffect(() => {
+    handleResize();
+
+let resizeObserver = new ResizeObserver(() => handleResize());
+resizeObserver.observe(ref.current);
+
+return () => {
+  resizeObserver.disconnect(ref.current);
+  resizeObserver = null;
+};
+
+  }, []);
+  return ComponentSize;
+}
+
+export default function Demo() {
+  const ref = useRef(null);
+  const componentSize = useComponentSize(ref);
+  return (
+    <>
+      {componentSize.width}
+
+      <textarea ref={ref} />
+
+    </>
+  );
+}
+```
+
+#### 拿到组件 onChange 抛出的值 
+
+效果：通过 useInputValue() 拿到 Input 框当前用户输入的值，而不是手动监听 onChange 再腾一个 otherInputValue 和一个回调函数把这一堆逻辑写在无关的地方。
+
+```js
+import React, { useState, useCallback } from 'react';
+
+function useInputValue(initialValue) {
+  const [value, setValue] = useState(initialValue);
+  const onChange = useCallback(function(e) {
+    setValue(e.currentTarget.value);
+  }, []);
+  return {
+    value,
+    onChange,
+  };
+}
+
+export default function Demo() {
+  const name = useInputValue('jjsun');
+  return (
+    <>
+      {name.value}
+      <input {...name} />
+    </>
+  );
+}
+
+```
+
+
+
 ### hooks原理
 
 #### function组件和class组件本质的区别
@@ -5659,9 +6115,23 @@ function updateRef(initialValue){
 -   真实DOM∶ 生成HTML字符串＋ 重建所有的DOM元素
 -   Virtual DOM∶ 生成vNode＋ DOMDiff＋必要的DOM更新
 
-Virtual DOM的更新DOM的准备工作耗费更多的时间，也就是JS层面，相比于更多的DOM操作它的消费是极其便宜的。尤雨溪在社区论坛中说道∶ 框架给你的保证是，你不需要手动优化的情况下，我依然可以给你提供过得去的性能。 **（2）跨平台** Virtual DOM本质上是JavaScript的对象，它可以很方便的跨平台操作，比如服务端渲染、uniapp等。
+Virtual DOM的更新DOM的准备工作耗费更多的时间，也就是JS层面，相比于更多的DOM操作它的消费是极其便宜的。尤雨溪在社区论坛中说道∶ 框架给你的保证是，你不需要手动优化的情况下，我依然可以给你提供过得去的性能。 
+
+**（2）跨平台** Virtual DOM本质上是JavaScript的对象，它可以很方便的跨平台操作，比如服务端渲染、uniapp等。
 
 ### 2\. React diff 算法的原理是什么？
+
+vdom 时间复杂度O(n^3)优化到O(n)
+
+传统的diff算法
+
+两棵树中的节点一一进行对比的复杂度为`O(n^2)，树1上的点1要遍历树2上的所有的点，树1上的点2也要遍历树2的所有点，以此类推，复杂度为O(n^2)`。如果在比较过程中发现树1（也就是旧树）上的一个点A在树2（新树）上没有找到，点A会被删掉，在老diff算法里点A被删后的空位，需要遍历树2上的所有点去找到一个可以填充它，复杂度为O(n)。
+
+**1.只比较同一层级，不跨级比较**
+
+**2.tab不相同，则直接删掉重建，不再深度比较**
+
+**3.tag和key，两者都相同，则认为是同一节点，不再深度比较**
 
 实际上，diff 算法探讨的就是虚拟 DOM 树发生变化后，生成 DOM 树更新补丁的方式。它通过对比新旧两株虚拟 DOM 树的变更差异，将更新补丁作用于真实 DOM，以最小成本完成视图更新。 
 
@@ -5673,7 +6143,7 @@ Virtual DOM的更新DOM的准备工作耗费更多的时间，也就是JS层面�
 -   当虚拟 DOM 发生变化后，就会根据差距计算生成 patch，这个 patch 是一个结构化的数据，内容包含了增加、更新、移除等；
 -   根据 patch 去更新真实的 DOM，反馈到用户的界面上。
 
-![image-20220701214755433](https://s2.loli.net/2022/07/01/9fF5gvNd26pWCcm.png)
+![image-20220701214755433](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs9fF5gvNd26pWCcm.png)
 
  一个简单的例子：
 
@@ -5988,7 +6458,7 @@ SPN、SRT、HRRN都需要对进程时间进行评估和统计，实现比较复�
 
 反馈法仍然可能导致长进程饥饿，所以操作系统可以统计长进程的等待时间，当等待时间超过一定的阈值，可以选择提高它们的优先级。
 
-![img](https://s2.loli.net/2022/08/07/GhC8L3Fj7cQUHYA.webp)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsGhC8L3Fj7cQUHYA.webp)
 
 
 
@@ -6218,7 +6688,7 @@ export const Deletion = /*              */ 0b0000000001000
 #### Fiber 架构对生命周期的影响
 
 
-![d8eb7f64f3f94a9f8038949001284385](https://s2.loli.net/2022/07/07/sdbO71P4LqIu295.png)
+![d8eb7f64f3f94a9f8038949001284385](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgssdbO71P4LqIu295.png)
 
 1. render 阶段：纯净且没有副作用，可能会被 React 暂停、终止或重新启动。
 2. pre-commit 阶段：可以读取 DOM。
@@ -6714,11 +7184,11 @@ export default function ChildB({text, count}) {
 
 渲染 App 组件，我们可以看到初次渲染时，renderText 和 renderCount 都执行了，控制台输出如下图所示：
 
-![Drawing 6.png](https://s0.lgstatic.com/i/image/M00/8B/D3/CgqCHl_ga_SAeZvVAACbMQxPKsc444.png)
+![Drawing 6.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsCgqCHl_ga_SAeZvVAACbMQxPKsc444.png)
 
 点击右边按钮，对 count 进行修改，修改后的界面会发生如下的变化：
 
-![Drawing 7.png](https://s0.lgstatic.com/i/image2/M01/03/AA/CgpVE1_ga_yAZ5u-AADTkxhPMO8352.png)
+![Drawing 7.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsCgpVE1_ga_yAZ5u-AADTkxhPMO8352.png)
 
 可以看出，由于 count 发生了变化，因此 useMemo 针对 renderCount 的逻辑进行了重计算。而 text 没有发生变化，因此 renderText 的逻辑压根没有执行。
 
@@ -6757,7 +7227,7 @@ React 17 中没有新特性，这是由它的定位决定的。React 17 的定�
 
 #### 组件间通信方式
 
-![image.png](https://s2.loli.net/2022/08/07/Hyk8m7p5xJhfZto.webp)
+![image.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsHyk8m7p5xJhfZto.webp)
 
 #### props的几种模式
 
@@ -6853,7 +7323,7 @@ const Index = ()=>{
 
 对于组件来说，任何组件都可以通过约定的方式从 store 读取到全局的状态，任何组件也都可以通过合理地派发 action 来修改全局的状态。Redux 通过提供一个统一的状态容器，使得数据能够自由而有序地在任意组件之间穿梭。
 
-![image.png](https://s2.loli.net/2022/08/07/AU3YtWJ8fHc4DsT.webp)
+![image.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsAU3YtWJ8fHc4DsT.webp)
 
 1.使用 createStore 来完成 store 对象的创建
 
@@ -6914,7 +7384,7 @@ store.dispatch(action)
 
 Context 提供了一个无需为每层组件手动添加 props，就能在组件树间进行数据传递的方法。
 
-![image.png](https://s2.loli.net/2022/08/07/lYZIyvcsm3EPxdD.webp)
+![image.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgslYZIyvcsm3EPxdD.webp)
 
 基本用法：
 
@@ -7116,7 +7586,7 @@ console.log(`object`, myEvent.eventMap)
 
 ```
 
-![image.png](https://s2.loli.net/2022/08/07/nFzy1pr5CatVZ3h.webp)
+![image.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsnFzy1pr5CatVZ3h.webp)
 
 ##### 在React中应用
 
@@ -7221,7 +7691,7 @@ export default B;
 
 ```
 
-![image.png](https://s2.loli.net/2022/08/07/vImzEbAJyiRTwoe.webp)
+![image.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsvImzEbAJyiRTwoe.webp)
 
 
 
