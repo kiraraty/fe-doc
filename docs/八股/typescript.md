@@ -45,11 +45,11 @@ TypeScript 中引入了模块的概念，可以把声明、数据、函数和类
 
 不过，静态类型也消除了类型不安全的隐患，因为在编译期间就做了类型检查，就不会出现对 string 做了乘除，调用了 Date 的 exec 方法这类问题。
 
-![055d32fce2ee40bda9b0c617b9d4a645](https://s2.loli.net/2022/07/09/bvZ8lRuNa6cEthm.png)
+![055d32fce2ee40bda9b0c617b9d4a645](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsbvZ8lRuNa6cEthm.png)
 
 ## 基本类型
 
-![image-20220709112043012](https://s2.loli.net/2022/07/09/8ucorEPmivK49C7.png)
+![image-20220709112043012](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs8ucorEPmivK49C7.png)
 
 ### 布尔值
 

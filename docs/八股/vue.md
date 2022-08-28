@@ -961,7 +961,7 @@ getAndInvoke 函数会重新计算，然后对比新旧值，在三种情况下(
 
 基于Watcher类，有一个lazy属性，可以进行缓存作用，如果lazy是true证明是计算属性，直接返回数据，不用继续求值，这就是缓存值的原理
 
-![image-20220621085011422](https://s2.loli.net/2022/06/21/FSHsPfdICcehav7.png)
+![image-20220621085011422](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsFSHsPfdICcehav7.png)
 
 1.遍历计算属性，并把每个属性的方法赋给userDef
 
@@ -1674,7 +1674,7 @@ function __watcher(fn){
 
 我们知道在Vue中 Child 组件的标签 的中间是不可以包着什么的 。
 
-![image-20220714223514708](https://s2.loli.net/2022/07/14/ld6RJOhpcTbBPvN.png)
+![image-20220714223514708](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsld6RJOhpcTbBPvN.png)
 
 可是往往在很多时候我们在使用组件的时候总想在组件间外面自定义一些标签，vue新增了一种插槽机制，叫做作用域插槽。
 
@@ -1690,11 +1690,11 @@ function __watcher(fn){
 
 father.vue
 
-![image-20220621091100389](https://s2.loli.net/2022/06/21/2aHchKi93d7uADY.png)
+![image-20220621091100389](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs2aHchKi93d7uADY.png)
 
 child.vue
 
-![image-20220621091115897](https://s2.loli.net/2022/06/21/6AZtGqxIcYzTF7S.png)
+![image-20220621091115897](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs6AZtGqxIcYzTF7S.png)
 
 匿名插槽，name的属性对应的是 default 也可以不写就是默认的意思啦；
 
@@ -1710,21 +1710,21 @@ child.vue
 
 father.vue
 
-![image-20220621091140171](https://s2.loli.net/2022/06/21/FuYa7PyUZ9EHipx.png)
+![image-20220621091140171](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsFuYa7PyUZ9EHipx.png)
 
 child.vue
 
-![image-20220621091151645](https://s2.loli.net/2022/06/21/XKOCJqS7DVU1GhM.png)
+![image-20220621091151645](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsXKOCJqS7DVU1GhM.png)
 
 多个具名插槽的使用 多个具名插槽，插槽的位置不是使用插槽的位置而定的，是在定义的时候的位置来替换的(子组件里面确定)
 
 father.vue
 
-![image-20220621091208254](https://s2.loli.net/2022/06/21/CSzm39cRM2WVQ4q.png)
+![image-20220621091208254](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsCSzm39cRM2WVQ4q.png)
 
 child.vue
 
-![image-20220621091217351](https://s2.loli.net/2022/07/14/HQG3KPIelOzysAR.png)
+![image-20220621091217351](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsHQG3KPIelOzysAR.png)
 
 #### 作用域插槽
 
@@ -1744,11 +1744,11 @@ v-solt可以解构接收 解构接收的字段要和传的字段一样才可以
 
 子组件`<slot name="footer" v-bind:users='user1'>`对应父组件里面  `v-slot:footer="slotProps"`   父组件可以通过slotProps.users来取值user1
 
-![image-20220621091229483](https://s2.loli.net/2022/06/21/qgjwZ1r2EcJOsmC.png)
+![image-20220621091229483](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsqgjwZ1r2EcJOsmC.png)
 
 效果图
 
-![image-20220621091246267](https://s2.loli.net/2022/06/21/UAzp31qG6lXSrhn.png)
+![image-20220621091246267](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsUAzp31qG6lXSrhn.png)
 
 ### 11.如何保存当前页面状态，(keep-alive)原理是什么？
 
@@ -2058,7 +2058,35 @@ LRU 缓存策略∶ 从内存中找出最久未使用的数据并置换新的数
 
 由于 JavaScript 的限制，Vue 无法检测到以下数组变动：
 
-![image.png](https://s2.loli.net/2022/08/01/nA6bieGWTtERalj.webp)
+数组通过索引值修改内容 vm.arr[1] = ‘aa’
+
+```js
+// 数组值虽然变化了，但是并没有相应到页面上，此时的数组值其实是 ['aaa','b','c']
+btnClick(){
+  this.letters[0]('aaa');
+
+  // 替换方法一：splice()
+  this.letters.splice(0,1,'aaa')
+  // 替换方法二：Vue.set()。vue内部函数（这个也是响应式的）
+  Vue.set(this.letters,0,'aaa')
+}
+```
+
+数组长度的变化 vm.arr.length = 4
+
+![image.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsnA6bieGWTtERalj.webp)
+
+Vue.$set(target,key,value)：可以动态的给数组、对象添加和修改数据，并更新视图中数据的显示。
+
+Vue.set(target, key/index, value) 向响应式对象中添加一个属性，并确保这个新属性同样是响应式的，且触发视图更新。它必须用于向响应式对象上添加新属性，因为 Vue 无法探测普通的新增属性 (比如 this.obj.newProperty = 'hi')
+
+- `Vue.set()` 方法内部是一个循环处理的过程，如果当前新增监听的是一个对象，那就继续调用自己形成一个递归，直到最后的**子属性**是一个`数组/非对象类型`的参数后，递归结束，然后为自己添加监听，在监听中又会触发其他相关的方法(Dep 中订阅的事件就会被触发)。形成我们常见的双向数据绑定
+
+Vue.set( ) 是将 set 函数绑定在 Vue 构造函数上，this.$set() 是将 set 函数绑定在 Vue原型上。
+
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs5420598-b147c6f4580c131d.png)
+
+
 
 对于响应式数组，当浏览器支持_proto_属性时，使用push等方法时先从其原型arrayMethods上寻找push方法，也就是重写后的方法，处理之后数组变化会通知到其订阅者，更新页面，当在arrayMethods上查询不到时会向上在Array.prototype上查询；
 
@@ -2284,19 +2312,19 @@ v-cloak 指令设置样式，样式会在 Vue 实例编译结束时，从 HTML �
 
 ### 18.修改后页面更新渲染的过程
 
-![在这里插入图片描述](https://s2.loli.net/2022/07/29/5EZMmAjgp3Olv1w.png)
+![在这里插入图片描述](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs5EZMmAjgp3Olv1w.png)
 
-![img](https://s2.loli.net/2022/07/29/KWtlC9SIxfFOkhA.png)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsKWtlC9SIxfFOkhA.png)
 
 一、初始化
 
- ![img](https://s2.loli.net/2022/07/29/OP6ZFBQD1WRbMay.png)
+ ![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsOP6ZFBQD1WRbMay.png)
 
 在 new Vue() 之后。 Vue 会调用 _init 函数进行初始化，也就是这里的 init 过程，它会初始化生命周期、事件、 props、 methods、 data、 computed 与 watch 等。
 
 二、模板编译
 
- ![img](https://s2.loli.net/2022/07/29/QH8LvVxN1BediCp.png)
+ ![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsQH8LvVxN1BediCp.png)
 
 上面就是使用vue template complier（compile编译可以分成 parse、optimize 与 generate 三个阶段），将模板编译成render函数，执行render函数后，变成vnode。
 
@@ -2318,7 +2346,7 @@ generate 是将 AST 转化成 render function 字符串的过程，得到结果�
 
 三、vue的响应式原理：
 
- ![img](https://s2.loli.net/2022/07/29/tzy3aGYQmgcwK5n.png)
+ ![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgstzy3aGYQmgcwK5n.png)
 
 前置知识: 
 
@@ -2347,7 +2375,7 @@ VDOM-用JS模拟DOM结构，计算出最小的变更，操作DOM
 
 五、patch函数，diff算法上台
 
- ![img](https://s2.loli.net/2022/07/29/gKfwp6R9qtZ4okX.png)
+ ![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsgKfwp6R9qtZ4okX.png)
 
 这部分涉及算法
 
@@ -2362,7 +2390,7 @@ patch函数：
 
 patch的核心就是diff算法，diff算法通过同层的树节点进行比较而非对树进行逐层搜索遍历的方式，所以时间复杂度只有o(n)，比较高效，我们看下图所示：
 
- ![img](https://s2.loli.net/2022/07/29/9Sz7lEO5gQjtpi2.png)
+ ![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs9Sz7lEO5gQjtpi2.png)
 
 我们看下patch这个函数的demo:
 
@@ -2444,7 +2472,7 @@ updateChildren函数
 
 下面是关键代码：
 
- ![img](https://s2.loli.net/2022/07/29/SwqaBmjKc9NxPIA.png)
+ ![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsSwqaBmjKc9NxPIA.png)
 
 直接看我的代码注释吧！
 
@@ -2630,7 +2658,7 @@ function getUrl (repo, clone) {
 
 
 
-![img](https://s2.loli.net/2022/08/01/9MhlgVd6PuGSIY2.webp)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsimgs9MhlgVd6PuGSIY2.webp)
 
 
 
@@ -2895,7 +2923,7 @@ function renderTemplateFiles () {
 
 ### 22.render函数使用
 
-![img](https://s2.loli.net/2022/08/01/RdTW6LmoK5j8wBx.webp)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsRdTW6LmoK5j8wBx.webp)
 
 
 
@@ -3013,7 +3041,7 @@ HTML代码:
 
 
 
-![img](https://s2.loli.net/2022/08/01/yZqHADgsTkrjdLO.webp)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsyZqHADgsTkrjdLO.webp)
 
 
 
@@ -3049,7 +3077,7 @@ Vue支持我们通过`data`参数传递一个JavaScript对象作为组件数据,
 
 Vue创建了一层`Watcher`层, 在组件渲染的过程中把属性记录为依赖, 当依赖项的`setter`被调用时, 会通知`Watcher`重新计算, 从而使它关联的组件得以更新.
 
-![img](https://s2.loli.net/2022/08/01/tRAXZKzB6hrYju8.webp)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgstRAXZKzB6hrYju8.webp)
 
 
 
@@ -3091,7 +3119,7 @@ render(createElement){
 
 
 
-![img](https://s2.loli.net/2022/08/01/4R8GYfyKgCltSzb.webp)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs4R8GYfyKgCltSzb.webp)
 
 
 
@@ -3104,7 +3132,7 @@ render(createElement){
 
 
 
-![img](https://s2.loli.net/2022/08/01/3MULJGrseoOEAXa.webp)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs3MULJGrseoOEAXa.webp)
 
 
 
@@ -3187,7 +3215,7 @@ let app = new Vue({
 
 **h函数就是vue中的createElement方法，这个函数作用就是创建虚拟dom，追踪dom变化**
 
-![img](https://img-blog.csdnimg.cn/20190715150357696.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQyNzc4MDAx,size_16,color_FFFFFF,t_70)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs20190715150357696.png)
 
 **上边代码：最终html代码会被编译成h函数的渲染形式。返回的是一个虚拟DOM对象，通过diff算法，来追踪自己要如何改变真实DOM**
 
@@ -3221,7 +3249,7 @@ createElement也是一个函数，它接受三个参数
 
 vue-template-complier  可以将template转换成  withIthis){  return h('p',[...])  }  
 
-![DOM的流程图 (1).png](https://s2.loli.net/2022/08/06/PWVyCU5BtrkQKjS.webp)
+![DOM的流程图 (1).png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsPWVyCU5BtrkQKjS.webp)
 
 #### createElement 参数
 
@@ -3253,7 +3281,6 @@ Vue.component('custom-element', {
       return createElement(elFn())
     }
 })
-复制代码
 ```
 
 以上代码, 等价于:
@@ -3267,7 +3294,6 @@ Vue.component('custom-element', {
     name: 'custom-element'
   }
 </script>
-复制代码
 ```
 
 ##### 第2个参数: `{ Object }`, 可选
@@ -3440,7 +3466,7 @@ Vue.component('custom-element', {
 
 createElement解析流程图
 
-![img](https://s2.loli.net/2022/08/01/cAN4GmIKa7wFWbp.webp)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgscAN4GmIKa7wFWbp.webp)
 
 
 
@@ -3582,11 +3608,11 @@ Vue渲染中, 核心关键的几步是:
 
 [原理](https://juejin.cn/post/6997776616294187015)
 
-![5f17cedf4e974df89fb807ff961ae00b](https://s2.loli.net/2022/06/20/75EQRtOALMcUkC2.png)
+![5f17cedf4e974df89fb807ff961ae00b](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs75EQRtOALMcUkC2.png)
 
 #### 初始化及挂载
 
-![img](https://s2.loli.net/2022/08/01/Gtsq3B1RCFEcgAT.png)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsGtsq3B1RCFEcgAT.png)
 
 在 `new Vue()` 之后。 Vue 会调用 `_init` 函数进行初始化，也就是这里的 `init` 过程，它会初始化生命周期、事件、 props、 methods、 data、 computed 与 watch 等。其中最重要的是通过 `Object.defineProperty` 设置 `setter` 与 `getter` 函数，用来实现「**响应式**」以及「**依赖收集**」，后面会详细讲到，这里只要有一个印象即可。
 
@@ -3682,7 +3708,7 @@ export function initMixin (Vue: Class<Component>) {
 
 compile编译可以分成 `parse`、`optimize` 与 `generate` 三个阶段，最终需要得到 render function。
 
-![img](https://s2.loli.net/2022/08/01/toyDrG7Fz8IH5Mh.png)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgstoyDrG7Fz8IH5Mh.png)
 
 ##### parse
 
@@ -3702,13 +3728,13 @@ compile编译可以分成 `parse`、`optimize` 与 `generate` 三个阶段，最
 
 接下来也就是 Vue.js 响应式核心部分。
 
-![img](https://s2.loli.net/2022/08/01/HNEGnT9c3Qqoz2F.png)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsHNEGnT9c3Qqoz2F.png)
 
 这里的 `getter` 跟 `setter` 已经在之前介绍过了，在 `init` 的时候通过 `Object.defineProperty` 进行了绑定，它使得当被设置的对象被读取的时候会执行 `getter` 函数，而在当被赋值的时候会执行 `setter` 函数。
 
 当 render function 被渲染的时候，因为会读取所需对象的值，所以会触发 `getter` 函数进行「**依赖收集**」，「**依赖收集**」的目的是将观察者 Watcher 对象存放到当前闭包中的订阅者 Dep 的 subs 中。形成如下所示的这样一个关系。
 
-![img](https://s2.loli.net/2022/08/01/sxMCPi7qQw2ApmV.png)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgssxMCPi7qQw2ApmV.png)
 
 在修改对象的值的时候，会触发对应的 `setter`， `setter` 通知之前「**依赖收集**」得到的 Dep 中的每一个 Watcher，告诉它们自己的值改变了，需要重新渲染视图。这时候这些 Watcher 就会开始调用 `update` 来更新视图，当然这中间还有一个 `patch` 的过程以及使用队列来异步更新的策略，这个我们后面再讲。
 
@@ -3742,7 +3768,7 @@ compile编译可以分成 `parse`、`optimize` 与 `generate` 三个阶段，最
 
 #### 更新视图
 
-![img](https://s2.loli.net/2022/08/01/An3LVpCH1BESxjO.png)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsAn3LVpCH1BESxjO.png)
 
 前面我们说到，在修改一个对象值的时候，会通过 `setter -> Watcher -> update` 的流程来修改对应的视图，那么最终是如何更新视图的呢？
 
@@ -3752,7 +3778,7 @@ compile编译可以分成 `parse`、`optimize` 与 `generate` 三个阶段，最
 
 #### 再看全局
 
-<img src="https://s2.loli.net/2022/08/01/ULjhe4DXv16xNl8.png" alt="img" style="zoom:50%;" />
+<img src="https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsULjhe4DXv16xNl8.png" alt="img" style="zoom:50%;" />
 
 ### 24.Vue性能优化
 
@@ -4241,7 +4267,7 @@ JavaScript 中对象和数组是通过引用传入的，所以对于一个数组
 单双向绑定，指的是`View`层和`Model`层之间的映射关系。
 `react`采取单向绑定
 
-![img](https://s2.loli.net/2022/08/01/nyXa5egWtK1iG8A.webp)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsnyXa5egWtK1iG8A.webp)
 
 
 
@@ -4260,7 +4286,7 @@ JavaScript 中对象和数组是通过引用传入的，所以对于一个数组
  `Vue`与`React`都是单向数据流的模型，虽然`vue`有双向绑定`v-model`，但是`vue`和`react`父子组件之间数据传递，仍然还是遵循单向数据流的，父组件可以向子组件传递`props`，但是子组件不能修改父组件传递来的`props`，子组件只能通过事件通知父组件进行数据更改
 
 
-![img](https://s2.loli.net/2022/08/01/OcgMQGnyUfeXZbd.webp)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsOcgMQGnyUfeXZbd.webp)
 
 通过单向数据流的模型，所有状态的改变可记录、可跟踪，相比于双向数据流可加容易维护与定位问题
 
@@ -4286,7 +4312,7 @@ JavaScript 中对象和数组是通过引用传入的，所以对于一个数组
 
 总得来说，单双向数据绑定与数据流是两个不同维度的概念，数据绑定是`View`与`Model`之间的映射关系，数据流指的是组件之间的数据流动。因此，单向数据流也可有双向绑定，双向数据流也可以有双向绑定，两者不应该混为一谈
 
-![img](https://s2.loli.net/2022/08/01/q3NVdyOxcBLACDb.webp)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsq3NVdyOxcBLACDb.webp)
 
 ### 27.自定义指令
 
@@ -7843,7 +7869,7 @@ function install (app, injectKey) {
 
 [Vuex源码分析](https://juejin.cn/post/6895980141466386440)
 
-#### Vuex的使用
+
 
 ```js
 // store/index
@@ -7900,7 +7926,219 @@ new Vue({
 
   **3. 在 Vue 的实例化时，添加 store 属性；**
 
+Vuex是专门为Vuejs应用程序设计的**状态管理工具**。它采用集中式存储管理应用的所有组件的状态，并以相应的规则保证状态以一种可预测的方式发生变化。
 
+#### **1、Vuex的构成和使用**
+
+
+
+![img](https://pic4.zhimg.com/v2-f330e46f1a97cfe60b8914802688083b_r.jpg)
+
+
+
+由上图，我们可以看出Vuex有以下几个部分构成：
+
+**1）state**
+
+state是存储的单一状态，是存储的基本数据。
+
+**2）Getters**
+
+getters是store的计算属性，对state的加工，是派生出来的数据。就像computed计算属性一样，getter返回的值会根据它的依赖被缓存起来，且只有当它的依赖值发生改变才会被重新计算。
+
+**3）Mutations**
+
+mutations提交更改数据，使用store.commit方法更改state存储的状态。（mutations同步函数）
+
+**4）Actions**
+
+actions像一个装饰器，提交mutation，而不是直接变更状态。（actions可以包含任何异步操作）
+
+**5）Module**
+
+Module是store分割的模块，每个模块拥有自己的state、getters、mutations、actions。
+
+```js
+const moduleA = {
+  state: { ... },
+  mutations: { ... },
+  actions: { ... },
+  getters: { ... }
+}
+
+const moduleB = {
+  state: { ... },
+  mutations: { ... },
+  actions: { ... }
+}
+
+const store = new Vuex.Store({
+  modules: {
+    a: moduleA,
+    b: moduleB
+  }
+})
+
+store.state.a // -> moduleA 的状态
+store.state.b // -> moduleB 的状态
+```
+
+**6）辅助函数**
+
+Vuex提供了mapState、MapGetters、MapActions、mapMutations等辅助函数给开发在vm中处理store。
+
+
+
+![img](https://pic1.zhimg.com/v2-90437dee8c4d7b465b2d0e6e07778ff0_r.jpg)
+
+
+
+```text
+import Vuex from 'vuex';
+Vue.use(Vuex); // 1. vue的插件机制，安装vuex
+let store = new Vuex.Store({ // 2.实例化store，调用install方法
+    state,
+    getters,
+    modules,
+    mutations,
+    actions,
+    plugins
+});
+new Vue({ // 3.注入store, 挂载vue实例
+    store,
+    render: h=>h(app)
+}).$mount('#app');
+```
+
+**Vuex的设计思想**
+
+Vuex的设计思想，借鉴了Flux、Redux，将数据存放到全局的store，再将store挂载到每个vue实例组件中，利用Vue.js的细粒度数据响应机制来进行高效的状态更新。
+
+看了Vuex设计思想，心里难免会有这样的疑问：
+
+- vuex的store是如何挂载注入到组件中呢？
+- vuex的state和getters是如何映射到各个组件实例中响应式更新状态呢？
+
+#### 2.**Vuex的原理解析**
+
+我们来看下vuex的源码，分析看看上面2个疑惑的问题：
+
+**疑问1：vuex的store是如何挂载注入到组件中呢？**
+
+1、在vue项目中先安装vuex，核心代码如下：
+
+```text
+import Vuex from 'vuex';
+Vue.use(vuex);// vue的插件机制
+```
+
+2、利用vue的[插件机制](https://cn.vuejs.org/v2/guide/plugins.html)，使用Vue.use(vuex)时，会调用vuex的install方法，装载vuex，install方法的代码如下：
+
+```text
+export function install (_Vue) {
+  if (Vue && _Vue === Vue) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.error(
+        '[vuex] already installed. Vue.use(Vuex) should be called only once.'
+      )
+    }
+    return
+  }
+  Vue = _Vue
+  applyMixin(Vue)
+}
+```
+
+3、applyMixin方法使用vue[混入机制](https://cn.vuejs.org/v2/guide/mixins.html)，vue的生命周期beforeCreate钩子函数前混入vuexInit方法，核心代码如下：
+
+```text
+Vue.mixin({ beforeCreate: vuexInit });
+
+function vuexInit () {
+    const options = this.$options
+    // store injection
+    if (options.store) {
+      this.$store = typeof options.store === 'function'
+        ? options.store()
+        : options.store
+    } else if (options.parent && options.parent.$store) {
+      this.$store = options.parent.$store
+    }
+}
+```
+
+分析源码，我们知道了vuex是利用vue的mixin混入机制，在beforeCreate钩子前混入vuexInit方法，vuexInit方法实现了store注入vue组件实例，并注册了vuex store的引用属性$store。store注入过程如下图所示：
+
+![img](https://pic4.zhimg.com/v2-a8b969f8771a1fc13b7cedfdfe86f0e7_r.jpg)
+
+
+
+**疑问2：vuex的state和getters是如何映射到各个组件实例中响应式更新状态呢？**
+
+store实现的源码在src/store.js
+
+1、我们在源码中找到resetStoreVM核心方法：
+
+```text
+function resetStoreVM (store, state, hot) {
+  const oldVm = store._vm
+
+  // 设置 getters 属性
+  store.getters = {}
+  const wrappedGetters = store._wrappedGetters
+  const computed = {}
+  // 遍历 wrappedGetters 属性
+  forEachValue(wrappedGetters, (fn, key) => {
+    // 给 computed 对象添加属性
+    computed[key] = partial(fn, store)
+    // 重写 get 方法
+    // store.getters.xx 其实是访问了store._vm[xx]，其中添加 computed 属性
+    Object.defineProperty(store.getters, key, {
+      get: () => store._vm[key],
+      enumerable: true // for local getters
+    })
+  })
+
+  const silent = Vue.config.silent
+  Vue.config.silent = true
+  // 创建Vue实例来保存state，同时让state变成响应式
+  // store._vm._data.$$state = store.state
+  store._vm = new Vue({
+    data: {
+      $$state: state
+    },
+    computed
+  })
+  Vue.config.silent = silent
+
+  // 只能通过commit方式更改状态
+  if (store.strict) {
+    enableStrictMode(store)
+  }
+}
+```
+
+从上面源码，我们可以看出Vuex的state状态是响应式，是借助vue的data是响应式，将state存入vue实例组件的data中；Vuex的getters则是借助vue的计算属性computed实现数据实时监听。
+
+computed计算属性监听data数据变更主要经历以下几个过程：
+
+![img](https://pic3.zhimg.com/v2-2730644102b66eef140110b814a90496_r.jpg)
+
+
+
+**小结**
+
+Vuex是通过全局注入store对象，来实现组件间的状态共享。在大型复杂的项目中（多级组件嵌套），需要实现一个组件更改某个数据，多个组件自动获取更改后的数据进行业务逻辑处理，这时候使用vuex比较合适。假如只是多个组件间传递数据，使用vuex未免有点大材小用，其实只用使用组件间常用的通信方法即可。
+
+Vue组件简单常用的通信方式有以下几种：
+
+1、父子通信：
+
+父向子传值，通过props；子向父传值通过events ($emit)；父调用子方法通过ref；provide / inject。
+
+2、兄弟通信：bus
+
+3、跨级嵌套通信：bus；provide / inject等。
 
 
 
@@ -8078,6 +8316,427 @@ export default {
 - 生命周期   名称发生变化  使用setup    在 beforeCreate 钩子之前调用
 - diff算法 
 
+#### 1. vue2和vue3响应式原理发生了改变
+
+**vue2** 的双向数据绑定是利用ES5 的一个 [API](https://so.csdn.net/so/search?q=API&spm=1001.2101.3001.7020) `Object.definePropert()`对数据进行劫持 结合 发布订阅模式的方式来实现的。
+
+**vue3** 中使用了 [es6](https://so.csdn.net/so/search?q=es6&spm=1001.2101.3001.7020) 的 `Proxy`API 对数据代理。
+
+> 相比于vue2.x，使用proxy的优势如下
+>
+> 1. defineProperty只能监听某个属性，不能对全对象监听
+> 2. 可以省去for in、闭包等内容来提升效率（直接绑定整个对象即可）
+> 3. 可以监听数组，不用再去单独的对数组做特异性操作 vue3.x可以检测到数组内部数据的变化
+
+在vue2中只需要在data里定义数据，就可以实现数据层-视图层的双向绑定，而在vue3中使用ref接受一个内部值并返回一个响应式且可变的 ref 对象。ref 对象具有指向内部值的单个 property.value
+
+reactive的作用和ref的作用是类似的，都是将数据变成可相应的对象，其实ref的底层其实利用了reactive。 两者的区别，ref包装的对象需要.value ,而reactive中的不需要
+
+#### 2. Vue3支持碎片(Fragments)
+
+就是说在组件可以拥有多个根节点。
+**vue2**
+
+```html
+<template>
+  <div class='form-element'>
+  <h2> {{ title }} </h2>
+  </div>
+</template>
+```
+
+**vue3**
+
+```html
+<template>
+  <div class='form-element'>
+  </div>
+   <h2> {{ title }} </h2>
+</template>
+```
+
+#### 3. Composition API
+
+Vue2与Vue3 `最大的`区别 — Vue2使用选项类型API（Options API）对比Vue3合成型API（Composition API）
+
+> 旧的选项型API在代码里分割了不同的属性: data,computed属性，methods，等等。新的合成型API能让我们用方法（function）来分割，相比于旧的API使用属性来分组，`这样代码会更加简便和整洁`。
+
+**vue2**
+
+```js
+export default {
+  props: {
+    title: String
+  },
+  data () {
+    return {
+      username: '',
+      password: ''
+    }
+  },
+  methods: {
+    login () {
+      // 登陆方法
+    }
+  },
+  components:{
+            "buttonComponent":btnComponent
+        },
+  computed:{
+	  fullName(){
+	    return this.firstName+" "+this.lastName;     
+	  }
+}
+ 
+}
+```
+
+**vue3**
+
+```js
+export default {
+  props: {
+    title: String
+  },
+  
+  setup () {
+    const state = reactive({ //数据
+      username: '',
+      password: '',
+      lowerCaseUsername: computed(() => state.username.toLowerCase()) //计算属性
+    })
+     //方法
+    const login = () => {
+      // 登陆方法
+    }
+    return { 
+      login,
+      state
+    }
+  }
+}
+```
+
+#### 4. 建立数据 data
+
+**Vue2 - 这里把数据放入data属性中**
+
+```js
+export default {
+  props: {
+    title: String
+  },
+  data () {
+    return {
+      username: '',
+      password: ''
+    }
+  }
+}
+```
+
+在Vue3.0，我们就需要使用一个新的setup()方法，此方法在组件初始化构造的时候触发。
+
+使用以下三步来建立反应性数据:
+
+1. 从vue引入reactive
+2. 使用reactive()方法来声名我们的数据为响应性数据
+3. 使用setup()方法来返回我们的响应性数据，从而我们的template可以获取这些响应性数据
+
+```js
+import { reactive } from 'vue'
+
+export default {
+  props: {
+    title: String
+  },
+  setup () {
+    const state = reactive({
+      username: '',
+      password: ''
+    })
+
+    return { state }
+  }
+}
+```
+
+template使用，可以通过state.username和state.password获得数据的值。
+
+```html
+<template>
+  <div>
+    <h2> {{ state.username }} </h2>
+  </div>
+</template>
+```
+
+#### 5. 生命周期钩子 — Lifecyle Hooks
+
+```js
+Vue2--------------vue3
+beforeCreate  -> setup()
+created       -> setup()
+beforeMount   -> onBeforeMount
+mounted       -> onMounted
+beforeUpdate  -> onBeforeUpdate
+updated       -> onUpdated
+beforeDestroy -> onBeforeUnmount
+destroyed     -> onUnmounted
+activated     -> onActivated
+deactivated   -> onDeactivated
+```
+
+1. setup() :开始创建组件之前，在beforeCreate和created之前执行。创建的是data和method
+2. onBeforeMount() : 组件挂载到节点上之前执行的函数。
+3. onMounted() : 组件挂载完成后执行的函数。
+4. onBeforeUpdate(): 组件更新之前执行的函数。
+5. onUpdated(): 组件更新完成之后执行的函数。
+6. onBeforeUnmount(): 组件卸载之前执行的函数。
+7. onUnmounted(): 组件卸载完成后执行的函数
+
+- 若组件被`<keep-alive>`包含，则多出下面两个钩子函数。
+
+1. onActivated(): 被包含在中的组件，会多出两个生命周期钩子函数。被激活时执行 。
+2. onDeactivated(): 比如从 A组件，切换到 B 组件，A 组件消失时执行。
+
+#### 6.父子传参不同，setup() 函数特性
+
+总结：
+1、setup 函数时，它将接受两个参数：（props、context(包含attrs、slots、emit)）
+
+2、setup函数是处于 生命周期函数 beforeCreate 和 Created 两个钩子函数之前的函数
+
+3、执行 setup 时，组件实例尚未被创建（在 setup() 内部，this 不会是该活跃实例的引用，即不指向vue实例，Vue 为了避免我们错误的使用，直接将 `setup函数中的this修改成了 undefined`）
+
+4、与模板一起使用：需要返回一个对象 (在setup函数中定义的变量和方法最后都是需要 return 出去的 不然无法再模板中使用)
+
+5、使用渲染函数：可以返回一个渲染函数，该函数可以直接使用在同一作用域中声明的响应式状态
+
+**注意事项：**
+
+1、setup函数中不能使用this。Vue 为了避免我们错误的使用，直接将 `setup函数中的this修改成了 undefined`）
+
+2、setup 函数中的 props 是响应式的，当传入新的 prop 时，它将被更新。但是，因为 props 是响应式的，你`不能使用 ES6 解构`，因为它会消除 prop 的响应性。
+
+如果需要解构 prop，可以通过使用 setup 函数中的`toRefs` 来完成此操作：
+**父传子，props**
+
+```js
+import { toRefs } from 'vue'
+ 
+setup(props) {
+	const { title } = toRefs(props)
+ 
+	console.log(title.value)
+	 onMounted(() => {
+      console.log('title: ' + props.title)
+    })
+
+}
+```
+
+**子传父，事件 - Emitting Events**
+
+举例，现在我们想在点击提交按钮时触发一个login的事件。
+
+在 Vue2 中我们会调用到this.$emit然后传入事件名和参数对象。
+
+```js
+login () {
+      this.$emit('login', {
+        username: this.username,
+        password: this.password
+      })
+ }
+```
+
+在setup()中的第二个参数content对象中就有emit，这个是和this.$emit是一样的。那么我们只要在setup()接收第二个参数中使用分解对象法取出emit就可以在setup方法中随意使用了。
+
+然后我们在login方法中编写登陆事件
+另外：context 是一个普通的 JavaScript 对象，也就是说，它不是响应式的，这意味着你可以安全地对 context 使用 ES6 解构
+
+```js
+setup (props, { attrs, slots, emit }) {
+    // ...
+    const login = () => {
+      emit('login', {
+        username: state.username,
+        password: state.password
+      })
+    }
+
+    // ...
+}
+
+```
+
+3、 setup()内使用响应式数据时，需要通过.value获取
+
+```js
+import { ref } from 'vue'
+ 
+const count = ref(0)
+console.log(count.value) // 0
+```
+
+4、从 setup() 中返回的对象上的 property 返回并可以在模板中被访问时，它将自动展开为内部值。不需要在模板中追加 .value
+
+5、setup函数只能是同步的不能是异步的
+
+#### 7. vue3 Teleport瞬移组件
+
+Teleport一般被翻译成瞬间移动组件,实际上是不好理解的.我把他理解成"独立组件",
+他可以那你写的组件挂载到任何你想挂载的DOM上,所以是很自由很独立的
+以一个例子来看:编写一个弹窗组件
+
+```html
+<template>
+<teleport to="#modal">
+  <div id="center" v-if="isOpen">
+    <h2><slot>this is a modal</slot></h2>
+    <button @click="buttonClick">Close</button>
+  </div>
+</teleport>
+</template>
+<script lang="ts">
+
+export default {
+  props: {
+    isOpen: Boolean,
+  },
+  emits: {
+    'close-modal': null
+  },
+  setup(props, context) {
+    const buttonClick = () => {
+      context.emit('close-modal')
+    }
+    return {
+      buttonClick
+    }
+  }
+}
+</script>
+<style>
+  #center {
+    width: 200px;
+    height: 200px;
+    border: 2px solid black;
+    background: white;
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    margin-left: -100px;
+    margin-top: -100px;
+  }
+</style>
+```
+
+在app.vue中使用的时候跟普通组件调用是一样的
+
+```html
+<template>
+<div id="app">
+  <img alt="Vue logo" src="./assets/logo.png">
+  <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <HooksDemo></HooksDemo>
+  <button @click="openModal">Open Modal</button><br/>
+<modal :isOpen="modalIsOpen" @close-modal="onModalClose"> My Modal !!!!</modal>
+</div>
+  
+</template>
+<script>
+import HelloWorld from './components/HelloWorld.vue'
+import HooksDemo from './components/HooksDemo.vue'
+import Modal from './components/Modal.vue'
+import{ref} from 'vue'
+export default {
+  name: 'App',
+  components: {
+    HelloWorld,
+    HooksDemo,
+    Modal
+  },
+  setup() {
+    const modalIsOpen = ref(false)
+    const openModal = () => {
+      modalIsOpen.value = true
+    }
+    const onModalClose = () => {
+      modalIsOpen.value = false
+    }
+    return {
+      modalIsOpen,
+      openModal,
+      onModalClose
+    }
+  }
+}
+</script>
+
+<style>
+#app {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: #2c3e50;
+  margin-top: 60px;
+}
+</style>
+```
+
+要是在app.vue文件中使用的时候,modal是在app的 DOM节点之下的,父节点的dom结构和css都会给modal产生影响
+于是产生的问题
+
+1. modal被包裹在其它组件之中，容易被干扰
+2. 样式也在其它组件中，容易变得非常混乱
+
+Teleport 可以把modal组件渲染到任意你想渲染的外部Dom上,不必嵌套在#app中,这样就可以互不干扰了,可以把Teleport看成一个传送门,把你的组件传送到任何地方
+使用的时候 to属性可以确定想要挂载的DOM节点下面
+
+```html
+<template>
+  <teleport to="#modal">
+    <div id="center">
+      <h2>柏特better</h2>
+    </div>
+  </teleport>
+</template>
+
+12345678
+```
+
+在public文件夹下的index.html中增加一个节点
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <link rel="icon" href="<%= BASE_URL %>favicon.ico">
+    <title><%= htmlWebpackPlugin.options.title %></title>
+  </head>
+  <body>
+    <noscript>
+      <strong>We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
+    </noscript>
+    <div id="app"></div>
+    <div id="modal"></div>
+    <!-- built files will be auto injected -->
+  </body>
+</html>
+
+12345678910111213141516171819
+```
+
+这样可以看到modal组件就是没有挂载在app下,不再受app组件的影响了
+
+
+
 ### 2.Proxy的优点
 
 #### proxy使用
@@ -8132,6 +8791,8 @@ Proxy 实现的响应式原理与 Vue2的实现原理相同，实现方式大同
 
 ### 3.Vue3的响应式
 
+[手写简单vue3响应式原理](https://juejin.cn/post/7134281691295645732)
+
 vue2跟vue3实现方式不同：
 
 -   vue2使用 Object.defineProperty() 劫持对象监听数据的变化
@@ -8146,6 +8807,8 @@ vue2跟vue3实现方式不同：
 >   -   支持数组：Proxy 不需要对数组的方法进行重载，省去了众多 hack，减少代码量等于减少了维护成本，而且标准的就是最好的。
 >   -   Proxy 的第二个参数可以有 13 种拦截方法，这比起 Object.defineProperty() 要更加丰富
 >   -   Proxy 作为新标准受到浏览器厂商的重点关注和性能优化，相比之下 Object.defineProperty() 是一个已有的老方法。
+
+#### 依赖收集
 
 每当我们改变代理对象(vue2对象)的时候，比如我们新增一个`age`属性，即使`change`函数里面没有使用到`age`, 我们也会触发`change`函数。 所以我们要正确收集依赖，怎样正确收集依赖呢
 
@@ -8202,7 +8865,333 @@ const reactive = (obj) => {
 }
 ```
 
+在源码中
 
+核心就是在访问响应式数据的时候，触发 `getter` 函数，进而执行 `track` 函数收集依赖：
+
+```js
+let shouldTrack = true
+// 当前激活的 effect
+let activeEffect
+// 原始数据对象 map
+const targetMap = new WeakMap()
+function track(target, type, key) {
+  if (!shouldTrack || activeEffect === undefined) {
+    return
+  }
+  let depsMap = targetMap.get(target)
+  if (!depsMap) {
+    // 每个 target 对应一个 depsMap
+    targetMap.set(target, (depsMap = new Map()))
+  }
+  let dep = depsMap.get(key)
+  if (!dep) {
+    // 每个 key 对应一个 dep 集合
+    depsMap.set(key, (dep = new Set()))
+  }
+  if (!dep.has(activeEffect)) {
+    // 收集当前激活的 effect 作为依赖
+    dep.add(activeEffect)
+   // 当前激活的 effect 收集 dep 集合作为依赖
+    activeEffect.deps.push(dep)
+  }
+}
+```
+
+分析这个函数的实现前，我们先想一下要收集的依赖是什么，我们的目的是实现响应式，就是当数据变化的时候可以自动做一些事情，比如执行某些函数，所以我们收集的依赖就是数据变化后执行的副作用函数。
+
+`track` 函数拥有三个参数，其中 `target` 表示原始数据；`type` 表示这次依赖收集的类型；`key` 表示访问的属性。
+
+`track` 函数外部创建了全局的 `targetMap` 作为原始数据对象的 `Map`，它的键是 `target`，值是 `depsMap`，作为依赖的 `Map`；这个 `depsMap` 的键是 `target` 的 `key`，值是 `dep` 集合，`dep` 集合中存储的是依赖的副作用函数。为了方便理解，可以通过下图表示它们之间的关系：
+
+![image-20220828113446237](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsimage-20220828113446237.png)
+
+因此每次执行 `track` 函数，就是把当前激活的副作用函数 `activeEffect` 作为依赖，然后收集到 `target` 相关的 `depsMap` 对应 `key` 下的依赖集合 `dep` 中
+
+#### 派发通知
+
+派发通知发生在数据更新的阶段，核心就是在修改响应式数据时，触发 `setter` 函数，进而执行 `trigger` 函数派发通知:
+
+```js
+const targetMap = new WeakMap()
+function trigger(target, type, key) {
+  // 通过 targetMap 拿到 target 对应的依赖集合
+  const depsMap = targetMap.get(target)
+  if (!depsMap) {
+    // 没有依赖，直接返回
+    return
+  }
+  // 创建运行的 effects 集合
+  const effects = new Set()
+  // 添加 effects 的函数
+  const add = (effectsToAdd) => {
+    if (effectsToAdd) {
+      effectsToAdd.forEach(effect => {
+        effects.add(effect)
+      })
+    }
+  }
+  // SET | ADD | DELETE 操作之一，添加对应的 effects
+  if (key !== void 0) {
+    add(depsMap.get(key))
+  }
+  const run = (effect) => {
+    // 调度执行
+    if (effect.options.scheduler) {
+      effect.options.scheduler(effect)
+    }
+    else {
+      // 直接运行
+      effect()
+    }
+  }
+  // 遍历执行 effects
+  effects.forEach(run)
+}
+```
+
+`trigger` 函数拥有三个参数，其中 `target` 表示目标原始对象；`type` 表示更新的类型；`key` 表示要修改的属性。
+
+`trigger` 函数 主要做了四件事情：
+
+1. 从 `targetMap` 中拿到 `target` 对应的依赖集合 `depsMap`；
+2. 创建运行的 `effects` 集合；
+3. 根据 `key` 从 `depsMap` 中找到对应的 `effect` 添加到 `effects` 集合；
+4. 遍历 `effects` 执行相关的副作用函数。
+
+因此每次执行 `trigger` 函数，就是根据 `target` 和 `key`，从 `targetMap` 中找到相关的所有副作用函数遍历执行一遍。
+
+在描述依赖收集和派发通知的过程中，我们都提到了一个词：副作用函数，依赖收集过程中我们把 `activeEffect`（当前激活副作用函数）作为依赖收集
+
+#### 副作用函数
+
+那么，什么是副作用函数，在介绍它之前，我们先回顾一下响应式的原始需求，即我们修改了数据就能自动做某些事情，举个简单的例子：
+
+```js
+import { reactive } from 'vue'
+const counter = reactive({
+  num: 0
+})
+function logCount() {
+  console.log(counter.num)
+}
+function count() {
+  counter.num++
+}
+logCount()
+count()
+复制代码
+```
+
+我们定义了响应式对象 `counter`，然后在 `logCount` 中访问了 `counter.num`，我们希望在执行 `count` 函数修改 `counter.num` 值的时候，能自动执行 `logCount` 函数。
+
+按我们之前对依赖收集过程的分析，如果`logCount` 是 `activeEffect` 的话，那么就可以实现需求，但显然是做不到的，因为代码在执行到 `console.log(counter.num)` 这一行的时候，它对自己在 `logCount` 函数中的运行是一无所知的。
+
+那么该怎么办呢？其实只要我们运行 `logCount` 函数前，把 `logCount` 赋值给 `activeEffect` 就好了：
+
+```js
+activeEffect = logCount 
+logCount()
+复制代码
+```
+
+顺着这个思路，我们可以利用高阶函数的思想，对 `logCount` 做一层封装：
+
+```js
+function wrapper(fn) {
+  const wrapped = function(...args) {
+    activeEffect = fn
+    fn(...args)
+  }
+  return wrapped
+}
+const wrappedLog = wrapper(logCount)
+wrappedLog()
+复制代码
+```
+
+`wrapper` 本身也是一个函数，它接受 `fn` 作为参数，返回一个新的函数 `wrapped`，然后维护一个全局变量 `activeEffect`，当 `wrapped` 执行的时候，把 `activeEffect` 设置为 `fn`，然后执行 `fn` 即可。
+
+这样当我们执行 `wrappedLog` 后，再去修改 `counter.num`，就会自动执行 `logCount` 函数了。
+
+实际上 Vue 3 就是采用类似的做法，在它内部就有一个 `effect` 副作用函数，我们来看一下它的实现：
+
+```js
+// 全局 effect 栈
+const effectStack = []
+// 当前激活的 effect
+let activeEffect
+function effect(fn, options = EMPTY_OBJ) {
+  if (isEffect(fn)) {
+    // 如果 fn 已经是一个 effect 函数了，则指向原始函数
+    fn = fn.raw
+  }
+  // 创建一个 wrapper，它是一个响应式的副作用的函数
+  const effect = createReactiveEffect(fn, options)
+  if (!options.lazy) {
+    // lazy 配置，计算属性会用到，非 lazy 则直接执行一次
+    effect()
+  }
+  return effect
+}
+function createReactiveEffect(fn, options) {
+  const effect = function reactiveEffect() {
+    if (!effect.active) {
+      // 非激活状态，则判断如果非调度执行，则直接执行原始函数。
+      return options.scheduler ? undefined : fn()
+    }
+    if (!effectStack.includes(effect)) {
+      // 清空 effect 引用的依赖
+      cleanup(effect)
+      try {
+        // 开启全局 shouldTrack，允许依赖收集
+        enableTracking()
+        // 压栈
+        effectStack.push(effect)
+        activeEffect = effect
+        // 执行原始函数
+        return fn()
+      }
+      finally {
+        // 出栈
+        effectStack.pop()
+        // 恢复 shouldTrack 开启之前的状态
+        resetTracking()
+        // 指向栈最后一个 effect
+        activeEffect = effectStack[effectStack.length - 1]
+      }
+    }
+  }
+  effect.id = uid++
+  // 标识是一个 effect 函数
+  effect._isEffect = true
+  // effect 自身的状态
+  effect.active = true
+  // 包装的原始函数
+  effect.raw = fn
+  // effect 对应的依赖，双向指针，依赖包含对 effect 的引用，effect 也包含对依赖的引用
+  effect.deps = []
+  // effect 的相关配置
+  effect.options = options
+  return effect
+}
+```
+
+结合上述代码来看，`effect` 内部通过执行 `createReactiveEffect` 函数去创建一个新的 `effect` 函数，为了和外部的 `effect` 函数区分，我们把它称作 `reactiveEffect` 函数，并且还给它添加了一些额外属性（我在注释中都有标明）。另外，`effect` 函数还支持传入一个配置参数以支持更多的 `feature`，这里就不展开了。
+
+`reactiveEffect` 函数就是响应式的副作用函数，当执行 `trigger` 过程派发通知的时候，执行的 `effect` 就是它。
+
+按我们之前的分析，`reactiveEffect` 函数只需要做两件事情：让全局的 `activeEffect` 指向它， 然后执行被包装的原始函数 `fn`。
+
+但实际上它的实现要更复杂一些，首先它会判断 `effect` 的状态是否是 `active，`这其实是一种控制手段，允许在非 `active` 状态且非调度执行情况，则直接执行原始函数 `fn` 并返回。
+
+接着判断 `effectStack` 中是否包含 `effect`，如果没有就把 `effect` 压入栈内。之前我们提到，只要设置 `activeEffect = effect` 即可，那么这里为什么要设计一个栈的结构呢？
+
+其实是考虑到以下这样一个嵌套 `effect` 的场景：
+
+```js
+import { reactive} from 'vue' 
+import { effect } from '@vue/reactivity' 
+const counter = reactive({ 
+  num: 0, 
+  num2: 0 
+}) 
+function logCount() { 
+  effect(logCount2) 
+  console.log('num:', counter.num) 
+} 
+function count() { 
+  counter.num++ 
+} 
+function logCount2() { 
+  console.log('num2:', counter.num2) 
+} 
+effect(logCount) 
+count()
+```
+
+我们每次执行 `effect` 函数时，如果仅仅把 `reactiveEffect` 函数赋值给 `activeEffect`，那么针对这种嵌套场景，执行完 `effect(logCount2)` 后，`activeEffect` 还是 `effect(logCount2)` 返回的 `reactiveEffect` 函数，这样后续访问 `counter.num` 的时候，依赖收集对应的 `activeEffect` 就不对了，此时我们外部执行 `count` 函数修改 `counter.num` 后执行的便不是 `logCount` 函数，而是 `logCount2` 函数，最终输出的结果如下：
+
+```js
+num2: 0 
+num: 0 
+num2: 0
+```
+
+而我们期望的结果应该如下：
+
+```js
+num2: 0 
+num: 0 
+num2: 0 
+num: 1
+```
+
+因此针对嵌套 `effect` 的场景，我们不能简单地赋值 `activeEffect`，应该考虑到函数的执行本身就是一种入栈出栈操作，因此我们也可以设计一个 `effectStack`，这样每次进入 `reactiveEffect` 函数就先把它入栈，然后 `activeEffect` 指向这个 `reactiveEffect` 函数，接着在 `fn` 执行完毕后出栈，再把 `activeEffect` 指向 `effectStack` 最后一个元素，也就是外层 `effect` 函数对应的 `reactiveEffect`。
+
+这里我们还注意到一个细节，在入栈前会执行 `cleanup` 函数清空 `reactiveEffect` 函数对应的依赖 。在执行 `track` 函数的时候，除了收集当前激活的 `effect` 作为依赖，还通过 `activeEffect.deps.push(dep)` 把 `dep` 作为 `activeEffect` 的依赖，这样在 `cleanup` 的时候我们就可以找到 `effect` 对应的 `dep` 了，然后把 `effect` 从这些 `dep` 中删除。`cleanup` 函数的代码如下所示：
+
+```js
+function cleanup(effect) {
+  const { deps } = effect
+  if (deps.length) {
+    for (let i = 0; i < deps.length; i++) {
+      deps[i].delete(effect)
+    }
+    deps.length = 0
+  }
+}
+复制代码
+```
+
+为什么需要 `cleanup` 呢？如果遇到这种场景：
+
+```vue
+<template>
+  <div v-if="state.showMsg">
+    {{ state.msg }}
+  </div>
+  <div v-else>
+    {{ Math.random()}}
+  </div>
+  <button @click="toggle">Toggle Msg</button>
+  <button @click="switchView">Switch View</button>
+</template>
+<script>
+  import { reactive } from 'vue'
+
+  export default {
+    setup() {
+      const state = reactive({
+        msg: 'Hello World',
+        showMsg: true
+      })
+
+      function toggle() {
+        state.msg = state.msg === 'Hello World' ? 'Hello Vue' : 'Hello World'
+      }
+
+      function switchView() {
+        state.showMsg = !state.showMsg
+      }
+
+      return {
+        toggle,
+        switchView,
+        state
+      }
+    }
+  }
+</script>
+```
+
+结合代码可以知道，这个组件的视图会根据 `showMsg` 变量的控制显示 `msg` 或者一个随机数，当我们点击 `Switch View` 的按钮时，就会修改这个变量值。
+
+假设没有 `cleanup`，在第一次渲染模板的时候，`activeEffect` 是组件的副作用渲染函数，因为模板 `render` 的时候访问了 `state.msg`，所以会执行依赖收集，把副作用渲染函数作为 `state.msg` 的依赖，我们把它称作 `render effect`。然后我们点击 `Switch View` 按钮，视图切换为显示随机数，此时我们再点击 `Toggle Msg` 按钮，由于修改了 `state.msg` 就会派发通知，找到了 `render effect` 并执行，就又触发了组件的重新渲染。
+
+但这个行为实际上并不符合预期，因为当我们点击 `Switch View` 按钮，视图切换为显示随机数的时候，也会触发组件的重新渲染，但这个时候视图并没有渲染 `state.msg`，所以对它的改动并不应该影响组件的重新渲染。
+
+因此在组件的 `render effect` 执行之前，如果通过 `cleanup` 清理依赖，我们就可以删除之前 `state.msg` 收集的 `render effect` 依赖。这样当我们修改 `state.msg` 时，由于已经没有依赖了就不会触发组件的重新渲染，符合预期
 
 ### 4.如何理解composition API
 
@@ -8408,7 +9397,7 @@ export default{
 -   由于在执行 setup函数的时候，还没有执行 Created 生命周期方法，所以在 setup 函数中，无法使用 data 和 methods 的变量和方法
 -   由于我们不能在 setup函数中使用 data 和 methods，所以 Vue 为了避免我们错误的使用，直接将 setup函数中的this 修改成了 undefined
 
-![image-20220316213946552](https://s2.loli.net/2022/04/03/aJAiv7qclpgNeyS.png)
+![image-20220316213946552](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsaJAiv7qclpgNeyS.png)
 
 
 
@@ -8838,7 +9827,7 @@ svelte便实现了这种优化，通过将数据和真实dom的映射关系，�
 
 - `tag`: 当前节点的标签名
 - `data`: 当前节点的数据对象，具体包含哪些字段可以参考vue源码`types/vnode.d.ts`中对`VNodeData`的定义
-  ![clipboard.png](https://s2.loli.net/2022/08/01/6lpF9OrxEYutqI7.png)
+  ![clipboard.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs6lpF9OrxEYutqI7.png)
 - `children`: 数组类型，包含了当前节点的子节点
 - `text`: 当前节点的文本，一般文本节点或注释节点会有该属性
 - `elm`: 当前虚拟节点对应的真实的dom节点
@@ -9596,7 +10585,7 @@ patch
      - 如果`oldStartVnode`和`newStartVnode`是同一节点，调用`patchVnode`进行`patch`，然后将`oldStartVnode`和`newStartVnode`都设置为下一个子节点，重复上述流程
        ![clipboard.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202303863.webp)
      - 如果`oldEndVnode`和`newEndVnode`是同一节点，调用`patchVnode`进行`patch`，然后将`oldEndVnode`和`newEndVnode`都设置为上一个子节点，重复上述流程
-       ![clipboard.png](https://s2.loli.net/2022/08/01/YaKR9NTWAMDEuwZ.png)
+       ![clipboard.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsYaKR9NTWAMDEuwZ.png)
      - 如果`oldStartVnode`和`newEndVnode`是同一节点，调用`patchVnode`进行`patch`，如果`removeOnly`是`false`，那么可以把`oldStartVnode.elm`移动到`oldEndVnode.elm`之后，然后把`oldStartVnode`设置为下一个节点，`newEndVnode`设置为上一个节点，重复上述流程
        ![clipboard.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202303851.png)
      - 如果`newStartVnode`和`oldEndVnode`是同一节点，调用`patchVnode`进行`patch`，如果`removeOnly`是`false`，那么可以把`oldEndVnode.elm`移动到`oldStartVnode.elm`之前，然后把`newStartVnode`设置为下一个节点，`oldEndVnode`设置为上一个节点，重复上述流程
