@@ -2355,6 +2355,8 @@ history.forward()
 
 ![image.png](https://s2.loli.net/2022/08/01/GRcg4mQ3xhnbraX.webp)
 
+#### 特点
+
 元素事件响应在DOM树中是从顶层的Window开始“流向”目标元素，然后又从目标元素“流向”顶层的Window
 
 通常，我们将这种事件流向分为三个阶段：**捕获阶段，目标阶段，冒泡阶段**。
@@ -2371,7 +2373,7 @@ DOM事件流的三个阶段是**先捕获阶段，然后是目标阶段，最后
 
 通过事件代理，我们可以将多个事件监听器减少为一个，这样就减少代码的重复编写了
 
-
+#### 使用案例
 
 实际操作中，我们可以通过 element.addEventListener() 设置一个元素的事件模型为冒泡事件或者捕获事件。
 先来看一下 addEventListener 函数的语法：
@@ -2442,6 +2444,160 @@ items.addEventListener('click', (e) => {console.log('冒泡：click ',e.target.i
 
 ```
 
+#### 阻止冒泡方法
+
+```html
+<!DOCTYPE html>
+<html lang="en" onclick="handleClickHtml()">
+  <head>  
+    <title>以这个html结构例举</title>
+  </head>
+ 
+  <body onclick="handleClickBody()">
+    <div onclick="handleClickDiv()">
+      <button id="btn1" onclick="handleClickBtn1(event)">我是一个btn1按钮preventDefault取消默认行为</button>
+      <button id="btn2" onclick="handleClickBtn2(event)">我是一个btn2按钮stopPropagation取消后续事件捕获和事件冒泡</button>
+      <button id="btn3" onclick="handleClickBtn3(event)">我是一个btn3按钮return false</button>
+      <button id="btn4" >我是一个btn4按钮函数式写法</button>
+    </div>
+　</body>
+  <script>
+    function handleClickBtn1(e){
+      console.log(e);
+      console.log('点击htn1');
+      e.preventDefault();
+    }
+    function handleClickBtn2(e){
+      console.log(e);
+      console.log('点击htn2');
+      e.stopPropagation();
+    }
+    function handleClickBtn3(e){
+      console.log(e);
+      console.log('点击htn3');
+      return false
+    }
+    var btn4 = document.getElementById('btn4');
+    btn4.onclick = function (e){
+      console.log(e);
+      console.log('点击htn4');
+      return false
+    };
+    function handleClickDiv(){
+      console.log('点击div');
+    }
+    function handleClickBody(){
+      console.log('点击body');
+    }
+    function handleClickHtml(){
+      console.log('点击html');
+    }
+  </script>
+</html>
+
+<!-- 事件冒泡的： 如果在div中发生点击事件：那么click事件就在经过的结点上依次触发，button < div < body < html < document < window -->
+```
+
+**处理事件冒泡的方法**
+
+1.使用preventDefault();
+
+```js
+<button onClick={(e) => { e.preventDefault();}}>取消</button>
+```
+
+使用 e.preventDefault() 
+
+用于取消事件的默认行为，如果a标签的默认事件是href跳转，加了就不会跳转了
+
+2.使用stopPropapation()；
+
+```js
+<button onClick={(e) => { e.stopPropagation();}}>取消</button>
+```
+
+使用 e.stopPropagation() 用于取消所有后续事件捕获和事件冒泡
+
+3.直接使用return false
+
+```js
+<button onClick={(e) => { return false ；}}>取消</button>
+```
+
+据说是使用这个就会直接调用 preventDefault和stopPropapation，TM的我自己使用这个居然没得一点效果，离谱，该冒的泡是一个都不会少啊
+
+事件流总共3个阶段：事件捕获，到达目标，事件冒泡 事件捕获是从外层到里层到body这一层就结束，到达目标即触发事件的节点的过程一般是指body里的那一层，事件冒泡是从里层到外层
+
+#### 不发生冒泡的事件
+
+当一个元素上的事件被触发的时候 比如鼠标点击了一个按钮 那么同样的事件将会在那个元素的所有祖先元素中被触发
+这 一过程被称为事件冒泡 这个事件将会从原始元素开始一直被触发 直到DOM树的最上层 想是气泡冒泡一样 因而得名
+
+Html5的媒体事件(media Event)：
+
+```undefined
+play 不冒泡 ✖
+mute 不冒泡 ✖
+```
+
+indexedDB中的一系列事件：
+
+```mipsasm
+abort 冒泡 ✔
+blocked 不冒泡 ✖
+close 不冒泡 ✖
+complete 不冒泡 ✖
+success 不冒泡 ✖
+upgradeneeded 不冒泡 ✖
+versionchange 不冒泡 ✖
+```
+
+表单验证合法性事件：
+
+```undefined
+invalid 不冒泡 ✖
+```
+
+监听Node节点插入移除事件：
+
+```undefined
+DOMNodeInsertedIntoDocument 不冒泡 ✖
+DOMNodeRemovedFromDocument 不冒泡 ✖
+```
+
+Mouse鼠标事件：
+
+```undefined
+click 冒泡 ✔
+dblclick 冒泡 ✔
+mousedown 冒泡 ✔
+mouseenter 不冒泡 ✖
+mouseleave 不冒泡 ✖
+mousemove 冒泡 ✔
+mouseout 冒泡 ✔
+mouseover 冒泡 ✔
+mouseup 冒泡 ✔
+```
+
+Focus聚焦事件：
+
+```mipsasm
+blur 不冒泡 ✖  因为失去焦点本身就是针对这个元素的
+focus 不冒泡 ✖  因为获取焦点本身就是针对这个元素的
+focusin 冒泡 ✔
+focusout 冒泡 ✔
+```
+
+UI事件：
+
+```
+load 异步 不冒泡 ✖
+unload 不冒泡 ✖
+abort 不冒泡 ✖
+error 异步 不冒泡 ✖
+select 冒泡 ✔
+```
+
 #### 总结
 
 **DOM事件流有3个阶段：捕获阶段，目标阶段，冒泡阶段；三个阶段的顺序为：捕获阶段——目标阶段——冒泡阶段；**
@@ -2455,6 +2611,8 @@ items.addEventListener('click', (e) => {console.log('冒泡：click ',e.target.i
 **事件委托（事件代理）是根据事件冒泡或事件捕获的机制来实现的。**
 
 Window对象是直接面向用户的，那么用户触发一个事件，如点击事件，肯定是用window对象开始的，所以自然就是先捕获后冒泡
+
+
 
 ### 7.数组方法？怎么遍历？怎么创建？
 
@@ -2604,7 +2762,7 @@ console.log(colors[3])  // undefined
 
 数组长度始终比数组最后一个值的索引大1，这是因为索引值都是从0开始的
 
-#### 数组方法
+#### 数组改变
 
 改变原数组的方法：fill()、pop()、push()、shift()、splice()、unshift()、reverse()、sort()；
 
@@ -2797,7 +2955,53 @@ console.log(array2)  //  [0, 1, 10, 15, 5]
 
 可以看到，上面第二段代码就出现了问题，虽然5是小于10的，但是字符串10在5的前面，所以10还是会排在5前面，因此可知，在很多情况下，不添加参数是不行的。
 
-对于sort()方法的参数，它是一个比较函数，它接收两个参数，如果第一个参数应该排在第二个参数前面，就返回-1；如果两个参数相等，就返回0；如果第一个参数应该排在第二个参数后面，就返回1。一个比较函数的形式可以如下：
+对于sort()方法的参数，它是一个比较函数，它接收两个参数，**如果第一个参数应该排在第二个参数前面，就返回-1；如果两个参数相等，就返回0；如果第一个参数应该排在第二个参数后面，就返回1**。
+
+sort((a,b)=>{})
+
+a是后面的数，b是前面的数
+
+```js
+var arr=[1,2,3,4,5,6]
+arr.sort((a,b)=>{
+		console.log(a,b)
+})
+2 1
+3 2
+4 3
+5 4
+6 5
+```
+
+return 正数是保持现状
+
+```js
+var arr=[1,2,3,4,5,6]
+arr.sort((a,b)=>{
+	return 1
+})
+console.log(arr);
+//[ 1, 2, 3, 4, 5, 6 ]
+```
+
+return 负数是交换
+
+```js
+var arr=[1,2,3,4,5,6]
+arr.sort((a,b)=>{
+		return -1
+})
+console.log(arr);
+//[ 6, 5, 4, 3, 2, 1 ]
+```
+
+a是后面的数，b是前面的数
+
+==a-b是升序  如果a-b>0 后面的大 是正数 保持现状 就是升序  否则进行交换==
+
+==b-a是降序  如果b-a>0 后面的小 是正数 保持现状 就是降序  否则进行交换==
+
+一个比较函数的形式可以如下：
 
 ```javascript
 function compare(value1, value2) {
@@ -2815,6 +3019,21 @@ let array2 = array.sort(compare);
 console.log(array2)  // [0, 1, 5, 10, 15]
 ```
 
+对二维数组进行排序  数值相等序号小的在前面
+
+```js
+var dp=[[2,2],[1,2],[3,4],[4,5],[5,6],[3,2]]
+dp.sort((b, a) => {
+		return a[1] - b[1]
+})
+dp.sort((b,a)=>{
+	if(b[1]==a[1]){
+		if(a[0]>b[0]) return -1
+	}
+})
+console.log(dp); 
+```
+
 使用箭头函数来定义：
 
 ```javascript
@@ -2826,6 +3045,10 @@ console.log(array2)  // [0, 1, 5, 10, 15]
 let array3 = array.sort((a, b) => b - a);  // 倒序排序
 console.log(array3)  // [15, 10, 5, 1, 0]
 ```
+
+
+
+
 
 ###### （2）reverse()
 
@@ -4493,7 +4716,7 @@ setInterval(function, N)
 //即：每隔N秒把function事件推到消息队列中
 ```
 
-![image.png](https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/788a403e21284339b4bf7fff34c1a392~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp?) 上图可见，setInterval 每隔 100ms 往队列中添加一个事件；100ms 后，添加 T1 定时器代码至队列中，主线程中还有任务在执行，所以等待，some event 执行结束后执行 T1 定时器代码；又过了 100ms，T2 定时器被添加到队列中，主线程还在执行 T1 代码，所以等待；又过了 100ms，理论上又要往队列里推一个定时器代码，**但由于此时 T2 还在队列中，所以 T3 不会被添加（T3 被跳过）** ，结果就是此时被跳过；这里我们可以看到，T1 定时器执行结束后马上执行了 T2 代码，所以并没有达到定时器的效果。
+![image.png](https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/788a403e21284339b4bf7fff34c1a392~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp?) 上图可见，setInterval 每隔 100ms 往队列中添加一个事件；100ms 后，添加 T1 定时器代码至队列中，主线程中还有任务在执行，所以等待，some event 执行结束后执行 T1 定时器代码；又过了 100ms，T2 定时器被添加到队列中，主线程还在执行 T1 代码，所以等待；又过了 100ms，理论上又要往队列里推一个定时器代码，**但由于此时 T2 还在队列中，所以 T3 不会被添加（T3 被跳过)** ，结果就是此时被跳过；这里我们可以看到，T1 定时器执行结束后马上执行了 T2 代码，所以并没有达到定时器的效果。
 
 综上所述，setInterval 有两个缺点：
 
