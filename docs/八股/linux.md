@@ -6,8 +6,6 @@
 
 -   Linux是一套免费使用和自由传播的类似Unix操作系统，一般的WEB项目都是部署都是放在Linux操作系统上面。 Linux是一个基于POSIX和Unix的多用户、多任务、支持多线程和多CPU的操作系统。它能运行主要的Unix工具软件、应用程序和网络协议。它支持32位和64位硬件。Linux继承了Unix以网络为核心的设计思想，是一个性能稳定的多用户网络操作系统。
   
-    ![在这里插入图片描述](https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/4/14/171744a2d148acc2~tplv-t2oaga2asx-zoom-in-crop-mark:3024:0:0:0.awebp)
-    
 
 ### Windows和Linux的区别
 
@@ -46,7 +44,7 @@
 
 -   从大的方面讲，Linux 体系结构可以分为两块：
 
-![在这里插入图片描述](https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/4/14/171744a2d1cc127a~tplv-t2oaga2asx-zoom-in-crop-mark:3024:0:0:0.awebp)
+![image-20220831223421958](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsimage-20220831223421958.png)
 
 -   用户空间(User Space) ：用户空间又包括用户的应用程序(User Applications)、C 库(C Library) 。
 -   内核空间(Kernel Space) ：内核空间又包括系统调用接口(System Call Interface)、内核(Kernel)、平台架构相关的代码(Architecture-Dependent Kernel Code) 。
@@ -165,7 +163,7 @@
   
 -   Linux 支持 5 种文件类型，如下图所示：
   
-    ![在这里插入图片描述](https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/4/14/171744a2d70c1faf~tplv-t2oaga2asx-zoom-in-crop-mark:3024:0:0:0.awebp)
+    ![image-20220831223442158](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsimage-20220831223442158.png)
     
 
 ### Linux 的目录结构是怎样的？
@@ -174,7 +172,7 @@
 
 -   Linux 文件系统的结构层次鲜明，就像一棵倒立的树，最顶层是其根目录：  
   
-    ![在这里插入图片描述](https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/4/14/171744a2d6e0c867~tplv-t2oaga2asx-zoom-in-crop-mark:3024:0:0:0.awebp)
+    ![image-20220831223452363](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsimage-20220831223452363.png)
     
     **常见目录说明**：
 
@@ -406,7 +404,6 @@ cd ~ ;切换当前用户的家目录。root用户的家目录就是root目录。
 ```
 pwd 
 显示当前的绝对路劲
-
 ```
 
   
@@ -416,7 +413,6 @@ pwd
 ```
 ls -a ;显示所有文件夹,隐藏文件也显示出来
 ls -R ;连同子目录一起列出来
-
 ```
 
   
@@ -428,7 +424,6 @@ ll -a ;显示所有文件,隐藏文件也显示出来
 ll -R ;连同子目录内容一起列出来
 ll -h ;友好展示详情信息,可以看大小
 ll -al ;即能显示隐藏文件又能显示详细列表。 
-
 ```
 
   
@@ -438,7 +433,6 @@ ll -al ;即能显示隐藏文件又能显示详细列表。
 ```
 touch test.txt  ;创建test.txt文件
 touch /opt/java/test.java ;在指定目录创建test.java文件
-
 ```
 
   
@@ -448,7 +442,6 @@ touch /opt/java/test.java ;在指定目录创建test.java文件
 ```
 mkdir 文件夹名称 ;在此目录创建文件夹
 mkdir /opt/java/jdk ;在指定目录创建文件夹
-
 ```
 
   
@@ -459,7 +452,6 @@ mkdir /opt/java/jdk ;在指定目录创建文件夹
 cat lj.log ;快捷查看文件命令 
 Ctrl + c ;暂停显示文件
 Ctrl + d ;退出查看文件命令
-
 ```
 
   
@@ -471,7 +463,6 @@ Ctrl + d ;退出查看文件命令
 空格键：向下滚动一屏或Ctrl+F
 B：返回上一层或Ctrl+B
 q：退出more
-
 ```
 
   
@@ -489,7 +480,6 @@ b：后退一页 或 page up。
 q：退出。
 d：前进半页。
 u：后退半页
-
 ```
 
   
@@ -498,7 +488,6 @@ u：后退半页
 
 ```
 tail -10 ;文件名 看最后10行
-
 ```
 
   
@@ -509,7 +498,6 @@ tail -10 ;文件名 看最后10行
 cp /opt/java/java.log /opt/logs/ ;把java.log 复制到/opt/logs/下
 cp /opt/java/java.log /opt/logs/aaa.log ;把java.log 复制到/opt/logs/下并且改名为aaa.log
 cp -r /opt/java /opt/logs ;把文件夹及内容复制到logs文件中
-
 ```
 
   
@@ -519,7 +507,6 @@ cp -r /opt/java /opt/logs ;把文件夹及内容复制到logs文件中
 ```
 mv /opt/java/java.log /opt/mysql/ ;移动文件到mysql目录下
 mv java.log mysql.log ;把java.log改名为mysql.log
-
 ```
 
   
@@ -535,7 +522,6 @@ rm 文件名 ;安全删除命令  （yes删除 no取消）
 rm -rf 强制删除文件夹及内容
 rm -rf *  删除当前目录下的所有内容。
 rm -rf /* 删除Linux系统根目录下所有的内容。系统将完蛋。   
-
 ```
 
   
@@ -549,7 +535,6 @@ find -name 文件名;按照指定名称查找在当前目录下查找文件
 find / -name 文件名按照指定名称全局查找文件
 find -name '*文件名' ;任意前缀加上文件名在当前目录下查找文件
 find / -name '*文件名*' ;全局进行模糊查询带文件名的文件 
-
 ```
 
   
@@ -594,7 +579,6 @@ d0 ;从光标当前位置删除到此行的第一个位置
 yy ;复制
 p ;在光标的下面进行粘贴
 P ;在光标的上门进行粘贴
-
 ```
 
   
@@ -603,7 +587,6 @@ P ;在光标的上门进行粘贴
 
 ```
 管道命令的语法：命令1 | 命令2 | 命令3。
-
 ```
 
   
@@ -617,7 +600,6 @@ grep String test.java ；在test.java文件中查找String的位置，返回整�
 
 ps aux|grep java ；查找带java关键字的进程
 ll |grep java ；查找带java关键字的文件夹及文件
-
 ```
 
   
@@ -631,8 +613,6 @@ ll |grep java ；查找带java关键字的文件夹及文件
 rz  从win系统中选择文件上传到Linux系统中
 
 sz  文件名 选择Linux系统的文件复制到win系统中
-
-
 ```
 
   
@@ -656,7 +636,6 @@ tar -zxvf redis-3.2.8.tar.gz -C /opt/java/ ；解压到指定目录
 压缩命令：（注意 语法有点反了，我反正每次都搞反）
 tar -zcvf redis-3.2.8.tar.gz  redis-3.2.8/  ;语法 tar -zcvf  压缩后的名称  要压缩的文件
 tar -zcvf 压缩后的文件（可指定目录）  要压缩的文件（可指定目录） 
-
 ```
 
   
@@ -677,7 +656,6 @@ RSS      //该进程占用的固定內存量（KB）
 STAT     //进程的状态
 START    //该进程被触发启动时间
 TIME     //该进程实际使用CPU运行的时间
-
 ```
 
   
@@ -689,7 +667,6 @@ kill 命令用来中止一个进程。（要配合ps命令使用，配合pid关�
 （ps类似于打开任务管理器，kill类似于关闭进程）
 kill -5 进程的PID ;推荐,和平关闭进程
 kill -9 PID ;不推荐,强制杀死进程
-
 ```
 
   
@@ -700,7 +677,6 @@ kill -9 PID ;不推荐,强制杀死进程
 用于查看和更改网络接口的地址和参数，包括IP地址、网络掩码、广播地址，使用权限是超级用户。（一般是用来查看的，很少更改）
 如果此命令输入无效，先输入yum -y install net-tools
 ifconfig
-
 ```
 
   
@@ -713,7 +689,6 @@ ifconfig
 2、再到LInux系统中输入 ping ip地址
 （公司电脑，我就不暴露Ip了,没图片  自己去试）
 按Ctrl + C 可以停止测试。
-
 ```
 
   
@@ -728,7 +703,6 @@ ifconfig
 -g 以gb为单位显示内存使用情况
 -s<间隔秒数> 持续显示内存
 -t 显示内存使用总合
-
 ```
 
   
@@ -741,7 +715,6 @@ ifconfig
 -s 保密模式
 -p <进程号> 指定进程显示
 -n <次数>循环显示次数
-
 ```
 
   
@@ -753,7 +726,6 @@ ifconfig
 #利用netstat指令可让你得知整个Linux系统的网络情况。
 #语法：
 netstat [-acCeFghilMnNoprstuvVwx][-A<网络类型>][--ip]
-
 ```
 
   
@@ -762,7 +734,6 @@ netstat [-acCeFghilMnNoprstuvVwx][-A<网络类型>][--ip]
 
 ```
 file 文件名
-
 ```
 
   
@@ -771,7 +742,6 @@ file 文件名
 
 ```
 Linux centos 重启命令：reboot
-
 ```
 
   
@@ -780,8 +750,6 @@ Linux centos 重启命令：reboot
 
 ```
 Linux centos 关机命令：halt
-
-
 ```
 
   
@@ -790,7 +758,6 @@ Linux centos 关机命令：halt
 
 ```
 ntpdate ntp1.aliyun.com
-
 ```
 
   
@@ -800,7 +767,6 @@ ntpdate ntp1.aliyun.com
 ```
 rm -rf /etc/localtime
 ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
-
 ```
 
   
@@ -809,5 +775,4 @@ ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 
 ```
 date
-
 ```
