@@ -1773,6 +1773,8 @@ function *createIterator(items) {
 
 ### 11.class
 
+#### 基础理论
+
 - 定义：对一类具有共同特征的事物的抽象(构造函数语法糖)
 
 - 原理：类本身指向构造函数，所有方法定义在`prototype`上，可看作构造函数的另一种写法(`Class === Class.prototype.constructor`)
@@ -1910,6 +1912,351 @@ function MixClass(...mixins) {
 }
 class Student extends MixClass(Person, Kid) {}
 ```
+
+#### class使用
+
+下面我们来看看如何使用`class`关键字声明一个类。
+
+```javascript
+class Animal {
+
+}
+
+// or
+
+const Animal = class {
+
+}
+```
+
+而在`ES6`之前，我们都是通过以下这样子的方式来模拟出类的。
+
+```javascript
+function Animal(){
+
+}
+```
+
+#### 类的构造函数
+
+每一个类都可以有一个自己的构造函数，这个名称是固定的`constructor`，当我们通过`new`调用一个类时，这个类就会调用自己的`constructor`方法（构造函数）。
+
+- 它用于创建对象时给类传递一些参数
+- 每一个类只能有一个构造函数，否则报错
+
+通过`new`调用一个类时，会调用构造函数，执行如下操作过程：
+
+1. 在内存中开辟一块新的空间用于创建新的对象
+2. 这个对象内部的`__proto__`属性会被赋值为该类的`prototype`属性
+3. 构造函数内的this，指向创建出来的新对象
+4. 执行构造函数的内部代码
+5. 如果函数没有返回对象，则返回`this`
+
+```javascript
+class Animal  {
+  // 类的构造方法
+  // 用于接收函数
+  constructor(name) {
+    this.name = name;
+  }
+}
+
+var a = new Animal("ABC");
+console.log(a); // Animal { name: 'ABC' }
+```
+
+上面这个例子中，我们在`class`中定义的`constructor`，这个就是构造方法，而`this`代表的是实例对象。
+
+这个`class`，你可以把它看作构造函数的另外一种写法，因为它和它的构造函数的相等的，即是类本身指向构造函数。
+
+```javascript
+console.log(Animal === Animal.prototype.constructor); // true
+```
+
+其实，在类上的所有方法都会放在`prototype`属性上。
+
+#### 类中的属性
+
+##### 实例属性
+
+实例的属性必须定义在类的方法里，就如上面的例子，我们在构造函数中定义`name`这个属性。
+
+```javascript
+class Animal{
+  constructor(name,height,weight) {
+    this.name = name;
+    this.height = height
+    this.weight = weight
+  }
+}
+```
+
+##### 静态属性
+
+当我们把一个属性赋值给类本身，而不是赋值给它`prototype`，这样子的属性被称之为静态属性（`static`）。
+
+静态属性直接通过类来访问，无需在实例中访问。
+
+```javascript
+class Foo{
+  static name ='_island'
+}
+
+console.log(Foo.name);
+```
+
+##### 私有属性
+
+私有属性只能在类中读取、写入，不能通过外部引用私有字段。
+
+```javascript
+class Animal{
+  #age;
+  constructor(name,age){
+    this.name=name
+    this.#age=age
+  }
+}
+
+var a = new Animal('_island',18)
+console.log(a); // Animal { name: '_island' }
+console.log(a.name); // _island
+console.log(a.age); // undefined
+console.log(a.#age); // Private field '#age' must be declared in an enclosing class
+```
+
+我们通过`getOwnPropertyDescriptors`方法获取到它的属性，同样也是获取不到。
+
+```javascript
+console.log(Object.getOwnPropertyDescriptors(a))
+
+{
+  name: {
+    value: '_island',
+    writable: true,
+    enumerable: true,
+    configurable: true
+  }
+}
+```
+
+> 私有字段仅能在字段声明中预先定义。
+
+> 公共和私有字段声明是JavaScript标准委员会[TC39](https://link.juejin.cn/?target=https%3A%2F%2Ftc39.es%2F)提出的[实验性功能（第3阶段）](https://link.juejin.cn/?target=https%3A%2F%2Fgithub.com%2Ftc39%2Fproposal-class-fields)。浏览器中的支持是有限的，但是可以通过[Babel](https://link.juejin.cn/?target=https%3A%2F%2Fbabeljs.io%2F)等系统构建后使用此功能。
+
+#### 类中的方法
+
+##### 实例方法
+
+在`ES6`之前，我们定义类中的方法是类中的原型上进行定义的，防止类中的方法重复在多个对象上。
+
+```javascript
+function Animal() {}
+Animal.prototype.eating = function () {
+  console.log(this.name + " eating");
+};
+```
+
+在`ES6`中，定义类中的方法更加简洁，直接在类中定义即可，这样子的写法即优雅可读性也强。
+
+```javascript
+class Animal{
+  eating() {
+    console.log(this.name + " eating");
+  }
+}
+```
+
+##### 静态方法
+
+静态方法与上面提到的静态属性是一样的，在方法前面使用`static`关键字进行声明，之后调用这个方法时不需要通过类的实例来调用，可以直接通过类名来调用它。
+
+```javascript
+class Animal{
+  static createName(name) {
+    return name
+  }
+}
+
+var a2 = Animal.createName("_island");
+console.log(a2); // _island
+```
+
+##### 私有方法
+
+在面向对象中，私有方法是一个常见需求，但是在ES6中没有提供，我们可以通过某个方法来实现它。
+
+```javascript
+class Foo {
+  __getBloodType() {
+    return "O";
+  }
+}
+```
+
+> 需要注意的是，通过下划线开头通常我们会局限它是一个私有方法，但是在类的外部还是可以正常调用到这个方法的
+
+#### 类的继承
+
+`extends`关键字用于扩展子类，创建一个类作为另外一个类的一个子类。
+
+它会将父类中的属性和方法一起继承到子类的，减少子类中重复的业务代码。
+
+这对比之前在`ES5`中修改原型链实现继承的方法的可读性要强很多，而且写法很简洁。
+
+##### extends的使用
+
+```javascript
+class Animal{
+
+}
+
+// dog 继承 Animal 类
+class dog extends Animal {
+
+}
+```
+
+##### 继承类的属性和方法
+
+下面这个例子，我们定义了`dog`这个类，通过`extends`关键字继承了`Animal`类的属性和方法。
+
+在子类的`constructor`方法中，我们使用了`super`关键字，在子类中它是必须存在的，否则新建实例时会抛出异常。这是因为子类的this对象是继承自父类的this对象，如果不调用`super`方法，子类就得不到`this`对象。
+
+```javascript
+class Animal {
+  constructor(name) {
+    this.name = name;
+  }
+  eating() {
+    console.log(this.name + " eating");
+  }
+}
+
+// dog 继承 Animal 类
+class dog extends Animal {
+  constructor(name, legs) {
+    super(name);
+    this.legs = legs;
+  }
+  speaking() {
+    console.log(this.name + " speaking");
+  }
+}
+
+var d = new dog("tom", 4);
+d.eating(); // tom eating
+d.speaking(); // tom speaking
+console.log(d.name); // tom
+```
+
+#### Super
+
+**super**关键字用于访问和调用一个对象的父对象上的函数。
+
+`super`指的是超级、顶级、父类的意思
+
+在子类的构造函数中使用`this`或者返回默认对象之前，必须先通过`super`调用父类的构造函数。
+
+下面这段代码，子类的`constructor`方法中先调用了`super`方法，它代表了父类的构造函数，也就是说我们把参数传递进去之后，其实它是调用了父类的构造函数。
+
+```javascript
+class Animal{
+  constructor(name)
+}
+
+class dog{
+  constructor(name,type,weight){
+    super(name)
+    this.type=type
+    this.weight=weight
+  }
+}
+```
+
+下面这段代码使用super调用父类的方法
+
+```javascript
+class Animal {
+  constructor(name) {
+    this.name = name;
+  }
+  eating() {
+    console.log(this.name + " eating");
+  }
+}
+
+// dog 继承 Animal 类
+class dog extends Animal {
+  constructor(name, legs) {
+    super(name);
+    this.legs = legs;
+  }
+  speaking() {
+    super.eating()
+    console.log(this.name + " speaking");
+  }
+  
+}
+
+var d = new dog("tom",4);
+d.speaking(); // tom eating tom speaking
+```
+
+#### Getter 和 Setter
+
+在类内部也可以使用`get`和`set`关键字，对应某个属性设置存值和取值函数，拦截属性的存取行为。
+
+```javascript
+class Animal {
+  constructor() {
+    this._age = 3;
+  }
+
+  get age() {
+    return this._age;
+  }
+
+  set age(val) {
+    this._age = val;
+  }
+}
+
+var a = new Animal();
+console.log(a.age); // 3
+a.age = 4;
+console.log(a.age); //4
+```
+
+#### 关于class扩展
+
+##### 严格模式
+
+在类和模块的内部，默认是严格模式，所以不需要使用`use strict`指定运行模式。只要你的代码写在类或模块之中，就只有严格模式可用。
+
+##### name属性
+
+`ES6`中的类只是`ES5`构造函数的一层包装，所以函数的许多属性都被`class`继承了，包括`name`属性。
+
+```javascript
+class Animal{
+
+}
+console.log(Animal.name); // Animal
+```
+
+##### 变量提升
+
+`class`不存在变量提升，这与我们在`ES5`中实现类的不同的，`function`关键字会存在变量提升。
+
+```javascript
+new Foo(); // ReferenceError
+class Foo {}
+```
+
+#### 实现原理
+
+
 
 ### 12.JS Object的实现
 
@@ -2830,7 +3177,7 @@ person1.say() //hanmeimei
 
 
 
-### 1.什么是回调地狱，promise的出现解决了什么问题
+### 1.promise的出现解决了什么问题
 
 Promise 是异步编程的一种解决方案： 从语法上讲，promise是一个对象，从它可以获取异步操作的消息；从本意上讲，它是承诺，承诺它过一段时间会给你一个结果。 promise有三种状态：**pending(等待态)，fulfiled(成功态)，rejected(失败态)**；状态一旦改变，就不会再变。创造promise实例后，它会立即执行。
 
@@ -2846,6 +3193,27 @@ Promise 是异步编程的一种解决方案： 从语法上讲，promise是一�
 从表面上看，Promise只是能够简化层层回调的写法，而实质上Promise的精髓是“状态”，用维护状态、传递状态的方式来使得回调函数能够及时调用，它比传递callback 函数要简单、灵活的多
 
 通过Promise这种方式很好的解决了回调地狱问题，使得异步过程同步化，让代码的整体逻辑与大脑的思维逻辑一致，减少出错率。
+
+#### promise和async await区别
+
+- 首先说说两者的概念
+
+1. Promise
+    Promise 是异步编程的一种解决方案，比传统的解决方案——回调函数和事件——更合理和更强大，简单地说，Promise好比容器，里面存放着一些未来才会执行完毕（异步）的事件的结果，而这些结果一旦生成是无法改变的
+2. async await
+    async await也是异步编程的一种解决方案，他遵循的是Generator 函数的语法糖，他拥有内置执行器，不需要额外的调用直接会自动执行并输出结果，它返回的是一个Promise对象。
+
+- 两者的区别
+
+1. Promise的出现解决了传统callback函数导致的“地域回调”问题，但它的语法导致了它向纵向发展行成了一个回调链，遇到复杂的业务场景，这样的语法显然也是不美观的。而async await代码看起来会简洁些，使得异步代码看起来像同步代码，await的本质是可以提供等同于”同步效果“的等待异步返回能力的语法糖，只有这一句代码执行完，才会执行下一句。
+2. async await与Promise一样，是非阻塞的。
+3. async await是基于Promise实现的，可以说是改良版的Promise，它不能用于普通的回调函数。
+
+简单来看，这两者除了语法糖不一样外，他们解决的问题、达到的效果是大同小异的，我们可以在不同的应用场景，根据自己的喜好来选择使用
+
+使用async函数可以让代码简洁很多，不需要像Promise一样需要then,不需要写匿名函数处理Promise的resolve的值，也不需要定义多余的data变量，还避免了嵌套代码。
+
+async/await 让 try/catch可以同时处理同步和异步的错误。比如，try/catch不能处理JSON.parse的错误，因为它在Promise中,我们需要使用.catch,这样的错误会显得代码非常的冗余
 
 ### 2.promise的方法和注意的问题
 
@@ -2922,7 +3290,225 @@ throw new Error('error!!!')
 - `.then`方法是能接收两个参数的，第一个是处理成功的函数，第二个是处理失败的函数，再某些时候你可以认为`catch`是`.then`第二个参数的简便写法。
 - `.finally`方法也是返回一个`Promise`，他在`Promise`结束的时候，无论结果为`resolved`还是`rejected`，都会执行里面的回调函数。
 
-### 3.async和await解决了什么问题，优势在哪，底层原理是什么
+#### 链式调用原理
+
+```js
+function Promise(fn) {
+  this.cbs = [];
+
+  const resolve = (value) => {
+    setTimeout(() => {
+      this.data = value;
+      this.cbs.forEach((cb) => cb(value));
+    });
+  }
+
+  fn(resolve);
+}
+
+Promise.prototype.then = function (onResolved) {
+  return new Promise((resolve) => {
+    this.cbs.push(() => {
+      const res = onResolved(this.data);
+      if (res instanceof Promise) {
+        res.then(resolve);
+      } else {
+        resolve(res);
+      }
+    });
+  });
+};
+```
+
+案例
+
+```js
+new Promise((resolve) => {
+  setTimeout(() => {
+    resolve(1);
+  }, 500);
+})
+  .then((res) => {
+    console.log(res);
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(2);
+      }, 500);
+    });
+  })
+  .then(console.log);
+//500ms 后输出 1
+//500ms 后输出 2
+```
+
+#### 构造函数
+
+首先来实现 Promise 构造函数
+
+```javascript
+function Promise(fn) {
+  // Promise resolve时的回调函数集
+  this.cbs = [];
+
+  // 传递给Promise处理函数的resolve
+  // 这里直接往实例上挂个data
+  // 然后把onResolvedCallback数组里的函数依次执行一遍就可以
+  const resolve = (value) => {
+    // 注意promise的then函数需要异步执行
+    setTimeout(() => {
+      this.data = value;
+      this.cbs.forEach((cb) => cb(value));
+    });
+  }
+
+  // 执行用户传入的函数 
+  // 并且把resolve方法交给用户执行
+  fn(resolve);
+}
+```
+
+好，写到这里先回过头来看案例
+
+```scss
+const fn = (resolve) => {
+  setTimeout(() => {
+    resolve(1);
+  }, 500);
+};
+
+new Promise(fn);
+```
+
+分开来看，`fn` 就是用户传的函数，这个函数内部调用了 `resolve` 函数后，就会把 `promise` 实例上的 `cbs` 全部执行一遍。
+
+到此为止我们还不知道 `cbs` 这个数组里的函数是从哪里来的
+
+最重要的 then 实现，链式调用全靠它：
+
+```javascript
+Promise.prototype.then = function (onResolved) {
+  // 这里叫做promise2
+  return new Promise((resolve) => {
+    this.cbs.push(() => {
+      const res = onResolved(this.data);
+      if (res instanceof Promise) {
+        // resolve的权力被交给了user promise
+        res.then(resolve);
+      } else {
+        // 如果是普通值 就直接resolve
+        // 依次执行cbs里的函数 并且把值传递给cbs
+        resolve(res);
+      }
+    });
+  });
+};
+```
+
+再回到案例里
+
+```javascript
+const fn = (resolve) => {
+  setTimeout(() => {
+    resolve(1);
+  }, 500);
+};
+
+const promise1 = new Promise(fn);
+
+promise1.then((res) => {
+  console.log(res);
+  // user promise
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(2);
+    }, 500);
+  });
+});
+```
+
+注意这里的命名：
+
+1. 我们把 `new Promise` 返回的实例叫做`promise1`
+2. 在 `Promise.prototype.then` 的实现中，我们构造了一个新的 promise 返回，叫它`promise2`
+3. 在用户调用 `then` 方法的时候，**用户手动构造了一个 promise 并且返回**，用来做异步的操作，叫它`user promise`
+
+那么在 `then` 的实现中，**内部的 this 其实就指向`promise1`**
+
+而`promise2`的**传入的`fn` 函数执行了一个 `this.cbs.push()`，其实是往 `promise1` 的`cbs`数组中 push 了一个函数，等待后续执行**。
+
+```javascript
+Promise.prototype.then = function (onResolved) {
+  // 这里叫做promise2
+  return new Promise((resolve) => {
+    // 这里的this其实是promise1
+    this.cbs.push(() => {});
+  });
+};
+```
+
+那么重点看这个 **push 的函数，注意，这个函数在 `promise1` 被 resolve 了以后才会执行**。
+
+```javascript
+// promise2
+return new Promise((resolve) => {
+  this.cbs.push(() => {
+    // onResolved就对应then传入的函数
+    const res = onResolved(this.data)
+    // 例子中的情况 用户自己返回了一个user promise
+    if (res instanceof Promise) {
+      // user promise的情况
+      // 用户会自己决定何时resolve promise2
+      // 只有promise2被resolve以后
+      // then下面的链式调用函数才会继续执行
+      res.then(resolve)
+    } else {
+      resolve(res)
+    }
+  })
+})
+```
+
+**如果用户传入给 then 的 onResolved 方法返回的是个 `user promise`，那么这个`user promise`里用户会自己去在合适的时机 `resolve promise2`，那么进而这里的 `res.then(resolve)` 中的 resolve 就会被执行**：
+
+```javascript
+if (res instanceof Promise) {
+    res.then(resolve)
+}
+```
+
+结合下面这个例子来看：
+
+```javascript
+new Promise((resolve) => {
+  setTimeout(() => {
+    // resolve1
+    resolve(1);
+  }, 500);
+})
+  // then1
+  .then((res) => {
+    console.log(res);
+    // user promise
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        // resolve2
+        resolve(2);
+      }, 500);
+    });
+  })
+  // then2
+  .then(console.log);
+```
+
+`then1`这一整块其实返回的是 `promise2`，那么 `then2` 其实本质上是 `promise2.then(console.log)`，
+
+也就是**说 `then2`注册的回调函数，其实进入了`promise2`的 `cbs` 回调数组**里，又因为我们刚刚知道，`resolve2` 调用了之后，`user promise` 会被 resolve，进而触发 `promise2` 被 resolve，进而 `promise2` 里的 `cbs` 数组被依次触发。
+
+这样就实现了用户自己写的 `resolve2` 执行完毕后，`then2` 里的逻辑才会继续执行，也就是**异步链式调用**。
+
+### 3.async和await特点和用法
+
+#### 特点
 
 `async` 函数是 `Generator` 函数的语法糖。使用 关键字 `async` 来表示，在函数内部使用 `await` 来表示异步。相较于 `Generator`，`async` 函数的改进在于下面四点：
 
@@ -2935,7 +3521,7 @@ throw new Error('error!!!')
 
 它有以下几个特点：
 
-- 建立在 promise 之上。所以，不能把它和回调函数搭配使用。但它会声明一个异步函数，并隐式地返回一个Promise。因此可以直接return变量，无需使用 Promise.resolve 进行转换。
+- **建立在 promise 之上。所以，不能把它和回调函数搭配使用。但它会声明一个异步函数，并隐式地返回一个Promise。因此可以直接return变量，无需使用 Promise.resolve 进行转换**。
 - 和 promise 一样，是非阻塞的。但不用写 then 及其回调函数，这减少代码行数，也避免了代码嵌套。而且，所有异步调用，可以写在同一个代码块中，无需定义多余的中间变量。
 - 它的最大价值在于，可以使异步代码，在形式上，更接近于同步代码。
 - 它总是与 await 一起使用的。并且，await 只能在 async 函数体内。
@@ -2952,6 +3538,8 @@ throw new Error('error!!!')
 带 async 关键字的函数，它使得函数的返回值必是promise对象
 如果 async 关键字函数返回的不是promise，会自动用Promise.resolve() 包装
 如果 async 关键字函数显式的返回 promise，以你返回的promise为准
+
+async函数一定会返回一个promise对象。如果一个async函数的返回值看起来不是promise，那么它将会被隐式地包装在一个promise中
 
 ```js
 async function fn1(){
@@ -2992,8 +3580,6 @@ promise.catch(err=>{
 //999 Error: error6666
 ```
 
-
-
 以返回的promise为准
 
 ```js
@@ -3009,9 +3595,59 @@ promise.then(res=>{
 //123
 ```
 
+**async 函数中 return 值如何接受**
 
+通过 promise.then-cb 形参获取
+
+```js
+ async function foo(){
+            console.log(222222);
+            return 123;
+        }
+let res = foo();
+ res.then(data=>{
+            console.log(data);//123
+        })
+```
+
+
+
+第二种接受函数返回值的方式是 await
+
+```js
+  (async function (){
+           console.log('async run');
+           //第二种接受函数返回值的方式是 await
+           let res = await foo();
+           console.log(res);
+       })()
+ async function foo(){
+           console.log('foo run');
+           return 123;  
+       }
+ //res作用：接受 async foo函数返回值 是promise
+let res = foo();
+```
+
+#### promiseValue
+
+[[PromiseValue]]是个内部变量，外部无法得到，只能在then中获取。
+
+[promiseValue]哪些能赋值
+
+- async函数的return
+- new promise 中 resolve实参
+- then 中 return （catch finally 中的return）
+- promise.reslove()实参 promise.reject()实参
 
 #### await 等的是右侧 [表达式] 的结果
+
+await关键字的作用 就是获**取 Promise中返回的内容**， 获取的是Promise函数中resolve或者reject的值（await 作用是获取promise.[[promiseValue]]的值）
+
+关于await的注意点
+
+- await 必须写在 async 中
+- await 后是一个promise实例对象
 
 ```js
 async function async1() {
@@ -3139,9 +3775,12 @@ await接受new Promise或者promise对象 会返回resoLve的值
     
     console.log( 'script end' )
 
+
 ```
 
 执行顺序：
+
+![image-20220828104143074](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsimage-20220828104143074.png)
 
 同步代码 **console.log( ‘script start’ )**
 将 setTimeout 放入宏任务队列
@@ -3158,8 +3797,11 @@ promise.then()，发现这个是微任务，所以暂时不打印，只是推入
 执行完同步代码后，执行 await Promise.resolve(undefined) 了，类似于Promise.resolve(undefined) .then((undefined) => { })
 微任务队列，先进先出原则：
 
-任务1， console.log( ‘promise2’ )
-任务2 ，Promise.resolve(undefined)，语句结束后，后面的代码不再被阻塞，所以打印 console.log( ‘async1 end’ )
+
+Promise.resolve(undefined)，语句结束后，后面的代码不再被阻塞，所以打印 console.log( ‘async1 end’ )
+
+然后 console.log( ‘promise2’ )
+
 宏任务队列，console.log(‘setTimeout’)
 
 
@@ -3503,6 +4145,8 @@ JavaScript 运行时，除了一个正在运行的主线程，引擎还提供一
 `setInterval`，其实这个函数作用和 `setTimeout` 基本一致，只是该函数是每隔一段时间执行一次回调函数。
 
 通常来说不建议使用 `setInterval`。第一，它和 `setTimeout` 一样，不能保证在预期的时间执行任务。第二，它存在执行累积的问题
+
+考虑极端情况，假如定时器里面的代码需要进行大量的计算(耗费时间较长)，或者是 DOM 操作。这样一来，花的时间就比较长，有可能前一次代码还没有执行完，后一次代码就被添加到队列了。也**会到时定时器变得不准确，甚至出现同一时间执行两次的情况**。
 
 有循环定时器的需求，其实完全可以通过 `requestAnimationFrame` 来实现
 
@@ -4167,6 +4811,164 @@ fn(1)(2)(3)(4)(5)
         vm.set(element, 'something');
         vm.get(element);
         ```
+
+### 5.Js预编译
+
+#### 案例
+
+```js
+var global = 100
+ function fn() {
+   console.log(global);
+}
+fn()
+```
+
+我们来假想一下，如果面试官问你：这段代码最后会输出什么？你大概率会觉得他在侮辱你，这不就是100吗；但如果面试官再问你，这个100怎么来的？你能回答的出来吗？
+
+其实，面试官问你这个问题就是看你知不知道JS代码在运行时都发生了什么？ 这个时候，很多小伙伴是不是已经开始想声明提升的问题了。用声明提升去思考代码也就是这样的顺序
+
+```js
+var global //变量声明提升
+function fn(){ //函数声明提升
+console.log(global)
+}
+global = 100 //变量赋值
+fn() //函数执行
+```
+
+看到这，很多小伙伴肯定会说不过如此。那么保持这个想法，看下面的代码
+
+```js
+ function fn(a) {
+      console.log(a); // function() {}
+      var a = 123;
+      console.log(a); // 123
+      function a() {}
+      console.log(a); // 123
+      var b = function() {}
+      console.log(b); // function() {}
+      function d() {}
+      var d = a
+      console.log(d); // 123
+    }
+    fn(1)
+```
+
+请问：这段代码是怎么的运行顺序？开始声明提升？现在，大家应该就知道我要说什么，通过声明提升、作用域去思考一段代码的运行顺序，如果代码简单还好说，一旦代码的声明操作、赋值操作一大堆，就会浪费大把的时间，而且出错率极高。
+
+#### 函数体内
+
+先以上面的代码为例，在一个函数体内的代码运行。其实JS运行可以分为编译阶段和执行阶段。那么这两个阶段分别发生了什么呢？
+
+上述代码中
+
+- 编译阶段
+    - 先创建一个AO（activation object）对象
+    - 然后去找形参和变量声明，将形参和变量声明作为AO对象的属性名，值为undefined
+    - 再者，将实参和形参统一
+    - 最后，找函数声明，将函数名作为AO对象的属性名，值赋予函数体
+
+带着这些，我们再来看这段代码
+
+```js
+function fn(a) { //二、形参是a，值为undefined
+      console.log(a); // function() {}
+      var a = 123; //二、a变量声明，AO里已经有了，覆盖后还是一样的
+      console.log(a); // 123
+      function a() {}// 四、a 申明为一个函数
+      console.log(a); // 123
+      var b = function() {} //二、变量b声明，值为undefined
+      console.log(b); // function() {}
+      function d() {} // 四、d声明为一个函数
+      var d = a //二、变量d声明，值为undefined
+      console.log(d); // 123
+    }
+    //第一步在这、函数在执行前进行编译，创建AO对象
+    AO:{
+        //第二步，开始找形参和变量声明，并写入AO
+        a:undefined 1 function (){}
+        b:undefined 
+        d:undefined function(){}
+        //第三步，就相当于把实参传给形参，所以a的值现在就变成了1
+        //第四步，找函数声明，写入AO
+    }
+    fn(1)
+```
+
+到最后编译阶段结束，AO对象中的属性和值是：
+
+```js
+AO:{
+    a:function(){}
+    b:undefined
+    d:function(){}
+}
+```
+
+现在，我们来通过看AO对象中，属性对应的值来执行整个函数。
+
+- 从fn(1)开始执行函数
+- 第一个log要a，去AO中找a，是function(){}。然后a被赋值为123，AO对象中的a随之更新
+- 第二个log又要a，去AO中找a，现在输出的就是123了。然后变量b被赋值为一个函数，AO中也随之更新
+- 第三个log要b，去AO中找b，输出的就是function(){},然后a的值被赋给了d，AO中a的值是123，所以d也变成123，AO中随之更新
+- 第四个log要d，不就是123嘛 到这，这段代码就执行完了，不妨回过去看看，嗯？就这么简单？为了证明我不是在耍流氓，大家可以去跑一跑，对照一下。
+
+看到这，聪明的朋友们马上会有疑问，这不过是函数体内的，那在全局上又是怎么样的。我只能说：更简单，接着看。。。
+
+#### 在全局下
+
+在函数体中，整个编译阶段我总结成四部曲。在全局下，三步足以，多一步算我输。
+
+- 第一步、创建一个GO（global object）对象
+- 第二步、找变量声明，将变量声明作为GO的属性名，值为undefined
+- 第三步、找全局里的函数声明，将函数名作为GO对象的属性名，值赋予函数体 三步，结束了，老规矩，拿代码来说话：
+
+```js
+GO:{
+    fn：function(){}
+}
+global = 100
+function fn() {
+   console.log(global); // undefined
+   global = 200
+   console.log(global); // 200
+   var global = 300
+}
+AO:{
+    global:undefined
+}
+fn()
+```
+
+- 编译阶段 来，三步走起！
+    - 第一步、创建一个GO对象
+    - 第二步、找变量声明，并没有，全局中只有一个赋值语句和函数声明
+    - 第三步、找函数声明，所以GO对象中编译阶段只有fn 编译到这，全局就编译完了，接下来就是函数体内的编译了
+    - 第一步、创建一个AO对象
+    - 第二步、找形参和变量声明，这里没有形参，变量global声明，值为undefined。写入AO
+    - 第三步、传参，实参形参都没有
+    - 第四步、找函数声明，也没有 到这，整个编译就结束了，可以开始执行了。
+- 执行阶段
+    - 先执行赋值语句，因为global在全局中没有定义，这里会强制声明一个global并赋值100，写入GO中
+    - 然后到fn()执行函数体。
+    - 第一个log要global，先去自己的AO找，找到了，值为undefined。所以输出undefined
+    - 进行赋值，将AO中的global值更新为200
+    - 第二个log还要global，这里已经变成200了，所以输出200
+    - 最后AO中global被赋值为300 看到这里，再回想一下，是不是感觉很通透了。下面稍微总结下上面说的方法
+
+#### 总结
+
+- 函数体内的编译四步曲，发生在函数执行之前
+    1. 创建AO对象 （activation object）
+    2. 找形参和变量声明，将形参和变量声明作为AO对象的属性名，值为undefined
+    3. 将实参和形参统一
+    4. 在函数体里找函数声明，将函数名作为AO对象的属性名，值赋予函数体
+- 全局下的编译三步曲，发生在代码最前面
+    1. 创建GO对象
+    2. 找变量声明，将变量声明作为GO对象的属性名，值赋予undefined
+    3. 找全局里的函数声明，将函数名作为GO对象的属性名，值赋予函数体
+
 
 ------
 
