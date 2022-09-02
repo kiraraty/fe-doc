@@ -1,40 +1,10 @@
-# 图形化开发
-
-
-
-## Threejs
-
-### 为什么？
-
-**webGL太难用，太复杂！**
-
-**但是现代浏览器都支持 WebGL**
-
-> 这样我们就不必使用 **Flash**、**Java** 等插件就能在浏览器中创建三维图形。
-
-
-
-**Three.js 的出现完美地解决了这个矛盾。**
-
-> 它提供一个很简单的关于 **WebGL** 特性的 **JavaScript API**，使得用户不需要详细地学习 **WebGL**，就能轻松创作出好看的三维图形样例。
-
-> WebGL原生的api是一种非常低级的接口，而且还需要一些数学和图形学的相关技术。对于没有相关基础的人来说，入门真的很难，Three.js将入门的门槛降低了整整的一大截，对WebGL进行封装，简化我们创建三维动画场景的过程。只要你有一定的JavaScript的基础，有一定的前端经验，我坚信，用不了多长时间，三维制作会变得很简单。
-
-**学习Three.js入门3D开发不但门槛低，而且学习曲线不会太陡，即使以后转向WebGL原生开发，也能通过Three.js学习到很多有用的知识。** 并且在webGL封装的各种库来讲，threejs现在是独领风骚。
-
-**现在最火的微信小游戏跳一跳也是在Three.js的基础上开发出来的。**
-
-所以，你如果要学3D，Three.js是我们必须要学的WebGL框架。
-
-
+## Three.js
 
 ### 基本介绍
 
 **Threejs 该项目的目的是使用默认的WebGL渲染器创建一个易于使用，轻量级的3D库。该库还在示例中提供了Canvas 2D，SVG和CSS3D渲染器。**
 
 https://github.com/mrdoob/three.js
-
-
 
 #### 特点
 
@@ -44,7 +14,7 @@ Three.js作为WebGL框架中的佼佼者，由于它的易用性和扩展性，�
 2. **面向对象**：开发者可以使用上层的JavaScript对象，而不是仅仅调用JavaScript函数。
 3. **功能非常丰富**：Three.js除了封装了WebGL原始API之外，Three.js还包含了许多实用的内置对象，可以方便地应用于游戏开发、动画制作、幻灯片制作、髙分辨率模型和一些特殊的视觉效果制作。
 4. **速度很快**：Three.js采用了3D图形最佳实践来保证在不失可用性的前提下，保持极高的性能。
-   支持交互：WebGL本身并不提供拾取（picking)功能（即是否知道鼠标正处于某个物体上）。而Three.js则固化了拾取支持，这就使得你可以轻松为你的应用添加交互功能。
+    支持交互：WebGL本身并不提供拾取（picking)功能（即是否知道鼠标正处于某个物体上）。而Three.js则固化了拾取支持，这就使得你可以轻松为你的应用添加交互功能。
 5. **包含数学库**：Three.js拥有一个强大易用的数学库，你可以在其中进行矩阵、投影和矢量运算。
 6. **内置文件格式支持**：你可以使用流行的3D建模软件导出文本格式的文件，然后使用Three.js加载；也可以使用Three.js自己的JSON格式或二进制格式。
 7. **扩展性很强**：为Three.js添加新的特性或进行自定义优化是很容易的事情。如果你需要某个特殊的数据结构，那么只需要封装到Three.js即可。
@@ -63,6 +33,7 @@ Three.js作为WebGL框架中的佼佼者，由于它的易用性和扩展性，�
 #### 与Babylon.js对比
 
 Babylon.JS是最好的JavaScript3D游戏引擎，它能创建专业级三维游戏。主要以游戏开发和易用性为主。与Three.js之间的对比： 
+
 1. Three.js比较全面，而Babylon.js专注于游戏方面。 
 2. Babylon.js提供了对碰撞检测、场景重力、面向游戏的照相机，Three.js本身不自带，需要依靠引入插件实现。 
 3. 对于WebGL的封装，双方做的各有千秋，Three.js浅一些，好处是易于扩展，易于向更底层学习；Babylon.js深一些，好处是易用扩展难度大一些。 
@@ -199,7 +170,7 @@ function init() {
 
 使用`Three.js`显示创建的内容，我们必须需要的三大件是：`渲染器，相机和场景`。相机获取到场景内显示的内容，然后再通过渲染器渲染到画布上面。
 
-![image-20190714190138267](https://s2.loli.net/2022/07/02/TzZ4RaeXDnihBwS.png)
+![image-20190714190138267](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsTzZ4RaeXDnihBwS.png)
 
 #### 创建渲染器
 
@@ -237,7 +208,7 @@ function initCamera() {
 
 > 第二行，我们设置了相机的位置。
 
-![image-20190714000818622](https://s2.loli.net/2022/07/02/4BL1iGORPoTVI7A.png)
+![image-20190714000818622](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs4BL1iGORPoTVI7A.png)
 
 > WebGL坐标系统作为3D坐标，在原来的2D坐标xy轴上面又多了一个z轴，大家注意z轴的方向，是坐标轴朝向我们的方向是正轴，我们眼看去的方向是是z轴的负方向。
 > camera.position.set函数是设置当前相机的位置，函数传的三个值分别是x轴坐标，y轴坐标和z轴坐标。我们只是将相机的放到了z正轴坐标轴距离坐标原点的15的位置。相机默认的朝向是朝向0点坐标的，我们也可以设置相机的朝向，这将在后面相机介绍是，专门介绍相机的相关。
@@ -344,27 +315,22 @@ function animate() {
 
 
 
-
-
-### 基本元素
-
-#### scene场景
+### scene场景
 
 ##### 介绍
 
 场景是我们每个`Three.js`项目里面放置内容的容器，我们也可以拥有多个场景进行切换展示，你可以在场景内放置你的**模型**，**灯光**和**照相机**。还可以通过调整场景的位置，让场景内的所有内容都一起跟着调整位置。
 
 ##### THREE.Object3D
-为了方便操作，Three.js将每个能够直接添加到场景内的对象都继承至一个基类-THREE.Object3D，以后我们将继承至这个基类的对象称为3d对象，判断一个对象是否是继承至THREE.Object3D，我们可以这么判断：
+
+为了方便操作，Three.js将每个能够直接添加到场景内的对象都继承至一个基类-**THREE.Object3D**，以后我们将继承至这个基类的对象称为3d对象，判断一个对象是否是继承至THREE.Object3D，我们可以这么判断：
 
 ```js
 obj instanceof THREE.Object3D
 //继承至返回 true 否则返回false
 ```
 
-![image-20190717191601592](https://s2.loli.net/2022/07/02/nYg4ISfUqzyW6Rx.png)
-
-
+![image-20190717191601592](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsnYg4ISfUqzyW6Rx.png)
 
 ##### 向场景内添加一个`3d`对象：
 
@@ -373,7 +339,7 @@ scene.add(mesh); //将网格添加到场景
 ```
 
 
-这个方法不光能够在场景内使用，而且也可以将一个`3d`对象添加到另一个`3d`对象里面：
+这个方法不光能够在场景内使用，而且也可以将**一个`3d`对象添加到另一个`3d`对象里面**：
 
 ```js
 parent.add(child);
@@ -448,7 +414,7 @@ mesh.scale = new THREE.Vector3(2, 2, 2); //每个方向都放大一倍
 
 ##### 修改模型的转向
 
-第一种方式是单独设置每个轴的旋转：
+第一种方式是**单独设置每个轴的旋转：**
 
 ```js
 mesh.rotation.x = Math.PI; //模型沿x旋转180度
@@ -456,7 +422,7 @@ mesh.rotation.y = Math.PI * 2; //模型沿y轴旋转360度，跟没旋转一样�
 mesh.rotation.z = - Math.PI / 2; //模型沿z轴逆时针旋转90du
 ```
 
-第二种方式就是使用`set`方法重新赋值：
+第二种方式就是**使用`set`方法重新赋**值：
 
 ```js
 mesh.rotation.set(Math.PI, 0, - Math.PI / 2); //旋转效果和第一种显示的效果相同
@@ -470,7 +436,7 @@ mesh.rotation = new THREE.Euler(Math.PI, 0, - Math.PI / 2, "YZX");
 
 
 
-#### 调式方法
+### 调式方法
 
 有些时候，我们需要调整模型的位置或者大小什么的需要每次都去场景内进行调试，现在我推荐一种常用的插件`dat.GUI`，接下来，我们将一起看看如何使用这一款插件：
 
@@ -515,9 +481,7 @@ function updatePosition() {
 
 这样，只要我们每次都修改对象里面的值以后，都会触发`updatePosition`回调，来更新模型的位置。
 
-
-
-#### Geometry几何体
+### Geometry几何体
 
 一个模型是由几何体`Geometry`和材质`material`组成。`Three.js`内置了很多的几何体种类，如：立方体、三棱锥、球、八面体、十二面体、二十面体等等，这一节我们将介绍一下这些类型几何体的模型创建和几何体的通用方法。
 
@@ -528,15 +492,15 @@ function updatePosition() {
 **它们两个的区别是**：
 
 - Geometry
-  - 使用了Three.js提供的THREE.Vector3或者THREE.Color这样的对象来存储数据
-  - 易与阅读和编辑
-  - 性能弱一些
-  - 适合动画场景
+    - 使用了Three.js提供的THREE.Vector3或者THREE.Color这样的对象来存储数据
+    - 易与阅读和编辑
+    - 性能弱一些
+    - 适合动画场景
 - BufferGeometry
-  - 存储数据原始
-  - 不易阅读和编辑
-  - **性能好**
-  - 适合存储一些放入场景内不需要再额外操作的模型
+    - 存储数据原始
+    - 不易阅读和编辑
+    - **性能好**
+    - 适合存储一些放入场景内不需要再额外操作的模型
 
 ##### 互转
 
@@ -600,7 +564,7 @@ https://threejs.org/docs/scenes/geometry-browser.html#BoxGeometry
 
 > 比如我们要将西瓜切成小块，必须朝三个方向切才行。
 
-![image-20190717173516260](https://s2.loli.net/2022/07/02/A8QOJunch2b1MTm.png)
+![image-20190717173516260](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsA8QOJunch2b1MTm.png)
 
 ##### 圆形
 
@@ -646,6 +610,7 @@ scene.add( cone );
 ```js
 ConeGeometry(radius : 浮点类型, height : 浮点类型, radialSegments : 整数类型, heightSegments : 整数类型, openEnded : 布尔类型, thetaStart : 浮点类型, thetaLength : 浮点类型)
 ```
+
 radius — 底部圆锥的半径，默认值为1。
 height — 圆锥体的高度，默认值为1。
 radialSegments — 圆锥周围的分段面数，默认值为8。
@@ -759,6 +724,7 @@ scene.add( torus );
 ```
 TorusGeometry(radius : 浮点类型, tube : 浮点类型, radialSegments : 整数类型, tubularSegments : 整数类型, arc : 浮点类型)
 ```
+
 radius - 圆环的半径，从圆环的中心到管的中心。默认值为1
 tube — 管的半径。默认值是0.4
 radialSegments — 横向分段数，默认值是8
@@ -775,7 +741,7 @@ https://threejs.org/docs/scenes/geometry-browser.html#TorusGeometry
 
 
 
-#### 材质
+### 材质
 
 这一节我们讲解一下模型的表现，也就是我们看到的模型的外观——材质。
 **简单的说就是物体看起来是什么质地**。材质可以看成是材料和质感的结合。在渲染程式中，它是表面各可视属性的结合，这些可视属性是指表面的色彩、纹理、光滑度、透明度、反射率、折射率、发光度等。Three.js给我们封装好了大部分的材质效果。
@@ -889,7 +855,7 @@ scene.add( mesh ); //将网格添加到场景
 
 
 
-#### 光照
+### 光照
 
 通过之前的内容，我们已经了解一个模型的创建整个过程。接下来，我们将学习如果实现在场景中添加光效和阴影效果。首先我们先介绍一下光照的创建：
 
@@ -990,7 +956,7 @@ scene.add(plane);
 
 上面我们设置了球体和立方体可以产生阴影，底部的平面可以接收球和立方体产生的阴影，便可以产生下面的图片效果：
 
-![image-20190718141005720](https://s2.loli.net/2022/07/02/5dRXD3tIFEeGcOw.png)
+![image-20190718141005720](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs5dRXD3tIFEeGcOw.png)
 
 由于设置阴影是一项十分耗性能的工作，所以我们需要尽量设置合适的阴影渲染范围和密度。平行光阴影的实现原理是通过正交相机OrthographicCamera（将在下一节讲解相机）来通过检测当前模型，也就是directionalLight.shadow.camera就是一个正交相机，只要在这个正交相机可视范围内的可以投影的物体才可以被设置投影。并且我们可以通过设置一些相机的属性属性来实现产生阴影的范围：
 
@@ -1140,7 +1106,7 @@ hemisphereLight.position.set(0, -1, 0); //默认从上往下渲染，也就是�
 
 
 
-#### Camera相机
+### Camera相机
 
 相机是`Three.js`抽象出来的一个对象，使用此对象，我们可以定义显示的内容，并且可以通过移动相机位置来显示不同的内容。 下面讲解一下`Three.js`中的相机的通用属性和常用的相机对象。
 
@@ -1170,7 +1136,7 @@ camera.lookAt(mesh.position);
 
 使用正交相机`OrthographicCamera`渲染出来的场景，所有的物体和模型都按照它固有的尺寸和精度显示，一般使用在工业要求精度或者2D平面中，因为它能完整的显示物体应有的尺寸。
 
-![image-20190718175457610](https://s2.loli.net/2022/07/02/Nd1P6FigXUhW24J.png)
+![image-20190718175457610](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsNd1P6FigXUhW24J.png)
 
 上面的图片可以清晰的显示出正交相机显示的范围，它显示的内容是一个立方体结构，通过图片我们发现，只要确定`top`，`left`，`right`，`bottom`，`near`和`far`六个值，我们就能确定当前相机捕获场景的区域，在这个区域外面的内容不会被渲染，所以，我们创建相机的方法就是：
 
@@ -1232,7 +1198,7 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 
 透视相机是最常用的也是模拟人眼的视角的一种相机，它所渲染生成的页面是一种近大远小的效果。
 
-![image-20190718175812754](https://s2.loli.net/2022/07/02/O8kuSZJch23TBzD.png)
+![image-20190718175812754](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsO8kuSZJch23TBzD.png)
 
 上面的图片就是一个透视相机的生成原理，我们先看看渲染的范围是如何生成的：
 
@@ -1325,7 +1291,7 @@ function animate() {
 
 
 
-#### Points 粒子
+### Points 粒子
 
 这一节，我们将学习到`Sprite`精灵和`Points`粒子两项东西，这两种对象共同点就是我们通过相机查看它们时，始终看到的是它们的正面，它们总朝向相机。通过它们的这种特性，我们可以实现广告牌的效果，或实现更多的比如雨雪、烟雾等更加绚丽的特效。
 
@@ -1464,7 +1430,7 @@ pointsMaterial.sizeAttenuation = false; //关闭粒子的显示效果受距离�
 - geometries 存储当前模型所使用的几何体的数组
 - materials 存储当前模型所使用的材质的数组
 - object 当前模型的结构以及标示所应用到的材质和几何体标示
-  所有的模型网格，几何体和材质都有一个固定的uuid标识符，JSON格式中都是通过uuid作为引用。
+    所有的模型网格，几何体和材质都有一个固定的uuid标识符，JSON格式中都是通过uuid作为引用。
 
 所有的模型网格，几何体和材质都有一个固定的`uuid`标识符，`JSON`格式中都是通过`uuid`作为引用。
 
@@ -1516,24 +1482,24 @@ https://sketchfab.com/3d-models?date=week&features=downloadable&sort_by=-likeCou
 
 1. 首先，将`GLTFLoader`加载器插件引入到页面，插件在官方包的地址`/examples/js/loaders/`，一些文件的导入插件都在这一个文件夹内，大家有兴趣可以研究一下：
 
-   ```js
-   <script src="../js/loaders/GLTFLoader.js"></script>
-   ```
+    ```js
+    <script src="../js/loaders/GLTFLoader.js"></script>
+    ```
 
 2. 然后创建一个加载器：
 
-   ```js
-   var loader = new THREE.GLTFLoader();
-   ```
+    ```js
+    var loader = new THREE.GLTFLoader();
+    ```
 
 3. 使用加载器去加载模型，并调节一下模型大小在场景内展示：
 
-   ```js
-   loader.load('../js/models/gltf/scene.gltf', function (gltf) {
-       gltf.scene.scale.set(.1,.1,.1);
-       scene.add(gltf.scene);
-   });
-   ```
+    ```js
+    loader.load('../js/models/gltf/scene.gltf', function (gltf) {
+        gltf.scene.scale.set(.1,.1,.1);
+        scene.add(gltf.scene);
+    });
+    ```
 
 > 只要碰到loader，一定要使用dev server
 
@@ -1547,120 +1513,121 @@ https://sketchfab.com/3d-models?date=week&features=downloadable&sort_by=-likeCou
 
 1. 定义模型
 
-   ```js
-   var cubeGeometry = new THREE.BoxGeometry(4, 4, 4); // 正方体
-   var cubeMaterial = new THREE.MeshLambertMaterial({morphTargets: true, color: 0x00ffff}); // 材质
-   
-   // 创建两个影响立方体的变形目标， 动画完成的终极状态
-   var cubeTarget1 = new THREE.BoxGeometry(2, 10, 2);   // 瘦高
-   var cubeTarget2 = new THREE.BoxGeometry(8, 2, 8); // 矮胖
-   
-   // 将两个geometry的顶点放入到立方体的morphTargets里面
-   cubeGeometry.morphTargets[0] = {name: 'target1', vertices: cubeTarget1.vertices}; // 设定需要变化的终极目标
-   cubeGeometry.morphTargets[1] = {name: 'target2', vertices: cubeTarget2.vertices};
-   cubeGeometry.computeMorphNormals(); // 告诉threejs我要进行变形动画
-   
-   cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-   cube.position.set(0, 10, 0);
-   
-   // 将立方体添加到顶点当中
-   scene.add(cube);
-   ```
+    ```js
+    var cubeGeometry = new THREE.BoxGeometry(4, 4, 4); // 正方体
+    var cubeMaterial = new THREE.MeshLambertMaterial({morphTargets: true, color: 0x00ffff}); // 材质
+    
+    // 创建两个影响立方体的变形目标， 动画完成的终极状态
+    var cubeTarget1 = new THREE.BoxGeometry(2, 10, 2);   // 瘦高
+    var cubeTarget2 = new THREE.BoxGeometry(8, 2, 8); // 矮胖
+    
+    // 将两个geometry的顶点放入到立方体的morphTargets里面
+    cubeGeometry.morphTargets[0] = {name: 'target1', vertices: cubeTarget1.vertices}; // 设定需要变化的终极目标
+    cubeGeometry.morphTargets[1] = {name: 'target2', vertices: cubeTarget2.vertices};
+    cubeGeometry.computeMorphNormals(); // 告诉threejs我要进行变形动画
+    
+    cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+    cube.position.set(0, 10, 0);
+    
+    // 将立方体添加到顶点当中
+    scene.add(cube);
+    ```
 
 2. 调试器绑定update
 
-   ```js
-   //声明一个保存需求修改的相关数据的对象
-   gui = {
-     influence1:0.01,
-     influence2:0.01,
-     update : function () {
-       cube.morphTargetInfluences[0] = gui.influence1;  // 原生属性， 代表权重，值越大越接近变化目标
-       cube.morphTargetInfluences[1] = gui.influence2;
-     }
-   };
-   
-   var datGui = new dat.GUI();
-   //将设置属性添加到gui当中，gui.add(对象，属性，最小值，最大值）
-   datGui.add(gui, 'influence1', 0, 1).onChange(gui.update);
-   datGui.add(gui, 'influence2', 0, 1).onChange(gui.update);
-   ```
-   
-   ![image-20190725232943778](https://s2.loli.net/2022/07/02/egA2I8macw57jLG.png)
+    ```js
+    //声明一个保存需求修改的相关数据的对象
+    gui = {
+      influence1:0.01,
+      influence2:0.01,
+      update : function () {
+        cube.morphTargetInfluences[0] = gui.influence1;  // 原生属性， 代表权重，值越大越接近变化目标
+        cube.morphTargetInfluences[1] = gui.influence2;
+      }
+    };
+    
+    var datGui = new dat.GUI();
+    //将设置属性添加到gui当中，gui.add(对象，属性，最小值，最大值）
+    datGui.add(gui, 'influence1', 0, 1).onChange(gui.update);
+    datGui.add(gui, 'influence2', 0, 1).onChange(gui.update);
+    ```
+
+    ![image-20190725232943778](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsegA2I8macw57jLG.png)
 
 #### 骨骼动画
+
 骨骼动画是需要生成一个与模型相关的骨架，骨架中的骨骼也会存在对应关系，模型的每一个需要动画的顶点需要设置影响它的骨骼以及骨骼影响顶点的程度。骨骼动画和变形动画相比会比较复杂一些，但是它又有更多的灵活性。我们可以想象一下人体的骨骼，如果使用变形动画，需要把所有的每一次的变动都存一个顶点数组，而骨骼动画，只需要设置骨骼的相关信息，就可以实现更多的动画。
 
 1. 首先， 我们创建了一个圆柱几何体，然后通过圆柱的几何体每一个顶点的y轴坐标来设置需要绑定的骨骼的下标和影响的程度：
 
-   ```js
-   //遍历几何体所有的顶点
-   for (var i = 0; i < geometry.vertices.length; i++) {
-   
-       //根据顶点的位置计算出骨骼影响下标和权重
-   
-       var vertex = geometry.vertices[i];
-       var y = (vertex.y + sizing.halfHeight);
-   
-       var skinIndex = Math.floor(y / sizing.segmentHeight);
-       var skinWeight = (y % sizing.segmentHeight) / sizing.segmentHeight;
-   
-       geometry.skinIndices.push(new THREE.Vector4(skinIndex, skinIndex + 1, 0, 0));
-       geometry.skinWeights.push(new THREE.Vector4(1 - skinWeight, skinWeight, 0, 0));
-   
-   }
-   
-   ```
+    ```js
+    //遍历几何体所有的顶点
+    for (var i = 0; i < geometry.vertices.length; i++) {
+    
+        //根据顶点的位置计算出骨骼影响下标和权重
+    
+        var vertex = geometry.vertices[i];
+        var y = (vertex.y + sizing.halfHeight);
+    
+        var skinIndex = Math.floor(y / sizing.segmentHeight);
+        var skinWeight = (y % sizing.segmentHeight) / sizing.segmentHeight;
+    
+        geometry.skinIndices.push(new THREE.Vector4(skinIndex, skinIndex + 1, 0, 0));
+        geometry.skinWeights.push(new THREE.Vector4(1 - skinWeight, skinWeight, 0, 0));
+    
+    }
+    
+    ```
 
-   > 几何体的`skinIndices`属性和`skinWeights`属性就是来设置相关的绑定下标和权重（骨骼影响程度）。
-   >
-   > 
-   >
-   > Vector4 不代表任何意义,仅仅是4个float , 你需要根据你的需求 赋予这个Vetor4的含义
-   > 比如 XYZ 代表坐标 ,W 代表比例, 这样 你可以用 Vector3 pos = new Vector3(X/W,Y/W,Z/W) 来控制坐标的比例
-   > 你也可用W 代表透明度, XYZ来控制RPG
-   > 或者也可以用W 来进行bool 判断
+    > 几何体的`skinIndices`属性和`skinWeights`属性就是来设置相关的绑定下标和权重（骨骼影响程度）。
+    >
+    > 
+    >
+    > Vector4 不代表任何意义,仅仅是4个float , 你需要根据你的需求 赋予这个Vetor4的含义
+    > 比如 XYZ 代表坐标 ,W 代表比例, 这样 你可以用 Vector3 pos = new Vector3(X/W,Y/W,Z/W) 来控制坐标的比例
+    > 你也可用W 代表透明度, XYZ来控制RPG
+    > 或者也可以用W 来进行bool 判断
 
 2. 相应的，我们需要设置一组相关的骨骼，骨骼具有嵌套关系，这样才能实现一个骨架，由于圆柱体比较简单，我们就创建一条骨骼垂直嵌套的骨骼：
 
-   ```js
-   bones = [];
-   
-   var prevBone = new THREE.Bone();
-   bones.push(prevBone);
-   prevBone.position.y = -sizing.halfHeight;
-   
-   for (var i = 0; i < sizing.segmentCount; i++) {
-   
-       var bone = new THREE.Bone();
-       bone.position.y = sizing.segmentHeight;
-       bones.push(bone); //添加到骨骼数组
-       prevBone.add(bone); //上一个骨骼定义为父级
-       prevBone = bone;
-   
-   }
-   
-   ```
+    ```js
+    bones = [];
+    
+    var prevBone = new THREE.Bone();
+    bones.push(prevBone);
+    prevBone.position.y = -sizing.halfHeight;
+    
+    for (var i = 0; i < sizing.segmentCount; i++) {
+    
+        var bone = new THREE.Bone();
+        bone.position.y = sizing.segmentHeight;
+        bones.push(bone); //添加到骨骼数组
+        prevBone.add(bone); //上一个骨骼定义为父级
+        prevBone = bone;
+    
+    }
+    
+    ```
 
 3. 创建纹理时，我们还需要设置当前纹理需要受到骨骼的影响，将材质的`skinning`属性设置为`true`：
 
-   ```js
-   var lineMaterial = new THREE.MeshBasicMaterial({
-       skinning: true,
-       wireframe: true
-   });
-   ```
+    ```js
+    var lineMaterial = new THREE.MeshBasicMaterial({
+        skinning: true,
+        wireframe: true
+    });
+    ```
 
 4. 最后，我们需要创建骨骼材质，并将模型绑定骨骼：
 
-   ```js
-   mesh = new THREE.SkinnedMesh(geometry, [material, lineMaterial]);
-   var skeleton = new THREE.Skeleton(bones); //创建骨架
-   mesh.add(bones[0]); //将骨骼添加到模型里面
-   mesh.bind(skeleton); //模型绑定骨架
-   ```
-   
-   
+    ```js
+    mesh = new THREE.SkinnedMesh(geometry, [material, lineMaterial]);
+    var skeleton = new THREE.Skeleton(bones); //创建骨架
+    mesh.add(bones[0]); //将骨骼添加到模型里面
+    mesh.bind(skeleton); //模型绑定骨架
+    ```
+
+    
 
 #### 两种动画的区别
 
@@ -1679,65 +1646,65 @@ https://sketchfab.com/3d-models?date=week&features=downloadable&sort_by=-likeCou
 
 1. 在模型加载成功以后，我们首先将模型创建出来，并将材质的`morphTargets`设置为ture，可以使用变形动画：
 
-   ```js
-   mesh = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({
-       vertexColors: THREE.FaceColors,
-       morphTargets: true
-   }));
-   mesh.castShadow = true;
-   mesh.scale.set(0.1, 0.1, 0.1);
-   scene.add(mesh);
-   
-   ```
+    ```js
+    mesh = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({
+        vertexColors: THREE.FaceColors,
+        morphTargets: true
+    }));
+    mesh.castShadow = true;
+    mesh.scale.set(0.1, 0.1, 0.1);
+    scene.add(mesh);
+    
+    ```
 
-   
+    
 
 2. 然后我们创建了一个针对于该模型的混合器：
 
-   ```js
-   mixer = new THREE.AnimationMixer(mesh);
-   
-   ```
+    ```js
+    mixer = new THREE.AnimationMixer(mesh);
+    
+    ```
 
-   
+    
 
 3. 接着使用变形目标数据创建一个动画片段：
 
-   ```js
-   var clip = THREE.AnimationClip.CreateFromMorphTargetSequence('gallop', geometry.morphTargets, 30);
-   
-   ```
+    ```js
+    var clip = THREE.AnimationClip.CreateFromMorphTargetSequence('gallop', geometry.morphTargets, 30);
+    
+    ```
 
-   
+    
 
 4. 使用混合器和动画片段创建一个动画播放器来播放：
 
-   ```js
-   var action = mixer.clipAction(clip); //创建动画播放器
-   action.setDuration(1); //设置当前动画一秒为一个周期
-   action.play(); //设置当前动画播放
-   
-   ```
+    ```js
+    var action = mixer.clipAction(clip); //创建动画播放器
+    action.setDuration(1); //设置当前动画一秒为一个周期
+    action.play(); //设置当前动画播放
+    
+    ```
 
-   
+    
 
 5. 最后，我们还需要在重新绘制循环中更新混合器，进行动作更新：
 
-   ```js
-   function render() {
-   
-       control.update();
-   
-       var time = clock.getDelta();
-   	//由于模型导入是异步的，所以我们再模型没有加载完之前是获取不到混合器的
-       if (mixer) {
-           mixer.update(time);
-       }
-   
-       renderer.render(scene, camera);
-   }
-   
-   ```
+    ```js
+    function render() {
+    
+        control.update();
+    
+        var time = clock.getDelta();
+    	//由于模型导入是异步的，所以我们再模型没有加载完之前是获取不到混合器的
+        if (mixer) {
+            mixer.update(time);
+        }
+    
+        renderer.render(scene, camera);
+    }
+    
+    ```
 
 
 
@@ -1750,59 +1717,59 @@ https://sketchfab.com/3d-models?date=week&features=downloadable&sort_by=-likeCou
 
 1. 首先，创建一个`position`对象，里面存储当前立方体的位置数据：
 
-   ```js
-   var position = {x:-40, y:0, z:-30};
-   ```
+    ```js
+    var position = {x:-40, y:0, z:-30};
+    ```
 
-   
+    
 
 2. 然后，通过当前的对象创建一个补间`Tween`：
 
-   ```js
-   tween = new TWEEN.Tween(position);
-   ```
+    ```js
+    tween = new TWEEN.Tween(position);
+    ```
 
-   
+    
 
 3. 设置每一个属性的目标位置，并告诉`Tween`在2000毫秒内移动到目标位置：
 
-   ```js
-   tween.to({x:40, y:30, z:30}, 2000);
-   ```
+    ```js
+    tween.to({x:40, y:30, z:30}, 2000);
+    ```
 
-   
+    
 
 4. 我们设置`Tween`对象的每次更新的回调，在每次数据更新以后，将立方体的位置更新掉：
 
-   ```js
-   tween.onUpdate(function (pos) {
-       cube.position.set(pos.x, pos.y, pos.z);
-   });
-   ```
+    ```js
+    tween.onUpdate(function (pos) {
+        cube.position.set(pos.x, pos.y, pos.z);
+    });
+    ```
 
-   
+    
 
 5. `Tween`对象不会直接执行，需要我们去调用`start()`方法激活：
 
-   ```js
-   tween.start();
-   ```
+    ```js
+    tween.start();
+    ```
 
-   
+    
 
 6. 想要完成整个过程，我们还需要在每帧里面调用`TWEEN.update`，来触发`Tween`对象更新位置：
 
-   ```js
-   function render() {
-   
-       //更新Tween
-       TWEEN.update();
-   
-       control.update();
-   
-       renderer.render(scene, camera);
-   }
-   ```
+    ```js
+    function render() {
+    
+        //更新Tween
+        TWEEN.update();
+    
+        control.update();
+    
+        renderer.render(scene, camera);
+    }
+    ```
 
 ### 性能优化建议
 
@@ -1929,7 +1896,7 @@ animate();
 
 ### 王者荣耀demo制作
 
-![image-20190725192207759](https://s2.loli.net/2022/07/02/ZfFAa6SYQgdjyLt.png)
+![image-20190725192207759](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsZfFAa6SYQgdjyLt.png)
 
 #### 1. 场景搭建
 
@@ -2295,1063 +2262,4 @@ function closeAttack() {
     clearInterval(attackInterval);
 }
 ```
-
-
-
-## D3.js
-
-### 为什么学习D3
-
-**D3.js和threejs的应用场景完全不一样**。threejs主要应用与基于webGL的3D场景，而D3.js确主要应用与2D场景。
-
-它们一起形成了一种互补关系。
-
-简而言之D3JS就是一个数据可视化的库。
-
-那什么是数据可视化呢？
-
-> 给出一组数据 [10，80，40,100,30,20,50]
-
-![image-20190801162422591](https://s2.loli.net/2022/07/02/lEQI5jviK1zZH9J.png)
-
-#### 类似的库 eharts
-
-ECharts，一个使用 JavaScript 实现的开源可视化库，可以流畅的运行在 PC 和移动设备上，兼容当前绝大部分浏览器，ECharts 提供了常规的[折线图](https://www.echartsjs.com/option.html#series-line)、[柱状图](https://www.echartsjs.com/option.html#series-line)、[散点图](https://www.echartsjs.com/option.html#series-scatter)、[饼图](https://www.echartsjs.com/option.html#series-pie) 等等。
-
-#### 和eharts的区别
-
-eharts是封装好的各种的图表可以直接拿来使用，类似于图表模具，直接拿来使用即可。
-
-D3.js就像画笔一样，一切都由你自由发挥。
-
-### 基本介绍
-
-**D3.js**（**Data-Driven Documents**）是一个使用动态图形进行[数据可视化](https://zh.wikipedia.org/wiki/資料視覺化)的[JavaScript程序库](https://zh.wikipedia.org/wiki/JavaScript函式庫)。与[W3C](https://zh.wikipedia.org/wiki/W3C)标准兼容，并且利用广泛实现的[SVG](https://zh.wikipedia.org/wiki/SVG)、JavaScript和[CSS](https://zh.wikipedia.org/wiki/CSS)标准，改良自早期的[Protovis](https://zh.wikipedia.org/w/index.php?title=Protovis&action=edit&redlink=1)程序库。与其他的程序库相比，D3对**视图结果有很大的可控性**。D3是2011年面世的，同年的8月发布了2.0.0版。到2018年4月，D3已被更新到了5.5.0版[[1\]](https://zh.wikipedia.org/wiki/D3.js#cite_note-d3_Releases-1)。
-
-#### 	发展历史
-
-在D3.js开发之前已经有出现过许多尝试做数据可视化的包，例如[Prefuse](https://zh.wikipedia.org/w/index.php?title=Prefuse&action=edit&redlink=1)，Flare和Protovis程序库，他们都可以视为D3.js的前身。然而Prefuse和Flare皆有缺点，皆不能只透过浏览器完成渲染，皆须要透过额外插件来完成。
-
-例如2005年发布的Prefuse是一个数据可视化程序库，但是它需要透过网页的[Java](https://zh.wikipedia.org/wiki/Java)插件才能于[浏览器](https://zh.wikipedia.org/wiki/瀏覽器)中呈现；而Flare是2007年发布的另一个数据可视化工具包，由于其是使用[ActionScript](https://zh.wikipedia.org/wiki/ActionScript)编程语言开发，因此也需要额外插件，即[Flash](https://zh.wikipedia.org/wiki/Adobe_Flash_Player)插件才能完成渲染。
-
-2009年，[史丹佛大学](https://zh.wikipedia.org/wiki/史丹佛大學)的史丹佛可视化团队（Stanford Visualization Group）的杰佛瑞·赫尔、[迈克·保斯托](https://zh.wikipedia.org/w/index.php?title=邁克·保斯托&action=edit&redlink=1)和瓦迪姆·欧格菲兹齐利用开发Prefuse和Flare的经验开始用Javscript开发了可从给定数据产生SVG图形的Protovis程序库。而Protovis程序库在业界和学界皆有一定的知名度[[3\]](https://zh.wikipedia.org/wiki/D3.js#cite_note-3)。
-
-2011年，史丹佛可视化团队停止开发Protovis，并开始开发新的数据可视化程序库，借由之前开发Protovis的经验，开发出了D3.js程序库，在注重于Web标准的同时提供了更丰富的平台也有了更好的性能[[4\]](https://zh.wikipedia.org/wiki/D3.js#cite_note-Bostock,_Ogievetsky_&_Heer_2011-4)。
-
-#### 技术原理
-
-D3.js透过预先创建好迁入于网页中的[JavaScript](https://zh.wikipedia.org/wiki/JavaScript)函数来选择网页元素、创建[SVG](https://zh.wikipedia.org/wiki/SVG)元素、调整[CSS](https://zh.wikipedia.org/wiki/CSS)来呈现数据，并且也可以设置动画、动态改变对象状态或加入工具提示来完成用户交互功能。使用简单的D3.js函数就能够将大型的数据数据结构与SVG对象进行绑定，并且能生成[格式化文本](https://zh.wikipedia.org/wiki/格式化文本)和各种图表。
-
-
-
-### 基本使用
-
-#### hello world
-
-先尝试用 D3 写第一个 HelloWorld 程序。学编程入门的第一个程序都是在屏幕上输出 HelloWorld，本课稍微有些不同，不是单纯的输出。
-
-在 HTML 中输出 HelloWorld 是怎样的呢，先看下面的代码。
-
-```html
-<html> 
-  <head> 
-        <meta charset="utf-8"> 
-        <title>HelloWorld</title> 
-  </head> 
-    <body> 
-        <p>Hello World 1</p>
-        <p>Hello World 2</p>
-    </body> 
-</html>
-```
-
-##### 用 JavaScript 来更改 HelloWorld
-
-对于上面输出的内容，如果想用 JavaScript 来更改这两行文字，怎么办呢？我们会添加代码变为：
-
-```html
-<html> 
-  <head> 
-        <meta charset="utf-8"> 
-        <title>HelloWorld</title> 
-  </head> 
-    <body> 
-    <p>Hello World 1</p>
-    <p>Hello World 2</p>
-        <script>
-        var paragraphs = document.getElementsByTagName("p");
-        for (var i = 0; i < paragraphs.length; i++) {
-          var paragraph = paragraphs.item(i);
-          paragraph.innerHTML = "I like dog.";
-        }          
-        </script> 
-    </body> 
-</html>
-```
-
-##### 用 D3 来更改 HelloWorld
-
-如果使用 D3.js 来修改这两行呢？只需添加一行代码即可。注意不要忘了引用 D3.js 源文件。
-
-**引入**： 
-
-```
-<script src="https://d3js.org/d3.v5.js"></script>
-```
-
-```html
-<html> 
-  <head> 
-        <meta charset="utf-8"> 
-        <title>HelloWorld</title> 
-  </head> 
-    <body> 
-        <p>Hello World 1</p>
-        <p>Hello World 2</p>
-        <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script> 
-        <script>  
-        d3.select("body").selectAll("p").text("www.ourd3js.com");      
-        </script> 
-    </body> 
-</html>
-```
-
-接下来改变字体的颜色和大小，稍微修改上述代码：
-
-```js
-//选择<body>中所有的<p>，其文本内容为 www.ourd3js.com，选择集保存在变量 p 中
-var p = d3.select("body")
-          .selectAll("p")
-          .text("www.ourd3js.com");
-
-//修改段落的颜色和字体大小
-p.style("color","red")
- .style("font-size","72px");
-```
-
-#### 选择元素
-
-在 D3 中，用于选择元素的函数有两个：
-
-- d3.select()：是选择所有指定元素的第一个
-- d3.selectAll()：是选择指定元素的全部
-
-这两个函数返回的结果称为选择集。
-
-例如，选择集的常见用法如下。
-
-```js
-var body = d3.select("body"); //选择文档中的body元素
-var p1 = body.select("p");      //选择body中的第一个p元素
-var p = body.selectAll("p");    //选择body中的所有p元素
-var svg = body.select("svg");   //选择body中的svg元素
-var rects = svg.selectAll("rect");  //选择svg中所有的svg元素
-```
-
-#### 绑定数据
-
-选择集和绑定数据通常是一起使用的。
-
-D3 有一个很独特的功能：能将数据绑定到 DOM 上，也就是绑定到文档上。这么说可能不好理解，例如网页中有段落元素 p 和一个整数 5，于是可以将整数 5 与 p 绑定到一起。绑定之后，当需要依靠这个数据才操作元素的时候，会很方便。
-
-D3 中是通过以下两个函数来绑定数据的：
-
-- datum()：绑定一个数据到选择集上
-- data()：绑定一个数组到选择集上，数组的各项值分别与选择集的各元素绑定
-
-相对而言，data() 比较常用。
-
-假设现在有三个段落元素如下。
-
-```
-<p>Apple</p>
-<p>Pear</p>
-<p>Banana</p>
-```
-
-**datum()**
-
-假设有一字符串 China，要将此字符串分别与三个段落元素绑定，代码如下：
-
-```js
-var str = "China";
-
-var body = d3.select("body");
-var p = body.selectAll("p");
-
-p.datum(str);
-
-p.text(function(d, i){
-    return "第 "+ i + " 个元素绑定的数据是 " + d;
-});
-```
-
-绑定数据后，使用此数据来修改三个段落元素的内容，其结果如下：
-
-```
-第 0 个元素绑定的数据是 China
-
-第 1 个元素绑定的数据是 China
-
-第 2 个元素绑定的数据是 China
-```
-
-在上面的代码中，用到了一个无名函数 **function(d, i)**。当选择集需要使用被绑定的数据时，常需要这么使用。其包含两个参数，其中：
-
-- d 代表数据，也就是与某元素绑定的数据。
-- i 代表索引，代表数据的索引号，从 0 开始。
-
-例如，上述例子中：第 0 个元素 apple 绑定的数据是 China。
-
-**data()**
-
-有一个数组，接下来要分别将数组的各元素绑定到三个段落元素上。
-
-```js
-var dataset = ["I like dog","I like cat","I like snake"];
-```
-
-绑定之后，其对应关系的要求为：
-
-- Apple 与 I like dog 绑定
-- Pear 与 I like cat 绑定
-- Banana 与 I like snake 绑定
-
-调用 data() 绑定数据，并替换三个段落元素的字符串为被绑定的字符串，代码如下：
-
-```js
-var body = d3.select("body");
-var p = body.selectAll("p");
-
-p.data(dataset)
-  .text(function(d, i){
-      return d;
-});
-```
-
-这段代码也用到了一个无名函数 function(d, i)，其对应的情况如下：
-
-- 当 i == 0 时， d 为 I like dog。
-- 当 i == 1 时， d 为 I like cat。
-- 当 i == 2 时， d 为 I like snake。
-
-此时，三个段落元素与数组 dataset 的三个字符串是一一对应的，因此，在函数 function(d, i) 直接 return d 即可。
-
-结果自然是三个段落的文字分别变成了数组的三个字符串。
-
-```
-I like dog
-
-I like cat
-
-I like snake
-```
-
-#### 选择、插入、删除元素
-
-已经讲解了 select 和 selectAll，以及选择集的概念。本节具体讲解这两个函数的用法。
-
-假设在 body 中有三个段落元素：
-
-```
-<p>Apple</p>
-<p>Pear</p>
-<p>Banana</p>
-```
-
-现在，要分别完成以下四种选择元素的任务。
-
-##### 选择第一个 p 元素
-
-```
-t("p");
-p1.style("color","red");
-```
-
-##### 选择三个 p 元素
-
-```javascript
-var p = body.selectAll("p");
-p.style("color","red");
-```
-
-##### 选择第二个 p 元素
-
-有不少方法，一种比较简单的是给第二个元素添加一个 id 号。
-
-Pear
-
-然后，使用 select 选择元素，注意参数中 id 名称前要加 # 号。
-
-```
-var p2 = body.select("#myid");
-p2.style("color","red");
-```
-
-##### 选择后两个 p 元素
-
-给后两个元素添加 class，
-
-```
-<p class="myclass">Pear</p>
-<p class="myclass">Banana</p>
-```
-
-由于需要选择多个元素，要用 selectAll。注意参数，class 名称前要加一个点。
-
-```javascript
-var p = body.selectAll(".myclass");
-p.style("color","red");
-```
-
-#### 插入元素
-
-插入元素涉及的函数有两个：
-
-- append()：在选择集末尾插入元素
-- insert()：在选择集前面插入元素
-
-假设有三个段落元素，与上文相同。
-
-**append()**
-
-```
-body.append("p")
-    .text("append p element");
-```
-
-在 body 的末尾添加一个 p 元素，结果为：
-
-```
-Apple
-Pear
-Banana
-append p element
-```
-
-**insert()**
-
-在 body 中 id 为 myid 的元素前添加一个段落元素。
-
-```
-body.insert("p","#myid")
-  .text("insert p element");
-```
-
-已经指定了 Pear 段落的 id 为 myid，因此结果如下。
-
-```
-Apple
-insert p element
-Pear
-Banana
-```
-
-#### 删除元素
-
-删除一个元素时，对于选择的元素，使用 remove 即可，例如：
-
-```
-var p = body.select("#myid");
-p.remove();
-```
-
-
-
-### SVG 基本使用
-
-SVG 意为可缩放矢量图形（Scalable Vector Graphics）。
-
-SVG 使用 XML 格式定义图像。
-
-#### 什么是svg
-
-- SVG 指可伸缩矢量图形 (Scalable Vector Graphics)
-- SVG 用来定义用于网络的基于矢量的图形
-- SVG 使用 XML 格式定义图形
-- **SVG 图像在放大或改变尺寸的情况下其图形质量不会有所损失**
-- SVG 是万维网联盟的标准
-- **SVG 与诸如 DOM 和 XSL 之类的 W3C 标准是一个整体**
-
-#### hello-world
-
-```html
-<html>
-<body>
- 
-<h1>My first SVG</h1>
- 
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
-  <circle cx="100" cy="50" r="40" stroke="black"
-  stroke-width="2" fill="red" />
-</svg>
- 
-</body>
-</html>
-```
-
-#### 简单的 SVG 实例
-
-一个简单的SVG图形例子：
-
-这里是SVG文件（SVG文件的保存与SVG扩展）：
-
-```svg
-<?xml version="1.0" standalone="no"?>
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" 
-"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
-  <circle cx="100" cy="50" r="40" stroke="black"
-  stroke-width="2" fill="red" />
-</svg>
-```
-
-**第一行**包含了 XML 声明。请注意 standalone 属性！该属性规定此 SVG 文件是否是"独立的"，或含有对外部文件的引用。
-
-standalone="no" 意味着 SVG 文档会引用一个外部文件 - 在这里，是 DTD 文件。
-
-**第二和第三行**引用了这个外部的 SVG DTD。该 DTD 位于 "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"。该 DTD 位于 W3C，含有所有允许的 SVG 元素。
-
-SVG 代码以 `<svg> `元素开始，包括开启标签` <svg> `和关闭标签 `</svg> `。这是根元素。width 和 height 属性可设置此 SVG 文档的宽度和高度。version 属性可定义所使用的 SVG 版本，xmlns 属性可定义 SVG 命名空间。
-
-SVG 的` <circle>` 用来创建一个圆。cx 和 cy 属性定义圆中心的 x 和 y 坐标。如果忽略这两个属性，那么圆点会被设置为 (0, 0)。r 属性定义圆的半径。
-
-stroke 和 stroke-width 属性控制如何显示形状的轮廓。我们把圆的轮廓设置为 2px 宽，黑边框。
-
-fill 属性设置形状内的颜色。我们把填充颜色设置为红色。
-
-关闭标签的作用是关闭 SVG 元素和文档本身。
-
-#### SVG 在 HTML 页面
-
-SVG 文件可通过以下标签嵌入 HTML 文档：<embed>、<object> 或者 <iframe>。
-
-SVG的代码可以直接嵌入到HTML页面中，或您可以直接链接到SVG文件。
-
-##### 使用 `<embed>` 标签
-
-```
-<embed src="circle1.svg" type="image/svg+xml" />
-```
-
-##### 直接在HTML嵌入SVG代码
-
-在Firefox、Internet Explorer9、谷歌Chrome和Safari中，你可以直接在HTML嵌入SVG代码。
-
-```html
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
-   <circle cx="100" cy="50" r="40" stroke="black" stroke-width="2" fill="red" />
-</svg>
-```
-
-#### SVG图形
-
-SVG有一些预定义的形状元素，可被开发者使用和操作：
-
-- 矩形 <rect>
-- 圆形 <circle>
-- 椭圆 <ellipse>
-- 线 <line>
-- 折线 <polyline>
-- 多边形 <polygon>
-- 路径 <path>
-
-
-
-##### 矩形
-
-EX1:
-
-<rect> 标签可用来创建矩形，以及矩形的变种：
-
-```html
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
-  <rect width="300" height="100"
-  style="fill:rgb(0,0,255);stroke-width:1;stroke:rgb(0,0,0)"/>
-</svg>
-```
-
-- rect 元素的 width 和 height 属性可定义矩形的高度和宽度
-- style 属性用来定义 CSS 属性
-- CSS 的 fill 属性定义矩形的填充颜色（rgb 值、颜色名或者十六进制值）
-- CSS 的 stroke-width 属性定义矩形边框的宽度
-- CSS 的 stroke 属性定义矩形边框的颜色
-
-EX2:
-
-让我们看看另一个例子，它包含一些新的属性：
-
-```html
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
-  <rect x="50" y="20" width="150" height="150"
-  style="fill:blue;stroke:pink;stroke-width:5;fill-opacity:0.1;
-  stroke-opacity:0.9"/>
-</svg>
-```
-
-- x 属性定义矩形的左侧位置（例如，x="0" 定义矩形到浏览器窗口左侧的距离是 0px）
-- y 属性定义矩形的顶端位置（例如，y="0" 定义矩形到浏览器窗口顶端的距离是 0px）
-- CSS 的 fill-opacity 属性定义填充颜色透明度（合法的范围是：0 - 1）
-- CSS 的 stroke-opacity 属性定义轮廓颜色的透明度（合法的范围是：0 - 1）
-
-
-
-##### 圆形
-
-<circle> 标签可用来创建一个圆：
-
-```html
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
-  <circle cx="100" cy="50" r="40" stroke="black"
-  stroke-width="2" fill="red"/>
-</svg>
-```
-
-- cx和cy属性定义圆点的x和y坐标。如果省略cx和cy，圆的中心会被设置为(0, 0)
-- r属性定义圆的半径
-
-
-
-##### 椭圆
-
-<ellipse> 元素是用来创建一个椭圆：
-
-椭圆与圆很相似。不同之处在于椭圆有不同的x和y半径，而圆的x和y半径是相同的：
-
-````html
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
-  <ellipse cx="300" cy="80" rx="100" ry="50"
-  style="fill:yellow;stroke:purple;stroke-width:2"/>
-</svg>
-````
-
-##### 直线
-
-<line> 元素是用来创建一个直线：
-
-```html
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
-  <line x1="0" y1="0" x2="200" y2="200"
-  style="stroke:rgb(255,0,0);stroke-width:2"/>
-</svg>
-```
-
-- x1 属性在 x 轴定义线条的开始
-- y1 属性在 y 轴定义线条的开始
-- x2 属性在 x 轴定义线条的结束
-- y2 属性在 y 轴定义线条的结束
-
-##### 多边形
-
-<polygon> 标签用来创建含有不少于三个边的图形。
-
-polygon来自希腊。 "Poly" 意味 "many" ， "gon" 意味 "angle".
-
-```html
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
-  <polygon points="200,10 250,190 160,210"
-  style="fill:lime;stroke:purple;stroke-width:1"/>
-</svg>
-```
-
-下面的示例创建一个四边的多边形：
-
-```html
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
-  <polygon points="220,10 300,210 170,250 123,234"
-  style="fill:lime;stroke:purple;stroke-width:1"/>
-</svg>
-```
-
-##### 曲线
-
-<polyline> 元素是用于创建任何只有直线的形状：
-
-```html
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
-  <polyline points="20,20 40,25 60,40 80,120 120,140 200,180"
-  style="fill:none;stroke:black;stroke-width:3" />
-</svg>
-```
-
-只有直线的另一个例子：
-
-```html
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
-  <polyline points="0,40 40,40 40,80 80,80 80,120 120,120 120,160" style="fill:white;stroke:red;stroke-width:4" />
-</svg>
-```
-
-##### 路径
-
-<path> 元素用于定义一个路径。
-
-下面的命令可用于路径数据：
-
-- M = moveto
-- L = lineto
-- H = horizontal lineto
-- V = vertical lineto
-- C = curveto
-- S = smooth curveto
-- Q = quadratic Bézier curve
-- T = smooth quadratic Bézier curveto
-- A = elliptical Arc
-- Z = closepath
-
-例子定义了一条路径，它开始于位置150 0，到达位置75 200，然后从那里开始到225 200，最后在150 0关闭路径。
-
-```html
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
-    <path d="M150 0 L75 200 L225 200 Z" />
-</svg>
-```
-
-##### 文本
-
-<text> 元素用于定义文本。
-
-EX:1
-
-```
-<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
-  <text x="0" y="15" fill="red">I love SVG</text>
-</svg>
-```
-
-##### Svg与Canvas的区别？
-
-1. 绘制的图片格式不同
-
-```
-Canvas 的工具getContext 绘制出来的图形或传入的图片都依赖分辨率，能够以 .png 和 .jpg格式保存存储图像，可以说是位图
-
-SVG 可以在H5中直接绘制，但绘制的是矢量图
-
-由于位图依赖分辨率，矢量图不依赖分辨率，所以Canvas和SVG的图片格式的不同实际上是他们绘制出来的图片的格式不同造成的。
-```
-
-2. Canvas不支持事件处理器，SVG支持事件处理器
-
-```
-Canvas 绘制的图像 都在Canvas这个画布里面，是Canvas的一部分，不能用js获取已经绘制好的图形元素。
-```
-
-3. 适用范围不同
-
-```
-Canvas是逐像素进行渲染的，一旦图形绘制完成，就不会继续被浏览器关注。而SVG是通过DOM操作来显示的。
-
-所以Canvas的文本渲染能力弱，而SVG最适合带有大型渲染区域的应用程序，比如地图。
-
-而Canvas 最适合有许多对象要被频繁重绘的图形密集型游戏。
-
-而SVG由于DOM操作 在复杂度高的游戏应用中 会减慢渲染速度。所以不适合在游戏应用。
-```
-
-
-
-### 实践
-
-#### 做一个简单的柱状图
-
-![image-20190802172953054](https://s2.loli.net/2022/07/02/5WMfGmcuzILs67J.png)
-
-##### 画布
-
-前几章的处理对象都是 HTML 的文字，没有涉及图形的制作。
-
-要绘图，首要需要的是一块绘图的“**画布**”。
-
-HTML 5 提供两种强有力的“画布”：**SVG** 和 **Canvas**。
-
-##### 添加画布
-
-D3 虽然没有明文规定一定要在 SVG 中绘图，但是 D3 提供了众多的 SVG 图形的生成器，它们都是只支持 SVG 的。因此，建议使用 SVG 画布。
-
-使用 D3 在 body 元素中添加 svg 的代码如下。
-
-```js
-var width = 300;  //画布的宽度
-var height = 300;   //画布的高度
-
-var svg = d3.select("body")     //选择文档中的body元素
-    .append("svg")          //添加一个svg元素
-    .attr("width", width)       //设定宽度
-    .attr("height", height);    //设定高度
-```
-
-有了画布，接下来就可以在画布上作图了。
-
-##### 绘制矩形
-
-本文绘制一个横向的柱形图。只绘制矩形，不绘制文字和坐标轴。
-
-在 SVG 中，矩形的元素标签是 rect。例如：
-
-```html
-<svg>
-  <rect></rect>
-  <rect></rect>
-</svg>
-```
-
-上面的 rect 里没有矩形的属性。矩形的属性，常用的有四个：
-
-- x：矩形左上角的 x 坐标
-- y：矩形左上角的 y 坐标
-- width：矩形的宽度
-- height：矩形的高度
-
-要注意，在 SVG 中，x 轴的正方向是水平向右，y 轴的正方向是垂直向下的。
-
-现在给出一组数据，要对此进行可视化。数据如下：
-
-```js
-var dataset = [ 250 , 210 , 170 , 130 , 90 ];  //数据（表示矩形的宽度）
-```
-
-为简单起见，我们直接用数值的大小来表示矩形的像素宽度（后面会说到这不是一种好方法）。然后，添加以下代码。
-
-```js
-var rectHeight = 25;   //每个矩形所占的像素高度(包括空白)
-
-svg.selectAll("rect")
-    .data(dataset)
-    .enter()
-    .append("rect")
-    .attr("x",20)
-    .attr("y",function(d,i){
-         return i * rectHeight;
-    })
-    .attr("width",function(d){
-         return d;
-    })
-    .attr("height",rectHeight-2)
-    .attr("fill","steelblue");
-```
-
-这段代码添加了与 dataset 数组的长度相同数量的矩形，所使用的语句是：
-
-```js
-svg.selectAll("rect")   //选择svg内所有的矩形
-    .data(dataset)  //绑定数组
-    .enter()        //指定选择集的enter部分
-    .append("rect") //添加足够数量的矩形元素
-```
-
-这段代码以后会常常出现在 D3 的代码中，请务必牢记。目前不深入讨论它的作用机制是怎样的，只需要读者牢记，当：
-
-**有数据，而没有足够图形元素的时候，使用此方法可以添加足够的元素。**
-
-添加了元素之后，就需要分别给各元素的属性赋值。在这里用到了 function(d, i)，前面已经讲过，d 代表与当前元素绑定的数据，i 代表索引号。给属性赋值的时候，是需要用到被绑定的数据，以及索引号的。
-
-最后一行的：
-
-```javascript
-.attr("fill","steelblue");
-```
-
-
-
-##### 比例尺的使用
-
-比例尺是 D3 中很重要的一个概念，上一章里曾经提到过直接用数值的大小来代表像素不是一种好方法，本章正是要解决此问题。
-
-**为什么需要比例尺**
-
-上一章制作了一个柱形图，当时有一个数组：
-
-```js
-var dataset = [ 250 , 210 , 170 , 130 , 90 ];
-```
-
-绘图时，直接使用 250 给矩形的宽度赋值，即矩形的宽度就是 250 个像素。
-
-此方式非常具有局限性，如果数值过大或过小，例如：
-
-```javascript
-var dataset_1 = [ 2.5 , 2.1 , 1.7 , 1.3 , 0.9 ];
-var dataset_2 = [ 2500, 2100, 1700, 1300, 900 ];
-```
-
-对以上两个数组，绝不可能用 2.5 个像素来代表矩形的宽度，那样根本看不见；也不可能用 2500 个像素来代表矩形的宽度，因为画布没有那么长。
-
-于是，我们需要一种计算关系，能够：
-
-**将某一区域的值映射到另一区域，其大小关系不变。**
-
-这就是比例尺（Scale）。
-
-**有哪些比例尺**
-
-比例尺，很像数学中的函数。例如，对于一个一元二次函数，有 x 和 y 两个未知数，当 x 的值确定时，y 的值也就确定了。
-
-在数学中，x 的范围被称为**定义域**，y 的范围被称为**值域**。
-
-D3 中的比例尺，也有定义域和值域，分别被称为 domain 和 range。开发者需要指定 domain 和 range 的范围，如此即可得到一个计算关系。
-
-D3 提供了多种比例尺，下面介绍最常用的两种。
-
-
-
-###### 线性比例尺
-
-线性比例尺，能将一个连续的区间，映射到另一区间。要解决柱形图宽度的问题，就需要线性比例尺。
-
-假设有以下数组：
-
-```js
-var dataset = [1.2, 2.3, 0.9, 1.5, 3.3];
-```
-
-现有要求如下：
-
-**将 dataset 中最小的值，映射成 0；将最大的值，映射成 300。**
-
-代码如下：
-
-```js
-var min = d3.min(dataset);
-var max = d3.max(dataset);
-
-var linear = d3.scaleLinear()
-        .domain([min, max])
-        .range([0, 300]);
-
-linear(0.9);    //返回 0
-linear(2.3);    //返回 175
-linear(3.3);    //返回 300
-```
-
-其中，**d3.scale.linear()** 返回一个线性比例尺。domain() 和 range() 分别设定比例尺的定义域和值域。在这里还用到了两个函数，它们经常与比例尺一起出现：
-
-- d3.max()
-- d3.min()
-
-这两个函数能够求数组的最大值和最小值，是 D3 提供的。按照以上代码，
-
-比例尺的定义域 domain 为：[0.9, 3.3]
-
-比例尺的值域 range 为：[0, 300]
-
-因此，当输入 0.9 时，返回 0；当输入 3.3 时，返回 300。当输入 2.3 时呢？返回 175，这是按照线性函数的规则计算的。
-
-有一点请大家记住：
-
-d3.scale.linear() 的返回值，是可以当做**函数**来使用的。因此，才有这样的用法：linear(0.9)。
-
-
-
-###### 序数比例尺
-
-有时候，定义域和值域不一定是连续的。例如，有两个数组：
-
-```js
-var index = [0, 1, 2, 3, 4];
-var color = ["red", "blue", "green", "yellow", "black"];
-```
-
-我们希望 0 对应颜色 red，1 对应 blue，依次类推。
-
-但是，这些值都是离散的，线性比例尺不适合，需要用到序数比例尺。
-
-```js
-var ordinal = d3.scaleOrdinal()
-        .domain(index)
-        .range(color);
-
-ordinal(0); //返回 red
-ordinal(2); //返回 green
-ordinal(4); //返回 black
-```
-
-###### 给柱形图添加比例尺
-
-修改一下数组，再定义一个线性比例尺。
-
-```js
-var dataset = [ 2.5 , 2.1 , 1.7 , 1.3 , 0.9 ];
-
-var linear = d3.scale.linear()
-        .domain([0, d3.max(dataset)])
-        .range([0, 250]);
-
-```
-
-其后，按照上一章的方法添加矩形，在给矩形设置宽度的时候，应用比例尺。
-
-```js
-var rectHeight = 25;   //每个矩形所占的像素高度(包括空白)
-
-svg.selectAll("rect")
-    .data(dataset)
-    .enter()
-    .append("rect")
-    .attr("x",20)
-    .attr("y",function(d,i){
-         return i * rectHeight;
-    })
-    .attr("width",function(d){
-         return linear(d);   //在这里用比例尺
-    })
-    .attr("height",rectHeight-2)
-    .attr("fill","steelblue");
-```
-
-如此一来，所有的数值，都按照同一个线性比例尺的关系来计算宽度，因此数值之间的大小关系不变。
-
-
-
-##### 坐标轴
-
-坐标轴，是可视化图表中经常出现的一种图形，由一些列线段和刻度组成。坐标轴在 SVG 中是没有现成的图形元素的，需要用其他的元素组合构成。D3 提供了坐标轴的组件，如此在 SVG 画布中绘制坐标轴变得像添加一个普通元素一样简单。
-
-![image-20190802180149326](https://s2.loli.net/2022/07/02/2r31CwbkMEQpRo7.png)
-
-在 SVG 画布的预定义元素里，有六种基本图形：
-
-- 矩形
-- 圆形
-- 椭圆
-- 线段
-- 折线
-- 多边形
-
-另外，还有一种比较特殊，也是功能最强的元素：
-
-- 路径
-
-画布中的所有图形，都是由以上七种元素组成。
-
-显然，这里面没有**坐标轴** 这种元素。如果有的话，我们可以采用类似以下的方式定义：
-
-```html
-<axis x1="" x2="" ...></axis>
-```
-
-很可惜，没有这种元素。但是，这种设计是合理的：不可能为每一种图形都配备一个单独的元素，那样 SVG 就会过于庞大。
-
-因此，我们需要用其他元素来组合成坐标轴，最终使其变为类似以下的形式：
-
-```html
-<g>
-<!-- 第一个刻度 -->
-<g>
-<line></line>   <!-- 第一个刻度的直线 -->
-<text></text>   <!-- 第一个刻度的文字 -->
-</g>
-<!-- 第二个刻度 -->
-<g>
-<line></line>   <!-- 第二个刻度的直线 -->
-<text></text>   <!-- 第二个刻度的文字 -->
-</g> 
-...
-<!-- 坐标轴的轴线 -->
-<path></path>
-</g>
-```
-
-分组元素 ，是 SVG 画布中的元素，意思是 group。此元素是将其他元素进行组合的容器，在这里是用于将坐标轴的其他元素分组存放。
-
-如果需要手动添加这些元素就太麻烦了，为此，D3 提供了一个组件：d3.svg.axis()。它为我们完成了以上工作。
-
-
-
-###### 定义坐标轴
-
-上一章提到了比例尺的概念，要生成坐标轴，需要用到比例尺，它们二者经常是一起使用的。下面，在上一章的数据和比例尺的基础上，添加一个坐标轴的组件。
-
-```js
-var dataset = [1, 2, 3, 4, 5];  // 数据源  x
-
-// 比例尺  让图表更加的直观， 合理
-
-var min = d3.min(dataset);
-var max = d3.max(dataset);
-
-// console.log(max)
-
-// scaleLinear可以定义比例尺  domain range
-var linear = d3.scaleLinear().domain([0, max]).range([0, 300]);
-
-// 添加坐标轴
-var xAxis = d3.axisBottom(linear);
-```
-
-
-
-###### 在svg中添加坐标轴
-
-定义了坐标轴之后，只需要在 SVG 中添加一个分组元素 ，再将坐标轴的其他元素添加到这个 里即可。代码如下：
-
-```js
-svg.append("g")
-   .attr("transform","translate(20,130)")
-   .call(axis);
-```
-
-
-
-#### 让你的坐标轴动起来demo
-
-```html
-<!DOCTYPE html>
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
-    <style>
-        #update {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-        }
-    </style>
-</head>
-
-<body>
-    <button id="update">更新</button>
-    <script src="https://d3js.org/d3.v5.js"></script>
-    <script>
-
-        // 1. 添加画布
-        var width = 960;
-        var height = 500;
-
-        var svg = d3.select('body').append('svg').attr('width', width).attr('height', height)
-
-        // 完成 静态的  坐标轴
-        // 线性比例尺
-        var scale = d3.scaleLinear().domain([0, 100]).range([100, 860]);
-
-        var axis = d3.axisBottom(scale);
-
-        
-        var g = svg.append('g').attr('id', 'g').call(axis);
-
-        // 绑定事件
-        d3.select('#update').on('click', function() {
-            // 更新数据
-            scale.domain([0, Math.random() * 100]);
-            // g.call(axis);
-            // transition d3提供默认的动画
-            d3.select('#g').transition().call(axis)
-        })
-
-    </script>
-</body>
-
-</html>
-
-```
-
-
-
-
 
