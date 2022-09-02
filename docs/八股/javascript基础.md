@@ -1998,6 +1998,56 @@ keypress		键盘按下，但是识别不了功能键，区分字母大小写
 属性：keyCode ：返回ASCII码值
 ```
 
+#### 原生Js事件绑定的几种方式
+
+
+
+在Js中，有三种常用的绑定事件的方法：
+
+##### 在Dom元素中直接绑定
+
+```js
+<button onclick="handleClick">Click Me</button>
+```
+
+##### 在JS代码中绑定
+
+```js
+document.getElementById("demo").onclick=function(){
+    /*   函数体   */     
+}
+```
+
+##### 绑定事件监听函数
+
+绑定事件的另一种方法是用addEventListener()或者attachEvent()来绑定事件监听函数
+
+elementObject.addEventListener(eventName, handle, useCapture);
+
+这里的事件名称没有"on"前缀，handle事件句柄函数，useCapture，布尔值，是否使用捕获类型，一般为false，即为冒泡
+
+elementObject.attachEvent(eventName, handle) 这里的事件名称有"on"前缀。
+
+addEventListener()是标准的绑定事件监听函数的方法，是W3C所支持的，Chrome、FireFox、Opera、Safari、IE9.0及其以上版本都支持的；但是，IE8.0及其以下版本不支持该方法，它使用attachEvent()来兼容。
+
+```js
+function addEvent(obj, type, handle){
+            try{
+                // Chrome、FireFox、Opera、Safari、IE9.0及其以上版本
+                obj.addEventListener(type, handle, false);
+            }catch(e){
+                try{
+                    // IE8.0及其以下版本
+                    obj.attachEvent("on" + type, handle);
+                }catch(e){
+                    obj["on" + type] = handle;
+                }
+            }
+        }
+```
+
+
+
 #### MutationObserver
 
 [`MutationObserver`](https://developer.mozilla.org/zh-CN/docs/Web/API/MutationObserver) 接口提供了监视对 DOM 树所做更改的能力。它被设计为旧的 Mutation Events 功能的替代品，该功能是 DOM3 Events 规范的一部分。
