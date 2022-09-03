@@ -1224,7 +1224,7 @@ ctx.stroke()
     
     ## 案例2：模拟时钟
     
-    ```html
+    ```js
     <!DOCTYPE html>
     <html>
     <head>
