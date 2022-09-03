@@ -9720,6 +9720,265 @@ export default defineComponent({
 </Suspense>
 ```
 
+### 10.实现一个mini-vue3
+
+#### dom渲染过程
+
+![image-20220828193515638](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsimage-20220828193515638.png)
+
+![image-20220828193541719](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsimage-20220828193541719.png)
+
+<img src="https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsimage-20220828193608830.png" alt="image-20220828193608830" style="zoom:150%;" />
+
+#### 渲染系统实现  
+
+功能一：h函数，用于返回一个VNode对象；
+功能二：mount函数，用于将VNode挂载到DOM上；
+功能三：patch函数，用于对两个VNode进行对比，决定如何处理新的VNode 
+
+##### h函数
+
+```js
+const h = (tag, props, children) => {
+  // vnode -> javascript对象 -> {}
+  return {
+    tag,
+    props,
+    children
+  }
+}
+```
+
+##### mount函数
+
+**第一步**：根据tag，创建HTML元素，并且存储
+到vnode的el中；
+**第二步**：处理props属性
+如果以on开头，那么监听事件；
+普通属性直接通过 setAttribute 添加即可；
+**第三步**：处理子节点
+如果是字符串节点，那么直接设置
+textContent；
+如果是数组节点，那么遍历调用 mount 函
+数；  
+
+```js
+const mount = (vnode, container) => {
+  // vnode -> element
+  // 1.创建出真实的原生, 并且在vnode上保留el
+  const el = vnode.el = document.createElement(vnode.tag);
+
+  // 2.处理props
+  if (vnode.props) {
+    for (const key in vnode.props) {
+      const value = vnode.props[key];
+
+      if (key.startsWith("on")) { // 对事件监听的判断
+        el.addEventListener(key.slice(2).toLowerCase(), value)
+      } else {
+        el.setAttribute(key, value);
+      }
+    }
+  }
+
+  // 3.处理children
+  if (vnode.children) {
+    if (typeof vnode.children === "string") {
+      el.textContent = vnode.children;
+    } else {
+      vnode.children.forEach(item => {
+        mount(item, el);
+      })
+    }
+  }
+
+  // 4.将el挂载到container上
+  container.appendChild(el);
+}
+```
+
+##### patch函数
+
+![image-20220828194432401](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsimage-20220828194432401.png)
+
+```js
+const patch = (n1, n2) => {
+  if (n1.tag !== n2.tag) {
+    const n1ElParent = n1.el.parentElement;
+    n1ElParent.removeChild(n1.el);
+    mount(n2, n1ElParent);
+  } else {
+    // 1.取出element对象, 并且在n2中进行保存
+    const el = n2.el = n1.el;
+
+    // 2.处理props
+    const oldProps = n1.props || {};
+    const newProps = n2.props || {};
+    // 2.1.获取所有的newProps添加到el
+    for (const key in newProps) {
+      const oldValue = oldProps[key];
+      const newValue = newProps[key];
+      if (newValue !== oldValue) {
+        if (key.startsWith("on")) { // 对事件监听的判断
+          el.addEventListener(key.slice(2).toLowerCase(), newValue)
+        } else {
+          el.setAttribute(key, newValue);
+        }
+      }
+    }
+
+    // 2.2.删除旧的props
+    for (const key in oldProps) {
+      if (key.startsWith("on")) { // 对事件监听的判断
+        const value = oldProps[key];
+        el.removeEventListener(key.slice(2).toLowerCase(), value)
+      } 
+      if (!(key in newProps)) {
+        el.removeAttribute(key);
+      }
+    }
+
+    // 3.处理children
+    const oldChildren = n1.children || [];
+    const newChidlren = n2.children || [];
+
+    if (typeof newChidlren === "string") { // 情况一: newChildren本身是一个string
+      // 边界情况 (edge case)
+      if (typeof oldChildren === "string") {
+        if (newChidlren !== oldChildren) {
+          el.textContent = newChidlren
+        }
+      } else {
+        el.innerHTML = newChidlren;
+      }
+    } else { // 情况二: newChildren本身是一个数组
+      if (typeof oldChildren === "string") {
+        el.innerHTML = "";
+        newChidlren.forEach(item => {
+          mount(item, el);
+        })
+      } else {
+        // oldChildren: [v1, v2, v3, v8, v9]
+        // newChildren: [v1, v5, v6]
+        // 1.前面有相同节点的原生进行patch操作
+        const commonLength = Math.min(oldChildren.length, newChidlren.length);
+        for (let i = 0; i < commonLength; i++) {
+          patch(oldChildren[i], newChidlren[i]);
+        }
+
+        // 2.newChildren.length > oldChildren.length
+        if (newChidlren.length > oldChildren.length) {
+          newChidlren.slice(oldChildren.length).forEach(item => {
+            mount(item, el);
+          })
+        }
+
+        // 3.newChildren.length < oldChildren.length
+        if (newChidlren.length < oldChildren.length) {
+          oldChildren.slice(newChidlren.length).forEach(item => {
+            el.removeChild(item.el);
+          })
+        }
+      }
+    }
+  }
+}
+
+```
+
+#### 依赖收集系统  
+
+```js
+class Dep {
+  constructor() {
+    this.subscribers = new Set();
+  }
+
+  depend() {
+    if (activeEffect) {
+      this.subscribers.add(activeEffect);
+    }
+  }
+
+  notify() {
+    this.subscribers.forEach(effect => {
+      effect();
+    })
+  }
+}
+
+let activeEffect = null;
+function watchEffect(effect) {
+  activeEffect = effect;
+  effect();
+  activeEffect = null;
+}
+
+
+// Map({key: value}): key是一个字符串
+// WeakMap({key(对象): value}): key是一个对象, 弱引用
+const targetMap = new WeakMap();
+function getDep(target, key) {
+  // 1.根据对象(target)取出对应的Map对象
+  let depsMap = targetMap.get(target);
+  if (!depsMap) {
+    depsMap = new Map();
+    targetMap.set(target, depsMap);
+  }
+
+  // 2.取出具体的dep对象
+  let dep = depsMap.get(key);
+  if (!dep) {
+    dep = new Dep();
+    depsMap.set(key, dep);
+  }
+  return dep;
+}
+
+
+// vue3对raw进行数据劫持
+function reactive(raw) {
+  return new Proxy(raw, {
+    get(target, key) {
+      const dep = getDep(target, key);
+      dep.depend();
+      return target[key];
+    },
+    set(target, key, newValue) {
+      const dep = getDep(target, key);
+      target[key] = newValue;
+      dep.notify();
+    }
+  })
+}
+```
+
+#### 外层设计
+
+```js
+function createApp(rootComponent) {
+  return {
+    mount(selector) {
+      const container = document.querySelector(selector);
+      let isMounted = false;
+      let oldVNode = null;
+
+      watchEffect(function() {
+        if (!isMounted) {
+          oldVNode = rootComponent.render();
+          mount(oldVNode, container);
+          isMounted = true;
+        } else {
+          const newVNode = rootComponent.render();
+          patch(oldVNode, newVNode);
+          oldVNode = newVNode;
+        }
+      })
+    }
+  }
+}
+```
+
 
 
 ## Virtual DOM
@@ -10184,7 +10443,7 @@ if (newStartVNode.key === oldStartVNode.key) {
 
 #### vue3 最长递增子序列
 
-其实就简单的看一眼我们就能发现，这两段文字是有一部分是相同的，**这些文字是不需要修改也不需要移动的**，真正需要进行修改中间的几个字母，所以`diff`就变成以下部分
+其实就简单的看一眼我们就能发现，这两段文字是有**一部分是相同**的，**这些文字是不需要修改也不需要移动的**，真正需要进行修改中间的几个字母，所以`diff`就变成以下部分
 
 ```
 text1: 'llo'
@@ -10195,7 +10454,7 @@ text2: 'y'
 
 ![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202302522.webp)
 
-图中的被绿色框起来的节点，他们是不需要移动的，只需要进行打补丁`patch`就可以了。我们把该逻辑写成代码。
+图中的**被绿色框起来的节点，他们是不需要移动的，只需要进行打补丁`patch`就可以了**。我们把该逻辑写成代码。
 
 ```js
 function vue3Diff(prevChildren, nextChildren, parent) {
@@ -10229,7 +10488,7 @@ function vue3Diff(prevChildren, nextChildren, parent) {
 
 ![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202302866.webp)
 
-我们以这张图为例，此时`j > prevEnd`且`j <= nextEnd`，我们只需要把**新列表**中`j`到`nextEnd`之间剩下的节点**插入**进去就可以了。相反， 如果`j > nextEnd`时，我们把**旧列表**中`j`到`prevEnd`之间的节点**删除**就可以了。
+我们以这张图为例，**此时`j > prevEnd`且`j <= nextEnd`，我们只需要把新列表中`j`到`nextEnd`之间剩下的节点插入进去就可以了。相反， 如果`j > nextEnd`时，我们把旧列表中`j`到`prevEnd`之间的节点删除**就可以了。
 
 ```js
 function vue3Diff(prevChildren, nextChildren, parent) {
@@ -11366,6 +11625,101 @@ data 中的每一个属性都会被处理为存取器属性，同时每一个属
 
 
 ## 框架对比
+
+### Vue和js、jquery对比
+
+jQuery这个诞生于2006年的js类库，因为它强大的选择器大大解决了许多前端小白取不到元素的痛、链式操作使得jQuery代码简洁优雅、丰富的插件支持让可扩展性相当高、轻量又不会污染顶级变量的优点，曾经风靡一时。但长江后浪推前浪，于2013年尤雨溪个人开发的Vue框架，现在已然成为全世界三大前端框架之一。那么Vue到底有什么优势能够脱颖而出呢？总的来说，Vue的核心优势就是减少DOM操作、双向数据绑定和组件化3个方面。
+
+#### 减少DOM操作
+
+从jQuery到Vue，是前端思维的转变，从传统的直接操作DOM元素转变为操作虚拟DOM，这是Vue较jQuery乃至原生JS，更具优势的一个原因。
+那么什么叫做直接操作DOM元素？什么叫操作虚拟DOM？虚拟DOM的优势是什么？
+
+- jQuery直接操作DOM元素，是使用选择器（$）选取DOM对象，对其进行赋值、取值、事件绑定等操作。每次对元素处理的前提都是先取到元素，DOM操作较多。
+- Vue操作虚拟DOM，是在Vue类下面新建对象模拟DOM元素，在操作过程中对数据进行处理而不是直接操作DOM元素，当数据处理完成后，仅仅比较开始和结束状态虚拟DOM有哪些变换，最终根据结束状态虚拟DOM去操作DOM。
+- 虚拟DOM的出现将前端的工作从操作元素为主转变为处理数据，减少了DOM操作，减少浏览器的渲染引擎的工作量，渲染更快，大大解决了前端性能优化的难题。
+
+#### 双向数据绑定
+
+数据绑定分单向数据绑定和双向数据绑定。传统的单向数据绑定一般是数据影响页面，而页面不影响数据。Vue在MVVM框架中的双向数据绑定通过v-model实现（在 MVVM 框架中，View(视图，也就是常说的页面) 和 Model(数据) 不可以直接通讯），使得视图和数据可以根据一方的改变自身做出相应改变。最直观的就是，在Vue中数据改变，视图无需刷新即可实时改变，而jQuery中数据改变，视图需要用户手动刷新才会改变。
+
+#### 组件化
+
+Vue组件具有独立的逻辑和功能或界面，同时又能根据规定的接口规则进行相互融合，变成一个完整的应用，简单来说，就是将页面的功能等需求进行划分成多个模块，可以根据需求增减，同时不影响整个页面的运行。在工作中，有这方面的需求时，可以自己写组件进行重复使用，还可以从网上获取相应组件，也可以对别人封装的组件进行二次封装等等。Vue组件的优势就是组件进行重复使用，便于协同开发，提高开发效率。
+
+#### 单页面应用
+
+单页面的实现一般是几个div在来回切换。如果一开始已经写好html，再来回切的话，html是太长了。如果用js去写又拼的很麻烦。如果用jq、原生实现页面切换，比较好的方式是用模版引擎，但其实单页面的实现没那么简单，不单单要考虑html能否单独写出来，还要考虑js需不需要按需加载，路由需不需要等等。。。用vue就不需要烦这些东西，vue自动构建单页应用，使用router模拟跳转
+
+总的来说，jQuery和Vue的关系并非你死我活，各自都有不同的侧重点。jQuery侧重样式操作，动画效果，而Vue侧重数据绑定。大家可以根据需求进行结合使用。
+
+
+
+#### Vue比JQuery减少了 DOM 操作
+
+在这里我先提出一个问题，为什么要较少DOM操作
+
+回答：当DOM操作影响到布局的时候，浏览器的渲染引擎就要重新计算然后渲染，越多的DOM操作就会导致越多的计算，自然会影响页面性能，所以DOM操作减少是最好的
+
+那Vue又是怎么样减少DOM操作的呢？
+
+Vue通过虚拟DOM技术减少DOM操作。什么是虚拟DOM？使用js对象模拟DOM，在操作过程中不会直接操作DOM，等待虚拟DOM操作完成，仅仅比较开始和结束状态虚拟DOM有哪些变换，最终根据结束状态虚拟DOM去操作DOM。至于虚拟DOM怎么比较则是采用diff算法，具体算法我也不会。不过diff算法里有一个很好的措施来减少DOM操作。
+
+#### diff的处理措施：
+
+##### （一）、优先处理特殊场景
+
+（1）、头部的同类型节点、尾部的同类型节点
+
+这类节点更新前后位置没有发生变化，所以不用移动它们对应的DOM
+
+（2）、头尾/尾头的同类型节点
+
+这类节点位置很明确，不需要再花心思查找，直接移动DOM就好
+
+##### （二）、“原地复用”
+
+“原地复用”是指Vue会尽可能复用DOM，尽可能不发生DOM的移动。Vue在判断更新前后指针是否指向同一个节点，其实不要求它们真实引用同一个DOM节点，实际上它仅判断指向的是否是同类节点，如果是同类节点，那么Vue会直接复用DOM，例如通过对换文本内容的方式，这样的好处是不需要移动DOM。
+
+#### Vue支持双向数据绑定
+
+数据绑定有单向数据绑定和双向数据绑定。
+
+##### 什么是单向数据绑定？
+
+单向数据绑定即一方面只受另一方面影响，却无法影响另一方面。前端常说的单向数据绑定一般都指数据影响页面，而页面不影响数据。
+
+##### 什么是双向数据绑定？
+
+双向的意思即两个方面相互影响，前端来说，即数据影响页面，页面同时影响数据。例如，在 MVVM 框架中，View(视图) 和 Model(数据) 是不可以直接通讯的，在它们之间存在着 ViewModel 这个中间介充当着观察者的角色。当用户操作 View(视图)，ViewModel 感知到变化，然后通知 Model 发生相应改变；反之当 Model(数据) 发生改变，ViewModel 也能感知到变化，使 View 作出相应更新。
+
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs11989392-be71514e8de9219b.png)
+
+v-model双向绑定
+
+以上代码将input的value和页面显示双向绑定在一起。其实v-model只是语法糖，双向绑定其实就等于单向绑定+UI时间监听，只不过Vue将过程采用黑箱封装起来了。
+
+##### 那双向绑定有什么好处？
+
+好处就是方便，数据自动更新。而缺点就是无法得知是哪里更改了数据。
+
+#### Vue支持组件化
+
+##### 组件化的概念
+
+Web 中的组件其实就是页面组成的一部分，好比是电脑中的每一个元件（如硬盘、键盘、鼠标），它是一个具有独立的逻辑和功能或界面，同时又能根据规定的接口规则进行相互融合，变成一个完整的应用，页面就是有一个个类似这样的部分组成，比如导航、列表、弹窗、下拉菜单等。页面只不过是这些组件的容器，组件自由组合形成功能完善的界面，当不需要某个组件，或者想要替换某个组件时，可以随时进行替换和删除，而不影响整个应用的运行。
+
+##### 组件化的特性
+
+**高内聚性**，组建功能必须是完整的，如我要实现下拉菜单功能，那在下拉菜单这个组件中，就把下拉菜单所需要的所有功能全部实现。
+
+**低耦合度**，通俗点说，代码独立不会和项目中的其他代码发生冲突。在实际工程中，我们经常会涉及到团队协作，传统按照业务线去编写代码的方式，就很容易相互冲突，所以运用组件化方式就可大大避免这种冲突的存在、
+
+每一个组件都有子集清晰的职责，完整的功能，较低的耦合便于单元测试和重复利用。
+
+##### 组件化的优点
+
+1.提高开发效率 2.方便重复使用 3.简化调试步骤 4.提升整个项目的可维护性 5.便于协同开发
 
 ### Vue3 与 Vue2 区别详述
 
