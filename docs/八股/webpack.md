@@ -508,6 +508,8 @@ module.exports = {
 
 ##### 12. vue-loader
 
+![image-20220828201332087](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsimage-20220828201332087.png)
+
 [学习文章](https://juejin.cn/post/6994468137584295973)
 
 作为 `webpack` 中一个为解析 `.vue` 文件的 `loader`。主要的作用是是将单文件组件(`SFC`) 解析为 `vue runtime`是可识别的组件模块
@@ -516,13 +518,17 @@ module.exports = {
 
 第一个阶段：通过 `vue-loader` 将 `.vue` 文件转化为中间产物
 
-`vue-lodaer` 现将读取的源文件，然后通过 `@vue/component-compiler-utils`中的 `parse` 解析器将得到源文件的描述符。对每个 `block` 进行处理，生成对应的模块请求。由 `normalizer` 函数把每个 `block` 拼接到一起，形成一个 `vue` 组件
+`vue-lodaer` 现将读取的源文件，然后通过 `@vue/component-compiler-utils`(compiler-sfc)中的 `parse` 解析器将得到**源文件**的**描述符**。**对每个 `block` 进行处理，生成对应的模块请求**。由 `normalizer` 函数把每个 `block` 拼接到一起，形成一个 `vue` 组件
+
+源文件描述符
+
+![image-20220828202034820](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsimage-20220828202034820.png)
 
 ![vue-loader1.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201840750.webp)
 
 第二个阶段：通过 `pitcher-loader`(这个`loader`是通过 `vueloaderplugin`注入到`webpack`中的) 将第一阶段中间产物转化为另一阶段产物
 
-![vue-loader2.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201841133.webp)
+<img src="https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201841133.webp" alt="vue-loader2.png" style="zoom:150%;" />
 
 通过 `pitcher-loader`(这个`loader`是通过 `vueloaderplugin`注入到`webpack`中的) 将第一阶段中间产物转化为另一阶段产物。 就以 `import { render, staticRenderFns } from "./test.vue?vue&type=template&id=13429420&scoped=true&"` 为例，会被转化为 `-!./lib/vue-loader/loaders/templateLoader.js??vue-loader-options!./lib/vue-loader/index.js??vue-loader-options!./test.vue?vue&type=template&id=13429420&scoped=true&`
 
@@ -532,7 +538,7 @@ module.exports = {
 
 第三个阶段：第二阶段转化 `request` 请求，通过对应的 `loader` 进行处理
 
-![vue-loader3.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201841161.webp)
+<img src="https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201841161.webp" alt="vue-loader3.png" style="zoom:150%;" />
 
 在得到上述的`request` 之后，`webpack`会先使用`vue-loader`处理，然后再使用`template-loader`来处理，然后得到最后模块
 
@@ -1314,7 +1320,7 @@ app.listen(3000);
 
 
 
-### 6.性能优化  treeShaking原理
+### 6.treeShaking原理
 
 `Tree Shaking`中文含义是摇树，在webpack中指的是打包时把无用的代码摇掉，以优化打包结果。
 
@@ -1395,7 +1401,32 @@ Webpack 中，Tree-shaking 的实现一是先**标记**出模块导出值中哪�
 - Seal 阶段，遍历 ModuleGraph 标记模块导出变量有没有被使用
 - 生成产物时，若变量没有被其它模块使用则删除对应的导出语句
 
+- `ES6`的模块引入是静态分析的，所以在编译时能正确判断到底加载了哪些模块
+- 分析程序流，判断哪些变量未被使用、引用，进而删除此代码
+
+**特点：**
+
+- 在生产模式下它是默认开启的，但是由于经过`babel`编译全部模块被封装成`IIFE`，它存在副作用无法被`tree-shaking`掉
+- 可以在`package.json`中配置`sideEffects`来指定哪些文件是有副作用的。它有两种值，一个是布尔类型，如果是`false`则表示所有文件都没有副作用；如果是一个数组的话，数组里的文件路径表示改文件有副作用
+- `rollup`和`webpack`中对`tree-shaking`的层度不同，例如对`babel`转译后的`class`，如果`babel`的转译是宽松模式下的话(也就是`loose`为`true`)，`webpack`依旧会认为它有副作用不会`tree-shaking`掉，而`rollup`会。这是因为`rollup`有程序流分析的功能，可以更好的判断代码是否真正会产生副作用
+
+**原理**
+
+- `ES6 Module` 引入进行静态分析，故而编译的时候正确判断到底加载了那些模块
+- 静态分析程序流，判断那些模块和变量未被使用或者引用，进而删除对应代码
+
+> 依赖于`import/export`
+
+通过导入所有的包后再进行条件获取
+
+> ES6的import语法完美可以使用tree shaking，因为可以在代码不运行的情况下就能分析出不需要的代码
+
+**CommonJS的动态特性模块意味着tree shaking不适用**。因为它是不可能确定哪些模块实际运行之前是需要的或者是不需要的。在ES6中，进入了完全静态的导入语法：import
+
 ### 7.webpack 中，module，chunk 和 bundle 的区别是什么？
+
+- `ES6`的模块引入是静态分析的，所以在编译时能正确判断到底加载了哪些模块
+- 分析程序流，判断哪些变量未被使用、引用，进而删除此代码
 
 ![image-20200518210532171](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201835066.png)
 
@@ -3852,7 +3883,7 @@ console.log(a);
 -   babel-loader开启缓存
 -   使用cache-loader
 
-##### 11.1babel-loader
+##### 11.1  babel-loader
 
 -   **Babel在转义js文件过程中消耗性能较高（语法树解析啥的），将babel-loader执行的结果缓存起来，当重新打包构建时会尝试读取缓存，从而提高打包构建速度、降低消耗**
 
@@ -3869,7 +3900,7 @@ console.log(a);
   },
 ```
 
-##### 11.2cache-loader
+##### 11.2  cache-loader
 
 -   在一些性能开销较大的 loader 之前添加此 loader,以将结果缓存到磁盘里
 -   存和读取这些缓存文件会有一些时间开销,所以请只对性能开销较大的 loader 使用此 loader
@@ -3927,9 +3958,9 @@ module.exports = {
 }
 ```
 
-#### 3.性能分析工具
+#### 13.性能分析工具
 
-#### 1\.speed-measure-webpack-plugin 测试每个核心步骤耗费的时间
+##### 1\.speed-measure-webpack-plugin 测试每个核心步骤耗费的时间
 
 -   使用：在module.exports导出的内容外包一层wrap函数即可。
 
@@ -3944,7 +3975,7 @@ module.exports =smw.wrap({
 
 ![](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201849168.png)
 
-#### 2.webpack-bundle-analyzer
+##### 2.webpack-bundle-analyzer
 
 > webpack-bundle-analyzer是一个webpack的插件，需要配合webpack和webpack-cli一起使用。这个插件的功能是生成代码分析报告，帮助提升代码质量和网站性能
 
@@ -3954,7 +3985,7 @@ module.exports =smw.wrap({
 
 上面这个插件的用法改了
 
-#### 耗时分析
+##### 耗时分析
 
 ```js
 const SpeedMeasureWebpackPlugin = require('speed-measure-webpack-plugin');const smw = new SpeedMeasureWebpackPlugin();module.exports =smw.wrap({    ...});
@@ -3964,7 +3995,7 @@ const SpeedMeasureWebpackPlugin = require('speed-measure-webpack-plugin');const 
 
 ![](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208201849748.png)
 
-#### webpack打包文件分析工具webpack-bundle-analyzer
+##### webpack打包文件分析工具webpack-bundle-analyzer
 
 > webpack-bundle-analyzer是一个webpack的插件，需要配合webpack和webpack-cli一起使用。这个插件的功能是生成代码分析报告，帮助提升代码质量和网站性能
 
@@ -4671,7 +4702,7 @@ let contenthash_of_entry1 = crypto.createHash('md5')
 
 ### 25.webpack如何挂在全局变量
 
-#### 1\. 直接引入
+#### 1\.直接引入
 
 ```js
 import _ from 'lodash'
@@ -4728,7 +4759,7 @@ module: {
 }
 ```
 
-#### 4\. `externals`
+#### 4\.`externals`
 
 - 使用该属性，需要配合`script`引用第三方库的脚本，如下：
 

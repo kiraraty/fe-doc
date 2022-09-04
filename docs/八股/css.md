@@ -69,7 +69,7 @@ CSS中，有很多**非布局样式**，这些样式（属性）和与布局无�
 
 需要在border内测添加空白，且空白处需要背景（色）时，使用 padding。
 
-### 3.伪类和伪元素的作用(原理)
+### 3.伪类和伪元素的作用
 
 那如何区分伪元素和伪类，记住两点：
 
@@ -1421,9 +1421,21 @@ css动画有一个重要的特性，它是完全工作在GPU上。因为你声�
 
 使用 translate3D 会让浏览器开启硬件加速，性能当然就提高了。translateZ变成3d效果，走GPU渲染。这样也有缺点就是耗电和发热问题。同样的canvas也会开启gpu渲染。
 
-### 11.对requestAnimationframe的理解
+### 11.requestAnimationframe和**requestIdleCallback**
+
+#### requestAnimationFrame
 
 实现动画效果的方法比较多，Javascript 中可以通过定时器 setTimeout 来实现，CSS3 中可以使用 transition 和 animation 来实现，HTML5 中的 canvas 也可以实现。除此之外，HTML5 提供一个专门用于请求动画的API，那就是 **requestAnimationFrame**，顾名思义就是**请求动画帧**。
+
+目前大多数设备的屏幕刷新率为`60次/秒`，如果在页面中有一个动画或者渐变效果，或者用户正在滚动页面，那么浏览器渲染动画或页面的每一帧的速率也需要跟设备屏幕的刷新率保持一致。
+
+卡顿：其中每个帧的预算时间仅比`16毫秒`多一点（`1秒/ 60 = 16.6毫秒`）。但实际上，浏览器有整理工作要做，因此您的所有工作是需要在`10毫秒`内完成。如果无法符合此预算，帧率将下降，并且内容会在屏幕上抖动。此现象通常称为卡顿，会对用户体验产生负面影响。
+
+跳帧: 假如动画切换在 16ms, 32ms, 48ms时分别切换，跳帧就是假如到了32ms，其他任务还未执行完成，没有去执行动画切帧，等到开始进行动画的切帧，已经到了该执行48ms的切帧。就好比你玩游戏的时候卡了，过了一会，你再看画面，它不会停留你卡的地方，或者这时你的角色已经挂掉了。必须在下一帧开始之前就已经绘制完毕;
+
+**`requestAnimationFrame` 是在主线程上完成。这意味着，如果主线程非常繁忙，`requestAnimationFrame`的动画效果会大打折扣。**
+
+**`requestAnimationFrame` 使用一个回调函数作为参数。这个回调函数会在浏览器重绘之前调用。**
 
 MDN对该方法的描述：
 
@@ -1432,6 +1444,21 @@ MDN对该方法的描述：
 **语法：** `window.requestAnimationFrame(callback);`  其中，callback是**下一次重绘之前更新动画帧所调用的函数**(即上面所说的回调函数)。该回调函数会被传入DOMHighResTimeStamp参数，它表示requestAnimationFrame() 开始去执行回调函数的时刻。该方法属于**宏任务**，所以会在执行完微任务之后再去执行。
 
 **取消动画：** 使用cancelAnimationFrame()来取消执行动画，该方法接收一个参数——requestAnimationFrame默认返回的id，只需要传入这个id就可以取消动画了。
+
+```js
+requestID = window.requestAnimationFrame(callback); 
+
+window.requestAnimFrame = (function(){
+    return  window.requestAnimationFrame       || 
+            window.webkitRequestAnimationFrame || 
+            window.mozRequestAnimationFrame    || 
+            window.oRequestAnimationFrame      || 
+            window.msRequestAnimationFrame     || 
+            function( callback ){
+            window.setTimeout(callback, 1000 / 60);
+        };
+})(); 
+```
 
 **优势：**
 
@@ -1443,6 +1470,20 @@ MDN对该方法的描述：
 
 - setTimeout任务被放入异步队列，只有当主线程任务执行完后才会执行队列中的任务，因此实际执行时间总是比设定时间要晚；
 - setTimeout的固定时间间隔不一定与屏幕刷新间隔时间相同，会引起丢帧。
+
+#### **requestIdleCallback()**
+
+> MDN上的解释：`requestIdleCallback()`方法将在浏览器的空闲时段内调用的函数排队。这使开发者能够在主事件循环上执行后台和低优先级工作，而不会影响延迟关键事件，如动画和输入响应。函数一般会按先进先调用的顺序执行，然而，如果回调函数指定了执行超时时间timeout，则有可能为了在超时前执行函数而打乱执行顺序。
+
+`requestAnimationFrame`会在每次屏幕刷新的时候被调用，而`requestIdleCallback`则会在每次屏幕刷新时，判断当前帧是否还有多余的时间，如果有，则会调用`requestAnimationFrame`的回调函数，
+
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs232908.png)
+
+图片中是两个连续的执行帧，大致可以理解为两个帧的持续时间大概为16.67，图中黄色部分就是空闲时间。所以，`requestIdleCallback` 中的回调函数仅会在每次屏幕刷新并且有空闲时间时才会被调用.
+
+利用这个特性，我们可以在动画执行的期间，利用每帧的空闲时间来进行数据发送的操作，或者一些优先级比较低的操作，此时不会使影响到动画的性能，或者和`requestAnimationFrame`搭配，可以实现一些页面性能方面的的优化，
+
+> react 的 `fiber` 架构也是基于 `requestIdleCallback` 实现的, 并且在不支持的浏览器中提供了 `polyfill`
 
 ### 12.精灵图的应用和常见图片格式
 
@@ -1593,7 +1634,7 @@ CSS与编译器现如今几乎成为开发CSS的标配，从以下几个方面�
 - 可以轻松实现多重继承
 - 完美的兼容了`CSS`代码，可以应用到老项目中
 
-### 14.为什么有时候⽤**translate**来改变位置⽽不是定位？
+### 14.有时候⽤**translate**来改变位置⽽不是定位？
 
 translate 是 transform 属性的⼀个值。改变transform或opacity不会触发浏览器重新布局（reflow）或重绘（repaint），只会触发复合（compositions）。⽽改变绝对定位会触发重新布局，进⽽触发重绘和复合。transform使浏览器为元素创建⼀个 GPU 图层，但改变绝对定位会使⽤到 CPU。 因此translate()更⾼效，可以缩短平滑动画的绘制时间。 ⽽translate改变位置时，元素依然会占据其原始空间，绝对定位就不会发⽣这种情况。
 
@@ -1745,7 +1786,7 @@ my-image { background: (low.png); }
 - 避免频繁读取会引发回流/重绘的属性，如果确实需要多次使用，就用一个变量缓存起来。
 - 对具有复杂动画的元素使用绝对定位，使它脱离文档流，否则会引起父元素及后续元素频繁回流。
 
-### 18.css溢出
+### 18.css溢出（overflow）
 
 **CSS overflow 属性控制对太大而区域无法容纳的内容的处理方式。**
 
@@ -2160,7 +2201,7 @@ display:-webkit-box;         // 作为弹性伸缩盒子模型显示。
 
 注意：由于上面的三个属性都是 CSS3 的属性，没有浏览器可以兼容，所以要在前面加一个`-webkit-` 来兼容一部分浏览器。
 
-### 24.如何判断元素是否到达可视区域
+### 24.判断元素到达可视区域
 
 以图片显示为例：
 
@@ -2173,264 +2214,96 @@ display:-webkit-box;         // 作为弹性伸缩盒子模型显示。
 
 ### 25.z-index属性
 
-`z-index`是一个用于控制文档中图层顺序的属性。具有较高`z-index`值的元素将会出现在具有较低值的元素之上。就像页面上的x轴和y轴决定一个元素在水平和垂直方向上的位置一样，`z-index`控制它们在z轴上相互层叠的方式。
+#### 基本概念
 
-#### 默认层叠顺序
+z-index 属性是**用来调整元素及子元素在 z 轴上的顺序**，当元素发生覆盖的时候，哪个元素在上面，哪个元素在下面。通常来说，z-index 值较大的元素会覆盖较低的元素。
 
-当我们编写HTML时，出现在文档靠后位置的元素，会自然层叠到靠前位置的元素之上。
+z-index 的默认值为 auto，可以设置正整数，也可以设置为负整数，如果不考虑 CSS3，只有定位元素(position:relative/absolute/fixed)的 z-index 才有作用，如果你的 z-index 作用于一个非定位元素(一些 CSS3 也会生效)，是不起任何作用的。
 
-```html
-<body>
-    <header class="site-header"></header>
-    <main class="site-content"></main>
-    <footer class="site-footer"></footer>
-</body>
-```
+当你为 DOM 元素设置了定位后，该元素的 z-index 就会生效，默认为 auto，你可以简单将它等同于 z-index: 0
 
-基于上面给定的HTML片段，如果它们的位置相互重叠的话，`footer`将会层叠在`main`内容区域之上，`main`将会层叠在`header`之上。
+#### **层叠水平(stacking level)**
 
-元素可以通过使用`position`属性和偏移属性的组合来进行重叠，偏移属性值包括`top`，`right`，`bottom`以及`left`。
-
-如果为每个元素设置`position: absolute` ，他们都会在彼此的基础上进行布局。`footer`元素在文档中最后出现，因此默认情况下，该元素会层叠在前两个元素之上。
+一个 DOM 元素，在不考虑层叠上下文的情况下，会按照层叠水平决定元素在 z 轴上的显示顺序，**通俗易懂地讲，不同的 DOM 元素组合在一起发生重叠的时候，它们的的显示顺序会遵循层叠水平的规则，而 z-index 是用来调整某个元素显示顺序，使该元素能够上浮下沉。**
 
-```css
-.site-header, .site-content, .site-footer {
-    position: absolute;
-    width: 400px;
-    padding: 20px;
-}
-.site-header {top: 0; left: 0;}
-.site-content {top: 50px; left: 50px;}
-.site-footer {top: 100px; left: 100px;}
-```
-
-如果使用偏移属性`top`和`left`，我们可以更清楚地看到层叠顺序。
+7 阶层叠水平(stacking level)
 
-#### 层叠上下文
-
-虽然使用`position: absolute`可以创建相互重叠的元素，但我们还没有创建所谓的**层叠上下文**。
-
-层叠上下文可以通过以下任意方式进行创建：
-
-- 元素的`position`属性值为`absolute`或者`relative`，且`z-index`值不为`auto`。
-- `flex`容器的子元素，且`z-index`值不为`auto`。
-- `opacity`属性值小于 `1` 的元素。
-- `transform`属性值不为`none`的元素。
-
-到目前为止，最常见的创建和使用层叠上下文的方式是上述列表中的第一种，所以让我们多花点时间来关注它。
-
-回到先前的示例，我们有三个元素彼此重叠，但目前为止它们并没有`z-index`值。
-
-`z-index`属性允许我们控制层叠的顺序。如果在`footer`元素上设置`z-index: 1`，在`main`元素上设置`z-index: 2`，以及在`header`元素上设置`z-index: 3`，那么默认层叠顺序将会完全颠倒。
-
-表面上看起来很简单，更高的`z-index`值有更高的元素层叠顺序。因此`z-index: 9999` 总是位于`z-index: 9`上面。事实果真如此吗？不幸的是，实际情况要更复杂一些。
-
-#### 层叠上下文中的z-index
-
-```html
-<header class="site-header blue">header</header>
-<main class="site-content green">content
-    <div class="box yellow"></div>
-</main>
-<footer class="site-footer pink">footer</footer>
-```
-
-如果我在`site-content`容器内添加一个`box`，并将其定位在右下角之外，我们可以看到它位于绿色盒子的上面和粉色盒子的下面。
-
-```css
-.box {
-    position: absolute;
-    bottom: -25px;
-    right: -25px;
-    z-index: 4; /* won't work :( */
-    width: 75px;
-    height: 75px;
-    border: 1px solid #000;
-}
-.site-header {top: 0; left: 0; z-index: -1;}
-.site-content {top: 50px; left: 50px;}
-.site-footer {top: 100px; left: 100px; z-index: 3;}
-```
-
-基于我们所了解的`z-index` ，我们可能会认为，为了使这个黄色的盒子出现在粉色盒子的上方，我们可以为`z-index`设置一个更高的值。
-
-如果我为黄色盒子设置了`z-index: 4`，该值要比`z-index: 3` 高，但是并没有看到任何变化。人们通常视图通过设置一个巨大的数字来强制改变层叠顺序，比如说设置`z-index: 9999` ，但这样做没有任何效果。如果在项目中看到这样的`z-index`值，那就属于坏代码。我们要尽量避免这种行为。
-
-导致上述设置不生效的根本原因，是由于`z-index`在层叠上下文中的行为。
-
-为了演示这一点，让我们来看一个稍微复杂一点的例子，这是我从MDN网站上借鉴来的。
-
-```html
-<header class="site-header blue">
-    <h1>Header</h1>
-    <code>position: relative;<br/>
-    z-index: 5;</code>
-</header>
-
-<main class="site-content pink">
-    <div class="box1 yellow">
-        <h1>Content box 1</h1>
-        <code>position: relative;<br/>
-        z-index: 6;</code>
-    </div>
-
-    <h1>Main content</h1>
-    <code>position: absolute;<br/>
-    z-index: 4;</code>
-
-    <div class="box2 yellow">
-	<h1>Content box 2</h1>
-	<code>position: relative;<br/>
-	z-index: 1;</code>
-    </div>
-
-    <div class="box3 yellow">
-	<h1>Content box 3</h1>
-	<code>position: absolute;<br/>
-	z-index: 3;</code>
-    </div>
-</main>
-
-<footer class="site-footer green">
-    <h1>Footer</h1>
-    <code>position: relative;<br/>
-    z-index: 2;</code>
-</footer>
-
-
-.blue {background: hsla(190,81%,67%,0.8); color: #1c1c1c;}
-.purple {background: hsla(261,100%,75%,0.8);}
-.green {background: hsla(84,76%,53%,0.8); color: #1c1c1c;}
-.yellow {background: hsla(61,59%,66%,0.8); color: #1c1c1c;}
-.pink {background: hsla(329,58%,52%,0.8);}
-
-header, footer, main, div {
-    position: relative;
-    border: 1px dashed #000;
-}
-h1 {
-    font: inherit;
-    font-weight: bold;
-}
-.site-header, .site-footer {
-    padding: 10px;
-}
-.site-header {
-    z-index: 5;
-    top: -30px;
-    margin-bottom: 210px;
-}
-.site-footer {
-    z-index: 2;
-}
-.site-content {
-    z-index: 4;
-    opacity: 1;
-    position: absolute;
-    top: 40px;
-    left: 180px;
-    width: 330px;
-    padding: 40px 20px 20px;
-}
-.box1 {
-    z-index: 6;
-    margin-bottom: 15px;
-    padding: 25px 10px 5px;
-}
-.box2 {
-    z-index: 1;
-    width: 400px;
-    margin-top: 15px;
-    padding: 5px 10px;
-}
-.box3 {
-    z-index: 3;
-    position: absolute;
-    top: 20px;
-    left: 180px;
-    width: 150px;
-    height: 250px;
-    padding-top: 125px;
-    text-align: center;
-}
-```
-
-在这里，我们有一个`header`，`footer`和`main`容器，就跟以前一样。但是在`site-content`内部，我们有三个盒子，它们都被定位了，并赋予了`z-index`。
-
-让我们首先看一下三个主要容器 - `header`，`footer`和`main` 。
-
-`header`的`z-index`值为5，因此出现在`z-index`值为4的`main`之上，`footer`的`z-index`值为2，因此出现在`main`之下。目前为止一切顺利吧？很好。
-
-`main`容器内的三个盒子让事情变得扑朔迷离起来。
-
-Content box 1的`z-index`值为6，但出现在`header`下面，而`header`的`z-index`值为5。
-
-Content box 2的`z-index`值为1，但出现在`footer`上面，而`footer`的`z-index`值为2。
-
-这究竟发生了啥？
-
-所有疑虑都可以通过以下事实来解释：所有的`z-index`值都是在其父级层叠上下文中生效的。因为父容器`.site-content`相比`footer`而言，有一个更高的`z-index`值，因此`.site-content`中的任何定位元素都将在该上下文中计算。
-
-在层叠上下文中思考层叠顺序的一个好方法是，把它看作是嵌套有序列表中的一个子项目。按照这种思路可以写成如下格式：
-
-- Header: `z-index: 5`
-- Main: `z-index: 4`
-    - Box 1: `z-index: 4.6`
-    - Box 2: `z-index: 4.1`
-    - Box 3: `z-index: 4.3`
-- Footer: `z-index: 2`
-
-因此，即使`header`是`z-index: 5` ，content box 1是`z-index: 6` ，但content box 1的渲染顺序是4.6，仍然小于5。因此，content box 1在`header`下面。
-
-刚开始确实有点乱，但随着练习，开始有眉目了。
-
-#### z-index只作用于定位元素
-
-如果你想控制元素的层叠顺序，你可以使用`z-index`达到目的。但是，只有当该元素的`position`值为`absolute`、`relative`或`fixed`时，`z-index`才会产生影响。
-
-用`position`精确地放置元素，对于建立复杂的布局或有趣的UI模式来说是不错的。但通常只是想要控制层叠的顺序，而不把元素从它在页面上的原始位置移开。
-
-如果是这种情况，你可以只设置`position: relative`，而不提供`top`、`right`、`bottom`或`left`的任何值。该元素将保持在其在页面上的原始位置，文档流不会被打断，`z-index`值将会生效。
-
-#### z-index可以是负值
-
-分层元素通常是为了建立复杂的图形或UI组件。这通常意味着将分层元素彼此重叠，并设置不断增加的`z-index`值。要把一个元素放在另一个元素的下面，它只需要有一个较低的`z-index`值，但这个较低的值可以是负值。
-
-当使用伪元素并希望将其定位在其父元素的内容之后时，负值的`z-index`是非常有用的。
-
-由于层叠上下文的工作方式，对于任何`:before`或`:after`元素，如果它们要被定位在其父元素的文本内容后面，那么它们需要一个负的`z-index`值。
-
-#### z-index策略
-
-让我们用我在项目中应用`z-index`的一个简单策略来总结一下。
-
-以前，我们使用个位数递增来设置`z-index`值，但如果你想在两个设置了`z-index: 3`和`z-index: 4` 的元素之间添加一个新的元素，你该怎么办？你必须同时改变更多的值。这可能会成为问题，并容易在网站的其他部分破坏CSS。
-
-#### 使用100步长设置z-index
-
-在处理`z-index`时，经常会看到这样的代码：
-
-```css
-.modal {
-    z-index: 99999;
-}
-```
-
-这样的代码对我来说非常粗糙，当附加上`!important`时，会更加糟糕。当看到这样的值时，往往意味着开发者不了解层叠上下文，并试图强制一个层在另一个层的上面。
-
-与其使用像9999、53或12这样的任意数字，不如使我们的`z-index`比例系统化，为程序带来更多秩序。这里我将使用以100为基础进行递增的`z-index`值。
-
-```css
-.layer-one {z-index: 100;}
-.layer-two {z-index: 200;}
-.layer-three {z-index: 300;}
-```
-
-我这样做是为了保持事情的条理性，同时也是为了注意整个项目中使用的众多不同的层。另一个好处是，如果需要在其他两个图层之间添加一个新的图层，有99个潜在的值可以挑选。
-
-当建立一个`z-index`系统时，这种手动方法是相当可靠的，但当与像Sass这样的预处理器的能力相结合时，可以变得更加灵活。
-
-#### 在什么情况下会失效
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsv2-1ec9491a660c0e11b7272633976da869_r.jpg)
+
+
+
+**元素层叠水平相当**
+
+那么当两个元素层叠水平相同的时候，这时候就要遵循下面两个准则：
+
+1. 后来居上原则
+2. 谁 z-index 大，谁在上的准则
+
+**后来居上的原则：**
+
+后来居上准则就是说，当元素层叠水平相同的时候后面的 DOM 会覆盖前面的 DOM 元素。
+
+**谁 z-index 大，谁在上：**
+
+因为 z-index 的存在，导致元素在相同的层叠上下文中的顺序是可以调整的，那么在 z-index 负值和正值的范围内，在这两个区间内的话 DOM 元素的 z-index 值越大，显示顺序就会越靠前。
+
+#### **层叠上下文**
+
+层叠上下文，你可以理解为 JS 中的作用域，一个页面中往往不仅仅只有一个层叠上下文(因为有很多种方式可以生成层叠上下文，只是你没有意识到而已)，在一个层叠上下文内，我们按照层叠水平的规则来堆叠元素。
+
+介绍完层叠上下文的概念，我们先来看看哪些方式可以创建层叠上下文？
+
+正常情况下，一共有三种大的类型创建层叠上下文：
+
+1. 默认创建层叠上下文
+2. 需要配合 z-index 触发创建层叠上下文
+3. 不需要配合 z-index 触发创建层叠上下文
+
+**一、默认创建层叠上下文**
+
+默认创建层叠上下文，只有 HTML 根元素，这里你可以理解为 body 标签。它属于根层叠上下文元素，不需要任何 CSS 属性来触发。
+
+**二、需要配合 z-index 触发创建层叠上下文**
+
+依赖 z-index 值创建层叠上下文的情况：
+
+1. position 值为 relative/absolute/fixed(部分浏览器)
+2. flex 项(父元素 display 为 flex|inline-flex)，注意是子元素，不是父元素创建层叠上下文
+
+这两种情况下，需要设置具体的 z-index 值，不能设置 z-index 为 auto，这也就是 z-index: auto 和 z-index: 0 的一点细微差别。
+
+前面我们提到，设置 position: relative 的时候 z-index 的值为 auto 会生效，但是这时候并没有创建层叠上下文，当设置 z-index 不为 auto，哪怕设置 z-index: 0 也会触发元素创建层叠上下文。
+
+**三、不需要配合 z-index 触发创建层叠上下文**
+
+这种情况下，基本上都是由 CSS3 中新增的属性来触发的，常见的有：
+
+- 元素的透明度 opacity 小于1
+
+- 元素的 mix-blend-mode 值不是 normal
+
+- 元素的以下属性的值不是 none：
+
+- - transform
+    - filter
+    - perspective
+    - clip-path
+    - mask / mask-image / mask-border
+
+- 元素的 isolution 属性值为 isolate
+
+- 元素的 -webkit-overflow-scrolling 属性为 touch
+
+- 元素的 will-change 属性具备会创建层叠上下文的值
+
+介绍完如何创建层叠上下文概念以及创建方式后，需要说明的是，创建了层叠上下文的元素可以理解局部层叠上下文，它只影响其子孙代元素，它自身的层叠水平是由它的父层叠上下文所决定的。
+
+#### **比较两个 DOM 元素显示顺序**
+
+1. 如果是在相同的层叠上下文，按照层叠水平的规则来显示元素
+2. **如果是在不同的层叠上下文中，先找到共同的祖先层叠上下文，然后比较共同层叠上下文下这个两个元素所在的局部层叠上下文的层叠水平。**
+
+#### 什么情况下会失效
 
 通常 z-index 的使用是在有两个重叠的标签，在一定的情况下控制其中一个在另一个的上方或者下方出现。z-index值越大就越是在上层。z-index元素的position属性需要是relative，absolute或是fixed。
 
@@ -3682,8 +3555,6 @@ html, body {    margin: 0;    padding: 0;}
 
 ### 6.怎么进行移动端适配
 
-[移动端适配方案详解](https://juejin.cn/post/7132037611060740103#heading-22)
-
 #### 逻辑分辨率（设备独立像素）
 
 Retina Display(视网膜屏幕)  在iPhone4使用的视网膜屏幕中，把2x2个像素当1个像素使用，这样让屏幕看起来更精致，但是元素的大小却不会改变。从此以后高分辨率的设备，多了一个逻辑像素。这些设备逻辑像素的差别虽然不会跨度很大，但是仍然有点差别，于是便诞生了移动端页面需要适配这个问题，既然逻辑像素由物理像素得来，那他们就会有一个像素比值
@@ -3859,10 +3730,6 @@ vh和vw方案和rem类似也是相当麻烦需要做单位转化，而且px转�
 ##### 3、px为主，vx和vxxx（vw/vh/vmax/vmin）为辅，搭配一些flex（推荐）
 
 之所以推荐使用此种方案，是由于我们要去考虑用户的需求，**用户之所以去买大屏手机，不是为了看到更大的字，而是为了看到更多的内容**，这样直接使用px是最明智的方案
-
-
-
-
 
 ### 7.响应式布局怎么做
 
