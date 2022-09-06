@@ -9,11 +9,16 @@
   * [Vue.js源码分析](八股/vue源码分析.md)
   * [React.js](八股/react.md)
   * [React.js源码分析](八股/react源码分析.md)
+* 实习
+  *[前端文件处理](八股/前端文件处理.md)
+  *[excel导出优化](八股/excel导出优化.md)
+  *[分片上传组件](八股/分片上传组件.md)
+  *[动态表格渲染](八股/动态表格渲染.md)
+  *[前端监控系统](八股/前端监控.md)
 * 项目
-  * [实习项目](八股/实习.md)
-  * [管理系统项目](八股/项目面试.md)
+  * [管理系统项目](八股/管理系统项目.md)
   * [预约系统项目](八股/预约系统项目.md)
-  * [投票项目](八股/投票项目笔记.md)  
+  * [投票系统项目](八股/投票系统项目.md)  
   * [三画项目](八股/三画项目面.md)
 * 进阶
   * [Webpack](八股/webpack.md)
@@ -40,5 +45,6 @@
   * [canvas](八股/HTML5-Canvas.md)
   * [svg](八股/SVG入门指南.md)
   * [webgl](八股/webgl.md)
-  * [three.js&d3.js](八股/three.js&d3.js.md)
+  * [three.js](八股/three.js.md)
+  * [d3.js](八股/d3.js.md)
   * [webgis](八股/webgis.md)  
