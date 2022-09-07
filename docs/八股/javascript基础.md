@@ -1111,7 +1111,7 @@ function fn(){
 
 （8）-0 === +0   结果为：true
 
-### 8.JavaScript梗图详解](https://blog.csdn.net/weixin_46170034/article/details/107029540)
+### 8.JavaScript梗图详解
 
 ![在这里插入图片描述](https://s2.loli.net/2022/08/14/7zxUZC1qWw4uaOY.png)
 
@@ -6423,6 +6423,52 @@ import用于引入外部模块， 其他脚本等的函数， 对象或者基本
 为什么只会加载运行一次呢？ 这是因为每个模块对象module都有一个属性：loaded。 为false表示还没有加载，为true表示已经加载； 
 
 结论三：如果有循环引入，那么加载顺序是什么？ 如果出现模块的引用关系，那么加载顺序是什么呢？ 这个其实是一种数据结构：图结构；  图结构在遍历的过程中，有深度优先搜索（DFS, depth first search）和广度优先搜索（BFS, breadth first search）； Node采用的是深度优先算法.
+
+#### 模块的加载机制
+
+- 先计算模块路径
+- 如果模块在缓存里面，取出缓存
+- 加载模块
+- 输出模块的 `exports` 属性即可
+
+```js
+// require 其实内部调用 Module._load 方法
+Module._load = function(request, parent, isMain) {
+  //  计算绝对路径
+  var filename = Module._resolveFilename(request, parent);
+
+  //  第一步：如果有缓存，取出缓存
+  var cachedModule = Module._cache[filename];
+  if (cachedModule) {
+    return cachedModule.exports;
+
+  // 第二步：是否为内置模块
+  if (NativeModule.exists(filename)) {
+    return NativeModule.require(filename);
+  }
+
+  /********************************这里注意了**************************/
+  // 第三步：生成模块实例，存入缓存
+  // 这里的Module就是我们上面的1.1定义的Module
+  var module = new Module(filename, parent);
+  Module._cache[filename] = module;
+
+  /********************************这里注意了**************************/
+  // 第四步：加载模块
+  // 下面的module.load实际上是Module原型上有一个方法叫Module.prototype.load
+  try {
+    module.load(filename);
+    hadException = false;
+  } finally {
+    if (hadException) {
+      delete Module._cache[filename];
+    }
+  }
+
+  // 第五步：输出模块的exports属性
+  return module.exports;
+}; 
+```
 
 ### 8.ES Module的解析过程
 

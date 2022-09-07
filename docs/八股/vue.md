@@ -13118,6 +13118,141 @@ TemplateRenderer.prototype.render = function render (content, context) {
 
 ## Demo实现
 
+### 模板
+
+组件化
+
+```vue
+<template>
+	<div>
+    </div>
+</template>
+<script>
+import 
+export default{
+    data(){
+        return {
+            
+        }
+    },
+     computed:{
+         
+     },
+     watch:{
+         
+     },
+     methods:{
+         
+    }
+}
+</script>
+<style lang="less" scoped>
+    
+</style>
+```
+
+html
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+  </head>
+  <body>
+    <div id="app">
+        姓： <input type="text" v-model=firstName> 名：
+        <input type="text" v-model=lastName> 姓名：
+        <span>{{fullname}}</span>
+    </div>
+ </body> 
+<script type="text/javascript">
+    var app = new Vue({
+        el: "#app",
+        data: {
+            firstName: 'z',
+            lastName: 's'
+        },
+        computed: {
+            fullname() {
+                return this.firstName + this.lastName
+            }
+        },
+        watch: {
+            firstName(newval) {
+​
+                this.fullname = newval + this.lastName
+            },
+            lastName(newval) {
+                this.fullname = this.firstName + newval
+            }
+​
+        },
+        methods:{
+        
+    }
+    })
+​
+</script>
+</html>
+```
+
+vue3
+
+```js
+<script lang="ts">
+export default defineComponent({
+  components:{
+  props: {
+      number:{
+          type:Number,
+          default:0
+      }
+  },
+  emit:[],
+  setup(props,context){
+      const countRef=ref(null)
+      watch(
+          ()=>props.number,
+          ()=>update(props.number)
+      )
+      onMounted(()=>{
+          func()
+      })
+      const func()=>{
+          
+      
+      
+      
+      }
+      return count
+  }
+  })
+</script>
+<style>
+<style>
+    
+```
+
+
+
+vue3.2
+
+```html
+<template>
+	<div>
+    </div>
+</template>
+<script lang="ts" setup>
+import 
+</script>
+<style>
+</style>
+```
+
+
+
 ### 1.实现一个modal框
 
 ```js
