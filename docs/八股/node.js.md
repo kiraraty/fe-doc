@@ -3900,7 +3900,7 @@ node和浏览器相比一个明显的不同就是node在**每个阶段结束后�
 -   ES5;
 -   connect的执行流程： connect的中间件模型是线性的，即一个一个往下执行；
 
-### egg.js的特点
+### Egg.js的特点
 
 **Egg**
 
@@ -4406,7 +4406,6 @@ formdata.append('filename', md5code+'.'+fileType);
     <input type="text" name="password"><br>
     <button>提交</button> 
 </form>
-复制代码
 ```
 
 当提交的时候，查看浏览器的网络请求：
@@ -4419,7 +4418,6 @@ Host: localhost:3000
 Accept-Encoding: gzip, deflate
 Content-Type: multipart/form-data; boundary=---------------------------340073633417401055292887335273
 Content-Length: 303
-复制代码
 ```
 
 请求体：
@@ -4435,7 +4433,7 @@ Content-Disposition: form-data; name="password"
 123456
 -----------------------------340073633417401055292887335273--
 
-复制代码
+
 ```
 
 这就是 `multipart/form-data` 的传输过程了，但是这里面有三个大坑：
@@ -4457,7 +4455,7 @@ Content-Disposition: form-data; name="password"
   > console.log(Buffer.from('a1').length) // 2
   > console.log('张三'.length) // 2
   > console.log(Buffer.from('张三').length) // 6
-  > 复制代码
+  > 
   > ```
 
 如果仅仅是基本的字符串类型，完全可以用 `www-form-urlencoded` 来进行传输，`multipart/form-data` 强大的地方是其能够传输二进制文件的能力，我们看一下如果包含二进制文件的话应该如何处理。我们增加一个 file 类型的 input，上传一张图片作为头像，发现请求体多出了一部分：
@@ -4909,6 +4907,10 @@ const leak = [];
 例如有个图片请求接口，每次请求，都需要用到类。若每次都需要重新new这些类，并不是很合适，在大量请求时，频繁创建和销毁这些类，造成内存抖动
 
 使用对象池的机制，对这种频繁需要创建和销毁的对象保存在一个对象池中。每次用到该对象时，就取对象池空闲的对象，并对它进行初始化操作，从而提高框架的性能
+
+### Node 服务中如何写日志
+
+[实现日志](https://juejin.cn/post/7045999468843368462)
 
 ### 获取一个目录下面所有文件
 
