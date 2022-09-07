@@ -165,7 +165,49 @@ console.log('bar');
 - process.nextTick()会在这一次event loop的call stack清空后（下一次event loop开始前）再调用callback
 - setTimeout()是并不知道什么时候call stack清空的，所以何时调用callback函数是不确定的
 
+####  node 的多进程架构
 
+> 面对 node 单线程对多核 CPU 使用不足的情况，Node 提供了 `child_process` 模块，来实现进程的复制，node 的多进程架构是主从模式，如下所示：
+
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs113934.png)
+
+```js
+var fork = require('child_process').fork;
+var cpus = require('os').cpus();
+for(var i = 0; i < cpus.length; i++){
+    fork('./worker.js');
+} 
+```
+
+> 在 linux 中，我们通过 `ps aux | grep worker.js` 查看进程
+
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs113939.png)
+
+这就是著名的主从模式，`Master-Worker`
+
+#### 创建子进程的方法
+
+- `spawn()`：启动一个子进程来执行命令
+- `exec()`: 启动一个子进程来执行命令，与 spawn()不同的是其接口不同，它有一个回调函数获知子进程的状况
+- `execFlie()`: 启动一个子进程来执行可执行文件
+- `fork()`: 与 `spawn()`类似，不同电在于它创建 Node 子进程需要执行 js 文件
+- `spawn()`与 `exec()`、`execFile()`不同的是，后两者创建时可以指定 `timeout` 属性设置超时时间，一旦创建的进程超过设定的时间就会被杀死
+- `exec()`与 `execFile()`不同的是，`exec()`适合执行已有命令，`execFile()`适合执行文件。
+
+#### 实现一个 node 子进程被杀死，然后自动重启代码
+
+在创建子进程的时候就让子进程监听 `exit` 事件，如果被杀死就重新 `fork` 一下
+
+```js
+var createWorker = function(){
+    var worker = fork(__dirname + 'worker.js')
+    worker.on('exit', function(){
+        console.log('Worker' + worker.pid + 'exited');
+        // 如果退出就创建新的worker
+        createWorker()
+    })
+} 
+```
 
 ### 文件系统模块fs
 
@@ -3657,7 +3699,188 @@ module.exports = {
 
 ## 综合问题
 
-### 1.Express和Koa的区别
+### Node.js架构
+
+nodejs架构，下图所示：
+
+
+
+![image-20220903225718982](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsimage-20220903225718982.png)
+
+如上图所示，nodejs自上而下分为
+
+
+
+- **用户代码 ( js 代码 )**
+
+> 用户代码即我们编写的应用程序代码、npm包、nodejs内置的js模块等，我们日常工作中的大部分时间都是编写这个层面的代码。
+
+- **binding代码**或者**三方插件（js 或 C/C++ 代码）**
+
+> **胶水代码**，能够让js调用C/C++的代码。可以将其理解为一个桥，桥这头是js，桥那头是C/C++，通过这个桥可以让js调用C/C++。
+> 在nodejs里，胶水代码的主要作用是把nodejs底层实现的C/C++库暴露给js环境。
+> **三方插件**是我们自己实现的C/C++库，同时需要我们自己实现胶水代码，将js和C/C++进行桥接。
+
+- **底层库**
+
+> nodejs的依赖库，包括大名鼎鼎的V8、libuv。
+> **V8**： 我们都知道，是google开发的一套高效javascript运行时，nodejs能够高效执行 js 代码的很大原因主要在它。
+> **libuv**：是用C语言实现的一套异步功能库，nodejs高效的异步编程模型很大程度上归功于libuv的实现，而libuv则是我们今天重点要分析的。
+> 还有一些其他的依赖库
+> **http-parser**：负责解析http响应
+> **openssl**：加解密
+> **c-ares**：dns解析
+> **npm**：nodejs包管理器
+> ...
+
+重点要分析的就是libuv。
+
+#### libuv 架构
+
+我们知道，nodejs实现异步机制的核心便是libuv，libuv承担着nodejs与文件、网络等异步任务的沟通桥梁，下面这张图让我们对libuv有个大概的印象：
+
+![image-20220903225748745](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsimage-20220903225748745.png)
+
+
+
+> 这是libuv官网的一张图，很明显，nodejs的网络I/O、文件I/O、DNS操作、还有一些用户代码都是在 libuv 工作的。 既然谈到了异步，那么我们首先归纳下nodejs里的异步事件：
+
+- 非I/O：
+    - 定时器（setTimeout，setInterval）
+    - microtask（promise）
+    - process.nextTick
+    - setImmediate
+    - DNS.lookup
+- I/O：
+    - 网络I/O
+    - 文件I/O
+    - 一些DNS操作
+
+#### 网络I/O
+
+对于网络I/O，各个平台的实现机制不一样，linux 是 epoll 模型，类 unix 是 kquene 、windows 下是高效的 IOCP 完成端口、SunOs 是 event ports，libuv 对这几种网络I/O模型进行了封装。
+
+#### 文件I/O、异步DNS操作
+
+libuv内部还维护着一个默认4个线程的线程池，这些线程负责执行文件I/O操作、DNS操作、用户异步代码。当 js 层传递给 libuv 一个操作任务时，libuv 会把这个任务加到队列中。之后分两种情况：
+
+- 1、线程池中的线程都被占用的时候，队列中任务就要进行排队等待空闲线程。
+- 2、线程池中有可用线程时，从队列中取出这个任务执行，执行完毕后，线程归还到线程池，等待下个任务。同时以事件的方式通知event-loop，event-loop接收到事件执行该事件注册的回调函数。
+
+> 当然，如果觉得4个线程不够用，可以在nodejs启动时，设置环境变量**UV_THREADPOOL_SIZE**来调整，出于系统性能考虑，libuv 规定可设置线程数不能超过**128**个。
+
+#### nodejs源码
+
+> 先简要介绍下nodejs的启动过程：
+
+- 1、调用**platformInit**方法 ，初始化 **nodejs** 的运行环境。
+- 2、调用 **performance_node_start** 方法，对 **nodejs** 进行性能统计。
+- 3、**openssl**设置的判断。
+- 4、调用**v8_platform.Initialize**，初始化 **libuv** 线程池。
+- 5、调用 **V8::Initialize**，初始化 **V8** 环境。
+- 6、创建一个**nodejs**运行实例。
+- 7、启动上一步创建好的实例。
+- 8、开始执行js文件，同步代码执行完毕后，进入事件循环。
+- 9、在没有任何可监听的事件时，销毁 **nodejs** 实例，程序执行完毕。
+
+#### 事件循环原理
+
+- node 的初始化
+    - 初始化 node 环境。
+    - 执行输入代码。
+    - 执行 **process.nextTick** 回调。
+    - 执行 microtasks。
+- 进入 event-loop
+    - 进入timers阶段
+        - 检查 timer 队列是否有到期的 timer 回调，如果有，将到期的 timer 回调按照 timerId 升序执行。
+        - 检查是否有 process.nextTick 任务，如果有，全部执行。
+        - 检查是否有microtask，如果有，全部执行。
+        - 退出该阶段。
+    - 进入IO callbacks阶段。
+        - 检查是否有 pending 的 I/O 回调。如果有，执行回调。如果没有，退出该阶段。
+        - 检查是否有 process.nextTick 任务，如果有，全部执行。
+        - 检查是否有microtask，如果有，全部执行。
+        - 退出该阶段。
+    - 进入idle，prepare阶段：
+        - 这两个阶段与我们编程关系不大，暂且按下不表。
+    - 进入poll阶段
+        - 首先检查是否存在尚未完成的回调，如果存在，那么分两种情况。
+            - 第一种情况：
+                - 如果有可用回调（可用回调包含到期的定时器还有一些IO事件等），执行所有可用回调。
+                - 检查是否有 process.nextTick 回调，如果有，全部执行。
+                - 检查是否有 microtaks，如果有，全部执行。
+                - 退出该阶段。
+            - 第二种情况：
+                - 如果没有可用回调。
+                - 检查是否有 immediate 回调，如果有，退出 poll 阶段。如果没有，阻塞在此阶段，等待新的事件通知。
+        - 如果不存在尚未完成的回调，退出poll阶段。
+    - 进入check阶段。
+        - 如果有immediate回调，则执行所有immediate回调。
+        - 检查是否有 process.nextTick 回调，如果有，全部执行。
+        - 检查是否有 microtaks，如果有，全部执行。
+        - 退出 **check** 阶段
+    - 进入closing阶段。
+        - 如果有immediate回调，则执行所有immediate回调。
+        - 检查是否有 process.nextTick 回调，如果有，全部执行。
+        - 检查是否有 microtaks，如果有，全部执行。
+        - 退出 **closing** 阶段
+    - 检查是否有活跃的 handles（定时器、IO等事件句柄）。
+        - 如果有，继续下一轮循环。
+        - 如果没有，结束事件循环，退出程序。
+
+可以发现，在事件循环的每一个子阶段退出之前都会按顺序执行如下过程：
+
+- 检查是否有 process.nextTick 回调，如果有，全部执行。
+- 检查是否有 microtaks，如果有，全部执行。
+- 退出当前阶段。
+
+### Node.js的异步IO
+
+[一文吃透异步I/O和事件循环](https://juejin.cn/post/7002106372200333319)
+
+#### Node 事件循环的流程
+
+在传统web服务中，大多都是使用多线程机制来解决并发的问题，原因是I/O事件会阻塞线程，而阻塞就意味着要等待。而node的设计是采用了单线程的机制，但它为什么还能承载高并发的请求呢？因为node的单线程仅针对主线程来说，即每个node进程只有一个主线程来执行程序代码，但node采用了事件驱动的机制，将耗时阻塞的I/O操作交给线程池中的某个线程去完成，主线程本身只负责不断地调度，并没有执行真正的I/O操作。也就是说node实现的是异步非阻塞式
+
+- 在进程启动时，Node 便会创建一个类似于 while(true)的循环，每执行一次循环体的过程我们成为 Tick。
+- 每个 Tick 的过程就是查看是否有事件待处理。如果有就取出事件及其相关的回调函数。然后进入下一个循环，如果不再有事件处理，就退出进程。
+
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs113857.png)
+
+node每次事件循环机制都包含了6个阶段：
+
+- timers阶段：这个阶段执行已经到期的timer(setTimeout、setInterval)回调
+- I/O callbacks阶段：执行I/O（例如文件、网络）的回调
+- idle, prepare 阶段：node内部使用
+- poll阶段：获取新的I/O事件, 适当的条件下node将阻塞在这里
+- check阶段：执行setImmediate回调
+- close callbacks阶段：执行close事件回调，比如TCP断开连接
+
+node和浏览器相比一个明显的不同就是node在**每个阶段结束后会去执行所有microtask任务**
+
+相对于浏览器环境，**node环境下多出了setImmediate和process.nextTick这两种异步操作**。setImmediate的回调函数是被放在check阶段执行，即相当于事件循环的最后阶段了。而process.nextTick会被当做一种microtask，前面提到每个阶段结束后都会执行所有microtask任务，所以process.nextTick有种类似于插队的作用
+
+![image-20220903230335671](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsimage-20220903230335671.png)
+
+这个图是整个 Node.js 的运行原理，从左到右，从上到下，Node.js 被分为了四层，分别是 `应用层`、`V8引擎层`、`Node API层` 和 `LIBUV层`。
+
+> - 应用层： 即 JavaScript 交互层，常见的就是 Node.js 的模块，比如 http，fs
+> - V8引擎层： 即利用 V8 引擎来解析JavaScript 语法，进而和下层 API 交互
+> - NodeAPI层： 为上层模块提供系统调用，一般是由 C 语言来实现，和操作系统进行交互 。
+> - LIBUV层： 是跨平台的底层封装，实现了 事件循环、文件操作等，是 Node.js 实现异步的核心 。
+
+#### 在每个 tick 的过程中，如何判断是否有事件需要处理呢
+
+- 每个事件循环中有一个或者多个观察者，而判断是否有事件需要处理的过程就是向这些观察者询问是否有要处理的事件。
+- 在 Node 中，事件主要来源于网络请求、文件的 I/O 等，这些事件对应的观察者有文件 I/O 观察者，网络 I/O 的观察者。
+- 事件循环是一个典型的生产者/消费者模型。异步 I/O，网络请求等则是事件的生产者，源源不断为 Node 提供不同类型的事件，这些事件被传递到对应的观察者那里，事件循环则从观察者那里取出事件并处理。
+- 在 windows 下，这个循环基于 IOCP 创建，在*nix 下则基于多线程创建
+
+#### 描述一下整个异步 I/O 的流程
+
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs113903.png)
+
+### Express和Koa的区别
 
 ##### Koa
 
@@ -3677,7 +3900,7 @@ module.exports = {
 -   ES5;
 -   connect的执行流程： connect的中间件模型是线性的，即一个一个往下执行；
 
-### 2.egg的特点
+### egg.js的特点
 
 **Egg**
 
@@ -3687,7 +3910,7 @@ module.exports = {
 4. 高度可扩展的插件机制，可以方便定制插件。
 5. 内置集群：使用 `Cluster`，自带进程守护、多进程以及进程间通讯等功能。
 
-### 3.怎么实现文件上传
+### 怎么实现文件上传
 
 [node.js 上传文件图片](https://juejin.cn/post/6998440011389468703)
 
@@ -3855,7 +4078,7 @@ app.use(fileRouter.routes());
 
 
 
-### 4.怎么进行大文件上传
+### 怎么进行大文件上传
 
 [Node.js 大文件上传、断点续传](https://juejin.cn/post/6965294779484045326)
 
@@ -4165,7 +4388,7 @@ formdata.append('filename', md5code+'.'+fileType);
 
 
 
-### 5.FormData 传输表单文件
+### FormData 传输表单文件
 
 #### multipart/form-data
 
@@ -4408,7 +4631,7 @@ mime.lookup('folder/file.js') // 'application/javascript'
 
 
 
-### 6.设计一个分页功能
+### 设计一个分页功能
 
 #### 一、是什么
 
@@ -4514,7 +4737,7 @@ router.all('/api', function (req, res, next) {
 
 确定了这两个值，就能查询出第 `N`页的数据
 
-### 7.Node.js性能监控和优化
+### Node.js性能监控和优化
 
 #### 一、 是什么
 
@@ -4687,7 +4910,7 @@ const leak = [];
 
 使用对象池的机制，对这种频繁需要创建和销毁的对象保存在一个对象池中。每次用到该对象时，就取对象池空闲的对象，并对它进行初始化操作，从而提高框架的性能
 
-### 8.获取一个目录下面所有文件
+### 获取一个目录下面所有文件
 
 ```js
 const fs = require("fs");
@@ -4734,4 +4957,6 @@ function readDir(pathUrl) {
 };
 readDir('./classification');
 ```
+
+### 
 

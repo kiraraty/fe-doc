@@ -3898,7 +3898,154 @@ app.model({
 });
 ```
 
+### 13.手写 redux-thunk 
 
+> redux-thunk` 可以利用 `redux` 中间件让 `redux` 支持异步的 `action
+
+```js
+// 如果 action 是个函数，就调用这个函数
+// 如果 action 不是函数，就传给下一个中间件
+// 发现 action 是函数就调用
+const thunk = ({ dispatch, getState }) => (next) => (action) => {
+  if (typeof action === 'function') {
+    return action(dispatch, getState);
+  }
+
+  return next(action);
+};
+export default thunk
+```
+
+### 14.手写redux 中间件
+
+#### 简单实现
+
+```text
+function createStore(reducer) {
+  let currentState
+  let listeners = []
+
+  function getState() {
+    return currentState
+  }
+
+  function dispatch(action) {
+    currentState = reducer(currentState, action)
+    listeners.map(listener => {
+      listener()
+    })
+    return action
+  }
+
+  function subscribe(cb) {
+    listeners.push(cb)
+    return () => {}
+  }
+
+  dispatch({type: 'ZZZZZZZZZZ'})
+
+  return {
+    getState,
+    dispatch,
+    subscribe
+  }
+}
+
+// 应用实例如下：
+function reducer(state = 0, action) {
+  switch (action.type) {
+    case 'ADD':
+      return state + 1
+    case 'MINUS':
+      return state - 1
+    default:
+      return state
+  }
+}
+
+const store = createStore(reducer)
+
+console.log(store);
+store.subscribe(() => {
+  console.log('change');
+})
+console.log(store.getState());
+console.log(store.dispatch({type: 'ADD'}));
+console.log(store.getState());
+```
+
+#### 迷你版
+
+```text
+export const createStore = (reducer,enhancer)=>{
+	if(enhancer) {
+		return enhancer(createStore)(reducer)
+	}
+	let currentState = {}
+	let currentListeners = []
+
+	const getState = ()=>currentState
+	const subscribe = (listener)=>{
+		currentListeners.push(listener)
+	}
+	const dispatch = action=>{
+		currentState = reducer(currentState, action)
+		currentListeners.forEach(v=>v())
+		return action
+	}
+	dispatch({type:'@@INIT'})
+	return {getState,subscribe,dispatch}
+}
+
+//中间件实现
+export applyMiddleWare(...middlewares){
+	return createStore=>...args=>{
+		const store = createStore(...args)
+		let dispatch = store.dispatch
+
+		const midApi = {
+			getState:store.getState,
+			dispatch:...args=>dispatch(...args)
+		}
+		const middlewaresChain = middlewares.map(middleware=>middleware(midApi))
+		dispatch = compose(...middlewaresChain)(store.dispatch)
+		return {
+			...store,
+			dispatch
+		}
+	}
+
+// fn1(fn2(fn3())) 把函数嵌套依次调用
+export function compose(...funcs){
+	if(funcs.length===0){
+		return arg=>arg
+	}
+	if(funs.length===1){
+		return funs[0]
+	}
+	return funcs.reduce((ret,item)=>(...args)=>ret(item(...args)))
+}
+
+
+//bindActionCreator实现
+
+function bindActionCreator(creator,dispatch){
+    return ...args=>dispatch(creator(...args))
+}
+function bindActionCreators(creators,didpatch){
+    //let bound = {}
+    //Object.keys(creators).forEach(v=>{
+   //     let creator = creator[v]
+     //   bound[v] = bindActionCreator(creator,dispatch)
+    //})
+    //return bound
+
+    return Object.keys(creators).reduce((ret,item)=>{
+	    ret[item] = bindActionCreator(creators[item],dispatch)
+    	return ret
+    },{})
+}
+```
 
 ## Hooks
 
