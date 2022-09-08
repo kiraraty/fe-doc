@@ -1,5 +1,3 @@
-## Three.js
-
 ### 基本介绍
 
 **Threejs 该项目的目的是使用默认的WebGL渲染器创建一个易于使用，轻量级的3D库。该库还在示例中提供了Canvas 2D，SVG和CSS3D渲染器。**
