@@ -11,6 +11,14 @@
   <!-- <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-simple.css"> -->
   <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify-darklight-theme@latest/dist/style.min.css">
   <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify-sidebar-collapse/dist/sidebar-folder.min.css" />
+  <style>
+    .sidebar{
+      width: 250px;
+    }
+    li.folder.level-1{
+      
+    }
+  </style>
 </head>
 
 <body>
@@ -69,7 +77,22 @@
         formatUpdated: "{YYYY}-{MM}-{DD} {HH}:{mm}",
         whereToPlace: "top",  // "top" or "bottom", default to "bottom"
       },
-    }
+      /* plugins: [
+        function (hook, vm) {
+          hook.beforeEach(function (html) {
+            //适配Markdown的====高亮语法
+            let res = html.match(/==(.+?)==/g);
+            for (var i = 0; i < res.length; i++) {
+              html = html.replace(res[i], `<span class="mark">` + res[i].replace(/==/g, "") + `</span>`);
+            }
+            //将更新时间加到文档的最顶部
+            return '> Last Modified {docsify-updated}'
+              + '\n----\n'
+              + html;
+          })
+        }
+    ] */
+  }
 
   </script>
   <script src="//cdn.jsdelivr.net/npm/docsify/lib/docsify.min.js"></script>
