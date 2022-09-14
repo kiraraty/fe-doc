@@ -315,11 +315,11 @@ function animate() {
 
 ### scene场景
 
-##### 介绍
+
 
 场景是我们每个`Three.js`项目里面放置内容的容器，我们也可以拥有多个场景进行切换展示，你可以在场景内放置你的**模型**，**灯光**和**照相机**。还可以通过调整场景的位置，让场景内的所有内容都一起跟着调整位置。
 
-##### THREE.Object3D
+#### THREE.Object3D
 
 为了方便操作，Three.js将每个能够直接添加到场景内的对象都继承至一个基类-**THREE.Object3D**，以后我们将继承至这个基类的对象称为3d对象，判断一个对象是否是继承至THREE.Object3D，我们可以这么判断：
 
@@ -330,7 +330,7 @@ obj instanceof THREE.Object3D
 
 ![image-20190717191601592](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsnYg4ISfUqzyW6Rx.png)
 
-##### 向场景内添加一个`3d`对象：
+#### 向场景内添加一个`3d`对象：
 
 ```js
 scene.add(mesh); //将网格添加到场景
@@ -343,7 +343,7 @@ scene.add(mesh); //将网格添加到场景
 parent.add(child);
 ```
 
-##### 获取一个3d对象
+#### 获取一个3d对象
 
 ```js
 object3D.name = "firstObj";
@@ -352,7 +352,7 @@ scene.add(object3D);
 scene.getObjectByName("firstObj"); //返回第一个匹配的3d对象
 ```
 
-##### 删除一个3d对象
+#### 删除一个3d对象
 
 如果我们想隐藏一个`3d`对象，而不让它显示，可以通过设置它的`visible`的值：
 
@@ -366,11 +366,11 @@ mesh.visible = false; //设置为false，模型将不会被渲染到场景内
 scene.remove(mesh); //将一个模型从场景中删除
 ```
 
-##### 修改位置(3种方式)
+#### 修改位置(3种方式)
 
 单独设置
 
-```
+```js
 mesh.position.x = 3; //将模型的位置调整到x正轴距离原点为3的位置。
 mesh.position.y += 5; //将模型的y轴位置以当前的位置向上移动5个单位。
 mesh.position.z -= 6;
@@ -378,7 +378,7 @@ mesh.position.z -= 6;
 
 一次性设置所有
 
-```
+```js
 mesh.position.set(3, 5, -6);  //直接将模型的位置设置在x轴为3，y轴为5，z轴为-6的位置
 ```
 
@@ -388,11 +388,11 @@ mesh.position.set(3, 5, -6);  //直接将模型的位置设置在x轴为3，y轴
 mesh.position = new THREE.Vector3(3, 5, -6); //上面的设置位置也可以通过这样设置。
 ```
 
-##### 修改大小
+#### 修改大小
 
 单独设置
 
-```
+```js
 mesh.scale.x = 2; //模型沿x轴放大一倍
 mesh.scale.y = 0.5; //模型沿y轴缩小一倍
 mesh.scale.z = 1; //模型沿z轴保持不变
@@ -410,7 +410,7 @@ mesh.scale.set(2, 2, 2); //每个方向等比放大一倍
 mesh.scale = new THREE.Vector3(2, 2, 2); //每个方向都放大一倍
 ```
 
-##### 修改模型的转向
+#### 修改模型的转向
 
 第一种方式是**单独设置每个轴的旋转：**
 
@@ -440,23 +440,23 @@ mesh.rotation = new THREE.Euler(Math.PI, 0, - Math.PI / 2, "YZX");
 
 https://github.com/dataarts/dat.gui
 
-##### 功能
+#### 功能
 
 - 参数调整
 - 自动匹配参数类型 (滑块， checkbox, 编辑 等)
 - 可以自定义函数
 
-##### 使用
+#### 使用
 
 1.引入
 
-```
+```js
 <script src="https://cdn.bootcss.com/dat-gui/0.7.1/dat.gui.min.js"></script>
 ```
 
 2.建一个对象，在里面设置我们需要修改的一些数据：
 
-```
+```js
 controls = {
     positionX:0,
     positionY:0,
@@ -483,7 +483,7 @@ function updatePosition() {
 
 一个模型是由几何体`Geometry`和材质`material`组成。`Three.js`内置了很多的几何体种类，如：立方体、三棱锥、球、八面体、十二面体、二十面体等等，这一节我们将介绍一下这些类型几何体的模型创建和几何体的通用方法。
 
-##### Geometry和BufferGeometry
+#### Geometry和BufferGeometry
 
 当前`Three.js`内置了这两种几何体类型Geometry和BufferGeometry，**这两个几何体类型都是用于存储模型的顶点位置、面的索引、法向量、颜色、uv纹理以及一些自定义的属性。**
 
@@ -503,8 +503,6 @@ function updatePosition() {
 ##### 互转
 
 两种几何体类型可以互转，所以，不要害怕现在使用的是那种。
-
-
 
 BufferGeometry`转换成`Geometry
 
@@ -528,11 +526,11 @@ bufferGeo.fromGeometry(geometry);
 
 
 
-##### 立方体
+#### 立方体
 
 在`WebGL`里面，所有的模型都是通过三角形面组成。
 
-###### 创建
+##### 创建
 
 ```js
 var geometry = new THREE.BoxGeometry( 1, 1, 1 );
@@ -541,7 +539,7 @@ var cube = new THREE.Mesh( geometry, material );
 scene.add( cube );
 ```
 
-###### 构造函数
+##### 构造函数
 
 ```js
 BoxGeometry(width : 浮点类型, height : 浮点类型, depth : 浮点类型, widthSegments : 整数类型, heightSegments : 整数类型, depthSegments : 整数类型)
@@ -564,11 +562,11 @@ https://threejs.org/docs/scenes/geometry-browser.html#BoxGeometry
 
 ![image-20190717173516260](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsA8QOJunch2b1MTm.png)
 
-##### 圆形
+#### 圆形
 
 **圆形是由多个三角形分段构成**，这些三角形分段围绕一个中心点延伸并且延伸到给定半径以外。
 
-###### 创建
+##### 创建
 
 ```js
 var geometry = new THREE.CircleGeometry( 5, 32 );
@@ -577,9 +575,9 @@ var circle = new THREE.Mesh( geometry, material );
 scene.add( circle );
 ```
 
-###### 构造函数
+##### 构造函数
 
-```
+```js
 CircleGeometry(radius : 浮点类型, segments : 整数类型, thetaStart : 浮点类型, thetaLength : 浮点类型)
 ```
 
@@ -588,13 +586,13 @@ segments — 段数（三角形），最小值为3，默认值为8
 thetaStart — 第一段的起始角度，默认值为0
 thetaLength — 圆形扇形的中心角，通常称为theta。默认值是2 * Pi，画出一个整圆
 
-###### 在线示意
+##### 在线示意
 
 https://threejs.org/docs/scenes/geometry-browser.html#CircleGeometry
 
-##### 圆锥
+#### 圆锥
 
-###### 创建
+##### 创建
 
 ```js
 var geometry = new THREE.ConeGeometry( 5, 20, 32 );
@@ -603,7 +601,7 @@ var cone = new THREE.Mesh( geometry, material );
 scene.add( cone );
 ```
 
-###### 构造函数
+##### 构造函数
 
 ```js
 ConeGeometry(radius : 浮点类型, height : 浮点类型, radialSegments : 整数类型, heightSegments : 整数类型, openEnded : 布尔类型, thetaStart : 浮点类型, thetaLength : 浮点类型)
@@ -617,13 +615,13 @@ openEnded — 圆锥体底部是是隐藏还是显示，默认值为false，显�
 thetaStart — 第一段的起始角度，默认值是0（Three.js的0度位置）。
 thetaLength — 圆形扇形的中心角，通常称为theta。默认值是2 * Pi，画出一个整圆
 
-###### 在线示意
+##### 在线示意
 
 https://threejs.org/docs/scenes/geometry-browser.html#ConeGeometry
 
-##### 圆柱
+#### 圆柱
 
-###### 创建
+##### 创建
 
 ```js
 var geometry = new THREE.CylinderGeometry( 5, 5, 20, 32 );
@@ -632,9 +630,9 @@ var cylinder = new THREE.Mesh( geometry, material );
 scene.add( cylinder );
 ```
 
-###### 构造函数
+##### 构造函数
 
-```
+```js
 CylinderGeometry(radiusTop : 浮点类型, radiusBottom : 浮点类型, height : 浮点类型, radialSegments : 整数类型, heightSegments : 整数类型, openEnded : 布尔类型, thetaStart : 浮点类型, thetaLength : 浮点类型)
 ```
 
@@ -647,13 +645,13 @@ openEnded — 圆柱体的两端是否显示，默认值是false，显示。
 thetaStart — 第一段的起始角度，默认值是0（Three.js的0度位置）。
 thetaLength — 圆形扇形的中心角，通常称为theta。默认值是2 * Pi，画出一个整圆
 
-###### 在线示意
+##### 在线示意
 
 https://threejs.org/docs/scenes/geometry-browser.html#CylinderGeometry
 
-##### 球
+#### 球
 
-###### 创建
+##### 创建
 
 ```js
 var geometry = new THREE.SphereGeometry( 5, 32, 32 );
@@ -662,9 +660,9 @@ var sphere = new THREE.Mesh( geometry, material );
 scene.add( sphere );
 ```
 
-###### 构造函数
+##### 构造函数
 
-```
+```js
 SphereGeometry(radius : 浮点类型, widthSegments : 整数类型, heightSegments : 整数类型, phiStart : 浮点类型, phiLength : 浮点类型, thetaStart : 浮点类型, thetaLength : 浮点类型)
 ```
 
@@ -676,13 +674,13 @@ phiLength — 指定水平渲染角度大小。默认值是Math.PI * 2
 thetaStart — 指定垂直渲染起始角度。默认值为0
 thetaLength — 指定垂直渲染角度大小。默认是Math.PI
 
-###### 在线示意
+##### 在线示意
 
 https://threejs.org/docs/scenes/geometry-browser.html#SphereGeometry
 
-##### 平面
+#### 平面
 
-###### 创建
+##### 创建
 
 ```js
 var geometry = new THREE.PlaneGeometry( 5, 20, 32 );
@@ -691,7 +689,7 @@ var plane = new THREE.Mesh( geometry, material );
 scene.add( plane );
 ```
 
-###### 构造函数
+##### 构造函数
 
 ```js
 PlaneGeometry(width : 浮点类型, height : 浮点类型, widthSegments : 整数类型, heightSegments : 整数类型)
@@ -702,13 +700,13 @@ height — 沿着Y轴的高度。默认值为1
 widthSegments — 宽度的分段数，可选。默认值为1
 heightSegments — 高度的分段数，可选。默认值为1
 
-###### 在线示意
+##### 在线示意
 
 https://threejs.org/docs/scenes/geometry-browser.html#PlaneGeometry
 
-##### 圆环
+#### 圆环
 
-###### 创建
+##### 创建
 
 ```js
 var geometry = new THREE.TorusGeometry( 10, 3, 16, 100 );
@@ -717,7 +715,7 @@ var torus = new THREE.Mesh( geometry, material );
 scene.add( torus );
 ```
 
-###### 构造函数
+##### 构造函数
 
 ```
 TorusGeometry(radius : 浮点类型, tube : 浮点类型, radialSegments : 整数类型, tubularSegments : 整数类型, arc : 浮点类型)
@@ -729,7 +727,7 @@ radialSegments — 横向分段数，默认值是8
 tubularSegments — 纵向分段数，默认值是6
 arc — 绘制的弧度。默认值是Math.PI * 2，绘制整个圆环
 
-###### 在线示意
+##### 在线示意
 
 https://threejs.org/docs/scenes/geometry-browser.html#TorusGeometry
 
@@ -744,7 +742,7 @@ https://threejs.org/docs/scenes/geometry-browser.html#TorusGeometry
 这一节我们讲解一下模型的表现，也就是我们看到的模型的外观——材质。
 **简单的说就是物体看起来是什么质地**。材质可以看成是材料和质感的结合。在渲染程式中，它是表面各可视属性的结合，这些可视属性是指表面的色彩、纹理、光滑度、透明度、反射率、折射率、发光度等。Three.js给我们封装好了大部分的材质效果。
 
-##### MeshBasicMaterial
+#### MeshBasicMaterial
 
 这种材质是一种简单的材质，不会受到光的影响，直接看到的效果就是整个物体的颜色都是一样，没有立体的感觉。
 
@@ -772,7 +770,7 @@ var material = new THREE.MeshBasicMaterial({color:0x00ffff}); //设置初始的�
 material.color = new THREE.Color(0xff00ff); //将颜色修改为紫色
 ```
 
-##### MeshNormalMaterial
+#### MeshNormalMaterial
 
 这种材质会根据面的方向不同自动改变颜色，也是我们之前一直在用的材质。
 
@@ -787,7 +785,7 @@ scene.add( mesh ); //将网格添加到场景
 
 ```
 
-##### LineBasicMaterial线条材质
+#### LineBasicMaterial线条材质
 
 要绘制线段，我们需要确定两个点，就是起点和终点，案例中我们使用了四个顶点创建了三条线。然后`Geometry`对象使用这组顶点配置几何体，实例化线的材质，最后使用`THREE.Line`生成线。
 
@@ -826,7 +824,7 @@ function initLight() {
 }
 ```
 
-##### MeshLambertMaterial 兰伯特材质
+#### MeshLambertMaterial 兰伯特材质
 
 这种材质会对光有反应，但是不会出现高光，可以模拟一些粗糙的材质的物体，比如木头或者石头。实现案例：
 
@@ -838,7 +836,7 @@ mesh = new THREE.Mesh( geometry, material ); //创建网格
 scene.add( mesh ); //将网格添加到场景
 ```
 
-##### MeshPhongMaterial 高光材质
+#### MeshPhongMaterial 高光材质
 
 这种材质具有高光效果，可以模拟一些光滑的物体的材质效果，比如油漆面，瓷瓦等光滑物体。实现案例：
 
@@ -857,7 +855,7 @@ scene.add( mesh ); //将网格添加到场景
 
 通过之前的内容，我们已经了解一个模型的创建整个过程。接下来，我们将学习如果实现在场景中添加光效和阴影效果。首先我们先介绍一下光照的创建：
 
-##### 创建光照
+#### 创建光照
 
 在上一节，因为案例需求，我们创建过一次光照效果，所有的光照效果也都是通过这种方式创建出来。
 
@@ -888,7 +886,7 @@ light.color.set(0x000000); //将光照的颜色修改为黑色
 light.intensity = 2.0; // 光照的强度改为默认的两倍
 ```
 
-##### AmbientLight 环境全局光
+#### AmbientLight 环境全局光
 
 环境光会照亮场景中所有的物体，在计算物体的颜色的时候，都会叠加上环境光的颜色。
 
@@ -899,7 +897,7 @@ scene.add( light );
 
 由于环境光作用于所有的物体，所有的材质，所以环境光是没有方向的，也无法产生阴影效果。
 
-##### DirectionalLight平行光
+#### DirectionalLight平行光
 
 平行光是以特定的方向发射的光。它产生的光都是平行的状态，主要用于模拟太阳光线。
 创建平行光也接受两个值，颜色和光线强度：
@@ -971,7 +969,7 @@ directionalLight.shadow.mapSize.height = 1024;
 directionalLight.shadow.mapSize.width = 1024;
 ```
 
-##### PointLight 点光源
+#### PointLight 点光源
 
 点光源就是从一个点的位置向四面八方发射出去光，一个简单的例子就是一个裸露的灯泡。
 实现一个最普通的点光源很简单：
@@ -1013,7 +1011,7 @@ pointLight.castShadow = true;
 scene.add(pointLight);
 ```
 
-##### SpotLight 聚光灯光源
+#### SpotLight 聚光灯光源
 
 聚光灯光源的效果也是从一个点发出光线，然后沿着一个一个圆锥体进行照射，可以模仿手电筒，带有灯罩的灯泡等效果。
 实现聚光灯的案例最简单是直接设置一个颜色即可，默认照射原点位置的光照：
@@ -1038,13 +1036,13 @@ spotLight = new THREE.SpotLight( 0xffffff, 2.0, 100, Math.PI/4); //设置光的�
 
 因为聚光灯只能照射一定的区域的物体，所以会出现光亮和无法照射地方的交接，我们可以通过配置第五个值来设置交接渐变的过渡效果：
 
-```
+```js
 spotLight = new THREE.SpotLight( 0xffffff, 2.0, 100, Math.PI/4, 0.5); //设置交界过渡幅度为0.5，默认是0，没有过渡，最大值为1
 ```
 
 我们也可以通过设置第六个值来设置聚光灯的衰减度，和点光源一样：
 
-```
+```js
 spotLight = new THREE.SpotLight( 0xffffff, 2.0, 100, Math.PI/4, 0.5, 2.0); // 设置衰减度为物理效果的值2.0
 
 ```
@@ -1078,7 +1076,7 @@ spotLight.castShadow = true;
 scene.add(spotLight);
 ```
 
-##### HemisphereLight室外光源
+#### HemisphereLight室外光源
 
 最后我们说一下室外光源，这个光源主要是为了模拟在户外的环境光效果，比如在蓝天绿地的户外，模型下面会显示出来绿色的环境光，而上方则会受到蓝天的影响而颜色偏蓝。
 实例化室外光源支持三个参数：天空的颜色，地面的颜色，和光的强度。
@@ -1112,7 +1110,7 @@ hemisphereLight.position.set(0, -1, 0); //默认从上往下渲染，也就是�
 
 由于相机都是继承至THREE.Object3D对象的，所以像设置位置的position属性、rotation旋转和scale缩放属性，可以直接对相机对象设置。我们甚至还可以使用add()方法，给相机对象添加子类，移动相机它的子类也会跟随着一块移动，我们可以使用这个特性制作一些比如HUD类型的显示界面。
 
-##### target 焦点属性和lookAt()方法
+#### target 焦点属性和lookAt()方法
 
 这两个方法的效果一定，都是调整相机的朝向，可以设置一个`THREE.Vector3`(三维向量)点的位置：
 
@@ -1130,7 +1128,7 @@ camera.target = mesh.position;  // 小技巧
 camera.lookAt(mesh.position);
 ```
 
-##### OrthographicCamera 正交相机
+#### OrthographicCamera 正交相机
 
 使用正交相机`OrthographicCamera`渲染出来的场景，所有的物体和模型都按照它固有的尺寸和精度显示，一般使用在工业要求精度或者2D平面中，因为它能完整的显示物体应有的尺寸。
 
@@ -1192,7 +1190,7 @@ orthographicCamera.updateProjectionMatrix();
 renderer.setSize(window.innerWidth, window.innerHeight);
 ```
 
-##### PerspectiveCamera 透视相机
+#### PerspectiveCamera 透视相机
 
 透视相机是最常用的也是模拟人眼的视角的一种相机，它所渲染生成的页面是一种近大远小的效果。
 
@@ -1242,7 +1240,7 @@ function onWindowResize() {
 window.onresize = onWindowResize;
 ```
 
-##### 相机插件
+#### 相机插件
 
 下载地址： https://github.com/mrdoob/three.js/blob/master/examples/js/controls/OrbitControls.js
 
@@ -1293,7 +1291,7 @@ function animate() {
 
 这一节，我们将学习到`Sprite`精灵和`Points`粒子两项东西，这两种对象共同点就是我们通过相机查看它们时，始终看到的是它们的正面，它们总朝向相机。通过它们的这种特性，我们可以实现广告牌的效果，或实现更多的比如雨雪、烟雾等更加绚丽的特效。
 
-##### Sprite 精灵
+#### Sprite 精灵
 
 精灵由于一直正对着相机的特性，一般使用在模型的提示信息当中。通过THREE.Sprite创建生成，由于THREE.Sprite和THREE.Mesh都属于THREE.Object3D的子类，所以，我们操作模型网格的相关属性和方法大部分对于精灵都适用。和精灵一起使用的还有一个THREE.SpriteMaterial对象，它是专门配合精灵的材质。注意：**精灵没有阴影效果。**
 
@@ -1334,7 +1332,7 @@ spriteCube.center.set(0.5, 0); //设置位置点处于精灵的最下方中间�
 scene.add(spriteCube);
 ```
 
-##### points 粒子
+#### points 粒子
 
 **粒子和精灵的效果是一样的，它们之间的区别就是如果当前场景内的精灵过多的话，就会出现性能问题**。粒子的作用就是为解决很多精灵而出现的，我们可以使用粒子去模型数量很多的效果，比如下雨，下雪等，数量很多的时候就适合使用粒子来创建，相应的，提高性能的损失就是失去了对单个精灵的操作，所有的粒子的效果都是一样。总的来说，粒子就是提高性能减少的一些自由度，而精灵就是为了自由度而损失了一些性能。
 
@@ -1369,7 +1367,7 @@ var starField = new THREE.Points(starsGeometry, starsMaterial);
 scene.add(starField);
 ```
 
-###### THREE.PointsMaterial 粒子的纹理
+#### THREE.PointsMaterial 粒子的纹理
 
 如果我们需要设置粒子的样式，还是需要通过设置`THREE.PointsMaterial`属性实现：
 

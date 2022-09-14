@@ -67,7 +67,7 @@
   * [Webpack5](八股/webpack5.md)
   * [Node.js](八股/node.js.md)
   * [Axios](八股/axios.md)
-  
+  * [大前端技术](八股/大前端技术.md)
 * 原理
   * [浏览器原理](八股/浏览器.md)
   * [计算机网络](八股/网络.md)
