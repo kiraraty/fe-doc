@@ -28,6 +28,9 @@
 <body>
   <div id="app"></div>
   <script>
+  if (typeof navigator.serviceWorker !== 'undefined') {
+    navigator.serviceWorker.register('sw.js')
+  }
     window.$docsify = {
       name: "",
       repo: "",
@@ -81,6 +84,7 @@
         formatUpdated: "{YYYY}-{MM}-{DD} {HH}:{mm}",
         whereToPlace: "top",  // "top" or "bottom", default to "bottom"
       },
+	  
       /* plugins: [
         function (hook, vm) {
           hook.beforeEach(function (html) {
