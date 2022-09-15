@@ -2553,7 +2553,7 @@ new webpack.IgnorePlugin(/\.\/locale/, /moment/),
 然后需要在plugin中配置babel的happyPack实例：
 
 ```js
-        new HappyPack({
+new HappyPack({
             // 用唯一的标识符 id 来代表当前的 HappyPack 是用来处理一类特定的文件
             id: 'babel',
             // 如何处理 .js 文件，用法和 Loader 配置中一样
@@ -2907,7 +2907,6 @@ var __webpack_modules__ = {
     // 返回模块
     return module.exports;
   }
-复制代码
 ```
 
 首先是一个`__webpack_module_cache__`，它是一个缓存对象，具体是干啥的下面再说，让我们继续往下看。
