@@ -17,7 +17,7 @@ ___
 
 ## 二、Canvas基本使用
 
-```
+```html
 <canvas id="tutorial" width="300" height="300"></canvas>
 ```
 
@@ -100,8 +100,6 @@ draw();
 
 以下实例绘制两个长方形：
 
-
-
 ```html
 <canvas id="tutorial" width="300" height="300"></canvas>
 <script type="text/javascript">
@@ -119,8 +117,6 @@ function draw(){
 draw();
 </script>
 ```
-
-
 
 ___
 
@@ -276,7 +272,7 @@ draw();
   
 2.  `0` 弧度是指的 `x` 轴正方向。
   
-    ```
+    ```js
     radians=(Math.PI/180)*degrees   //角度转换成弧度
     ```
     
@@ -368,8 +364,6 @@ draw();
 
 **4.5.1 什么是贝塞尔曲线**
 
-
-
 贝塞尔曲线(Bézier curve)，又称贝兹曲线或贝济埃曲线，是应用于二维图形应用程序的数学曲线。
 
 一般的矢量图形软件通过它来精确画出曲线，贝兹曲线由线段与节点组成，节点是可拖动的支点，线段像可伸缩的皮筋，我们在绘图工具上看到的钢笔工具就是来做这种矢量曲线的。
@@ -398,7 +392,7 @@ draw();
 
 绘制二次贝塞尔曲线:
 
-```
+```js
 quadraticCurveTo(cp1x, cp1y, x, y)
 ```
 
@@ -434,7 +428,7 @@ draw();
 
 绘制三次贝塞尔曲线:
 
-```
+```js
 bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y)
 ```
 
@@ -601,7 +595,9 @@ ctx.stroke()
     
     ![](https://www.runoob.com/wp-content/uploads/2018/12/3380216230-5b74dd8e97e85_articlex.png)
     
-    ### 3\. lineJoin = type
+    
+    
+    ##### 3.lineJoin = type
     
     同一个 path 内，设定线条与线条间接合处的样式。
     
@@ -1224,7 +1220,9 @@ ctx.stroke()
     
     ## 案例2：模拟时钟
     
-    ```js
+    css
+    
+    ```html
     <!DOCTYPE html>
     <html>
     <head>
@@ -1243,9 +1241,18 @@ ctx.stroke()
     	}
     </style>
     </head>
-    <body>
+     <body>
     <canvas id="solar" width="300" height="300"></canvas>
     <script>
+     </script>  
+     </body>
+    </html>
+    ```
+    
+    js
+    
+    ```js
+    
     init();
     
     function init(){
@@ -1261,6 +1268,12 @@ ctx.stroke()
             requestAnimationFrame(step);
         });
     }
+    
+    ```
+    
+    
+    
+    ```js
     /*绘制时分秒针*/
     function drawAllHands(ctx){
         let time = new Date();
@@ -1278,42 +1291,50 @@ ctx.stroke()
         drawHand(minuteAngle, 106, 4, "green", ctx);  //绘制分针
         drawHand(secondAngle, 129, 2, "blue", ctx);  //绘制秒针
     }
-    /*绘制时针、或分针、或秒针
-     * 参数1：要绘制的针的角度
-     * 参数2：要绘制的针的长度
-     * 参数3：要绘制的针的宽度
-     * 参数4：要绘制的针的颜色
-     * 参数4：ctx
-     * */
-    function drawHand(angle, len, width, color, ctx){
-        ctx.save();
-        ctx.translate(150, 150); //把坐标轴的远点平移到原来的中心
-        ctx.rotate(-Math.PI / 2 + angle);  //旋转坐标轴。 x轴就是针的角度
-        ctx.beginPath();
-        ctx.moveTo(-4, 0);
-        ctx.lineTo(len, 0);  // 沿着x轴绘制针
-        ctx.lineWidth = width;
-        ctx.strokeStyle = color;
-        ctx.lineCap = "round";
-        ctx.stroke();
-        ctx.closePath();
-        ctx.restore();
-    }
+    ```
+    
+    绘制时针、或分针、或秒针
+    
+    参数1：要绘制的针的角度
+    
+    参数2：要绘制的针的长度
+    
+    参数3：要绘制的针的宽度
+    
+    参数4：要绘制的针的颜色
+    
+    参数4：ctx
+    
+    ```js
+      function drawHand(angle, len, width, color, ctx){
+         ctx.save();
+         ctx.translate(150, 150); //把坐标轴的远点平移到原来的中心
+         ctx.rotate(-Math.PI / 2 + angle);  //旋转坐标轴。 x轴就是针的角度
+         ctx.beginPath();
+         ctx.moveTo(-4, 0);
+         ctx.lineTo(len, 0);  // 沿着x轴绘制针
+         ctx.lineWidth = width;
+         ctx.strokeStyle = color;
+         ctx.lineCap = "round";
+         ctx.stroke();
+         ctx.closePath();
+         ctx.restore();
+        }
     
     /*绘制表盘*/
     function drawDial(ctx){
         let pi = Math.PI;
     
         ctx.clearRect(0, 0, 300, 300); //清除所有内容
-        ctx.save();
+       ctx.save();
     
         ctx.translate(150, 150); //一定坐标原点到原来的中心
         ctx.beginPath();
-        ctx.arc(0, 0, 148, 0, 2 * pi); //绘制圆周
+       ctx.arc(0, 0, 148, 0, 2 * pi); //绘制圆周
         ctx.stroke();
         ctx.closePath();
     
-        for (let i = 0; i < 60; i++){//绘制刻度。
+       for (let i = 0; i < 60; i++){//绘制刻度。
             ctx.save();
             ctx.rotate(-pi / 2 + i * pi / 30);  //旋转坐标轴。坐标轴x的正方形从 向上开始算起
             ctx.beginPath();
@@ -1327,12 +1348,7 @@ ctx.stroke()
         }
         ctx.restore();
     }
-    </script>
-    </body>
-    </html>
     ```
-    
-    
     
     [尝试一下 »](https://www.runoob.com/try/try.php?filename=html5-canvas-intro3)
     
