@@ -69,6 +69,8 @@ https://threejs.org/editor/
 
 ### Hello World
 
+![image-20220913165729304](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/image-20220913165729304.png)
+
 前面说了这么多，准备了这么多，最后，放上我们的第一个案例吧。由此来打开学习Three.js 的大门：
 
 ```js
@@ -739,6 +741,8 @@ https://threejs.org/docs/scenes/geometry-browser.html#TorusGeometry
 
 ### 材质
 
+![image-20220913171041940](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/image-20220913171041940.png)
+
 这一节我们讲解一下模型的表现，也就是我们看到的模型的外观——材质。
 **简单的说就是物体看起来是什么质地**。材质可以看成是材料和质感的结合。在渲染程式中，它是表面各可视属性的结合，这些可视属性是指表面的色彩、纹理、光滑度、透明度、反射率、折射率、发光度等。Three.js给我们封装好了大部分的材质效果。
 
@@ -852,6 +856,8 @@ scene.add( mesh ); //将网格添加到场景
 
 
 ### 光照
+
+![image-20220913171125633](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/image-20220913171125633.png)
 
 通过之前的内容，我们已经了解一个模型的创建整个过程。接下来，我们将学习如果实现在场景中添加光效和阴影效果。首先我们先介绍一下光照的创建：
 

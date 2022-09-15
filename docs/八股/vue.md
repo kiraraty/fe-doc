@@ -37,8 +37,6 @@ Vue.js 是采用**数据劫持**结合**发布者-订阅者模式**的方式，�
 3. Watcher订阅者是Observer和Compile之间通信的桥梁，主要做的事情是: ①在自身实例化时往属性订阅器(dep)里面添加自己 ②自身必须有一个update()方法 ③待属性变动dep.notice()通知时，能调用自身的update()方法，并触发Compile中绑定的回调，则功成身退。
 4. MVVM作为数据绑定的入口，整合Observer、Compile和Watcher三者，通过Observer来监听自己的model数据变化，通过Compile来解析编译模板指令，最终利用Watcher搭起Observer和Compile之间的通信桥梁，达到数据变化 -> 视图更新；视图交互变化(input) -> 数据model变更的双向绑定效果。
 
-![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202259163.webp)
-
 ![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202259845.webp)
 
 
@@ -5188,7 +5186,9 @@ VueComponent.prototype.**proto** === Vue.prototype (这里的proto前后都是�
 
 #### Vue2生命周期
 
-<img src="https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202300568.png" alt="b1493c640d7e4cf2bd7785cea7c86789" style="zoom: 50%;" />
+
+
+![image-20220907204915660](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsimage-20220907204915660.png)
 
 Vue 实例有⼀个完整的⽣命周期，也就是从开始创建、初始化数据、编译模版、挂载Dom -> 渲染、更新 -> 渲染、卸载 等⼀系列过程，称这是Vue的⽣命周期。
 
@@ -6446,6 +6446,13 @@ history.state    用于存储2个方法的data数据，不同浏览器的读写�
 
 响应pushState或者replaceState的调用
 
+history.pushState方法接受三个参数，依次为：
+
+> state：一个与指定网址相关的状态对象，popstate事件触发时，该对象会传入回调函数。如果不需要这个对象，此处可以填null。
+> title：新页面的标题，但是所有浏览器目前都忽略这个值，因此这里可以填null。
+> url：新的网址，必须与当前页面处在同一个域。浏览器的地址栏将显示这个网址。
+> 假定当前网址是example.com/1.html，我们使用pushState方法在浏览记录（history对象）中添加一个新记录。
+
  每当活动的历史记录项发生变化时， `popstate` 事件都会被传递给window对象。如果当前活动的历史记录项是被 `pushState` 创建的，或者是由 `replaceState` 改变的，那么 `popstate` 事件的状态属性 `state` 会包含一个当前历史记录状态对象的拷贝
 
 ```js
@@ -6832,13 +6839,15 @@ const router = new Router({
 ##### 1、如何改变 URL 不引起页面刷新。
 
 Hash 模式：更新 window.location.hash, \#是用来指导浏览器动作的，http请求中是不包括#部分的，不会发送到服务器端。因此改变location.hash部分，浏览器不会发送请求重新加载页面
-History 模式：通过 pushState 或 replaceState 方法改变浏览器的 URL。
+History 模式：通过 pushState 或 replaceState 方法改变浏览器的 URL不会引起页面刷新
+
+ pushState 在用户访问页面后面添加一个访问记录， replaceState 则是直接替换了当前访问记录
 
 ##### 2、如何监控 URL 的变化。
 
-在 Hash 模式下可以通过监听 Hashchange 事件来监控 URL 的变化。
+在 Hash 模式下可以通过**监听 Hashchange 事件来监控 URL 的变化**。
 
-在 History 模式只有浏览器的前进和后退会触发 popstate 事件， History API 提供的 pushState 和 replaceState 并不会触发相关事件。故需要劫持 pushState / replaceState 方法，再手动触发事件。
+在 History 模式只有**浏览器的前进和后退会触发 popstate 事件**， History API 提供的 pushState 和 replaceState 并不会触发相关事件。故需要劫持 pushState / replaceState 方法，再手动触发事件。
 
 既然 History 这么麻烦，那为什么还要用 History 模式呢？
 
@@ -6871,7 +6880,9 @@ https://www.test.com/about
 
 ##### 3、如何根据 URL 改变页面内容。
 
-文章开头说了，*无刷新更新页面本质上是改变页面的DOM，而不是跳转到新页面。* 我们也知道了如何监控 URL 的变化，那最简单粗暴的方式就是直接通过 innerHTML 改变 DOM 内容。
+文章开头说了，***无刷新更新页面本质上是改变页面的DOM，而不是跳转到新页面**。* 我们也知道了如何监控 URL 的变化，那最简单粗暴的方式就是直接通过 innerHTML 改变 DOM 内容。
+
+根据当前路由地址找到对应组件重新更新渲染。
 
 当然主流的 SPA 框架如：React/Vue 是通过 **虚拟DOM(Virtual DOM)** 结合优化后的 **diff 策略** 实现最小 DOM 操作来更新页面。
 
@@ -6917,6 +6928,8 @@ https://www.test.com/about
 - 如何监听 URL 变化
   由于**pushState 和 replaceState** 并不会触发相应事件，故需劫持 pushState 和 replaceState 方法，手动触发事件：
 
+   触发事件, 让 addEventListener 可以监听到
+  
   ```tsx
   bindHistoryEventListener(type: string): any {
         const historyFunction: Function = (<any>history)[type];
@@ -6932,7 +6945,7 @@ https://www.test.com/about
   ```
 
   然后就可以监听相关事件了
-
+  
   ```tsx
   window.history.pushState = this.bindHistoryEventListener('pushState');
   window.addEventListener('pushState', () => {
@@ -6943,7 +6956,7 @@ https://www.test.com/about
       // ...
   });
   ```
-
+  
 - **/about 和 /about/me 是两个不同的页面**
   转换 pathname 为数组，再判断数组长度来区分：
 
@@ -7985,7 +7998,7 @@ Action 函数接受一个与 store 实例具有相同方法和属性的 context 
 - Vuex中所有的状态更新的唯一途径都是mutation，异步操作通过 Action 来提交 mutation实现，这样可以方便地跟踪每一个状态的变化，从而能够实现一些工具帮助更好地了解我们的应用。
 - 每个mutation执行完成后都会对应到一个新的状态变更，这样devtools就可以打个快照存下来，然后就可以实现 time-travel 了。如果mutation支持异步操作，就没有办法知道状态是何时更新的，无法很好的进行状态的追踪，给调试带来困难。
 
-### 5.基本注意
+### 5.注意的问题
 
 在组件里面  用方法执行dispatch('函数名'，value)
 
@@ -8802,7 +8815,7 @@ deactivated   -> onDeactivated
 1. onActivated(): 被包含在中的组件，会多出两个生命周期钩子函数。被激活时执行 。
 2. onDeactivated(): 比如从 A组件，切换到 B 组件，A 组件消失时执行。
 
-#### 6.父子传参不同，setup() 函数特性
+#### 6. 父子传参不同，setup() 函数特性
 
 总结：
 1、setup 函数时，它将接受两个参数：（props、context(包含attrs、slots、emit)）
@@ -10756,7 +10769,7 @@ if (newStartVNode.key === oldStartVNode.key) {
 
 其实就简单的看一眼我们就能发现，这两段文字是有**一部分是相同**的，**这些文字是不需要修改也不需要移动的**，真正需要进行修改中间的几个字母，所以`diff`就变成以下部分
 
-```
+```js
 text1: 'llo'
 text2: 'y'
 ```
@@ -10869,7 +10882,7 @@ function vue3Diff(prevChildren, nextChildren, parent) {
 
 ##### 判断是否需要移动
 
-其实几个算法看下来，套路已经很明显了，就是找到移动的节点，然后给他移动到正确的位置。把该加的新节点添加好，把该删的旧节点删了，整个算法就结束了。这个算法也不例外，我们接下来看一下它是如何做的。
+其实几个算法看下来，套路已经很明显了，**就是找到移动的节点，然后给他移动到正确的位置。把该加的新节点添加好，把该删的旧节点删了，整个算法就结束了**。这个算法也不例外，我们接下来看一下它是如何做的。
 
 当`前/后置`的预处理结束后，我们进入真正的`diff`环节。首先，我们先根据**新列表**剩余的节点数量，创建一个`source`数组，并将数组填满`-1`。
 
@@ -11590,7 +11603,7 @@ oldCh 和 ch 是代表旧和新两个 Vnode 节点序列，oldStartIdx、newStar
 以上分析了 Vnode 渲染和更新过程中的主要方法和流程，下面是本例中涉及到的主要方法的流程图：
 ![Vnode 流程图](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202303671.png)
 
-## vue源码分析
+## Vue源码分析
 
 ### 基本实现
 
@@ -12669,7 +12682,7 @@ react:
 -   总是确保hook出现在函数组件的最顶部 
 -   对于一些hook如useEffect, useMemo, useCallBack, 必须手动注册依赖项。 
 
-而在vue中, 基于vue的响应式系统，composiiton api在调用时可以不用考虑顺序并且能使用在判断/循环/内部函数中。并且由于vue的响应式数据会自动收集依赖，因此使用一些composiiton api如computed以及watchEffect时无需手动注册依赖。
+而在vue中, 基于vue的响应式系统，compostion api在调用时可以不用考虑顺序并且能使用在判断/循环/内部函数中。并且由于vue的响应式数据会自动收集依赖，因此使用一些composiiton api如computed以及watchEffect时无需手动注册依赖。
 
 后面基本是一些小的问题比如:
 
@@ -12693,6 +12706,21 @@ react:
 
 服务端渲染 SSR (Server-Side Rendering)，是指在服务端完成页面的html 拼接处理， 然后再发送给浏览器，将不具有交互能力的html结构绑定事件和状态，在客户端展示为具有完整交互能力的应用程序。
 
+前端在开发单页应用的时候会经常碰到上述代码.客户端渲染最明显的特征就是后端发送过来的`index.html`里面的`app`节点里面内容是空的.那整个客户端渲染流程很容易打通.
+
+- 浏览器输入网址请求服务器
+- 后端将一个不含有页面内容的`html`发送给浏览器
+- 浏览器接收到`html`开始加载,当读到后面`script`处就开始向服务器请求`js`资源.此时`html`是不含有内容的空模板
+- 后端收到请求便把`js`发送给浏览器,浏览器收到后开始加载执行`js`代码.
+- 这个时候`vue`开始接管了整个应用,它便开始加载`App`组件,但发现`App`组件里面有个异步请求的代码.浏览器便开始向后台发起`ajax`请求获取数据,数据得到后便开始渲染`App`组件的模板.
+- `App`组件所有工作都做完后,`vue`便把`App`组件的内容插入到`index.html`里`id`为`app`的`dom`元素.
+
+从上面客户端渲染的流程来看,后端发送给前台`index.html`是不包含页面内容的空模板,页面内容的渲染过程都是浏览器这边完成的,所以这种方式称为`客户端渲染`.
+
+`srr`和客户端渲染最大区别就是上面第二步,后端直接将一个把内容都填充好的`html`发给浏览器渲染.
+
+如此浏览器收到了`html`直接渲染就可以了,不需要自己再额外发送请求获取数据渲染模板,正因为这部分工作给省掉了,所以页面的加载速度会变得很流畅.其次由于发送过来的`html`本身就是有内容的,搜索引擎就能通过这些内容判端网站的类型和用处,这样便优化了`seo`
+
 ### 适用场景
 
 以下两种情况 SSR 可以提供很好的场景支持
@@ -12714,6 +12742,10 @@ react:
 我们来结合 Vue.js 来看看 Vue 是如何实现 SSR 的。
 
 ### Vue SSR 的实现原理
+
+**服务端渲染的核心就在于：通过vue-server-renderer插件的renderToString()方法，将Vue实例转换为字符串插入到html文件**
+
+
 
 #### 先决条件
 

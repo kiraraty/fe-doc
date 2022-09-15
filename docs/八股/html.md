@@ -40,6 +40,26 @@ HTML5 为什么只需要写 `<!DOCTYPE HTML>`
 - `HTML5` 不基于 `SGML`，因此不需要对`DTD`进行引用，但是需要`doctype`来规范浏览器的行为
 - 而`HTML4.01`基于`SGML`,所以需要对`DTD`进行引用，才能告知浏览器文档所使用的文档类型
 
+```html
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+
+</style>
+</head>
+<body>
+
+<h1>background 属性</h1>
+
+<script></script>
+</body>
+
+</html>
+```
+
+
+
 ### 3.Meta标签有哪些？有什么作用
 
 `meta` 标签由 `name` 和 `content` 属性定义，**用来描述网页文档的属性**，比如网页的作者，网页描述，关键词等，除了HTTP标准固定了一些`name`作为大家使用的共识，开发者还可以自定义name。
