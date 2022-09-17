@@ -80,21 +80,6 @@
         whereToPlace: "top",  // "top" or "bottom", default to "bottom"
       },
 	  
-      /* plugins: [
-        function (hook, vm) {
-          hook.beforeEach(function (html) {
-            //适配Markdown的====高亮语法
-            let res = html.match(/==(.+?)==/g);
-            for (var i = 0; i < res.length; i++) {
-              html = html.replace(res[i], `<span class="mark">` + res[i].replace(/==/g, "") + `</span>`);
-            }
-            //将更新时间加到文档的最顶部
-            return '> Last Modified {docsify-updated}'
-              + '\n----\n'
-              + html;
-          })
-        }
-    ] */
   }
 
   </script>
