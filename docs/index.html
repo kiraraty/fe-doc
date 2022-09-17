@@ -28,63 +28,14 @@
 <body>
   <div id="app"></div>
   <script>
-  if (typeof navigator.serviceWorker !== 'undefined') {
     navigator.serviceWorker.register('sw.js')
-    }
+	
     window.$docsify = {
       name: "",
       repo: "",
       loadSidebar: true,
       loadNavbar: true,
       subMaxLevel: 4,
-      search:[
-        '/八股/axios',
-        '/八股/css',
-        '/八股/d3.js',
-        '/八股/excel导出优化',
-        '/八股/html',
-        '/八股/HTML5-Canvas',
-        '/八股/javascript',
-        '/八股/javascript基础',
-        '/八股/javascript进阶',
-        '/八股/linux',
-        '/八股/node.js',
-        '/八股/react',
-        '/八股/react源码分析',
-        '/八股/SVG入门指南',
-        '/八股/three.js',
-        '/八股/typescript',
-        '/八股/typescript基础',
-        '/八股/typescript面试题',
-        '/八股/vue',
-        '/八股/vue3小结',
-        '/八股/vue源码分析',
-        '/八股/webgis',
-        '/八股/webgl',
-        '/八股/webpack',
-        '/八股/webpack5',
-        '/八股/三画项目面',
-        '/八股/代码题',
-        '/八股/分片上传组件',
-        '/八股/前端性能优化总结',
-        '/八股/前端文件处理',
-        '/八股/动态表格渲染',
-        '/八股/场景题',
-        '/八股/常见计算机基础',
-        '/八股/性能优化',
-        '/八股/投票系统项目',
-        '/八股/操作系统',
-        '/八股/数据库原理',
-        '/八股/数据结构与算法基础',
-        '/八股/浏览器',
-        '/八股/算法题',
-        '/八股/管理系统项目',
-        '/八股/组件封装思想',
-        '/八股/网络',
-        '/八股/设计模式',
-        '/八股/输出题',
-        '/八股/预约系统项目',
-      ],
       search: {   
         maxAge: 86400000,
         paths: "auto",
@@ -160,6 +111,7 @@
   <script src="//cdn.jsdelivr.net/npm/docsify-darklight-theme@latest/dist/index.min.js"></script>
   <script src="//cdn.jsdelivr.net/npm/docsify-catalog@1.0.0/dist/catalog.js"></script>
   <script src="//cdn.jsdelivr.net/npm/docsify-updated/src/time-updater.min.js"></script>
+  <script src="./sw.js"></script>
 </body>
 
 </html>
