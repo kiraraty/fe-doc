@@ -1205,11 +1205,11 @@ _traverse()方法里面
 
 ### 7.nextTick有什么应用场景？原理是什么？
 
-![12c574e8b85e729b0d9905959cc281ab.png](https://img-blog.csdnimg.cn/img_convert/12c574e8b85e729b0d9905959cc281ab.png)
+![12c574e8b85e729b0d9905959cc281ab.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/12c574e8b85e729b0d9905959cc281ab.png)
 
 **打印的结果是begin, 而不是我们设置的end。**这个结果足以说明Vue中DOM的更新并非同步
 
-ue异步执行DOM更新。只要观察到数据变化，Vue将开启一个队列，并缓冲在同一事件循环中发生的所有数据改变。如果同一个watcher被多次触发，只会被推入到队列中一次。这种在缓冲时去除重复数据对于避免不必要的计算和DOM操作上非常重要。然后，在下一个的事件循环“tick”中，Vue刷新队列并执行实际 (已去重的) 工作
+vue异步执行DOM更新。只要观察到数据变化，Vue将开启一个队列，并缓冲在同一事件循环中发生的所有数据改变。如果同一个watcher被多次触发，只会被推入到队列中一次。这种在缓冲时去除重复数据对于避免不必要的计算和DOM操作上非常重要。然后，在下一个的事件循环“tick”中，Vue刷新队列并执行实际 (已去重的) 工作
 
 Vue 的 nextTick 其本质是对 JavaScript 执行原理 EventLoop 的一种应用。
 
@@ -1377,7 +1377,7 @@ JavaScript中的对象是引用类型的数据，当多个实例引用同一个�
 
 所以组件的数据不能写成对象的形式，而是要写成函数的形式。数据以函数返回值的形式定义，这样当每次复用组件的时候，就会返回一个新的data，也就是说每个组件都有自己的私有数据空间，它们各自维护自己的数据，不会干扰其他组件的正常运行。
 
-### 9.Vue中的三种Watcher
+### 9.vue中的三种Watcher
 
 `Vue`可以说存在三种`watcher`，第一种是在定义`data`函数时定义数据的`render watcher`；第二种是`computed watcher`，是`computed`函数在自身内部维护的一个`watcher`，配合其内部的属性`dirty`开关来决定`computed`的值是需要重新计算还是直接复用之前的值；第三种就是`whtcher api`了，就是用户自定义的`export`导出对象的`watch`属性；当然实际上他们都是通过`class Watcher`类来实现的。
 
@@ -1882,7 +1882,7 @@ v-solt可以解构接收 解构接收的字段要和传的字段一样才可以
 
 ![image-20220621091246267](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsUAzp31qG6lXSrhn.png)
 
-### 11.如何保存当前页面状态，(keep-alive)原理是什么？
+### 11.保存当前页面状态，keep-alive原理
 
 既然是要保持页面的状态（其实也就是组件的状态），那么会出现以下两种情况：
 
@@ -2178,6 +2178,8 @@ LRU 缓存策略∶ 从内存中找出最久未使用的数据并置换新的数
 
 ### 12.vue如何监听对象或数组的属性变化 数组检测缺陷问题
 
+#### 监听缺陷
+
 在 Vue 的数据绑定中会对一个对象属性的变化进行监听，并且通过依赖收集做出相应的视图更新
 
 一个对象所有类型的属性变化都能被监听到吗？
@@ -2208,6 +2210,8 @@ btnClick(){
 
 ![image.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsnA6bieGWTtERalj.webp)
 
+#### Vue.$set
+
 Vue.$set(target,key,value)：可以动态的给数组、对象添加和修改数据，并更新视图中数据的显示。
 
 Vue.set(target, key/index, value) 向响应式对象中添加一个属性，并确保这个新属性同样是响应式的，且触发视图更新。它必须用于向响应式对象上添加新属性，因为 Vue 无法探测普通的新增属性 (比如 this.obj.newProperty = 'hi')
@@ -2234,17 +2238,17 @@ Vue.set( ) 是将 set 函数绑定在 Vue 构造函数上，this.$set() 是将 s
 
 在将数组处理成响应式数据后，如果使用数组原始方法改变数组时，数组值会发生变化，但是并不会触发数组的setter来通知所有依赖该数组的地方进行更新，为此，vue通过重写数组的某些方法来监听数组变化，重写后的方法中会手动触发通知该数组的所有依赖进行更新。
 
-**Vue重新的属性**
+#### **Vue重新的属性**
 
 push pop shift unshift splice sort reverse
 
 看来Vue能对数组进行监听的原因是，把数组的方法重写了。总结起来就是这几步：
 
-**01**先获取原生 Array 的原型方法，因为拦截后还是需要原生的方法帮我们实现数组的变化。
+**1**.先获取原生 Array 的原型方法，因为拦截后还是需要原生的方法帮我们实现数组的变化。
 
-**02**对 Array 的原型方法使用 Object.defineProperty 做一些拦截操作。
+**2**.对 Array 的原型方法使用 Object.defineProperty 做一些拦截操作。
 
-**03**把需要被拦截的 Array 类型的数据原型指向改造后原型
+**3.**把需要被拦截的 Array 类型的数据原型指向改造后原型
 
 ```js
 // 触发更新视图
@@ -2336,13 +2340,59 @@ observer(data)
 data.nums.push(4) // 监听数组
 ```
 
-### 13.事件修饰符有哪些
+### 13.vue事件修饰符有哪些
+
+**Vue的事件处理**
+
+1. 使用`@xxx`或者`v:on:xxx`来绑定事件，其中xxx是事件名。
+2. 事件的回调函数必须写在`methods`上，并且`不要用箭头函数`，否则this指向不是Vue实例。
+3. methods中配置的函数，都是被Vue管理的函数，`this指向都是Vue`
+
+**Vue的事件修饰符**
 
 - `.stop`：等同于 JavaScript 中的 `event.stopPropagation()` ，防止事件冒泡；
 - `.prevent` ：等同于 JavaScript 中的 `event.preventDefault()` ，防止执行预设的行为（如果事件可取消，则取消该事件，而不停止事件的进一步传播）；
 - `.capture` ：与事件冒泡的方向相反，事件捕获由外到内；
 - `.self` ：只会触发自己范围内的事件，不包含子元素；
 - `.once` ：只会触发一次。
+- `passive`： 事件的默认行为立即执行，无需等待事件回调执行完毕
+
+```js
+//阻止默认事件(只会触发showInfo函数，并不会跳转到www.baid.com)
+<a href="www.baidu.com" @click.prevent="showInfo">点我提示信息</a>
+
+//阻止事件冒泡(点击div2只会触发当前的事件，并不会冒泡触发div1的事件)
+<div @click="show">
+   div1
+   <div @click.stop="show">div2</div>
+</div>
+
+//事件只触发一次(只会触发一次点击事件，后续继续点击也不会再触发)
+<div @click.once="show">div2</div>
+
+//阻止事件捕获(点击div2先触发div1的事件，再触发div2的事件)
+<div @click.capture="show">
+   div1
+   <div @click="show">div2</div>
+</div>
+
+//只有event.targer是当前操作的元素才触发(只有点击自身才会触发，通过冒泡也不会触发事件)
+<div @click.self="show">
+   div1
+   <div @click="show">div2</div>
+</div>
+
+//事件的默认行为立即执行，无需等待事件回调执行完毕(不需要等待函数内容执行完，直接触发事件本来的效果)
+<div @whell.passive="show">
+   <div >div2</div>
+   <div >div3</div>
+   <div >div4</div>
+   <div >div5</div>
+</div>
+
+```
+
+
 
 ### 14.template渲染过程 ，模板编译原理
 
@@ -2438,7 +2488,7 @@ v-cloak 指令设置样式，样式会在 Vue 实例编译结束时，从 HTML �
 </style>
 ```
 
-### 17.执行命令后浏览器渲染显示出页面的过程
+### 17.执行命令后渲染显示出页面的过程
 
 [vue渲染过程](https://segmentfault.com/a/1190000018495383)
 
@@ -2854,13 +2904,13 @@ updateChildren函数
 
 
 
-### 19.Vue data 中某一个属性的值发生改变后，视图会立即同步执行重新渲染吗？
+### 19.vue data 中某一个属性的值发生改变后，视图会立即同步执行重新渲染吗？
 
 不会立即同步执行重新渲染。Vue 实现响应式并不是数据发生变化之后 DOM 立即变化，而是按一定的策略进行 DOM 的更新。Vue 在更新 DOM 时是异步执行的。只要侦听到数据变化， Vue 将开启一个队列，并缓冲在同一事件循环中发生的所有数据变更。
 
 如果同一个watcher被多次触发，只会被推入到队列中一次。这种在缓冲时去除重复数据对于避免不必要的计算和 DOM 操作是非常重要的。然后，在下一个的事件循环tick中，Vue 刷新队列并执行实际（已去重的）工作。
 
-### 20.Vue中 scoped css原理
+### 20.vue中 scoped css原理
 
 在开发环境我们的组件会先经过 vue-loader 的处理，然后结合运行时的框架代码渲染到页面上
 
@@ -2914,7 +2964,7 @@ $ masoneast init my-project
 
 拼接url代码是这段：
 
-```
+```js
 function getUrl (repo, clone) {
     var url
 
@@ -2941,11 +2991,11 @@ function getUrl (repo, clone) {
 }
 ```
 
-1. **当模板下载完毕后**， `vue-cli`会将它放在你的本地，方便你以后离线使用它生成项目， 路径是`/Users/xxx/.vue-templates`， 如果你之前有使用`vue-cli`生成过项目， 应该在你的管理员路径下能找到对应的`.vue-templates`文件夹。里面的webpack文件就和上面git地址里的代码一模一样。
+3.当模板下载完毕后， `vue-cli`会将它放在你的本地，方便你以后离线使用它生成项目， 路径是`/Users/xxx/.vue-templates`， 如果你之前有使用`vue-cli`生成过项目， 应该在你的管理员路径下能找到对应的`.vue-templates`文件夹。里面的webpack文件就和上面git地址里的代码一模一样。
 
 **注意：** .开头的文件夹默认是隐藏的， 你需要让它展示出来才能看到。
 
-1. **询问交互**
+1.**询问交互**
 
 
 
@@ -2955,15 +3005,15 @@ function getUrl (repo, clone) {
 
 接下， `vue-cli`会问你一堆问题， 你回答的这些问题它会将它们的答案存起来， 在接下来的生成中， 会根据你的答案来渲染生成对应的文件。
 
-1. **文件筛选**
+2.**文件筛选**
 
 在你回答完问题后， `vue-cli`就会根据你的需求从webpack模板中筛选出无用的文件， 并删除， 它不是从你本地删除， 只是在给你生成的项目中删除这些文件。
 
-1. **模板渲染**
+3.**模板渲染**
 
 在模板中， 你的`src/App.vue`长这样：
 
-```
+```vue
 <template>
   <div id="app">
     <img src="./assets/logo.png">
@@ -3002,7 +3052,7 @@ export default {
 
 如果在选择是否需要路由， 你选是，那最后生成在你的项目的`App.vue`长这样：
 
-```
+```vue
 <template>
   <div id="app">
     <img src="./assets/logo.png">
@@ -3030,7 +3080,7 @@ export default {
 
 它会根据你的要求，渲染出不同的文件给你。
 
-1. **文件生成**
+4.**文件生成**
 
 在完成渲染后， 接下来就会在你当前目录下生成对应的文件了， 至此， `vue-cli`的工作就完成了。
 
@@ -3042,7 +3092,7 @@ export default {
 
 通过`npm init`生成你的`package.json`文件, 在里面加入bin
 
-```
+```js
   "bin": {
     "xxx": "bin/index.js"
   },
@@ -3054,7 +3104,7 @@ export default {
 
 ##### 使用`commander`完成命令行中的命令
 
-```
+```js
 program
    .command('init [project-name]')
    .description('create a project')
@@ -3076,7 +3126,7 @@ program.parse(process.argv)
 
 通过上面代码， 你就有了`init`命令， 和`clone`, `offline`参数了， 此时你就有了：
 
-```
+```js
 $ masoneast init my-project
 $ masoneast init my-project --clone
 $ masoneast init my-project --offline
@@ -3092,7 +3142,7 @@ $ masoneast init my-project --offline
 
 这里依赖了两个库: `git-clone`和`download`。
 
-```
+```js
 function download (name, clone, fn) {
     if (clone) {
         gitclone(tmpUrl, tmpPath, err => {
@@ -3118,7 +3168,7 @@ function download (name, clone, fn) {
 
 交互的实现， 主要依赖了`inquirer`库。
 
-```
+```js
 function askQuestion (prompts) {                    //询问交互
     return (files, metalsmith, done) => {
         async.eachSeries(Object.keys(prompts), (key, next) => {
@@ -3130,8 +3180,8 @@ function askQuestion (prompts) {                    //询问交互
 
 将询问得到的答案存贮起来， 留给后面渲染使用
 
-```
-function prompt (data, key, prompt, done) {                    //将用户操作存储到metaData中
+```js
+function prompt (data, key, prompt, done) {    //将用户操作存储到metaData中
     inquirer.prompt([{
         type: prompt.type,
         name: key,
@@ -3159,7 +3209,7 @@ function prompt (data, key, prompt, done) {                    //将用户操作
 
 模板渲染， 依赖了前端模板引擎`handlebar`和解析模板引擎的`consolidate`库。 上面看到的`vue-template`模板里的`{{#router}}`其实就是`handlebar`的语法。
 
-```
+```js
 function renderTemplateFiles () {
 
     return (files, metalsmith, done) => {
@@ -3188,7 +3238,7 @@ function renderTemplateFiles () {
 
 这里用到了一个核心库： `metalsmith`。它主要功能就是读取你的文件， 并通过一系列的中间件对你的文件进行处理， 然后写到你想要的路径中去。就是通过这个库， 将我们的各个流程串联起来， 实现对模板的改造， 写出你想要的项目。
 
-```
+```js
     metalsmith.use(askQuestion(options.prompts))                            //这一段是generator的精华， 通过各种中间件对用户选择的模板进行处理
         .use(filterFiles(options.filters))                                  //文件筛选过滤
         .use(renderTemplateFiles())                                         //模板内部变量渲染
@@ -3202,13 +3252,13 @@ function renderTemplateFiles () {
 
 ##### 后话
 
-我这里实现的demo就是`vue-cli`的精简版， 主要功能有：
+这里实现的demo就是`vue-cli`的精简版， 主要功能有：
 
 - 1. 从git上download和clone项目模板
 - 1. 保存模板到本地，方便离线使用
 - 1. 询问问题， 按用户需求定制模板
 
-`vue-cli`还有有很多的容错判断， 以及其他模板， 下载源等的切换我这里都没有做处理了。
+`vue-cli`还有有很多的容错判断， 以及其他模板， 下载源等的切换这里都没有做处理了。
 
 
 
@@ -3644,7 +3694,6 @@ export default {
   width: 100%;
 }
 </style>
-复制代码
 ```
 
 ##### 第3个参数: `{ String | Array }`, 可选
@@ -4071,7 +4120,7 @@ compile编译可以分成 `parse`、`optimize` 与 `generate` 三个阶段，最
 
 <img src="https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsULjhe4DXv16xNl8.png" alt="img" style="zoom:50%;" />
 
-### 24.Vue性能优化
+### 24.vue性能优化
 
 #### 编码优化
 
@@ -4226,7 +4275,7 @@ Vue.use(Button)
 Vue.use(Select)
 ```
 
-### 25.Vue首屏性能优化组件
+### 25.vue首屏性能优化组件
 
 简单实现一个`Vue`首屏性能优化组件，现代化浏览器提供了很多新接口，在不考虑`IE`兼容性的情况下，这些接口可以很大程度上减少编写代码的工作量以及做一些性能优化方面的事情，当然为了考虑`IE`我们也可以在封装组件的时候为其兜底，本文的首屏性能优化组件主要是使用`IntersectionObserver`以及`requestIdleCallback`两个接口。
 
@@ -4509,7 +4558,7 @@ export default class LazyLoad extends Vue {
 
 
 
-### 26.Vue的双向绑定和单向数据流冲突吗？
+### 26.vue的双向绑定和单向数据流冲突吗？
 
 `Vue`中更加推荐单向数据流的状态管理模式(比如`Vuex`)，但`Vue`同时支持通过`v-model`实现双向数据绑定。
 
@@ -4605,7 +4654,7 @@ JavaScript 中对象和数组是通过引用传入的，所以对于一个数组
 
 ![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsq3NVdyOxcBLACDb.webp)
 
-### 27.自定义指令
+### 27.vue自定义指令
 
 [vue中如何自定义指令](https://blog.csdn.net/weixin_58032613/article/details/122759818)
 
@@ -5111,7 +5160,7 @@ export default vCopy;
   }
 ```
 
-### 28.Vue中的vm和VueComponent
+### 28.vue中的vm和VueComponent
 
 关于vm和vc,vm为Vue的实例对象，vc为VueComponent的是对象
 
@@ -5179,6 +5228,38 @@ VueComponent.prototype.**proto** === Vue.prototype (这里的proto前后都是�
 **即构造函数的显示原型属性 === 实例对象的隐式原型属性**
 
 ![在这里插入图片描述](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsf76c327ba18b49f391b9cafd498a7d03.png)
+
+
+
+### 29.Vue组件化的理解
+
+![在这里插入图片描述](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/d8f19e37fa4345db8e20190da1b3f02e.png)
+如果要编写一个页面，需要结构（html），样式（css），交互（js）。
+
+1. 如果上图，如果要编写第一个页面，需要html文件编写顶部、导航、内容、底部的html结构，并且引入渲染顶部、导航、内容、底部的四个css文件，最后引入控制顶部、导航、内容、底部交互的四个js文件，至此，页面1完成。
+2. 编写页面2，顶部、商品列表，底部，编写一个顶部、商品列表，底部结构的html文件，编写一个新的控制商品列表样式的css文件，并引入已有的顶部和底部的css文件，编写一个控制商品列表交互的js文件，并引入已有的控制顶部和底部交互的js文件，页面2编写完成。
+
+但是这样会有一点小问题：
+1.为了让css和js文件达到足够高的复用率，需要把css和js文件写的粒度比较细，这样会导致有很多的css和js文件，并且会使得网页的依赖关系变得复杂（一旦所依赖的css和js文件达到一个数量级），不好维护。
+2.代码的复用率不算很高，主要指的是html代码的复用，因为像上面两个页面，顶部和底部的html代码重复了。
+
+不过总的来说，传统的编程方式还是问题不大的。
+
+介绍完传统的编程方式，再来讲讲vue的组件化。
+![在这里插入图片描述](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/2badabefa02e48968f7748b1a1d9f11f.png)
+使用vue组件化重新编写刚刚传统编程方式编写的两个页面。
+
+1. 第一个页面包含顶部、内容、导航、底部，这次不再编写html文件再引入对应的css和js文件了，而是编写四个组件，顶部组件、内容组件、导航组件、底部组件，然后直接进行组装，就形成了一个页面1，组件包含了：html、css、html以及其他的东西，直接把这些东西封装到一个组件里面，组件就是一个个页面，然后就像搭积木那样搭成我们想要的最终页面。
+2. 然后编写第二个页面，直接再编写一个商品列表组件，再将其与之前编写的顶部、底部组件像搭积木那样组装起来就是页面2了。
+
+好处：
+
+1.依赖关系不再复杂，之后我们编写前端实际上编写一个个组件，然后将他们进行组装就行，比如我们想要一个页面3，包含顶部、导航、商品列表，都不用编写代码了，直接创建一个父组件，直接引入3个子组件，页面就编写好了。
+
+2.代码高度复用，你可以发现，连相较于传统编程方法，它连html代码都复用了。
+
+组件的定义：
+组件就是实现应用中局部功能的代码和资源的集合，代码指的是html、css、js，资源指的是音频、视频、图片等资源。也就是说一个组件就是一个局部功能的所有，注意，是局部功能，组件要划分得足够细才有较高的复用率，比如我编写了一个包含顶部和底部的组件，但是我的同事只要想顶部，那么我的这个组件他就复用不了了，因为他不想要底部，如果引入我的这个组件，就必须要有顶部和底部。
 
 ## 生命周期
 
@@ -8016,7 +8097,7 @@ mapActions 生成对应方法  方法中会调用dispatch去联系actions  注�
 
 mapMutations 生成对应方法  方法中会调用commit去联系mutations 注意模块名
 
-### 6.vuex持久化
+### 6.Vuex持久化
 
 vuex的 store 中的数据是保存在运行内存中的，当页面刷新时，页面会重新加载 vue 实例，vuex 里面的数据就会被重新赋值，这样就会出现页面刷新vuex中的数据丢失的问题。 如何解决浏览器刷新数据丢失问题呢？
 
