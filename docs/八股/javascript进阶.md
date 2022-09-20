@@ -984,7 +984,7 @@ if (Reflect.defineProperty(target, property, attributes)) {
 
 3.让`Object`操作都变成函数行为。某些`Object`操作是命令式，比如`name in obj`和`delete obj[name]`，而`Reflect.has(obj, name)`和`Reflect.deleteProperty(obj, name)`让它们变成了函数行为。
 
-```
+```js
 // 老写法
 'assign' in Object // true
 
@@ -6283,7 +6283,7 @@ test = [1,2,3,4,5]
 
 那上面代码首先我们声明了一个变量 `test`，它引用了对象 `{name: 'isboyjc'}`，接着我们把这个变量重新赋值了一个数组对象，也就变成了该变量引用了一个数组，那么之前的对象引用关系就没有了，如下图
 
-![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/a428ca00cb164eeab16e8cbbb603e7d7~tplv-k3u1fbpfcp-zoom-in-crop-mark:3024:0:0:0.awebp)
+![image-20220920231800548](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/image-20220920231800548.png)
 
 没有了引用关系，也就是无用的对象，这个时候假如任由它搁置，一个两个还好，多了的话内存也会受不了，所以就需要被清理（回收）
 
@@ -6331,11 +6331,11 @@ test = [1,2,3,4,5]
 
 标记清除算法有一个很大的缺点，就是在清除之后，剩余的对象内存位置是不变的，也会导致空闲内存空间是不连续的，出现了 `内存碎片`（如下图），并且由于剩余空闲内存不是一整块，它是由不同大小内存组成的内存列表，这就牵扯出了内存分配的问题
 
-![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/12247ac3d8f249a5ab85b9b40ba1147b~tplv-k3u1fbpfcp-zoom-in-crop-mark:3024:0:0:0.awebp)
+![image-20220920231731436](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/image-20220920231731436.png)
 
 假设我们新建对象分配内存时需要大小为 `size`，由于空闲内存是间断的、不连续的，则需要对空闲内存列表进行一次单向遍历找出大于等于 `size` 的块才能为其分配（如下图）
 
-![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/fb5107f04a3249ce8d37ec7cc5fd9668~tplv-k3u1fbpfcp-zoom-in-crop-mark:3024:0:0:0.awebp)
+![image-20220920231742183](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/image-20220920231742183.png)
 
 那如何找到合适的块呢？我们可以采取下面三种分配策略
 
@@ -6356,7 +6356,7 @@ test = [1,2,3,4,5]
 
 而 **标记整理（Mark-Compact）算法** 就可以有效地解决，它的标记阶段和标记清除算法没有什么不同，只是标记结束后，标记整理算法会将活着的对象（即不需要清理的对象）向内存的一端移动，最后清理掉边界的内存（如下图）
 
-![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/c04b0a5a40084e0ba4550500c57f2270~tplv-k3u1fbpfcp-zoom-in-crop-mark:3024:0:0:0.awebp)
+![image-20220920231718815](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/image-20220920231718815.png)
 
 #### 引用计数算法
 
@@ -6379,7 +6379,6 @@ let b = a 		// 此对象的引用计数是 2（a,b引用）
 a = null  		// 此对象的引用计数为 1（b引用）
 b = null 	 	// 此对象的引用计数为 0（无引用）
 ...			// GC 回收此对象
-复制代码
 ```
 
 这种方式是不是很简单？确实很简单，不过在引用计数这种算法出现没多久，就遇到了一个很严重的问题——循环引用，即对象 A 有一个指针指向对象 B，而对象 B 也引用了对象 A ，如下面这个例子
@@ -6392,7 +6391,6 @@ function test(){
   A.b = B
   B.a = A
 }
-复制代码
 ```
 
 如上所示，对象 A 和 B 通过各自的属性相互引用着，按照上文的引用计数策略，它们的引用数量都是 2，但是，在函数 `test` 执行完成之后，对象 A 和 B 是要被清理的，但使用引用计数则不会被清理，因为它们的引用数量不会变成 0，假如此函数在程序中被多次调用，那么就会造成大量的内存不会被释放
@@ -6413,12 +6411,11 @@ function test(){
 > // 切断引用关系
 > obj.ele = null
 > ele.obj = null
-> 复制代码
 > ```
->
-> 不过在 IE9 及以后的 `BOM` 与 `DOM` 对象都改成了 `JavaScript` 对象，也就避免了上面的问题
->
-> 此处参考 JavaScript高级程序设计 第四版 4.3.2 小节
+> 
+>不过在 IE9 及以后的 `BOM` 与 `DOM` 对象都改成了 `JavaScript` 对象，也就避免了上面的问题
+> 
+>此处参考 JavaScript高级程序设计 第四版 4.3.2 小节
 
 **优点**
 
@@ -6446,7 +6443,7 @@ V8 的垃圾回收策略主要基于分代式垃圾回收机制，V8 中将堆�
 
 V8 整个堆内存的大小就等于新生代加上老生代的内存（如下图）
 
-![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/abae5b06648a40d2aaa453b5d8a83939~tplv-k3u1fbpfcp-zoom-in-crop-mark:3024:0:0:0.awebp)
+![image-20220920231702695](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/image-20220920231702695.png)
 
 对于新老两块内存区域的垃圾回收，V8 采用了两个垃圾回收器来管控，我们暂且将管理新生代的垃圾回收器叫做新生代垃圾回收器，同样的，我们称管理老生代的垃圾回收器叫做老生代垃圾回收器好了
 
@@ -6456,7 +6453,7 @@ V8 整个堆内存的大小就等于新生代加上老生代的内存（如下�
 
 `Cheney算法` 中将堆内存一分为二，一个是处于使用状态的空间我们暂且称之为 `使用区`，一个是处于闲置状态的空间我们称之为 `空闲区`，如下图所示
 
-![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/aa2d5ad1d89b4b7b919f20e4a5f8973a~tplv-k3u1fbpfcp-zoom-in-crop-mark:3024:0:0:0.awebp)
+![image-20220920231648858](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/image-20220920231648858.png)
 
 新加入的对象都会存放到使用区，当使用区快被写满时，就需要执行一次垃圾清理操作
 
@@ -6494,7 +6491,7 @@ V8 整个堆内存的大小就等于新生代加上老生代的内存（如下�
 
 所谓并行，也就是同时的意思，它指的是垃圾回收器在主线程上执行的过程中，开启多个辅助线程，同时执行同样的回收工作
 
-![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/f0eef6c0d3bd49659a564fe698d17f43~tplv-k3u1fbpfcp-zoom-in-crop-mark:3024:0:0:0.awebp)
+![image-20220920231636342](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/image-20220920231636342.png)
 
 简单来说，使用并行回收，假如本来是主线程一个人干活，它一个人需要 3 秒，现在叫上了 2 个辅助线程和主线程一块干活，那三个人一块干一个人干 1 秒就完事了，但是由于多人协同办公，所以需要加上一部分多人协同（同步开销）的时间我们算 0.5 秒好了，也就是说，采用并行策略后，本来要 3 秒的活现在 1.5 秒就可以干完了
 
@@ -6512,7 +6509,7 @@ V8 整个堆内存的大小就等于新生代加上老生代的内存（如下�
 
 增量就是将一次 `GC` 标记的过程，分成了很多小步，每执行完一小步就让应用逻辑执行一会儿，这样交替多次后完成一轮 `GC` 标记（如下图）
 
-![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/e16d93c2c8414d3ab7eac55c852c678a~tplv-k3u1fbpfcp-zoom-in-crop-mark:3024:0:0:0.awebp)
+![image-20220920231627179](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/image-20220920231627179.png)
 
 试想一下，将一次完整的 `GC` 标记分次执行，那在每一小次 `GC` 标记执行完之后如何暂停下来去执行任务程序，而后又怎么恢复呢？那假如我们在一次完整的 `GC` 标记分块暂停后，执行任务程序时内存中标记好的对象引用关系被修改了又怎么办呢？
 
@@ -6532,7 +6529,7 @@ V8 整个堆内存的大小就等于新生代加上老生代的内存（如下�
 - 灰色指自身被标记，成员变量（该对象的引用对象）未被标记
 - 黑色指自身和成员变量皆被标记
 
-![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/b012d88c1f064eaebd0df60a9aadb85e~tplv-k3u1fbpfcp-zoom-in-crop-mark:3024:0:0:0.awebp)
+![image-20220920231618064](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/image-20220920231618064.png)
 
 如上图所示，我们用最简单的表达方式来解释这一过程，最初所有的对象都是白色，意味着回收器没有标记它们，从一组根对象开始，先将这组根对象标记为灰色并推入到标记工作表中，当回收器从标记工作表中弹出对象并访问它的引用对象时，将其自身由灰色转变成黑色，并将自身的下一个引用对象转为灰色
 
@@ -6546,7 +6543,7 @@ V8 整个堆内存的大小就等于新生代加上老生代的内存（如下�
 
 一次完整的 `GC` 标记分块暂停后，执行任务程序时内存中标记好的对象引用关系被修改了，增量中修改引用，可能不太好理解，我们举个例子（如图）
 
-![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/bada1914eff449b48b5a14e53c107ff3~tplv-k3u1fbpfcp-zoom-in-crop-mark:3024:0:0:0.awebp)
+![image-20220920231607045](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/image-20220920231607045.png)
 
 假如我们有 `A、B、C` 三个对象依次引用，在第一次增量分段中全部标记为黑色（活动对象），而后暂停开始执行应用程序也就是 JavaScript 脚本，在脚本中我们将对象 `B` 的指向由对象 `C` 改为了对象 `D` ，接着恢复执行下一次增量分段
 
@@ -6576,7 +6573,7 @@ V8 整个堆内存的大小就等于新生代加上老生代的内存（如下�
 
 这就要说到并发回收了，它指的是主线程在执行 `JavaScript` 的过程中，辅助线程能够在后台完成执行垃圾回收的操作，辅助线程在执行垃圾回收的时候，主线程也可以自由执行而不会被挂起（如下图）
 
-![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/0bae064a3a8e481b8829c9c7aef73a06~tplv-k3u1fbpfcp-zoom-in-crop-mark:3024:0:0:0.awebp)
+![image-20220920231557388](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/image-20220920231557388.png)
 
 辅助线程在执行垃圾回收的时候，主线程也可以自由执行而不会被挂起，这是并发的优点，但同样也是并发回收实现的难点，因为它需要考虑主线程在执行 `JavaScript `时，堆中的对象引用关系随时都有可能发生变化，这时辅助线程之前做的一些标记或者正在进行的标记就会要有所改变，所以它需要额外实现一些读写锁机制来控制这一点，这里我们不再细说
 
