@@ -2766,7 +2766,7 @@ Array.from(obj, function(value, index){
 
 结果如图：
 
-![image.png](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/49720500532943c1816b0459131bd3ce~tplv-k3u1fbpfcp-zoom-in-crop-mark:1304:0:0:0.awebp)
+![image-20220908093330231](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/image-20220908093330231.png)
 
 以上结果表明，通过 Array.from 这个方法可以自定义加工函数的处理方式，从而返回想要得到的值；如果不确定返回值，则会返回 undefined，最终生成的是一个包含若干个 undefined 元素的空数组。
 
@@ -3072,16 +3072,17 @@ console.log(array2)  // [0, 1, 5, 10, 15]
 对二维数组进行排序  数值相等序号小的在前面
 
 ```js
-var dp=[[2,2],[1,2],[3,4],[4,5],[5,6],[3,2]]
+var dp = [[10,2],[2, 2],[8,2], [1, 2], [3, 4], [4, 5], [5, 6], [3, 2]]
 dp.sort((b, a) => {
-		return a[1] - b[1]
+	return a[1] - b[1]
 })
-dp.sort((b,a)=>{
-	if(b[1]==a[1]){
-		if(a[0]>b[0]) return -1
+dp.sort((b, a) => {
+	if (b[1] == a[1]) {
+		if (a[0] > b[0]) return -1
 	}
 })
 console.log(dp); 
+//[ [ 5, 6 ], [ 4, 5 ],[3, 4], [1, 2],[2, 2], [3, 2],[8, 2], [10, 2]]
 ```
 
 使用箭头函数来定义：
@@ -3903,6 +3904,17 @@ str.replace(/blue/gi, "red");    // 输出结果：'Mr red has a red house and a
 ```
 
 **注意：** 如果 regexp 具有全局标志 g，那么 replace() 方法将替换所有匹配的子串。否则，它只替换第一个匹配子串。
+
+```javascript
+ var str="hello world";
+    var str1=str.replace(/o/g,function(match,pos,orginText){
+        console.log(pos);
+        return "a";
+    });
+    console.log(str1);//hella warld
+```
+
+上面的代码，第一行定义了字符串变量，并初始化。第二行调用了字符串的replace方法，第一个参数是模式匹配，第二个参数是一个函数。函数拥有三个参数：第一个参数是匹配到的字符串，第二个参数是匹配的位置，第三个参数是原字符串。在函数里面可以对字符串进行操作。使用函数作为第二个参数，可以做一些复杂的替换，比如当匹配多个字符时候，可以对不同的字符做不同的替换。
 
 ##### （2）match()
 

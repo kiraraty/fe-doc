@@ -5261,6 +5261,451 @@ VueComponent.prototype.**proto** === Vue.prototype (这里的proto前后都是�
 组件的定义：
 组件就是实现应用中局部功能的代码和资源的集合，代码指的是html、css、js，资源指的是音频、视频、图片等资源。也就是说一个组件就是一个局部功能的所有，注意，是局部功能，组件要划分得足够细才有较高的复用率，比如我编写了一个包含顶部和底部的组件，但是我的同事只要想顶部，那么我的这个组件他就复用不了了，因为他不想要底部，如果引入我的这个组件，就必须要有顶部和底部。
 
+### 30.为什么 Vue2 this 能够直接获取到 data 和 methods
+
+```js
+在平时使用vue来开发项目的时候，对于下面这一段代码，我们可能每天都会见到：
+
+const vm = new Vue({
+  data: {
+      name: '我是pino',
+  },
+  methods: {
+      print(){
+          console.log(this.name);
+      }
+  },
+});
+console.log(vm.name); // 我是pino
+vm.print(); // 我是pino
+但是我们自己实现一个构造函数却实现不了这种效果呢？
+
+function Super(options){}
+
+const p = new Super({
+    data: {
+        name: 'pino'
+    },
+    methods: {
+        print(){
+            console.log(this.name);
+        }
+    }
+});
+
+console.log(p.name); // undefined
+p.print(); // p.print is not a function
+```
+
+#### 源码
+
+首先可以找到vue2的入口文件：
+
+```js
+src/core/instance/index
+function Vue (options) {
+  if (process.env.NODE_ENV !== 'production' &&
+    !(this instanceof Vue)
+  ) {
+    warn('Vue is a constructor and should be called with the `new` keyword')
+  }
+  this._init(options)
+}
+
+// 初始化操作是在这个函数完成的
+initMixin(Vue)
+
+stateMixin(Vue)
+eventsMixin(Vue)
+lifecycleMixin(Vue)
+renderMixin(Vue)
+
+export default Vue
+```
+
+接下来看`initMixin`文件中是如何实现的
+
+```js
+export function initMixin (Vue: Class<Component>) {
+  Vue.prototype._init = function (options?: Object) {
+    const vm: Component = this
+    // a uid
+    vm._uid = uid++
+
+    let startTag, endTag
+    /* istanbul ignore if */
+    if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
+      startTag = `vue-perf-start:${vm._uid}`
+      endTag = `vue-perf-end:${vm._uid}`
+      mark(startTag)
+    }
+
+    // a flag to avoid this being observed
+    vm._isVue = true
+    // merge options
+    if (options && options._isComponent) {
+      // optimize internal component instantiation
+      // since dynamic options merging is pretty slow, and none of the
+      // internal component options needs special treatment.
+      initInternalComponent(vm, options)
+    } else {
+      vm.$options = mergeOptions(
+        resolveConstructorOptions(vm.constructor),
+        options || {},
+        vm
+      )
+    }
+    /* istanbul ignore else */
+    if (process.env.NODE_ENV !== 'production') {
+      initProxy(vm)
+    } else {
+      vm._renderProxy = vm
+    }
+    // expose real self
+    vm._self = vm
+    initLifecycle(vm)
+    initEvents(vm)
+    initRender(vm)
+    callHook(vm, 'beforeCreate')
+    initInjections(vm) // resolve injections before data/props
+    
+    // 初始化data/methods...
+    initState(vm)
+    initProvide(vm) // resolve provide after data/props
+    callHook(vm, 'created')
+  }
+}
+```
+
+其实仅仅关注`initState`这个函数就好了，这个函数初始化了`props`, `methods`, `watch`, `computed`
+
+- 使用`initProps`初始化了`props`
+- 使用`initMethods`初始化了`methods`
+- 使用`initData`初始化了`data`
+- 使用`initComputed`初始化了`computed`
+- 使用`initWatch`初始化了`watch`
+
+```js
+function initState (vm) {
+    vm._watchers = [];
+    var opts = vm.$options;
+    // 判断props属性是否存在，初始化props
+    if (opts.props) { initProps(vm, opts.props); }
+    // 有传入 methods，初始化方法methods
+    if (opts.methods) { initMethods(vm, opts.methods); }
+    // 有传入 data，初始化 data
+    if (opts.data) {
+      initData(vm);
+    } else {
+      observe(vm._data = {}, true /* asRootData */);
+    }
+    // 初始化computed
+    if (opts.computed) { initComputed(vm, opts.computed); }
+    // 初始化watch
+    if (opts.watch && opts.watch !== nativeWatch) {
+      initWatch(vm, opts.watch);
+    }
+}
+```
+
+在这里只关注`initMethods`和`initData`
+
+#### initMethods
+
+```js
+function initMethods (vm, methods) {
+    var props = vm.$options.props;
+    for (var key in methods) {
+      {
+          // 判断是否为函数
+        if (typeof methods[key] !== 'function') {
+          warn(
+            "Method \"" + key + "\" has type \"" + (typeof methods[key]) + "\" in the component definition. " +
+            "Did you reference the function correctly?",
+            vm
+          );
+        }
+        
+        // 判断props存在且props中是否有同名属性
+        if (props && hasOwn(props, key)) {
+          warn(
+            ("Method \"" + key + "\" has already been defined as a prop."),
+            vm
+          );
+        }
+        // 判断实例中是否有同名属性，而且是方法名是保留的 _ $ （在JS中一般指内部变量标识）开头
+        if ((key in vm) && isReserved(key)) {
+          warn(
+            "Method \"" + key + "\" conflicts with an existing Vue instance method. " +
+            "Avoid defining component methods that start with _ or $."
+          );
+        }
+      }
+      // 将methods中的每一项的this指向绑定至实例
+      // bind的作用就是用于绑定指向，作用同js原生的bind
+      vm[key] = typeof methods[key] !== 'function' ? noop : bind(methods[key], vm);
+    }
+}
+```
+
+其实整个`initMethods`方法核心就是将`this`绑定到了实例身上，因为`methods`里面都是函数，所以只需要遍历将所有的函数在调用的时候将`this`指向实例就可以实现通过`this`直接调用的效果。
+
+其他的大部分代码都是用于一些边界条件的判断：
+
+- 如果不为函数 -> 报错
+- `props`存在且`props`中是否有同名属性 -> 报错
+- 实例中是否有同名属性，而且是方法名是保留的 -> 报错
+
+**bind函数**
+
+```js
+function polyfillBind (fn, ctx) {
+    function boundFn (a) {
+      var l = arguments.length;
+      // 判断参数的个数来分别使用call/apply进行调用
+      return l
+        ? l > 1
+          ? fn.apply(ctx, arguments)
+          : fn.call(ctx, a)
+        : fn.call(ctx)
+    }
+
+    boundFn._length = fn.length;
+    return boundFn
+}
+
+function nativeBind (fn, ctx) {
+  return fn.bind(ctx)
+}
+// 判断是否支持原生的bind方法
+var bind = Function.prototype.bind
+  ? nativeBind
+  : polyfillBind;
+```
+
+`bind`函数中主要是做了兼容性的处理，如果不支持原生的`bind`函数，则根据参数个数的不同分别使用`call/apply`来进行`this`的绑定，而`call/apply`最大的区别就是传入参数的不同，一个分别传入参数，另一个接受一个数组。
+
+**hasOwn** 用于判断是否为对象本身所拥有的对象，上文通过此函数来判断是否在`props`中存在相同的属性
+
+```js
+// 只判断是否为本身拥有，不包含原型链查找
+var hasOwnProperty = Object.prototype.hasOwnProperty; 
+function hasOwn (obj, key) { 
+    return hasOwnProperty.call(obj, key) 
+}
+
+hasOwn({}, 'toString') // false
+hasOwn({ name: 'pino' }, 'name') // true
+```
+
+**isReserved**
+
+判断是否为内部私有命名（以`$`或`_`开头）
+
+```js
+function isReserved (str) {
+  var c = (str + '').charCodeAt(0);
+  return c === 0x24 || c === 0x5F
+}
+isReserved('_data'); // true
+isReserved('data'); // false
+```
+
+#### initData
+
+```js
+function initData (vm) {
+    var data = vm.$options.data;
+    // 判断data是否为函数，如果是函数，在getData中执行函数
+    data = vm._data = typeof data === 'function'
+      ? getData(data, vm)
+      : data || {};
+    // 判断是否为对象
+    if (!isPlainObject(data)) {
+      data = {};
+      warn(
+        'data functions should return an object:\n' +
+        'https://vuejs.org/v2/guide/components.html#data-Must-Be-a-Function',
+        vm
+      );
+    }
+    // proxy data on instance
+    // 取值 props/methods/data的值
+    var keys = Object.keys(data);
+    var props = vm.$options.props;
+    var methods = vm.$options.methods;
+    var i = keys.length;
+    // 判断是否为props/methods存在的属性
+    while (i--) {
+      var key = keys[i];
+      {
+        if (methods && hasOwn(methods, key)) {
+          warn(
+            ("Method \"" + key + "\" has already been defined as a data property."),
+            vm
+          );
+        }
+      }
+      if (props && hasOwn(props, key)) {
+        warn(
+          "The data property \"" + key + "\" is already declared as a prop. " +
+          "Use prop default value instead.",
+          vm
+        );
+      } else if (!isReserved(key)) {
+        // 代理拦截
+        proxy(vm, "_data", key);
+      }
+    }
+    // observe data
+    // 监听数据
+    observe(data, true /* asRootData */);
+}
+```
+
+**getData**
+
+如果`data`为函数时，调用此函数对`data`进行执行
+
+```js
+function getData (data, vm) {
+    // #7573 disable dep collection when invoking data getters
+    pushTarget();
+    try {
+      // 将this绑定至实例
+      return data.call(vm, vm)
+    } catch (e) {
+      handleError(e, vm, "data()");
+      return {}
+    } finally {
+      popTarget();
+    }
+}
+```
+
+**proxy**
+
+代理拦截，当使用`this.xxx`访问某个属性时，返回`this.data.xxx`
+
+```js
+// 一个纯净函数
+function noop (a, b, c) {}
+
+// 代理对象
+var sharedPropertyDefinition = {
+    enumerable: true,
+    configurable: true,
+    get: noop,
+    set: noop
+};
+
+function proxy (target, sourceKey, key) {
+    // get拦截
+    sharedPropertyDefinition.get = function proxyGetter () {
+      return this[sourceKey][key]
+    };
+    // set拦截
+    sharedPropertyDefinition.set = function proxySetter (val) {
+      this[sourceKey][key] = val;
+    };
+    // 使用Object.defineProperty对对象进行拦截
+    Object.defineProperty(target, key, sharedPropertyDefinition);
+}
+```
+
+其实对`data`的处理就是将`data`中的属性的`key`遍历绑定至实例`vm`上，然后使用`Object.defineProperty`进行拦截，将真实的数据操作都转发到`this.data`上。
+
+**Object.defineProperty对象属性**
+
+```js
+value：属性的默认值。 
+writable：该属性是否可写。 
+enumerable：该属性是否可被枚举。 
+configurable：该属性是否可被删除。 
+set()：该属性的更新操作所调用的函数。 
+get()：获取属性值时所调用的函数。
+```
+
+#### 简略实现
+
+```js
+  function Person(options) {
+      let vm = this
+      vm.$options = options
+
+      if(options.data) {
+        initData(vm)
+      } 
+      if(options.methods) {
+        initMethods(vm, options.methods)
+      }
+    }
+
+    function initData(vm) {
+      let data = vm._data = vm.$options.data
+
+      let keys = Object.keys(data)
+
+      let len = keys.length
+      while(len--) {
+        let key = keys[len]
+        proxy(vm, "_data", key)
+      }
+    }
+
+    var sharedPropertyDefinition = {
+        enumerable: true,
+        configurable: true,
+        get: noop,
+        set: noop
+    };
+
+    function proxy(target, sourceKeys, key) {
+
+      sharedPropertyDefinition.get = function() {
+        return this[sourceKeys][key]
+      }
+
+      sharedPropertyDefinition.set = function(val) {
+        this[sourceKeys][key] = val
+      }
+
+      Object.defineProperty(target, key, sharedPropertyDefinition)
+
+    }
+
+    function noop(a, b, c) {}
+
+    function initMethods(vm, methods) {
+      for(let key in methods) {
+        vm[key] = typeof methods[key] === 'function' ? methods[key].bind(vm) : noop
+      }
+    }
+
+    let p1 = new Person({
+      data: {
+        name: 'pino',
+        age: 18
+      },
+      methods: {
+        sayName() {
+          console.log('I am' + this.name)
+        }
+      }
+    })
+
+    console.log(p1.name) // pino
+    p1.sayName() // 'I am pino'
+```
+
+#### 总结
+
+所以就可以回答题目的问题了：
+
+通过`this`直接访问到`methods`里面的函数的原因是：因为`methods`里的方法通过 `bind` 指定了`this`为 `new Vue`的实例(`vm`)。
+
+通过 `this` 直接访问到 `data` 里面的数据的原因是：data里的属性最终会存储到`new Vue`的实例（`vm`）上的 `_data`对象中，访问 `this.xxx`，是访问`Object.defineProperty`代理后的 `this._data.xxx`。
+
 ## 生命周期
 
 ### 1.生命周期有哪些，vue2和vue3有什么区别
@@ -11176,7 +11621,112 @@ function vue3Diff(prevChildren, nextChildren, parent) {
 }
 ```
 
+#### vue3 diff的优化
 
+- 事件缓存：将事件缓存，可以理解为变成静态的了
+- 添加静态标记：Vue2 是全量 Diff，Vue3 是静态标记 + 非全量 Diff
+- 静态提升：创建静态节点时保存，后续直接复用
+- 使用最长递增子序列优化了对比流程：Vue2 里在 updateChildren() 函数里对比变更，在 Vue3 里这一块的逻辑主要在 patchKeyedChildren() 函数里，具体看下面
+
+**事件缓存**
+
+```javascript
+<button @click="handleClick">按钮</button>
+
+编译后结果
+export function render(_ctx, _cache, $props, $setup, $data, $options) {
+  return (_openBlock(), _createElementBlock("button", {
+    onClick: _cache[0] || (_cache[0] = (...args) => (_ctx.handleClick && _ctx.handleClick(...args)))
+  }, "按钮"))
+}
+
+```
+
+onClick 会先读取缓存，如果缓存没有的话，就把传入的事件存到缓存里，都可以理解为变成静态节点了
+
+**静态标记**
+
+```javascript
+export const enum PatchFlags {
+  TEXT = 1 ,  // 动态文本节点
+  CLASS = 1 << 1,  // 2   动态class
+  STYLE = 1 << 2,  // 4   动态style
+  PROPS = 1 << 3,  // 8   除去class/style以外的动态属性
+  FULL_PROPS = 1 << 4,       // 16  有动态key属性的节点，当key改变时，需进行完整的diff比较
+  HYDRATE_EVENTS = 1 << 5,   // 32  有监听事件的节点
+  STABLE_FRAGMENT = 1 << 6,  // 64  一个不会改变子节点顺序的fragment (一个组件内多个根元素就会用fragment包裹)
+  KEYED_FRAGMENT = 1 << 7,   // 128 带有key属性的fragment或部分子节点有key
+  UNKEYEN_FRAGMENT = 1 << 8, // 256  子节点没有key的fragment
+  NEED_PATCH = 1 << 9,       // 512  一个节点只会进行非props比较
+  DYNAMIC_SLOTS = 1 << 10,   // 1024   动态slot
+  HOISTED = -1,  // 静态节点 
+  BAIL = -2      // 表示 Diff 过程中不需要优化
+}
+
+<div id="app">
+    <div>jeff</div>
+    <p>{{ age }}</p>
+</div>
+
+编译结果为:
+const _hoisted_1 = { id: "app" }
+const _hoisted_2 = /*#__PURE__*/_createElementVNode("div", null, "jeff", -1 /* HOISTED */)
+
+export function render(_ctx, _cache, $props, $setup, $data, $options) {
+  return (_openBlock(), _createElementBlock("div", _hoisted_1, [
+    _hoisted_2,
+    _createElementVNode("p", null, _toDisplayString(_ctx.age), 1 /* TEXT */)
+  ]))
+}
+```
+
+看到上面编译结果中的 -1 和 1 了吗，这就是静态标记，这是在 Vue2 中没有的，patch 过程中就会判断这个标记来 Diff 优化流程，跳过一些静态节点对比
+
+**静态提升**
+在 Vue2 里每当触发更新的时候，不管元素是否参与更新，每次都会全部重新创建
+而在 Vue3 中会把这个不参与更新的元素保存起来，只创建一次，之后在每次渲染的时候不停地复用，比如上面例子中的静态的创建一次保存起来
+
+```javascript
+const _hoisted_1 = { id: "app" }
+const _hoisted_2 = /*#__PURE__*/_createElementVNode("div", null, "jeff", -1 /* HOISTED */)
+```
+
+然后每次更新 age 的时候，就只创建这个动态的内容，复用上面保存的静态内容
+
+```javascript
+export function render(_ctx, _cache, $props, $setup, $data, $options) {
+  return (_openBlock(), _createElementBlock("div", _hoisted_1, [
+    _hoisted_2,
+    _createElementVNode("p", null, _toDisplayString(_ctx.age), 1 /* TEXT */)
+  ]))
+}
+```
+
+**patchKeyedChildren**
+在 Vue2 里 updateChildren 会进行
+
+- 头和头比
+- 尾和尾比
+- 头和尾比
+- 尾和头比
+- 都没有命中的对比
+
+在 Vue3 里 patchKeyedChildren 为
+
+- 头和头比
+- 尾和尾比
+- 基于最长递增子序列进行移动/添加/删除
+
+看个例子，比如
+
+- 老的 children：[ a, b, c, d, e, f, g ]
+- 新的 children：[ a, b, f, c, d, e, h, g ]
+
+1、先进行头和头比，发现不同就结束循环，得到 [ a, b ]
+2、再进行尾和尾比，发现不同就结束循环，得到 [ g ]
+3、再保存没有比较过的节点 [ f, c, d, e, h ]，并通过 newIndexToOldIndexMap 拿到在数组里对应的下标，生成数组 [ 5, 2, 3, 4, -1 ]，-1 是老数组里没有的就说明是新增
+4、然后再拿取出数组里的最长递增子序列，也就是 [ 2, 3, 4 ] 对应的节点 [ c, d, e ]
+5、然后只需要把其他剩余的节点，基于 [ c, d, e ] 的位置进行移动/新增/删除就可以了
 
 ### 3.虚拟DOM怎么解析
 
@@ -12429,7 +12979,7 @@ export const enum PatchFlags {
 }
 ```
 
-**8\. 事件缓存**
+#### **8\. 事件缓存**
 
 Vue3 的`cacheHandler`可在第一次渲染后缓存我们的事件。相比于 Vue2 无需每次渲染都传递一个新函数。加一个 click 事件。
 
@@ -12467,7 +13017,7 @@ export function render(_ctx, _cache, $props, $setup, $data, $options) {
 
 观察以上渲染函数，你会发现 click 事件节点为静态节点（HOISTED 为 -1），即不需要每次重新渲染。
 
-**9\. Diff算法优化**
+#### **9\. Diff算法优化**
 
 搬运 Vue3 patchChildren 源码。结合上文与源码，patchFlag 帮助 diff 时区分静态节点，以及不同类型的动态节点。一定程度地减少节点本身及其属性的比对。
 
@@ -12547,7 +13097,7 @@ function patchUnkeyedChildren(c1, c2, container, parentAnchor, parentComponent, 
 }
 ```
 
-**10\. 打包优化**
+#### **10\. 打包优化**
 
 Tree-shaking：模块打包 webpack、rollup 等中的概念。移除 JavaScript 上下文中未引用的代码。主要依赖于 import 和 export 语句，用来检测代码模块是否被导出、导入，且被 JavaScript 文件使用。
 
@@ -12584,7 +13134,7 @@ nextTick(() => {
 
 内部API也有诸如 transition、v-model 等标签或者指令被命名导出。只有在程序真正使用才会被捆绑打包。Vue3 将所有运行功能打包也只有约22.5kb，比 Vue2 轻量很多。
 
-**11\. TypeScript支持**
+#### **11\. TypeScript支持**
 
 Vue3 由 TypeScript 重写，相对于 Vue2 有更好的 TypeScript 支持。
 
@@ -12592,7 +13142,7 @@ Vue3 由 TypeScript 重写，相对于 Vue2 有更好的 TypeScript 支持。
 
 -   Vue2 需要vue-class-component强化vue原生组件，也需要vue-property-decorator增加更多结合Vue特性的装饰器，写法比较繁琐。
 
-**二、Options API 与 Composition API**
+#### **12.Options API 与 Composition API**
 
 Vue 组件可以用两种不同的 API 风格编写：Options API 和 Composition API。
 
