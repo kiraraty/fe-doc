@@ -8,15 +8,11 @@
 <div onClick={this.handleClick.bind(this)}>点我</div>
 ```
 
-React并不是将click事件绑定到了div的真实DOM上，而是在document处监听了所有的事件，当事件发生并且冒泡到document处的时候，React将**事件内容封装并交由真正的处理函数运行**。这样的方式不仅仅减少了内存的消耗，还能在组件挂在销毁时统一订阅和移除事件。
+React并不是将click事件绑定到了div的真实DOM上，而是在document处监听了所有的事件，当事件发生并且冒泡到document处的时候，React将**事件内容封装并交由真正的处理函数运行**。这样的方式不仅仅减少了**内存的消耗**，还能在组件挂载销毁时**统一订阅和移除事件**。
 
 除此之外，冒泡到document上的事件也不是原生的浏览器事件，而是由react自己实现的合成事件（SyntheticEvent）。因此如果不想要是事件冒泡的话应该**调用event.preventDefault()方法**，而不是调用event.stopProppagation()方法。
 
 ![image-20220701085916823](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs4FsyP1ml5Tpgq8w.png)
-
-JSX 上写的事件并没有绑定在对应的真实 DOM 上，而是通过事件代理的方式，将所有的事件都**统一绑定**在了 `document` 上。这样的方式不仅减少了内存消耗，还能在组件挂载销毁时统一订阅和移除事件。
-
-另外冒泡到 `document` 上的事件也不是原生浏览器事件，而是 React 自己实现的合成事件（SyntheticEvent）。因此我们如果不想要事件冒泡的话，调用 `event.stopPropagation` 是无效的，而应该调用 `event.preventDefault`。
 
 实现合成事件的目的如下：
 
@@ -43,13 +39,13 @@ JSX 上写的事件并没有绑定在对应的真实 DOM 上，而是通过事�
 
 PureComponent表示一个纯组件，可以用来优化React程序，**减少render函数执行的次数，从而提高组件的性能**。
 
-在React中，当prop或者state发生变化时，可以通过在**shouldComponentUpdate**生命周期函数中**执行return false**来阻止页面的更新，从而减少不必要的render执行。React.PureComponent会自动执行 shouldComponentUpdate。
+在React中，当prop或者state发生变化时，可以通过在**shouldComponentUpdate**生命周期函数中**执行return false**来阻止页面的更新，从而减少不必要的render执行。React.PureComponent会**自动执行** shouldComponentUpdate。
 
 不过，pureComponent中的 shouldComponentUpdate() 进行的是**浅比较**，也就是说如果是引用数据类型的数据，**只会比较不是同一个地址**，**而不会比较这个地址里面的数据是否一致。浅比较会忽略属性和或状态突变情况，其实也就是数据引用指针没有变化，而数据发生改变的时候render是不会执行的。如果需要重新渲染那么就需要重新开辟空间引用数，PureComponent一般会用在一些纯展示组件上**。
 
 使用pureComponent的**好处**：当组件更新时，如果组件的props或者state都没有改变，render函数就不会触发。省去虚拟DOM的生成和对比过程，达到提升性能的目的。这是因为react自动做了一层浅比较。
 
-### 4.React 高阶组件是什么，和普通组件有什么区别，适用什么场景
+### 4.React 高阶组件(HOC)是什么，和普通组件有什么区别，适用什么场景
 
 官方解释∶
 
@@ -81,7 +77,7 @@ const BlogPostWithSubscription = withSubscription(BlogPost,
 
 **1）HOC的优缺点**
 
-- 优点∶ 逻辑服用、不影响被包裹组件的内部逻辑。
+- 优点∶逻辑复用、不影响被包裹组件的内部逻辑。
 - 缺点∶hoc传递给被包裹组件的props容易和被包裹后的组件重名，进而被覆盖
 
 **2）适用场景**
@@ -217,13 +213,13 @@ export default withFetching(fetching('some-other-type'))(MovieList);
 
 该方法当`props`发生变化时执行，初始化`render`时不执行，在这个回调函数里面，你可以根据属性的变化，通过调用`this.setState()`来更新你的组件状态，旧的属性还是可以通过`this.props`来获取,这里调用更新状态是安全的，并不会触发额外的`render`调用。
 
-**使用好处：** 在这个生命周期中，可以在子组件的render函数执行前获取新的props，从而更新子组件自己的state。 可以将数据请求放在这里进行执行，需要传的参数则从componentWillReceiveProps(nextProps)中获取。而不必将所有的请求都放在父组件中。于是该请求只会在该组件渲染时才会发出，从而减轻请求负担。
+**使用好处：** 在这个生命周期中，可以**在子组件的render函数执行前获取新的props，从而更新子组件自己的state**。 可以将数据请求放在这里进行执行，需要传的参数则从componentWillReceiveProps(nextProps)中获取。而**不必将所有的请求都放在父组件中。于是该请求只会在该组件渲染时才会发出，从而减轻请求负担**。
 
-componentWillReceiveProps在初始化render的时候不会执行，它会在Component接受到新的状态(Props)时被触发，一般用于父组件状态更新时子组件的重新渲染。
+componentWillReceiveProps在初始化render的时候不会执行，它会在Component**接受到新的状态(Props)时被触发**，一般用于**父组件状态更新时子组件的重新渲染**。
 
 ### 6.哪些方法会触发 React 重新渲染？重新渲染 render 会做些什么？
 
-#### （1）哪些方法会触发 react 重新渲染?
+#### 哪些方法会触发 react 重新渲染?
 
 - **setState（）方法被调用**
 
@@ -259,7 +255,31 @@ class App extends React.Component {
 
 只要父组件重新渲染了，即使传入子组件的 props 未发生变化，那么子组件也会重新渲染，进而触发 render
 
-#### **（2）重新渲染 render 会做些什么?**
+父组件数据变化，子组件数据更新方法：
+
+**利用componentWillReceiveProps方法**
+
+```javascript
+componentWillReceiveProps(nextProps){
+  this.setState({
+    isLogin: nextProps.isLogin,
+    userInfo: nextProps.userInfo,
+  });
+   }
+```
+
+**子组件数据变化，通知父组件**
+
+```javascript
+  // 父组件：
+  <FromCom demo={this.demo} />
+  //子组件：利用setState的回调函数
+  this.setState({}, () => {
+      this.props.demo(userInfo);
+    });
+```
+
+#### **重新渲染 render 会做些什么?**
 
 - 会对新旧 VNode 进行对比，也就是我们所说的Diff算法。
 - 对新旧两棵树进行一个深度优先遍历，这样每一个节点都会一个标记，在到深度遍历的时候，每遍历到一和个节点，就把该节点和新的节点树进行对比，如果有差异就放到一个对象里面
@@ -267,13 +287,184 @@ class App extends React.Component {
 
 React 的处理 render 的基本思维模式是每次一有变动就会去重新渲染整个应用。在 Virtual DOM 没有出现之前，最简单的方法就是直接调用 innerHTML。Virtual DOM厉害的地方并不是说它比直接操作 DOM 快，而是说不管数据怎么变，都会尽量以最小的代价去更新 DOM。React 将 render 函数返回的虚拟 DOM 树与老的进行比较，从而确定 DOM 要不要更新、怎么更新。当 DOM 树很大时，遍历两棵树进行各种比对还是相当耗性能的，特别是在顶层 setState 一个微小的修改，默认会去遍历整棵树。尽管 React 使用高度优化的 Diff 算法，但是这个过程仍然会损耗性能.
 
-#### **（3）判断什么时候重新渲染组件**
+#### **判断什么时候重新渲染组件**
 
 组件状态的改变可以因为`props`的改变，或者直接通过`setState`方法改变。组件获得新的状态，然后React决定是否应该重新渲染组件。只要组件的state发生变化，React就会对组件进行重新渲染。这是因为React中的`shouldComponentUpdate`方法默认返回`true`，这就是导致每次更新都重新渲染的原因。
 
 当React将要渲染组件时会执行`shouldComponentUpdate`方法来看它是否返回`true`（组件应该更新，也就是重新渲染）。所以需要重写`shouldComponentUpdate`方法让它根据情况返回`true`或者`false`来告诉React什么时候重新渲染什么时候跳过重新渲染。
 
-### 7.React声明组件有哪几种方法，有什么不同
+
+
+
+
+### 7.React如何跳过子组件更新，减少不必要的render
+
+#### 什么是shouldComponent？
+
+1. React中的一个生命周期，
+2. 运行时机：在getDerivedStateFromProps之后，render之前执行
+3. 触发条件：
+    a. props更新
+    b. setState
+
+forceUpdate不会导致shouldComponentUpdate的触发
+
+1. 作用，如果返回true，那组件就继续render；如果返回false，组件就不更新渲染
+
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/8ea77210ba975bb7f632729af039755a.png)
+
+#### 什么是pureComponent
+
+1. React的一种组件类；
+2. 与React.Component很相似。两者的区别在于React.Component中，并没有实现shouldComponentUpdate,需要继承类自己实现。而React.PureComponent中，会浅层对比prop和state，如果内容相同，那么组件将会跳过此次的render更新；
+3. React.PureComponent 中的 shouldComponentUpdate() 将跳过所有子组件树的 prop 更新。因此，请确保所有子组件也都是“纯”的组件。
+
+> 纯组件的含义，就是传入相同的props对象，总会有相同的渲染内容。
+>
+> 类似于**纯函数**的定义
+
+4.判断步骤：
+如果 PureComponent 里有 shouldComponentUpdate 函数的话，直接使用 shouldComponentUpdate 的结果作为是否更新的依据。
+
+没有 shouldComponentUpdate 函数的话，才会去判断是不是 PureComponent ，是的话再去做 **shallowEqual** 浅比较。
+
+```js
+ const instance = workInProgress.stateNode;
+// 如果实利实现了shouldComponentUpdate则返回调用它的结果
+if (typeof instance.shouldComponentUpdate === 'function') {
+    const shouldUpdate = instance.shouldComponentUpdate(
+        newProps,
+        newState,
+        nextContext,
+    );
+    return shouldUpdate;
+}
+
+// PureReactComponent的时候进行浅对比
+if (ctor.prototype && ctor.prototype.isPureReactComponent) {
+    return (
+        !shallowEqual(oldProps, newProps) || !shallowEqual(oldState, newState)
+    );
+  } 
+```
+
+> 从上面的代码就可以看出，pureComponent不是实现了shouldComponentUpdate的[Component](https://so.csdn.net/so/search?q=Component&spm=1001.2101.3001.7020)，而是在对比的时候就返回浅对比的结果。
+
+PureComponent不可滥用，他使用在class组件内，只有那些状态和属性不经常的更新的组件我们用来做优化，对于经常更新的，这样处理后反而浪费性能，因为每一次浅比较也是要消耗时间的
+
+##### 什么是shallowEqual浅比较
+
+[浅谈React 中的浅比较是如何工作的](https://link.juejin.cn/?target=https%3A%2F%2Fwww.yht7.com%2Fnews%2F186392)
+
+- 浅比较的对象，是新旧两个props、新旧两个state
+
+```js
+// PureReactComponent的时候进行浅对比
+  if (ctor.prototype && ctor.prototype.isPureReactComponent) {
+    return (
+      !shallowEqual(oldProps, newProps) || !shallowEqual(oldState, newState)
+    );
+  } 
+```
+
+- 先判断两个对象是否地址相同。如果地址相同，就直接返回true；如果地址不相同，就继续判断
+
+网上很多文章把第一步的意义判定为，基本类型的相等性判断
+
+- 再判断有没有不是对象的值，或者等于null的值。如果有，直接返回false；如果没有，就继续判断
+
+> 只有这一步通过了，下面的判断才有了意义
+>
+> 如果把第一步判定为，基本类型的判断，那第二步又如何解释呢？
+>
+> 话又说回来了，传进来的props或者state一定是对像啊。如果传进来的是非对象，又是怎么做到的呢？
+
+- 再判断两个props的key数量，是否相同，如果相同就继续下一步的判断；如果不相同，就直接返回false
+- 最后一步，分别判断每个key对应的value值，是否相同。判断value是否相同，使用的是object.is()
+
+##### 此处附上shallowEqual的源码
+
+```js
+// shallowEqual.js
+function shallowEqual(objA: mixed, objB: mixed): boolean {
+    // 一样的对象返回true
+    if (Object.is(objA, objB)) {
+        return true;
+    }
+    
+    // 不是对象或者为null返回false
+    if (
+        typeof objA !== 'object' || objA === null ||
+        typeof objB !== 'object' || objB === null
+    ) {
+        return false;
+    }
+    
+    const keysA = Object.keys(objA);
+    const keysB = Object.keys(objB);
+    
+    // key数量不同返回false
+    if (keysA.length !== keysB.length) {
+        return false;
+    }
+    
+    // 对应key的值不相同返回false
+    for (let i = 0; i < keysA.length; i++) {
+        if (
+            !hasOwnProperty.call(objB, keysA[i]) ||
+            !Object.is(objA[keysA[i]], objB[keysA[i]])
+        ) {
+            return false;
+        }
+    }
+    
+    return true;
+} 
+```
+
+#### 什么是React.memo
+
+```js
+const MyComponent = React.memo(function MyComponent(props) {
+  /* 使用 props 渲染 */
+},areEqual); 
+```
+
+1. React.memo是高阶组件，
+2. 包裹其中的组件，并返回新的组件。该组件在props没有变更的时候，就会返回相同的渲染结果，也就是直接跳过渲染阶段。该阶段及其之后的阶段的生命周期函数就不会得到调用。当然，进行的也是浅比较
+3. 用法：
+    1. 第一个参数,是函数组件（ React.FunctionComponent)
+    2. 第二个参数，回调函数。如果我们觉得浅比较不行，我们就填入第二个参数，React会把第二个参数的返回值，当作是否跳过更新的标准
+
+```js
+function areEqual(prevProps, nextProps) {
+  /*
+  如果把 nextProps 传入 render 方法的返回结果与
+  将 prevProps 传入 render 方法的返回结果一致则返回 true，
+  否则返回 false
+  */
+} 
+```
+
+1. 与 class 组件中 shouldComponentUpdate() 方法不同的是，如果 props 相等，areEqual 会返回 true；如果 props 不相等，则返回 false。这与 shouldComponentUpdate 方法的返回值相反
+
+#### 总结
+
+React 基于虚拟 DOM 和高效 Diff 算法的完美配合，实现了对 DOM 最小粒度的更新。大多数情况下，React 对 DOM 的渲染效率足以业务日常。但在个别复杂业务场景下，性能问题依然会困扰我们。此时需要采取一些措施来提升运行性能，其很重要的一个方向，就是避免不必要的渲染（Render）。这里提下优化的点：
+
+-   **shouldComponentUpdate 和 PureComponent**
+
+在 React 类组件中，可以利用 shouldComponentUpdate或者 PureComponent 来减少因父组件更新而触发子组件的 render，从而达到目的。shouldComponentUpdate 来决定是否组件是否重新渲染，如果不希望组件重新渲染，返回 false 即可。
+
+-   **利用高阶组件**
+
+在函数组件中，并没有 shouldComponentUpdate 这个生命周期，可以利用高阶组件，封装一个类似 PureComponet 的功能
+
+-   **使用 React.memo**
+
+React.memo 是 React 16.6 新的一个 API，用来缓存组件的渲染，避免不必要的更新，其实也是一个高阶组件，与 PureComponent 十分类似，但不同的是， **React.memo只能用于函数组件**。
+
+### 8.React声明组件有哪几种方法，有什么不同
 
 #### React 声明组件的三种方式：
 
@@ -312,7 +503,7 @@ React.createClass会自绑定函数方法，导致不必要的性能开销，增
 -   React.createClass创建的组件，其状态state是通过getInitialState方法来配置组件相关的状态；
 -   React.Component创建的组件，其状态state是在constructor中像初始化组件属性一样声明的。
 
-### 8.有状态组件和无状态组件的理解及使用场景
+### 9.有状态组件和无状态组件的理解及使用场景
 
 （1）**有状态组件**
 
@@ -358,7 +549,7 @@ React.createClass会自绑定函数方法，导致不必要的性能开销，增
 
 **总结：** 组件内部状态且与外部无关的组件，可以考虑用状态组件，这样状态树就不会过于复杂，易于理解和管理。当一个组件不需要管理自身状态时，也就是无状态组件，应该优先设计为函数组件。比如自定义的 `<Button/>`、 `<Input />` 等组件。
 
-### 9.React中什么是受控组件和非控组件？
+### 10.React中什么是受控组件和非控组件？
 
 **（1）受控组件** 在使用表单来收集用户输入时，例如`<input><select><textearea>`等元素都要绑定一个change事件，**当表单的状态发生变化，就会触发onChange事件**，**更新组件的state**。这种组件在React中被称为**受控组件**，在受控组件中，组件渲染出的状态与它的value或checked属性相对应，react通过这种方式消除了组件的局部状态，使整个状态可控。react官方推荐使用受控表单组件。
 
@@ -405,23 +596,9 @@ class NameForm extends React.Component {
 
 **总结：** 页面中所有输入类的DOM如果是现用现取的称为非受控组件，而通过setState将输入的值维护到了state中，需要时再从state中取出，这里的数据就受到了state的控制，称为受控组件。
 
-### 10.在React中如何避免不必要的render？
+### 11.React context的使用和理解
 
-React 基于虚拟 DOM 和高效 Diff 算法的完美配合，实现了对 DOM 最小粒度的更新。大多数情况下，React 对 DOM 的渲染效率足以业务日常。但在个别复杂业务场景下，性能问题依然会困扰我们。此时需要采取一些措施来提升运行性能，其很重要的一个方向，就是避免不必要的渲染（Render）。这里提下优化的点：
-
--   **shouldComponentUpdate 和 PureComponent**
-
-在 React 类组件中，可以利用 shouldComponentUpdate或者 PureComponent 来减少因父组件更新而触发子组件的 render，从而达到目的。shouldComponentUpdate 来决定是否组件是否重新渲染，如果不希望组件重新渲染，返回 false 即可。
-
--   **利用高阶组件**
-
-在函数组件中，并没有 shouldComponentUpdate 这个生命周期，可以利用高阶组件，封装一个类似 PureComponet 的功能
-
--   **使用 React.memo**
-
-React.memo 是 React 16.6 新的一个 API，用来缓存组件的渲染，避免不必要的更新，其实也是一个高阶组件，与 PureComponent 十分类似，但不同的是， **React.memo只能用于函数组件**。
-
-### 11.对React context的理解
+[React Context用法整理(附完整代码)](https://blog.csdn.net/qq_34307801/article/details/109774612)
 
 在React中，数据传递一般使用props传递数据，维持单向数据流，这样可以让组件之间的关系变得简单且可预测，但是单项数据流在某些场景中并不适用。**单纯一对的父子组件传递并无问题，但要是组件之间层层依赖深入，props就需要层层传递显然，这样做太繁琐了**。
 
@@ -433,8 +610,6 @@ JS的代码块在执行期间，会创建一个相应的作用域链，这个作
 
 假如以JS的作用域链作为类比，React组件提供的Context对象其实就好比一个提供给子组件访问的作用域，而 Context对象的属性可以看成作用域上的活动对象。由于组件 的 Context 由其父节点链上所有组件通 过 getChildContext（）返回的Context对象组合而成，所以，组件通过Context是可以访问到其父组件链上所有节点组件提供的Context的属性。
 
-
-
 **React并不推荐优先考虑使用Context？**
 
 -   Context目前还处于实验阶段，可能会在后面的发行版本中有很大的变化，事实上这种情况已经发生了，所以为了避免给今后升级带来大的影响和麻烦，不建议在app中使用context。
@@ -442,9 +617,443 @@ JS的代码块在执行期间，会创建一个相应的作用域链，这个作
 -   对于组件之间的数据通信或者状态管理，有效使用props或者state解决，然后再考虑使用第三方的成熟库进行解决，以上的方法都不是最佳的方案的时候，在考虑context。
 -   context的更新需要通过setState()触发，但是这并不是很可靠的，Context支持跨组件的访问，但是如果中间的子组件通过一些方法不影响更新，比如 shouldComponentUpdate() 返回false 那么不能保证Context的更新一定可以使用Context的子组件，因此，Context的可靠性需要关注
 
+**使用场景：**
 
+- 父组件使用`Provider`生产数据，子组件使用`Consumer`消费数据
+- 子组件使用`ContextType`接收数据
+- 动态和静态Context(父组件更新Context，被Provider包裹的子组件刷新数据，没被Provider包裹的子组件使用Context默认值)
+- 在嵌套组件中更新Context(子组件通过Context传递的函数更新数据)
+- 消费多个Context
 
-### 12.对React的插槽(Portals)的理解，如何使用，有哪些使用场景
+#### Context 什么时候用？
+
+Context 设计目的是为了共享那些对于一个组件树而言是“全局”的数据，例如当前认证的用户、主题或首选语言。举个例子，在下面的代码中，我们通过一个 “theme” 属性手动调整一个按钮组件的样式
+
+```javascript
+class App extends React.Component {
+  render() {
+    return <Toolbar theme="dark" />;
+  }
+}
+ 
+function Toolbar(props) {
+  // Toolbar 组件接受一个额外的“theme”属性，然后传递给 ThemedButton 组件。
+  // 如果应用中每一个单独的按钮都需要知道 theme 的值，这会是件很麻烦的事，
+  // 因为必须将这个值层层传递所有组件。
+  return (
+    <div>
+      <ThemedButton theme={props.theme} />
+    </div>
+  );
+}
+ 
+class ThemedButton extends React.Component {
+  render() {
+    return <Button theme={this.props.theme} />;
+  }
+}
+ 
+// 通过props传递：App -> Toolbar -> ThemedButton
+// 如果嵌套很深，那么需要逐层传递props，即使中间不需要该props，显得很繁琐
+```
+
+使用 context, 我们可以避免通过中间元素传递 props
+
+```javascript
+// Context 可以让我们无须明确地传遍每一个组件，就能将值深入传递进组件树。
+// 为当前的 theme 创建一个 context（"light"为默认值）。
+const ThemeContext = React.createContext('light');
+class App extends React.Component {
+  render() {
+    // 使用一个 Provider 来将当前的 theme 传递给以下的组件树。
+    // 无论多深，任何组件都能读取这个值。
+    // 在这个例子中，我们将 “dark” 作为当前的值传递下去。
+    return (
+      <ThemeContext.Provider value="dark">
+        <Toolbar />
+      </ThemeContext.Provider>
+    );
+  }
+}
+ 
+// 中间的组件再也不必指明往下传递 theme 了。
+function Toolbar() {
+  return (
+    <div>
+      <ThemedButton />
+    </div>
+  );
+}
+ 
+class ThemedButton extends React.Component {
+  // 指定 contextType 读取当前的 theme context。
+  // React 会往上找到最近的 theme Provider，然后使用它的值。
+  // 在这个例子中，当前的 theme 值为 “dark”。
+  static contextType = ThemeContext;
+  render() {
+    return <Button theme={this.context} />;
+  }
+}
+// 也可以使用 ThemedButto.contextType = ThemeContext;
+```
+
+#### API介绍
+
+##### **`React.createContext`**
+
+```javascript
+const MyContext = React.createContext(defaultValue);
+```
+
+创建一个 Context 对象。当 React 渲染一个订阅了这个 Context 对象的组件，这个组件会从组件树中离自身最近的那个匹配的 `Provider` 中读取到当前的 context 值。
+
+只有当组件所处的树中没有匹配到 Provider 时，其 `defaultValue` 参数才会生效。这有助于在不使用 Provider 包装组件的情况下对组件进行测试。注意：将 `undefined` 传递给 Provider 的 value 时，消费组件的 `defaultValue` 不会生效。
+
+##### `Context.Provider`
+
+```javascript
+<MyContext.Provider value={/* 某个值 */}>
+```
+
+每个 Context 对象都会返回一个 Provider React 组件，它允许消费组件订阅 context 的变化。
+
+Provider 接收一个 `value` 属性，传递给消费组件。一个 Provider 可以和多个消费组件有对应关系。多个 Provider 也可以嵌套使用，里层的会覆盖外层的数据。
+
+当 Provider 的 `value` 值发生变化时，它内部的所有消费组件都会重新渲染。Provider 及其内部 consumer 组件都不受制于 `shouldComponentUpdate` 函数，因此当 consumer 组件在其祖先组件退出更新的情况下也能更新。
+
+##### `Class.contextType`
+
+挂载在 class 上的 `contextType` 属性会被重赋值为一个由 React.createContext() 创建的 Context 对象。这能让你使用 `this.context` 来消费最近 Context 上的那个值。你可以在任何生命周期中访问到它，包括 render 函数中
+
+```javascript
+import MyContext from './MyContext';
+ 
+class MyClass extends React.Component {
+  componentDidMount() {
+    let value = this.context;
+    /* 在组件挂载完成后，使用 MyContext 组件的值来执行一些有副作用的操作 */
+  }
+  componentDidUpdate() {
+    let value = this.context;
+    /* ... */
+  }
+  componentWillUnmount() {
+    let value = this.context;
+    /* ... */
+  }
+  render() {
+    let value = this.context;
+    /* 基于 MyContext 组件的值进行渲染 */
+  }
+  // 或者如上边例子一样使用 static contextType = MyContext;
+}
+MyClass.contextType = MyContext;
+```
+
+##### `Context.Consumer`
+
+```javascript
+import MyContext from './MyContext';
+ 
+function ToolList() {
+  return (
+    <MyContext.Consumer
+      {value => /* 基于 context 值进行渲染*/}
+    </MyContext.Consumer>
+  )
+}
+```
+
+这里，React 组件也可以订阅到 context 变更。这能让你在函数式组件中完成订阅 context。
+
+这需要**函数作为子元素（function as a child）**这种做法。这个函数接收当前的 context 值，返回一个 React 节点。传递给函数的 `value` 值等同于往上组件树离这个 context 最近的 Provider 提供的 `value` 值。如果没有对应的 Provider，`value` 参数等同于传递给 `createContext()` 的 `defaultValue`。
+
+##### `Context.displayName`
+
+context 对象接受一个名为 `displayName` 的 property，类型为字符串。React DevTools 使用该字符串来确定 context 要显示的内容。
+
+如下述组件在 DevTools 中将显示为 MyDisplayName
+
+```javascript
+const MyContext = React.createContext(/* some value */);
+MyContext.displayName = 'MyDisplayName';
+ 
+<MyContext.Provider>   // "MyDisplayName.Provider" 在 DevTools 中
+<MyContext.Consumer>   // "MyDisplayName.Consumer" 在 DevTools 中
+```
+
+#### 示例
+
+##### 动态 Context
+
+对于上面的 theme 例子，使用动态值（dynamic values）后更复杂的用法
+
+**theme-context.js**
+
+```javascript
+export const themes = {
+  light: {
+    foreground: '#000000',
+    background: '#eeeeee',
+  },
+  dark: {
+    foreground: '#ffffff',
+    background: '#222222',
+  },
+};
+ 
+export const ThemeContext = React.createContext(themes.dark);   // 该处为默认值
+```
+
+**themed-button.js**
+
+```javascript
+import { ThemeContext } from './theme-context';
+ 
+class ThemedButton extends React.Component {
+  render() {
+    let props = this.props;
+    // 获取到ThemeContext中的默认值
+    let theme = this.context;
+    return (
+      <button
+        {...props}
+        style={{backgroundColor: theme.background}}
+      />
+    );
+  }
+  // static contextType = ThemeContext;
+}
+ThemedButton.contextType = ThemeContext;
+ 
+export default ThemedButton;
+```
+
+**app.js**
+
+```javascript
+import { ThemeContext, themes } from './theme-context';
+import ThemedButton from './themed-button';
+ 
+// 一个使用 ThemedButton 的中间组件
+function Toolbar(props) {
+  return (
+    <ThemedButton onClick={props.changeTheme}>
+      Change Theme
+    </ThemedButton>
+  );
+}
+ 
+class App extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      theme: themes.light,
+    };
+ 
+    this.toggleTheme = () => {
+      this.setState(state => ({
+        theme: state.theme === themes.dark ? themes.light : themes.dark,
+      }));
+    };
+  }
+ 
+  render() {
+    // 在 ThemeProvider 内部的 ThemedButton 按钮组件使用 state 中的 theme 值，
+    // 而外部的组件使用默认的 theme 值
+    return (
+      <Page>
+        <ThemeContext.Provider value={this.state.theme}>
+          <Toolbar changeTheme={this.toggleTheme} />
+        </ThemeContext.Provider>
+        <Section>
+          <ThemedButton />
+        </Section>
+      </Page>
+    );
+  }
+}
+ 
+ReactDOM.render(<App />, document.root);
+ 
+// 使用ThemeContext.Provider包裹的组件，可以消费到ThemeContext中的value
+// 即Toolbar、ThemedButton中都可以使用this.context来获取到value
+// 注意观察，更新state的方法是通过props向下传递，由子孙组件触发更新，下面会讲到通过context的方式传递更新函数
+```
+
+##### 在嵌套组件中更新 Context
+
+在上面的例子中，我们通过 props 的方式向下传递一个更新函数，从而改变 App 中 themes 的值。我们知道，从一个在组件树中嵌套很深的组件中更新 context 是很有必要的。在这种场景下，你可以通过 context 传递一个函数，使得 consumers 组件更新 context
+
+**theme-context.js**
+
+```javascript
+// 确保传递给 createContext 的默认值数据结构是调用的组件（consumers）所能匹配的！
+export const ThemeContext = React.createContext({
+  theme: themes.dark,
+  toggleTheme: () => {},   // 定义更新主题的方法，向下传递
+});
+```
+
+**theme-toggler-button.js**
+
+```javascript
+import { ThemeContext } from './theme-context';
+ 
+function ThemeTogglerButton() {
+  // Theme Toggler 按钮不仅仅只获取 theme 值，它也从 context 中获取到一个 toggleTheme 函数（下面app.js部分）
+  return (
+    <ThemeContext.Consumer>
+      {({theme, toggleTheme}) => (
+        <button onClick={toggleTheme} style={{backgroundColor: theme.background}}>
+          Toggle Theme
+        </button>
+      )}
+    </ThemeContext.Consumer>
+  );
+}
+ 
+export default ThemeTogglerButton;
+```
+
+**app.js**
+
+```javascript
+import { ThemeContext, themes } from './theme-context';
+import ThemeTogglerButton from './theme-toggler-button';
+ 
+class App extends React.Component {
+  constructor(props) {
+    super(props);
+ 
+    this.toggleTheme = () => {
+      this.setState(state => ({
+        theme: state.theme === themes.dark ? themes.light : themes.dark,
+      }));
+    };
+ 
+    // State 也包含了更新函数，因此它会被传递进 context provider。
+    this.state = {
+      theme: themes.light,
+      toggleTheme: this.toggleTheme,   // 定义更新函数，通过context方式向下传递
+    };
+  }
+ 
+  render() {
+    // 整个 state 都被传递进 provider
+    return (
+      <ThemeContext.Provider value={this.state}>
+        <Content />
+      </ThemeContext.Provider>
+    );
+  }
+}
+ 
+function Content() {
+  return (
+    <div>
+      <ThemeTogglerButton />
+    </div>
+  );
+}
+ 
+ReactDOM.render(<App />, document.root);
+```
+
+##### 消费多个 Context
+
+为了确保 context 快速进行重渲染，React 需要使每一个 consumers 组件的 context 在组件树中成为一个单独的节点
+
+```javascript
+// Theme context，默认的 theme 是 "light" 值
+const ThemeContext = React.createContext('light');
+ 
+// 用户登录 context
+const UserContext = React.createContext({
+  name: 'Guest',
+});
+ 
+class App extends React.Component {
+  render() {
+    const { signedInUser, theme } = this.props;
+ 
+    // 提供初始 context 值的 App 组件
+    return (
+      <ThemeContext.Provider value={theme}>
+        <UserContext.Provider value={signedInUser}>
+          <Layout />
+        </UserContext.Provider>
+      </ThemeContext.Provider>
+    );
+  }
+}
+ 
+function Layout() {
+  return (
+    <div>
+      <Sidebar />
+      <Content />
+    </div>
+  );
+}
+ 
+// 一个组件可能会消费多个 context
+function Content() {
+  return (
+    <ThemeContext.Consumer>
+      {theme => (
+        <UserContext.Consumer>
+          {user => (
+            <ProfilePage user={user} theme={theme} />
+          )}
+        </UserContext.Consumer>
+      )}
+    </ThemeContext.Consumer>
+  );
+}
+```
+
+如果两个或者更多的 context 值经常被一起使用，那你可能要考虑一下另外创建你自己的渲染组件，以提供这些值。
+
+#### 注意事项
+
+因为 context 会使用参考标识（reference identity）来决定何时进行渲染，这里可能会有一些陷阱，当 provider 的父组件进行重渲染时，可能会在 consumers 组件中触发意外的渲染。举个例子，当每一次 Provider 重渲染时，以下的代码会重渲染所有下面的 consumers 组件，因为 `value` 属性总是被赋值为新的对象
+
+```javascript
+class App extends React.Component {
+  render() {
+    return (
+      <MyContext.Provider value={{something: 'something'}}>
+        <Toolbar />
+      </MyContext.Provider>
+    );
+  }
+}
+```
+
+为了防止这种情况，将 value 状态提升到父节点的 state 里
+
+```javascript
+class App extends React.Component {
+  constructor(props) {
+    super(props);
+    // 多次渲染，state 会被保留，当value不变时，下面的 consumers 组件不会重新渲染 
+    this.state = {
+      value: {something: 'something'},
+    };
+  }
+ 
+  render() {
+    return (
+      <Provider value={this.state.value}>
+        <Toolbar />
+      </Provider>
+    );
+  }
+}
+```
+
+### 12.React的插槽(Portals)的理解，如何使用，有哪些使用场景
 
 React 官方对 Portals 的定义：
 
@@ -491,7 +1100,7 @@ render() {
 
 
 
-### 13.对React中Fragment的理解，它的使用场景是什么？
+### 13.React中Fragment的理解，它的使用场景是什么？
 
 在React中，组件返回的元素只能有一个根元素。**为了不添加多余的DOM节点，我们可以使用Fragment标签来包裹所有的元素，Fragment标签不会渲染出任何元素**。React官方对Fragment的解释：
 
@@ -832,7 +1441,7 @@ if (inst.componentWillMount) {
 
 接下来我们用同样的方式解析下当调用 setState 时会发生什么。setState 时会调用 Component 类中的 enqueueSetState 函数。
 
-```
+```js
 this.updater.enqueueSetState(this, partialState)
 ```
 
@@ -888,7 +1497,7 @@ React 的渲染过程大致一致，但协调并不相同，以 React 16 为分�
 
 在 React 16 及以后，协调改为了 Fiber Reconciler。它的调度方式主要有两个特点，第一个是**协作式多任务模式**，在这个模式下，线程会定时放弃自己的运行权利，交还给主线程，通过requestIdleCallback 实现。第二个特点是策略优先级，调度任务通过标记 tag 的方式分优先级执行，比如动画，或者标记为 high 的任务可以优先执行。Fiber Reconciler的基本单位是 Fiber，Fiber 基于过去的 React Element 提供了二次封装，提供了指向父、子、兄弟节点的引用，为 diff 工作的双链表实现提供了基础。
 
-在新的架构下，整个生命周期被划分为 Render 和 Commit 两个阶段。Render 阶段的执行特点是可中断、可停止、无副作用，主要是通过构造 workInProgress 树计算出 diff。以 current 树为基础，将每个 Fiber 作为一个基本单位，自下而上逐个节点检查并构造 workInProgress 树。这个过程不再是递归，而是基于循环来完成。
+在新的架构下，整个生命周期被划分为 Render 和 Commit 两个阶段。Render 阶段的执行特点是可中断、可停止、无副作用，主要是**通过构造 workInProgress 树计算出 diff。以 current 树为基础，将每个 Fiber 作为一个基本单位，自下而上逐个节点检查并构造 workInProgress 树。**这个过程不再是递归，而是基于循环来完成。
 
 在执行上通过 requestIdleCallback 来调度执行每组任务，每组中的每个计算任务被称为 work，每个 work 完成后确认是否有优先级更高的 work 需要插入，如果有就让位，没有就继续。优先级通常是标记为动画或者 high 的会先处理。每完成一组后，将调度权交回主线程，直到下一次 requestIdleCallback 调用，再继续构建 workInProgress 树。
 
@@ -956,7 +1565,7 @@ function enqueueUpdate(component) {
 
 **注意：**`batchingStrategy` 对象可以理解为“锁管理器”。这里的“锁”，是指 React 全局唯一的 `isBatchingUpdates` 变量，`isBatchingUpdates` 的初始值是 `false`，意味着“当前并未进行任何批量更新操作”。每当 React 调用 `batchedUpdate` 去执行更新动作时，会先把这个锁给“锁上”（置为 `true`），表明“现在正处于批量更新过程中”。当锁被“锁上”的时候，任何需要更新的组件都只能暂时进入 `dirtyComponents` 里排队等候下一次的批量更新，而不能随意“插队”。此处体现的“任务锁”的思想，是 React 面对大量状态仍然能够实现有序分批处理的基石。
 
-### 2.React setState 调用之后发生了什么？是同步还是异步？
+### 2.React setState是同步还是异步？ 调用之后发生了什么？
 
 **（1）React中setState后发生了什么**
 
@@ -6029,7 +6638,133 @@ function usePrevious(value) {
 
 -   setState 在底层处理逻辑上主要是和老 state 进行合并处理，而 useState 更倾向于重新赋值。
 
-### 11.useEffect的执行
+-   **setState会将多个调用合并为一个来执行**，也就是说，当执行setState的时候，state中的数据并不会马上更新
+
+-   **同步执行时useState也会对state进行逐个处理，而setState则只会处理最后一次**
+
+**setState和useState是看起来像异步的同步，因为react的合并机制，多次调用不会立即更新，setState是合并state,useState是执行最后一次，延迟执行但本身还在一个事件循环，如果脱离react事件，如原生事件或者setTimeout/promise.then里执行setState和useState，就会得到同步代码。**
+
+只要你进入了 `react` 的调度流程，那就是异步的。只要你没有进入 `react` 的调度流程，那就是同步的。什么东西不会进入 `react` 的调度流程？ `setTimeout` `setInterval` ，直接在 `DOM` 上绑定原生事件等。这些都不会走 `React` 的调度流程，你在这种情况下调用 `setState` ，那这次 `setState` 就是同步的。 否则就是异步的。
+
+而 `setState` 同步执行的情况下， `DOM` 也会被同步更新，也就意味着如果你多次 `setState` ，会导致多次更新，这是毫无意义并且浪费性能的。
+
+### 11.useSate异步更新
+
+#### 引入
+
+```javascript
+function App() {
+  const [n, setN] = useState(0)
+  const onClick = ()=>{
+    setN(n+1)
+    setN(n+1) //  此时发现，n只能+1，而不会+2
+    // setN(i=>i+1)
+    // setN(i=>i+1)
+  }
+  return (
+    <div className="App">
+      <h1>n: {n}</h1>
+      <button onClick={onClick}>+2</button>
+    </div>
+  );
+}
+
+ReactDOM.render(<App />, document.getElementById("root"));
+```
+
+react代码如上图：
+
+- 直觉上当我们点击button，应该会执行两次setN，n变为2。
+- **实际上：n变为了1**
+
+#### 简单分析
+
+Fiber 对象的上有一个记录内部 `State` 对象的属性，以便让我们能在下次渲染的时候取到上一次的值，叫做 `memoizedState` 。有了这个属性，我们的 FunctionComponent 就能有和 ClaassComponent 一样使用 `this.setState` 的能力了。
+
+`Fiber.memoizedState` 是一个**单项链表**的结构。首先，我们的每一个 useState 都会在后面生成一个 hook 节点。而它会把当前组件所有 useState 对应的 hook 节点用 `next` 指针串起来，头结点就是 `Fiber.memoizedState`。 我们初始化的目的就是为了构造完成它。
+
+hooks 以链表的形式存储在fiber节点的memoizedState属性上 **
+
+![[外链图片转存失败,源站可能有防盗链机制,建议将图片保存下来直接上传(img-gUZAW6IT-1653354708608)(/Users/jianshuangpeng/Library/Application Support/typora-user-images/image-20220124173020063.png)]](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/1c9519aa1712481ea2f8c0ef03de19e5.png)
+
+分析：
+
+1、在组件第一次渲染的时候，为每个hooks都创建了一个对象, 最终形成了一个链表.
+
+2、在组件更新的过程中，hooks函数执行的顺序是不变的，就可以根据这个链表拿到当前hooks对应的`Hook`对象，函数式组件就是这样拥有了state的能力。
+
+react中虚拟dom----workInProgress树有一个**memoizedState**属性,这个属性是用来存放hooks相关信息的,也就是说state是存在虚拟dom里面的.
+
+hooks信息是一个对象.这个对象里除了本身的值和更新函数外,还需要记录一些其他的信息,比如下一次的useState更新指向的hook信息等.那假如一个函数组件中有多个useState怎么办?hooks采用了数组存放的形式,也就算是在同一个组件中,所有的**hook对象**是存    在一个**数组**中的.如:
+
+```js
+ _hook :[
+        {value:1,uplate:function1,next:hook1},
+        {value:2,uplate:function2,next:hook2}
+]
+```
+
+useState更新时,会**依次**去执行hook对象数组里面的更新函数,从而修改虚拟dom,然后在完成一次组件更新后，会把当前workInProgress树赋值给current树，current会在commit阶段替换成真实的Dom树
+
+**我们再回头解释一下hooks使用的规则1,为什么hooks只能在顶层调用?**
+
+ diff算法会根据前后的虚拟dom去更新,useState也存在这个现象.也就是说,useState会根据前后的虚拟dom去更新,而hook信息是存在虚拟dom里面的,也就是说,会存在前后两个hook对象数组.而数据的对比更新是按照下标来的.也就是说,假如前后的数组长度不一样,就  会导致更新混乱,即useState的使用必须是明确而且不变的.假如
+
+```js
+if(a>0){
+  const [state,setState] =useState()
+}
+
+const [state1,setState1]=useState()
+```
+
+这种结果会出现什么现象?a大于0和小于0的时候hooks数组长度和顺序是不一致的
+
+a>0
+
+```js
+ _hook :[
+        {value:1,uplate:function1,next:hook1},
+        {value:2,uplate:function2,next:hook2}
+]
+```
+
+a<=0
+
+```js
+ _hook :[
+        {value:2,uplate:function2,next:hook2}
+]
+```
+
+也就是说,当我a<=0时,更新state1会拿到value:1的值,因为a<=0时,state1的索引是0,而0对应旧hook数组里的value:1,而不是它原本应该在的value:2.
+
+**总结一下原因就是,hooks信息是存在数组里的,而每次更新都是根据索引更新的,因此,usestate的使用必须是明确的,保证hoos数组的元素数量是一致的.**
+
+#### 为什么n是1，而不是2？
+
+- 我们知道：
+    1. useState每次执行会返回一个新的state（简单类型的等值拷贝）
+    2. setState会触发UI更新（重新render，执行函数组件）
+    3. 由于UI更新是异步任务，所以setState也是一个异步过程
+
+当我们两次`setN(n+1)`时候，实际上形成了两个**闭包**，都保存了对此时n的状态（n=0）的引用。
+在setN后：
+
+1. 先分别生成了两个新的n，数值上都等于n+1（即1），但彼此无关。
+2. 分别进行了render，而只有最新一次render有效，此次render引用了最后一次setN函数里生成的n。
+
+#### 解决方法
+
+```js
+// 利用函数，接收旧值，进行更新
+setState( x => x+1 )
+```
+
+- 接收的函数 `x=>x+1` 并未保持对n的引用，而是表达了一种 **加1** 操作
+- 推荐使用函数代码进行 `setState`
+
+### 12.useEffect的执行
 
 #### 问题
 
@@ -6382,7 +7117,7 @@ export default function Demo() {
 
 ```
 
-
+12.useState的同步异步
 
 ### hooks原理
 

@@ -503,7 +503,9 @@ dep.notify()
 
 其次，应该尽量将**重复的逻辑处理**放在子组件中，这样子才会让组件的封装更有意义。
 
-当然，通过本文的学习，即使不是交互组件，**任何组件都可以**通过这种方式来实现 `v-model`。
+即使不是交互组件，**任何组件都可以**通过这种方式来实现 `v-model`。
+
+#### 交互组件
 
 `v-model` 实际上就是 `$emit('input')` 以及 `props:value` 的组合语法糖，只要组件中满足这两个条件，就可以在组件中使用 `v-model`。
 
@@ -515,7 +517,7 @@ dep.notify()
 
 但是，除了上面列举的这些，别的都是 `$emit('input')` 以及 `props:value` 。
 
-**（1）作用在表单元素上** 动态绑定了 input 的 value 指向了 messgae 变量，并且在触发 input 事件的时候去动态把 message设置为目标值：
+**（1）作用在表单元素上** 动态绑定了 input 的 value 指向了 messgae 变量，并且在触发 input 事件的时候去动态把 message设置为目标值：一个是数据绑定，另一个是监听事件
 
 ```javascript
 <input v-model="sth" />
@@ -530,6 +532,8 @@ dep.notify()
 //在@input方法中，value => sth;
 //在:value中,sth => value;
 ```
+
+![image-20220923182943569](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/image-20220923182943569.png)
 
 **（2）作用在组件上** 在自定义组件中，v-model 默认会利用名为 value 的 prop和名为 input 的事件
 
@@ -559,6 +563,34 @@ methods:{
 ```
 
 默认情况下，一个组件上的v-model 会把 value 用作 prop且把 input 用作 event。但是一些输入类型比如单选框和复选框按钮可能想使用 value prop 来达到不同的目的。使用 model 选项可以回避这些情况产生的冲突。js 监听input 输入框输入数据改变，用oninput，数据改变以后就会立刻出发这个事件。通过input事件把数据$emit 出去，在父组件接受。父组件设置v-model的值为input `$emit`过来的值。
+
+#### 组件绑定
+
+![image-20220923183158452](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/image-20220923183158452.png)
+
+
+
+在给组件使用`v-model`的时候，其实相当于将绑定的值`update:model-value`通过props传递给组件。并且在该组件上监听一个名为`update:model-value`，在组件中通过`this.$emit触发事件`，并且可以将要修改的值，传递过去
+
+也可以写成
+
+![image-20220923183416036](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/image-20220923183416036.png)
+
+![image-20220923183452248](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/image-20220923183452248.png)
+
+
+
+当我们在`home`组件中使用`v-model`进行双线数据绑定，此时可以使用`computed`计算属性来进行设置，当绑定的数据发生改变时，此时通过`this.$emit`触发事件。
+
+#### **绑定多个属性**
+
+![image-20220923183609821](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/image-20220923183609821.png)
+
+
+
+绑定两个属性，如果我们直接对组件使用`v-model`,则默认`v-bind`绑定`model-value`,`v-on`监听`update:model-value`。此时如果对其更改名称，`v-model:title='title',`这样`v-bind`绑定`title`,`v-on`监听`update:title`。
+
+
 
 ### 4.Object.defineProperty和Proxy特点对比分析？
 
@@ -5261,7 +5293,7 @@ VueComponent.prototype.**proto** === Vue.prototype (这里的proto前后都是�
 组件的定义：
 组件就是实现应用中局部功能的代码和资源的集合，代码指的是html、css、js，资源指的是音频、视频、图片等资源。也就是说一个组件就是一个局部功能的所有，注意，是局部功能，组件要划分得足够细才有较高的复用率，比如我编写了一个包含顶部和底部的组件，但是我的同事只要想顶部，那么我的这个组件他就复用不了了，因为他不想要底部，如果引入我的这个组件，就必须要有顶部和底部。
 
-### 30.为什么 Vue2 this 能够直接获取到 data 和 methods
+### 30.Vue2 this 为什么能够直接获取到 data 和 methods
 
 ```js
 在平时使用vue来开发项目的时候，对于下面这一段代码，我们可能每天都会见到：
@@ -6934,7 +6966,7 @@ Vue-Router有两种模式：**hash模式**和**history模式**。默认的路由
 
 #### 1. hash模式
 
-**简介：** hash模式是开发中默认的模式，它的URL带着一个#，例如：[www.abc.com/#/vue](https://link.juejin.cn/?target=http%3A%2F%2Fwww.abc.com%2F%23%2Fvue)，它的hash值就是`#/vue`。
+**简介：** hash模式是开发中默认的模式，它的URL带着一个#，例如：`www.abc.com/#/vue`，它的hash值就是`#/vue`。
 
 **特点**：hash值会出现在URL里面，但是不会出现在HTTP请求中，对后端完全没有影响。所以改变hash值，不会重新加载页面。这种模式的浏览器支持度很好，低版本的IE浏览器也支持这种模式。hash路由被称为是前端路由，已经成为SPA（单页面应用）的标配。
 
