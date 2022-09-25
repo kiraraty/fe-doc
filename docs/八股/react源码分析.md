@@ -95,11 +95,11 @@ const UI = commit(state);
 
 ![react源码3.2](https://xiaochen1024.com/20210602082005.png)
 
-#### jsx
+### jsx
 
 jsx是js语言的扩展，react通过babel词法解析（具体怎么转换可以查阅babel相关插件），将jsx**转换成React.createElement**，React.createElement方法返回**virtual-dom对象**（内存中用来描述dom阶段的对象），所有**jsx本质上就是React.createElement的语法糖**，它能声明式的编写我们想要组件呈现出什么样的ui效果。
 
-#### Fiber双缓存
+### Fiber双缓存
 
 **Fiber对象**上面保存了包括**这个节点的属性、类型、dom等**，Fiber通过child、sibling、return（指向父节点）来形成Fiber树，还保存了**更新状态时用于计算state的updateQueue**，**updateQueue是一种链表结构**，上面可能存在多个未计算的update，update也是一种数据结构，上面包含了更新的数据、优先级等，除了这些之外，上面还有和副作用有关的信息。
 
@@ -131,7 +131,7 @@ ReactDOM.render(<App />, document.getElementById("root"));
 
 ![react源码7.3](https://xiaochen1024.com/react%E6%BA%90%E7%A0%817.3.png)
 
-#### scheduler
+### scheduler
 
 Scheduler的作用是调度任务，react15没有Scheduler这部分，**所以所有任务没有优先级，也不能中断，只能同步执行**。
 
@@ -150,7 +150,7 @@ function workLoopConcurrent() {
 
 ![react源码15.2](https://xiaochen1024.com/react%E6%BA%90%E7%A0%8115.2.png)
 
-#### Lane模型
+### Lane模型
 
 react之前的版本用`expirationTime`属性**代表优先级**，该**优先级和IO不能很好的搭配工作**（io的优先级高于cpu的优先级），现在有了**更加细粒度的优先级表示方法Lane**，**Lane用二进制位表示优先级**，二进制中的1表示位置，同一个二进制数可以有多个相同优先级的位，这就可以表示‘批’的概念，而且二进制方便计算。
 
@@ -192,7 +192,7 @@ const IdleLanes: Lanes = /*                             */ 0b0110000000000000000
 export const OffscreenLane: Lane = /*                   */ 0b1000000000000000000000000000000;
 ```
 
-#### reconciler （render phase）
+### reconciler （render phase）
 
 Reconciler发生在**render阶段**，render阶段会分别为**节点执行beginWork和completeWork**（后面会讲），或者**计算state，对比节点的差异，为节点赋值相应的effectFlags**（对应dom节点的增删改）
 
@@ -255,7 +255,7 @@ function App() {
 
 ![react源码8.3](https://xiaochen1024.com/react%E6%BA%90%E7%A0%818.3.png)
 
-#### renderer（commit phase）
+### renderer（commit phase）
 
 Renderer发生在commit阶段，commit阶段遍历effectList执行对应的dom操作或部分生命周期。
 
@@ -265,7 +265,7 @@ commit阶段发生在**commitRoot函数中，该函数主要遍历effectList，�
 
 ![react源码10.1](https://xiaochen1024.com/react%E6%BA%90%E7%A0%8110.1.png)
 
-#### concurrent
+### concurrent
 
 它是一类功能的合集（如fiber、schduler、lane、suspense），其目的是**为了提高应用的响应速度，使应用cpu密集型的更新不在那么卡顿，其核心是实现了一套异步可中断、带优先级的更新**。
 
@@ -657,7 +657,7 @@ react有3种模式进入主体函数的入口，我们可以从 react官方文�
 
 **特性对比：**
 
-#### ![react源码6.1](https://xiaochen1024.com/20210529105705.png)
+![react源码6.1](https://xiaochen1024.com/20210529105705.png)
 
 legacy 模式在合成事件中有自动批处理的功能，但仅限于一个浏览器任务。非 React 事件想使用这个功能必须使用 `unstable_batchedUpdates`。在 blocking 模式和 concurrent 模式下，所有的 `setState` 在默认情况下都是批处理的。会在开发中发出警告
 
@@ -990,7 +990,7 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
 
 ## render阶段
 
-#### render阶段的入口
+### render阶段的入口
 
 render阶段的主要工作是构建Fiber树和生成effectList，我们知道了react入口的两种模式会进入**performSyncWorkOnRoot**或者**performConcurrentWorkOnRoot**，而这两个方法分别会调用**workLoopSync**或者**workLoopConcurrent**
 
@@ -1027,7 +1027,7 @@ function workLoopConcurrent() {
     }
     ```
 
-#### render阶段整体执行流程
+### render阶段整体执行流程
 
 ![react源码8.1](https://xiaochen1024.com/20210529105753.png)
 
@@ -1059,7 +1059,7 @@ function workLoopConcurrent() {
 
 > 注意：当遍历到只有一个子文本节点的Fiber时，该Fiber节点的子节点不会执行beginWork和completeWork，如图中的‘chen’文本节点。这是react的一种优化手段
 
-#### beginWork
+### beginWork
 
 beginWork主要的工作是创建或复用子fiber节点
 
@@ -1123,7 +1123,7 @@ function beginWork(
     1.  oldProps ==`= newProps && workInProgress.type =`== current.type 属性和fiber的type不变
     2.  !includesSomeLane(renderLanes, updateLanes) 更新的优先级是否足够，第15章讲解
 
-#### reconcileChildren/mountChildFibers
+### reconcileChildren/mountChildFibers
 
 创建子fiber的过程会进入reconcileChildren，该函数的作用是为workInProgress fiber节点生成它的child fiber即 workInProgress.child。然后继续深度优先遍历它的子节点执行相同的操作。
 
@@ -1210,7 +1210,7 @@ export const Placement = /*                */ 0b00000000000010;
 
 ![react源码8.4](https://xiaochen1024.com/20210529110149.png)
 
-#### bailoutOnAlreadyFinishedWork
+### bailoutOnAlreadyFinishedWork
 
 ```js
 //ReactFiberBeginWork.old.js
@@ -1233,7 +1233,7 @@ if (!includesSomeLane(renderLanes, workInProgress.childLanes)) {
 
 如果进入了bailoutOnAlreadyFinishedWork复用的逻辑，会判断优先级第12章介绍，优先级足够则进入cloneChildFibers否则返回null
 
-#### completeWork
+### completeWork
 
 completeWork主要工作是处理fiber的props、创建dom、创建effectList
 
@@ -1480,7 +1480,7 @@ function reconcileChildFibers(
 
      如果a和b里的元素都没有key，因为节点的**更新前后文本节点不同**，导致他们都不能复用，所以**会销毁之前的节点**，并新建节点，但是现在**有key**了，b中的节点会**在老的a中寻找key相同的节点尝试复用，最后发现只是交换位置就可以完成更新**，具体对比过程后面会讲到。
 
-#### 单节点diff
+### 单节点diff
 
 单点diff有如下几种情况：
 
@@ -1531,7 +1531,7 @@ function reconcileSingleElement(
 }
 ```
 
-#### 多节点diff
+### 多节点diff
 
 多节点diff比较复杂，我们分三种情况进行讨论，其中**a表示更新前的节点，b表示更新后的节点**
 
@@ -2495,7 +2495,7 @@ function commitRoot(root) {
 
     ![react源码12.1](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs20210529105900.png)
 
-#### Update&updateQueue
+### Update&updateQueue
 
 HostRoot或者ClassComponent触发更新后，会在函数createUpdate中创建update，并在后面的render阶段的beginWork中计算Update。FunctionComponent对应的Update在第11章讲，它和HostRoot或者ClassComponent的Update结构有些不一样
 
@@ -2547,7 +2547,7 @@ fiber.updateQueue = queue;
 - shared.pending：新产生的update会以单向环状链表保存在shared.pending上，计算state的时候会剪开这个环状链表，并且链接在lastBaseUpdate后
 - effects：calback不为null的update
 
-#### 从触发更新的fiber节点向上遍历到rootFiber
+### 从触发更新的fiber节点向上遍历到rootFiber
 
 在markUpdateLaneFromFiberToRoot函数中会从触发更新的节点开始向上遍历到rootFiber，遍历的过程会处理节点的优先级（第15章讲）
 
@@ -2589,7 +2589,7 @@ function markUpdateLaneFromFiberToRoot(
 
 ![react源码12.5](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs20210529105905.png)
 
-#### 调度
+### 调度
 
 在ensureRootIsScheduled中，scheduleCallback会以一个优先级调度render阶段的开始函数performSyncWorkOnRoot或者performConcurrentWorkOnRoot
 
@@ -2612,7 +2612,7 @@ if (newCallbackPriority === SyncLanePriority) {
 }
 ```
 
-#### 状态更新
+### 状态更新
 
 classComponent状态计算发生在processUpdateQueue函数中，涉及很多链表操作，看图更加直白
 
@@ -2626,7 +2626,7 @@ classComponent状态计算发生在processUpdateQueue函数中，涉及很多链
 
     ![react源码12.2](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs20210529105911.png)
 
-#### 带优先级的状态更新
+### 带优先级的状态更新
 
 类似git提交，这里的c3意味着高优先级的任务，比如用户出发的事件，数据请求，同步执行的代码等。
 
@@ -2793,7 +2793,7 @@ export function processUpdateQueue<State>(
 
 ## hooks源码
 
-#### hook调用入口
+### hook调用入口
 
  在hook源码中hook存在于Dispatcher中，Dispatcher就是一个对象，不同hook 调用的函数不一样，全局变量ReactCurrentDispatcher.current会根据是mount还是update赋值为HooksDispatcherOnMount或HooksDispatcherOnUpdate
 
@@ -2829,7 +2829,7 @@ const HooksDispatcherOnUpdate: Dispatcher = {//update时
 };
 ```
 
-#### hook数据结构
+### hook数据结构
 
  在FunctionComponent中，多个hook会形成hook链表，保存在Fiber的memoizedState的上，而需要更新的Update保存在hook.queue.pending中
 
@@ -2852,7 +2852,7 @@ const hook: Hook = {
 - useMemo：例如`useMemo(callback, [dep])`，`memoizedState`等于`[callback(), dep]`
 - useCallback：例如`useCallback(callback, [dep])`，`memoizedState`等于`[callback, dep]`。`useCallback`保存`callback`函数，`useMemo`保存`callback`的执行结果
 
-#### useState&useReducer
+### useState&useReducer
 
 之所以把useState和useReducer放在一起，是因为在源码中useState就是有默认reducer参数的useReducer。
 
@@ -2995,7 +2995,7 @@ const hook: Hook = {
       
     ```
 
-#### useEffect
+### useEffect
 
 - 声明
 
@@ -3102,7 +3102,7 @@ const hook: Hook = {
       
     ```
 
-#### useRef
+### useRef
 
  sring类型的ref已经不在推荐使用(源码中string会生成refs，发生在coerceRef函数中)，ForwardRef只是把ref通过传参传下去，createRef也是{current: any这种结构，所以我们只讨论function或者{current: any}的useRef
 
@@ -3231,7 +3231,7 @@ export function createRef(): RefObject {
     }
     ```
 
-#### useMemo&useCallback
+### useMemo&useCallback
 
 - 声明阶段
 
@@ -3306,11 +3306,11 @@ export function createRef(): RefObject {
     }
     ```
 
-#### useLayoutEffect
+### useLayoutEffect
 
 useLayoutEffect和useEffect一样，只是调用的时机不同，它是在commit阶段的commitLayout函数中同步执行
 
-#### forwardRef
+### forwardRef
 
 forwardRef也非常简单，就是传递ref属性
 
@@ -3443,7 +3443,7 @@ schedule();
 
 ![react源码15.5](https://xiaochen1024.com/20210529105929.png)
 
-#### Scheduler
+### Scheduler
 
 我们知道如果我们的应用占用较长的js执行时间，比如超过了设备一帧的时间，那么设备的绘制就会出不的现象。
 
@@ -3451,7 +3451,7 @@ Scheduler主要的功能是时间切片和调度优先级，react在对比差异
 
 ![react源码15.3](https://xiaochen1024.com/20210529105933.png)
 
-#### 时间切片
+### 时间切片
 
  在浏览器的一帧中js的执行时间如下
 
@@ -3483,7 +3483,7 @@ function forceFrameRate(fps) {//计算时间片
 }
 ```
 
-#### 任务的暂停
+### 任务的暂停
 
 在shouldYield函数中有一段，所以可以知道，如果当前时间大于任务开始的时间+yieldInterval，就打断了任务的进行。
 
@@ -3495,7 +3495,7 @@ if (currentTime >= deadline) {
 }
 ```
 
-#### 调度优先级
+### 调度优先级
 
  在Scheduler中有两个函数可以创建具有优先级的任务
 
@@ -3832,18 +3832,18 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
 
 ## concurrent模式
 
-#### concurrent mode
+### concurrent mode
 
 react17支持concurrent mode，这种模式的根本目的是为了让应用保持cpu和io的快速响应，它是一组新功能，包括Fiber、Scheduler、Lane，可以根据用户硬件性能和网络状况调整应用的响应速度，核心就是为了实现异步可中断的更新。concurrent mode也是未来react主要迭代的方向。
 
 - cup：让耗时的reconcile的过程能让出js的执行权给更高优先级的任务，例如用户的输入，
 - io：依靠Suspense
 
-#### Fiber
+### Fiber
 
 Fiber我们之前介绍过，这里我们来看下在concurrent mode下Fiber的意义，react15之前的reconcile是同步执行的，当组件数量很多，reconcile时的计算量很大时，就会出现页面的卡顿，为了解决这个问题就需要一套异步可中断的更新来让耗时的计算让出js的执行权给高优先级的任务，在浏览器有空闲的时候再执行这些计算。所以我们需要一种数据结构来描述真实dom和更新的信息，在适当的时候可以在内存中中断reconcile的过程，这种数据结构就是Fiber。
 
-#### Scheduler
+### Scheduler
 
 Scheduler独立于react本身，相当于一个单独的package，Scheduler的意义在于，当cup的计算量很大时，我们根据设备的fps算出一帧的时间，在这个时间内执行cup的操作，当任务执行的时间快超过一帧的时间时，会暂停任务的执行，让浏览器有时间进行重排和重绘。在适当的时候继续任务。
 
@@ -3855,11 +3855,11 @@ Scheduler可以用过期时间来代表优先级的高低。
 
 优先级越低，过期时间越长，离当前时间越长，也就是过很久了才能轮到它执行。
 
-#### lane
+### lane
 
 Lane用二进制位表示任务的优先级，方便优先级的计算，不同优先级占用不同位置的‘赛道’，而且存在批的概念，优先级越低，‘赛道’越多。高优先级打断低优先级，新建的任务需要赋予什么优先级等问题都是Lane所要解决的问题。
 
-#### batchedUpdates
+### batchedUpdates
 
 简单来说，在一个上下文中同时触发多次更新，这些更新会合并成一次更新，例如
 
@@ -3935,11 +3935,11 @@ export function requestUpdateLane(fiber: Fiber): Lane {
 }
 ```
 
-#### Suspense
+### Suspense
 
  Suspense可以在请求数据的时候显示pending状态，请求成功后展示数据，原因是因为Suspense中组件的优先级很低，而离屏的fallback组件优先级高，当Suspense中组件resolve之后就会重新调度一次render阶段，此过程发生在updateSuspenseComponent函数中，具体可以看调试suspense的视频
 
-#### 总结
+### 总结
 
 Fiber为concurrent架构提供了数据层面的支持。
 
@@ -3951,13 +3951,13 @@ Lane模型为concurrent提供了更新的策略
 
 ## context
 
-#### context流程图
+### context流程图
 
 ![react源码17.1](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs20210529105951.png)
 
 ![react源码17.2](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs20210529105954.png)
 
-#### cursor/valueStack
+### cursor/valueStack
 
 react源码中存在一个valueStack和valueCursor用来记录context的历史信息和当前context，另外还有一个didPerformWorkStackCursor用来表示当前的context有没有变化
 
@@ -3990,7 +3990,7 @@ function popProvider(providerFiber) {
 
 为什么会有这样一个机制呢，因为我们的context是跨层级的，在之前讲到render阶段和commit阶段的时候，我们会以深度优先遍历的方式遍历节点，如果涉及跨层级读取状态就有点力不从心了，就需要一层一层往下传递我们的props，所以我们可以用一个stack记录我们的context，在render阶段pushProvider，在commit阶段popProvider，在每个具体的层级能根据valueCursor取当前value
 
-#### createContext
+### createContext
 
 ```js
 export function createContext<T>(
@@ -4055,7 +4055,7 @@ context.Provider = {
 context.Consumer = context;
 ```
 
-#### useContext
+### useContext
 
 useContext会调用readContext，readContext会创建dependce，加入当前fiber的dependencies链表中
 
@@ -4097,7 +4097,7 @@ function readContext(context, observedBits) {
 }
 ```
 
-#### provider/customer
+### provider/customer
 
 在render阶段会调用updateContextProvider，注意几个关键的步骤
 
@@ -4243,7 +4243,7 @@ function updateContextConsumer(current, workInProgress, renderLanes) {
 
 ## 事件系统
 
-#### 从一个bug说起
+### 从一个bug说起
 
 下面这个demo_13在react17和react16中有什么不同吗？代码也很简单，模拟一个modal框，点击显示出现，点击其他地方，相当于点击了mask，modal消失，因为react事件都是委托到上层，所以需要在handleClick阻止冒泡，这样点击显示的时候不会触发document上的事件回调，导致modal无法显示。但是在react16上发现这样做还是不行，需要调用e.nativeEvent.stopImmediatePropagation()才能实现，而react17上没什么影响
 
@@ -4275,13 +4275,13 @@ export default class Demo13 extends React.Component {
 
 大家也可以看下demo_11、demo_12在react16、17触发顺序有何差异，同时demo项目中的event.html也模拟了react16、17的事件代理机制
 
-#### 事件系统架构图
+### 事件系统架构图
 
 ![react源码18.1](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs20210529110000.png)
 
 我们以SimpleEvent为例看事件注册、绑定和触发的过程，看视频的调试过程
 
-#### 事件注册
+### 事件注册
 
 1. DOMPluginEventSystem.js会调用SimpleEventPlugin插件的registerEvents方法注册事件
 
@@ -4332,7 +4332,7 @@ export default class Demo13 extends React.Component {
     }
     ```
 
-#### 事件绑定
+### 事件绑定
 
 1. listenToAllSupportedEvents
 
@@ -4419,7 +4419,7 @@ export default class Demo13 extends React.Component {
     }
     ```
 
-#### 事件触发
+### 事件触发
 
 1. dispatchDiscreteEvent(dispatchEvent)
 
@@ -4501,7 +4501,7 @@ export default class Demo13 extends React.Component {
 
 ## 手写miniReact
 
-#### 迷你react和真正的源码有哪些区别呢
+### 迷你react和真正的源码有哪些区别呢
 
 - 在render阶段我们遍历了整颗Fiber树，在源码中如果节点什么都没改变会命中优化的逻辑，然后跳过这个节点的遍历
 - commit我们也遍历了整颗Fiber树，源码中只遍历带有effect的Fiber节点，也就是遍历effectList
@@ -4997,7 +4997,7 @@ rerender("World");
 
 我们介绍了react源码架构（ui=fn(state)），从scheduler开始调度（根据过期事件判断优先级），经过render阶段的深度优先遍历形成effectList（中间会执行reconcile|diff），交给commit处理真实节点（中间穿插生命周期和部分hooks），而这些调度的过程都离不开Fiber的支撑，Fiber是工作单元，也是节点优先级、更新UpdateQueue、节点信息的载体，Fiber双缓存则提供了对比前后节点更新的基础。我们还介绍了jsx是React.createElement的语法糖。Lane模型则提供了更细粒度的优先级对比和计算，这一切都为concurrent mode提供了基础，在这之上变可以实现Suspense和batchedUpdate（16、17版本实现的逻辑不一样），18章context的valueStack和valueCursor在整个架构中运行机制，19章介绍了新版事件系统，包括事件生产、监听和触发
 
-#### 面试题简答（详见视频源码角度讲解）
+### 面试题简答（详见视频源码角度讲解）
 
 1. jsx和Fiber有什么关系
 
