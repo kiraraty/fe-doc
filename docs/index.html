@@ -18,9 +18,9 @@
   <!-- <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify-sidebar-collapse/dist/sidebar-folder.min.css" /> -->
   <link rel="stylesheet" href="./sidebar.css">
   <style>
-     .sidebar{
-      width: 250px;
-    } 
+    /*  .sidebar{
+      width: 230px;
+    }  */
   </style>
 </head>
 
@@ -34,11 +34,11 @@
       loadNavbar: true,
       subMaxLevel: 4,
       search: {
-        maxAge: 86400000,
+        maxAge: 12*60*1000,
         paths: "auto",
         placeholder: "输入搜索的关键字",
         noData: "没有结果",
-        depth: 6,
+        depth: 4,
       },
       copyCode: {
         buttonText: 'Copy',
