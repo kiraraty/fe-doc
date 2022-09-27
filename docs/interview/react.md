@@ -3448,9 +3448,9 @@ React是视图层框架。Redux是一个用来**管理数据状态和UI状态的
 
 在 React 中，UI 以组件的形式来搭建，组件之间可以嵌套组合。但 React 中组件间通信的数据流是单向的，顶层组件可以通过 props 属性向下层组件传递数据，而下层组件不能向上层组件传递数据，兄弟组件之间同样不能。这样简单的单向数据流支撑起了 React 中的数据可控性。
 
-当项目越来越大的时候，管理数据的事件或回调函数将越来越多，也将越来越不好管理。管理不断变化的 state 非常困难。如果一个 model 的变化会引起另一个 model 变化，那么当 view 变化时，就可能引起对应 model 以及另一个 model 的变化，依次地，可能会引起另一个 view 的变化。直至你搞不清楚到底发生了什么。state 在什么时候，由于什么原因，如何变化已然不受控制。 当系统变得错综复杂的时候，想重现问题或者添加新功能就会变得举步维艰。如果这还不够糟糕，考虑一些来自前端开发领域的新需求，如更新调优、服务端渲染、路由跳转前请求数据等。state 的管理在大项目中相当复杂。
+**当项目越来越大的时候，管理数据的事件或回调函数将越来越多，也将越来越不好管理。管理不断变化的 state 非常困难。如果一个 model 的变化会引起另一个 model 变化，那么当 view 变化时，就可能引起对应 model 以及另一个 model 的变化，依次地，可能会引起另一个 view 的变化**。直至你搞不清楚到底发生了什么。state 在什么时候，由于什么原因，如何变化已然不受控制。 当系统变得错综复杂的时候，想重现问题或者添加新功能就会变得举步维艰。如果这还不够糟糕，考虑一些来自前端开发领域的新需求，如更新调优、服务端渲染、路由跳转前请求数据等。state 的管理在大项目中相当复杂。
 
-Redux 提供了一个叫 store 的统一仓储库，组件通过 dispatch 将 state 直接传入store，不用通过其他的组件。并且组件通过 subscribe 从 store获取到 state 的改变。使用了 Redux，所有的组件都可以从 store 中获取到所需的 state，他们也能从store 获取到 state 的改变。这比组件之间互相传递数据清晰明朗的多。
+Redux 提供了一个叫 store 的统一仓储库，**组件通过 dispatch 将 state 直接传入store，不用通过其他的组件。并且组件通过 subscribe 从 store获取到 state 的改变。使用了 Redux，所有的组件都可以从 store 中获取到所需的 state，他们也能从store 获取到 state 的改变**。这比组件之间互相传递数据清晰明朗的多。
 
 为什么要使用单向数据流的方式，因为前端项目有大多数是mvc 或者是mvvm架构。这种架构有什么缺点，有一个很大的缺点就是 当业务复杂度变得越来越高的时候，因为允许view 层和model层 直接传递。因为model可能不止对应一个view 层，就会出现下图这样的情况：
 
@@ -3923,9 +3923,11 @@ export default function createStore(reducer, initialState, middleFunc) {
 
 ### 4.Redux中异步的请求怎么处理
 
+
+
 可以在 componentDidmount 中直接进⾏请求⽆须借助redux。但是在⼀定规模的项⽬中,上述⽅法很难进⾏异步流的管理,通常情况下我们会借助**redux的异步中间件**进⾏异步处理。redux异步流中间件其实有很多，当下主流的异步中间件有两种redux-thunk、redux-saga。
 
-**（1）使用react-thunk中间件**
+#### **使用react-thunk中间件**
 
 **redux-thunk**优点:
 
@@ -3987,7 +3989,7 @@ componentDidMount(){
 }
 ```
 
-**（2）使用redux-saga中间件**
+#### **使用redux-saga中间件**
 
 **redux-saga**优点:
 
@@ -4064,6 +4066,22 @@ componentDidMount(){
   store.dispatch(action)
 }
 ```
+
+#### 总结
+
+使用redux-thunk，当我们返回的是函数时，store会帮我们调用这个返回的函数，并且把dispatch暴露出来供我们使用。**对于redux-thunk的整个流程来说，它是等异步任务执行完成之后，我们再去调用dispatch，然后去store去调用reduces**
+
+![image-20220927214653024](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/image-20220927214653024.png)
+
+使用了redux-saga，当我们dispatch的action类型不在reducer中时，redux-saga的监听函数`takeEvery`就会监听到，等异步任务有结果就执行`put`方法，相当于`dispatch`，再一次触发dispatch。**对于redux-saga的整个流程来说，它是等执行完action和reducer之后，判断reducer中有没有这个action**
+
+
+
+![image-20220927214704531](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/image-20220927214704531.png)
+
+总结来看，**redux-thunk和redux-saga处理异步任务的时机不一样。对于redux-saga，相对于在redux的action基础上，重新开辟了一个 async action的分支，单独处理异步任务**
+
+saga 自己基本上完全弄了一套 asyc 的事件监听机制，代码量大大增加，从我自己的使用体验来看 redux-thunk 更简单，和 redux 本身联系地更紧密。尤其是整个生态都向函数式编程靠拢的今天，redux-thunk 的高阶函数看上去更加契合这个闭环
 
 ### 5.Redux 怎么实现属性传递，原理是什么
 
@@ -4968,7 +4986,9 @@ app.model({
 });
 ```
 
-### 14.手写redux-thunk 
+
+
+### 14.redux-thunk分析
 
 > redux-thunk` 可以利用 `redux` 中间件让 `redux` 支持异步的 `action
 
@@ -4986,7 +5006,619 @@ const thunk = ({ dispatch, getState }) => (next) => (action) => {
 export default thunk
 ```
 
-### 15.手写redux 中间件
+#### 简单使用
+
+不用redux-thunk之前
+
+```js
+// store.js
+import { createStore } from 'redux';
+
+export const reducer = (state = {
+    count: 0
+}, action) => {
+    switch(action.type) {
+        case 'CHANGE_DATA': {
+            return {
+                ...state,
+                count: action.data
+            }
+        }
+        default: 
+            return state;
+
+    }
+}
+export const store = createStore(reducer);
+// App.jsx
+class ReduxTest extends React.Component {
+    constructor(props) {
+        super(props);
+        store.subscribe(() => {
+            console.log('subscribe')
+            this.setState({
+                count: store.getState().count
+            })
+        })
+    }
+    changeData = () => {
+        const { count } = store.getState();
+        const action = {
+            type: 'CHANGE_DATA',
+            data: count + 1
+        }
+        store.dispatch(action);
+    }
+    render() {
+        return (
+            <div>
+                <span>{this.state?.count}</span>
+                <button onClick={this.changeData}>按钮+1</button>
+            </div>
+        )
+    }
+}
+export default ReduxTest;
+```
+
+对于上述代码，我们dispatch一个action，其中action必须为一个对象。
+
+但是实际开发中，action里的数据往往是一个异步接口获取的数据，这个时候，我们可以
+
+```js
+class ReduxTest extends React.Component {
+    constructor(props) {
+        super(props);
+        store.subscribe(() => {
+            console.log('subscribe', store.getState());
+            this.setState({
+                count: store.getState().count
+            });
+        });
+    }
+    changeData = () => {
+        const { count } = store.getState();
+        let res;
+        const p = new Promise(resolve => {
+            setTimeout(() => {
+                res = 111;
+                resolve(res);
+            }, 1000);
+        });
+        p.then(r => {
+            const action = {
+                type: 'CHANGE_DATA',
+                data: r
+            };
+            store.dispatch(action);
+        });
+    };
+    render() {
+        return (
+            <div>
+                <span>{this.state?.count}</span>
+                <button onClick={this.changeData}>按钮+1</button>
+            </div>
+        );
+    }
+}
+export default ReduxTest;
+```
+
+但是，上述会把处理的异步的逻辑写在组件里，使代码变得混乱，
+因此，假如我dispatch一个函数，在这个函数里去处理异步的逻辑，岂不是使代码变得更简洁？！
+
+```js
+const getData = () => {
+    let res;
+    const p = new Promise(resolve => {
+        setTimeout(() => {
+            res = 111;
+            resolve(res);
+        }, 1000);
+    });
+    p.then(r => {
+      const action = {
+          type: 'CHANGE_DATA',
+          data: r
+      };
+      store.dispatch(action);
+  });
+};
+class ReduxTest extends React.Component {
+    constructor(props) {
+        super(props);
+        store.subscribe(() => {
+            console.log('subscribe', store.getState());
+            this.setState({
+                count: store.getState().count
+            });
+        });
+    }
+    changeData = () => {
+        const { count } = store.getState();
+        store.dispatch(getData);
+    };
+    render() {
+        return (
+            <div>
+                <span>{this.state?.count}</span>
+                <button onClick={this.changeData}>按钮+1</button>
+            </div>
+        );
+    }
+}
+export default ReduxTest;
+```
+
+这样，就将组件和异步处理逻辑进行了解耦。
+
+其实没有redux-thunk，也可以完成同样的功能，只是将处理异步逻辑的代码写在组件里，为了让代码更简洁、解耦，所以通过redux-thunk可以dispatch一个函数，然后在这个函数里处理异步操作。
+
+#### 源码分析
+
+在使用 Redux 过程，通过 dispatch 方法派发一个 action 对象。当我们使用 redux-thunk 后，可以 dispatch 一个 function。redux-thunk会自动调用这个 function，并且传递 dispatch, getState 方法作为参数。这样一来，我们就能在这个 function 里面处理异步逻辑，处理复杂逻辑，这是原来 Redux 做不到的，因为原来就只能 dispatch 一个简单对象
+
+redux-thunk 的源码比较简洁，实际就11行。前几篇我们说到 redux 的中间件形式，
+本质上是对 store.dispatch 方法进行了增强改造，基本是类似这种形式：
+
+```js
+const middleware = (store) => next => action => {}
+```
+
+
+
+先给个缩水版的实现：
+
+```javascript
+const thunk = ({ getState, dispatch }) => next => action => {
+    if (typeof action === 'function') {
+        return action(dispatch, getState)
+    }
+    return next(action)
+}
+export default thunk
+```
+
+- 原理：即当 action 为 function 的时候，就调用这个 function (传入 dispatch, getState)并返回；如果不是，就直接传给下一个中间件。
+
+完整源码如下：
+
+```javascript
+function createThunkMiddleware(extraArgument) {
+  return ({ dispatch, getState }) => next => action => {
+    // 如果action是一个function，就返回action(dispatch, getState, extraArgument)，否则返回next(action)。
+    if (typeof action === 'function') {
+      return action(dispatch, getState, extraArgument)
+    }
+    // next为之前传入的store.dispatch，即改写前的dispatch
+    return next(action)
+  }
+}
+
+const thunk = createThunkMiddleware()
+// 给thunk设置一个变量withExtraArgument，并且将createThunkMiddleware整个函数赋给它
+thunk.withExtraArgument = createThunkMiddleware
+
+export default thunk
+```
+
+我们发现其实还多了 extraArgument 传入，这个是自定义参数，如下用法：
+
+```javascript
+const api = "https://jsonplaceholder.typicode.com/todos/1";
+const whatever = 10;
+
+const store = createStore(
+  reducer,
+  applyMiddleware(thunk.withExtraArgument({ api, whatever })),
+);
+
+// later
+function fetchData() {
+  return (dispatch, getState, { api, whatever }) => {
+    // you can use api and something else here
+  };
+}
+```
+
+### 15.redux-saga分析
+
+[深入浅出Redux Saga——原理浅析](https://blog.csdn.net/juse__we/article/details/107598535)
+
+#### Side Effects 副作用
+
+我们经常会提到副作用，就是为了处理副作用我们才会使用Thunk， Saga这些工具，那什么是副作用？
+
+##### 什么是副作用？
+
+> 鲁迅说：副作用是在计算结果的过程中，系统状态的一种变化，或者与外部世界进行的可观察的交互。
+
+简单地说，**只要是跟函数外部环境发生的交互就都属于副作用**。
+
+是不是还是有点困惑？我们举些例子吧，副作用包括但不限于以下情况：
+
+- 发送一个 http 请求
+- 更改文件系统
+- 往数据库插入记录
+- 使用LocalStorage进行本地存储
+- 打印/log
+- 获取用户输入
+- DOM 查询
+- 访问系统状态
+
+大概知道什么是副作用之后，我们继续了解两个词：**纯函数 & 非纯函数**
+
+##### 什么是纯函数？
+
+**纯函数：**
+
+函数与外界交互唯一渠道就是——**参数**和**返回值**。也就是说：
+函数从**函数外部接受的所有输入信息**都通过**参数**传递到该函数内部；函数**输出到函数外部的所有信息**都通过**返回值**传递到该函数外部。
+
+##### 什么是非纯函数？
+
+非纯函数：
+
+函数通过**参数和返回值以外**的渠道，和外界进行数据交换。
+比如，读取/修改全局变量；比如，从local storage读取数据，还将其打印到屏幕；再比如在函数里发起一个http请求获取数据。。
+
+那为什么我们要追求纯函数？那它当然有它的好处了。
+
+- **引用透明性**：纯函数总是能够根据相同的输入返回相同的输出，所以它们就能够保证总是返回同一个结果。
+- **可移植性／自文档化**：纯函数内部与环境无关，可以自给自足，更易于观察和理解，一切依赖都从参数中传递进来，所以仅从函数签名我们就得知足够的信息。
+- **可缓存性**：由于以上特性，纯函数总能够根据输入做缓存，例如memoize函数，用一个对象来缓存计算结果。
+- **可测试性**：不需要伪造环境，只需简单地给函数一个输入，然后断言输出就好了。
+
+##### 让人讨厌的副作用？
+
+说了这么多纯函数的好处，我们费劲心思将让人讨厌的副作用处理掉，那为什么还要写有副作用的代码啊？
+
+但是回过头想想，副作用都是我们程序里的关键，假如没有副作用，一切都变得毫无意义了。
+
+假如一个前端项目不能发起http请求从后端获取信息，
+
+假如一个文件系统或者数据库不能让我们读写数据，
+
+假如不能根据用户的输入从屏幕上输出他们想要的信息
+
+这一切都没有意义了。
+
+所以我们的任务不是消除副作用，而是要把副作用统一管理，避免一些不该出现的/我们并不希望出现的问题，让程序看起来更可控更纯洁～
+
+所以我们才会在项目的状态管理中使用thunk，saga等手段处理副作用:)
+
+#### Why Not Redux Thunk
+
+Redux Thunk也是处理副作用的一个中间件，那为什么不推荐使用Redux Thunk呢？
+
+> 鲁迅说： 因为丑！它不好看！
+
+redux的作者提供了Redux Thunk中间件给我们集中地处理副作用，所以它的优点就是：可以处理副作用。
+
+但是也就仅提供处理副作用这个功能，处理方式相当粗暴简陋（你看看thunk一共就10行不到的代码你就懂了），我说说缺点：
+
+- 内部代码重复且无意义，逻辑复杂（丑）
+- Action本应是一个纯碎的JS对象，但是使用Thunk之后Action的形式千奇百态（丑）
+- 代码难以测试（因为丑）
+
+举个丑例子
+
+```js
+const GET_DATA = 'GET_DATA'
+const GET_DATA_SUCCESS = 'GET_DATA_SUCCESS'
+const GET_DATA_FAILED = 'GET_DATA_FAILED'
+ 
+const getDataAction = id => (dispatch, getState) => {
+  dispatch({
+    type: GET_DATA,
+    payload: id
+  })
+  api.getData(id)
+    .then(res => {
+      dispatch({
+        type: GET_DATA_SUCCESS,
+        payload: res
+      })
+    })
+    .catch(err => {
+      dispatch({
+        type: GET_DATA_FAILED,
+        payload: err
+      })
+    })
+}
+```
+
+综上，这不是我们高级而优雅的前端工程师想要的结果！！
+
+#### Why Redux Saga
+
+那为什么就推荐Saga了呢？
+
+> 鲁迅说： 优雅！高级！一眼看不懂！
+
+我们看一下官方介绍吧。
+
+> redux-saga is a library that aims to make application side effects easier to manage, more efficient to execute, easy to test, and better at handling failures.
+
+从介绍中可以看到Saga有这么几个特点：
+
+- 更容易管理副作用
+- 程序更高效执行
+- 易于测试
+- 易于处理错误
+
+那鲁迅为什么说人家优雅高级啊，高在哪儿啊？
+
+Redux Saga之所以更受我们欢迎，因为它的核心就是巧妙地使用了ES6的特性——Generator，基于Generator实现异步流程的控制管理。
+
+#### ES6 Generator
+
+为了更好地理解Saga的原理，了解Generator的基础知识是必经之路。
+
+```js
+function * generator () {
+  yield 'hello'
+  yield 'world'
+}
+ 
+let gen = generator()
+ 
+gen.next() // { value: 'hello', done: false}
+gen.next() // { value: 'world', done: false}
+gen.next() // { value: undefined, done: true}
+```
+
+generator是生成器函数，*：是它的专有标志。
+
+yield是暂停标志，每次程序运行到yield时都会暂停，等待下一次指令的执行；它只能在generator函数里，后面跟着一个表达式。
+
+**return是终止标志。**
+
+gen是由generator生成器函数生成的一个遍历器对象。
+
+gen对象拥有next()方法，调用next方法会得到结构为一个内含value和done属性的对象，value是yield后面表达式的值，done是遍历是否结束的标志位。
+
+只有执行了next才会开始调用generator函数。next传入的参数会当作上一个yield表达式的返回值，所以第一次调用next传入的参数是无效的。
+
+我们通过一个复杂一点点的例子来了解Generator函数
+
+```js
+function * generator (x, y) {
+  // yield
+  // 暂停标志
+  // 只能在generator里
+  // 后面接着一个表达式
+  let a = yield x + y
+  // ⚠️a拿到的是next传来的参数，而不是yield后面的表达式！
+  // ⚠️因此我们可以通过next函数在外部改变generator内部的行为
+  let b = yield x * y
+  // return
+  // 终止标志
+  return a + b
+}
+ 
+// gen
+// 遍历器对象
+let gen = generator(1, 2)
+ 
+gen.next()
+// {value: 3, done: false}
+gen.next(9)
+// {value: 2, done: false}
+gen.next(8)
+// {value: 17, done: false}
+// 只有执行next才会调用generator
+// next传入的参数会当作上一个yield表达式的返回值
+// 所以第一次调用next传入的参数是无效的
+ 
+```
+
+看懂这段代码最关键的点就是
+
+**yield前面的变量拿到的是next传来的参数，而不是yield后面的表达式！**
+
+![img](https://imgconvert.csdnimg.cn/aHR0cHM6Ly91cGxvYWQtaW1hZ2VzLmppYW5zaHUuaW8vdXBsb2FkX2ltYWdlcy83MTYyNTgyLTUwNjYzZWI5OWY3MjVmMWEucG5nP2ltYWdlTW9ncjIvYXV0by1vcmllbnQvc3RyaXB8aW1hZ2VWaWV3Mi8yL3cvMTEzMC9mb3JtYXQvd2VicA?x-oss-process=image/format,png)
+
+**Generator通过yield和next来传递数据来控制函数的内部流程**
+
+#### Redux Saga
+
+前面铺垫了这么多，终于要开始讲一下Saga了。
+
+Saga是一个中间件，所以我们首先当然要去注册一下它
+
+```js
+import { createStore, applyMiddleware } from 'redux'
+import createSagaMiddleware from 'redux-saga'
+import reducer from './reducers'
+import mySaga from './sagas'
+ 
+// create the saga middleware
+const sagaMiddleware = createSagaMiddleware()
+// mount it on the Store
+const store = createStore(
+  reducer,
+  applyMiddleware(sagaMiddleware)
+)
+ 
+// then run the saga
+sagaMiddleware.run(mySaga)
+ 
+export default store
+```
+
+注册的步骤很简单，调用createSagaMiddleware，用于创建saga中间件；讲saga中间件注入store中，并执行run操作，运行我们写的saga函数。
+
+再来一个简单的使用例子：
+
+```typescript
+import { createActions } from 'redux-actions'
+import { call, put, takeLatest } from 'redux-saga/effects'
+import { fetchDataApi } from '@api/index'
+ 
+export const {
+  data: { fetchDataReq, fetchDataSucc, fetchDataFailed }
+} = createActions({
+  DATA: {
+    FETCH_DATA_REQ: null,
+    FETCH_DATA_SUCC: rsp => ({ data: rsp }),
+    FETCH_DATA_FAILED: null,
+  }
+})
+ 
+function* fetchDataReqSaga() {
+  try {
+    const rsp = yield call(fetchDataApi)
+    yield put(fetchDataSucc(rsp))
+  } catch (e) {
+    yield put(fetchDataFailed(e))
+  }
+}
+ 
+function* watchFetchSaga() {
+  yield takeLatest(fetchDataReq, fetchDataReqSaga)
+}
+ 
+export default watchFetchSaga
+ 
+```
+
+Redux Thunk同样的小例子，发起一个action触发一个http请求，请求成功时发起success action，请求失败时发起failed action。
+
+在Saga中会使用一种叫做**Effect的指令来完成这些操作**。
+call，put，takeLatest等等，都是Effect指令。
+
+通俗地讲，call作用是调用其参数中的函数，pull作用是发起一个action，takelatest作用是监听某个action的触发并执行回调函数。
+
+#### Effects
+
+Effects就是简单的JavaScript对象，我们可以把它视作是发送给saga middleware的一些指令，它仅仅是负责向middleware**描述调用行为的信息**，而接下来的**操作是由middleware来执行**，**middleware执行完毕后将指令的结果回馈给 Generator**。
+
+也就是说**我们只需要通过声明Effects的形式，将副作用的部分都留给middleware来执行。**
+
+这样做的好处：
+1: 集中处理异步操作，更流利熟悉地表达复杂的控制流。
+2: 保证action是个纯粹的JavaScript对象，风格保持统一。
+3: 声明式指令，无需在generator中立即执行，只需通知middleware让其执行；借助generator的next方法，向外部暴露每一个步骤。
+
+接下来看一下一些常用的effect指令
+
+- put 用来命令 middleware 向 Store 发起一个 action。
+- take 用来命令 middleware 在 Store 上等待指定的 action。在发起与 pattern 匹配的 action 之前，Generator 将暂停。
+- call 用来命令 middleware 以参数 args 调用函数 fn。
+- fork 用来命令 middleware 以 **非阻塞调用** 的形式执行 fn。
+- race 用来命令 middleware 在多个 Effect 间运行，相当于Promise.race。
+- all 用来命令 middleware 并行地运行多个 Effect，并等待它* 们全部完成，相当于Promise.all。
+
+#### Saga辅助函数
+
+Saga除了提供Effects，还会提供一些高阶的辅助函数给我们使用，而这些辅助函数实际上也是基于各个Effects实现的。
+
+- takeEvery（take+fork）
+- takeLatest （take+fork+cancel）
+- takeLeading（take+call）
+- throttle（take+fork+delay）
+- debounce（take+fork+delay)
+- retry （call+delay）
+
+举个简单的例子，当用户点击按钮触发事件时：
+
+- takeEvery会并发执行（take+fork）；
+- takeLastest只执行最后一次（take+fork+cancel）；
+- takeLeading只执行第一次（take+call）；
+- throttle节流，触发后一段时间不会再次触发（take+fork+delay）；
+- debounce防抖，等到一段时间后再触发；
+- retry，多次重试触发；
+
+#### Saga原理之Channel（发布订阅模式）
+
+了解完Saga的基本使用，我们开始进一步了解它的原理。先说说Saga中间件里头有一个Channel的东西，它可以理解为一个action监听的池子，每次调用take指令的时候就会将对应action的监听函数放进池子里，当每次调用put指令或者外部发起一个action的时候，Saga就会在池子里匹配对应的监听函数并执行，然后将其销毁。
+
+![img](https://imgconvert.csdnimg.cn/aHR0cHM6Ly91cGxvYWQtaW1hZ2VzLmppYW5zaHUuaW8vdXBsb2FkX2ltYWdlcy83MTYyNTgyLTNmYmQ4MGY2Y2ZhMmUxMjUucG5nP2ltYWdlTW9ncjIvYXV0by1vcmllbnQvc3RyaXB8aW1hZ2VWaWV3Mi8yL3cvNzU0L2Zvcm1hdC93ZWJw?x-oss-process=image/format,png)
+
+channel
+
+以下是简化过的Saga源码channel部分：
+
+
+
+```php
+function channel () {
+  let taker
+  function take (cb) {
+    taker = cb
+  }
+  function put (input) {
+    if (taker) {
+      const tempTaker = taker
+      taker = null
+      tempTaker(input)
+    }
+  }
+  return {
+    put,
+    take
+  }
+}
+ 
+const chan = channel()
+```
+
+#### Saga原理之自驱动模式
+
+可能你会有疑惑，为什么Saga中间件会自动按照程序设定的一般地接受指定的Effect指令去执行对应的同步/异步操作呢？
+
+其实这就是Saga基于Generator的一种自驱动模式（这是我自己起的名字）
+
+回过头想想上文提及Generator时归结出的一个结论：
+
+**Generator通过yield和next来传递数据来控制函数的内部流程**
+
+Saga就是利用了这一点，而且不止这样，Saga中间件内部有一个**驱动函数**（effectRunner)，它里面生成一个遍历器对象来不断地**消费**生成器函数(effectProducer)中的effect指令，完成**指定的任务并递归循环下去**。（这时候你可能会想到TJ大神的CO库）
+
+这个驱动函数大概长这样
+
+
+
+```php
+function task (saga) {
+  // 初始化遍历器对象
+  const sa = saga()
+  function next (args) {
+      // 获取到yield后面的表达式——effect指令
+      const result = sa.next(args)
+      const effect = result.value
+      // 执行effect对应的操作——call/put/take...
+      runEffect(result.value, next)
+  }
+  // 执行next函数
+  next()
+}
+```
+
+这样就实现了一个自我驱动的方案，回想一下Saga中间件注册的步骤
+
+> 调用createSagaMiddleware，用于创建saga中间件；讲saga中间件注入store中，并执行run操作，运行我们写的saga函数。
+
+当执行run(saga)的时候其实就是启动了驱动函数（effectRunner)，它开始控制我们自己编写的业务流程Saga函数(effectProducer)，effectRunner通过**next来控制流程和传递数据**（执行结果），effectProducer通过**yield来发布effect指令**，这样就完美演绎了saga整个生命周期！！
+
+![img](https://imgconvert.csdnimg.cn/aHR0cHM6Ly91cGxvYWQtaW1hZ2VzLmppYW5zaHUuaW8vdXBsb2FkX2ltYWdlcy83MTYyNTgyLWU4NDZkMmQ5MmU0ZGVhZGYucG5nP2ltYWdlTW9ncjIvYXV0by1vcmllbnQvc3RyaXB8aW1hZ2VWaWV3Mi8yL3cvODE4L2Zvcm1hdC93ZWJw?x-oss-process=image/format,png)
+
+#### Saga源码
+
+实际上Saga源码中也就这么一回事，主要挑了channel和自驱动函数两块东西来看，在Saga源码中有一个proc函数，其实就是上文提到的自驱动函数，它接收到effect指令之后进行effect类型分发，不同effect对应不同的操作。
+
+![img](https://imgconvert.csdnimg.cn/aHR0cHM6Ly91cGxvYWQtaW1hZ2VzLmppYW5zaHUuaW8vdXBsb2FkX2ltYWdlcy83MTYyNTgyLTFlZjk3OTVkYWYyODMxN2MucG5nP2ltYWdlTW9ncjIvYXV0by1vcmllbnQvc3RyaXB8aW1hZ2VWaWV3Mi8yL3cvMTIwMC9mb3JtYXQvd2VicA?x-oss-process=image/format,png)
+
+
+
+#### Saga测试
+
+Saga还有一个优点记得吗？易于测试，由于业务代码都是声明式地调用，而不是真实地进行一些副作用操作，所以在写单测的时候可以通过断言的方式来测试，而不用mock一些繁琐复杂的操作。
+
+### 16.手写redux 中间件
 
 #### 简单实现
 
@@ -5118,6 +5750,8 @@ function bindActionCreators(creators,didpatch){
 ```
 
 ### 16.Redux源码分析
+
+[实现一个Redux（完善版）](https://segmentfault.com/a/1190000022641464)
 
 [带你从头到尾系统地撸一遍Redux源码](https://juejin.cn/post/6965366315833884680)
 
@@ -6206,7 +6840,7 @@ const TableDeail = ({
 
 下面是具体的 class 与 Hooks 的**生命周期对应关系**：
 
--   `constructor`：函数组件不需要构造函数，可以通过调用 `**useState 来初始化 state**`。如果计算的代价比较昂贵，也可以传一个函数给 `useState`。
+-   `constructor`：函数组件不需要构造函数，可以通过调用 `useState 来初始化 state`。如果计算的代价比较昂贵，也可以传一个函数给 `useState`。
 
 ```jsx
 const [num, UpdateNum] = useState(0)
@@ -6647,6 +7281,31 @@ function usePrevious(value) {
 只要你进入了 `react` 的调度流程，那就是异步的。只要你没有进入 `react` 的调度流程，那就是同步的。什么东西不会进入 `react` 的调度流程？ `setTimeout` `setInterval` ，直接在 `DOM` 上绑定原生事件等。这些都不会走 `React` 的调度流程，你在这种情况下调用 `setState` ，那这次 `setState` 就是同步的。 否则就是异步的。
 
 而 `setState` 同步执行的情况下， `DOM` 也会被同步更新，也就意味着如果你多次 `setState` ，会导致多次更新，这是毫无意义并且浪费性能的。
+
+**同步更新解决方法**
+
+react的`setState`是不能变成同步的, 不论是在`函数组件`或是`class组件`
+
+```coffeescript
+setState({
+    name: 'Ruofee'
+}, () => {
+    // setState回调函数
+});
+```
+
+此处只是set state之后的一个回调, 实际上是等组件重新render再执行, 因此还是异步的
+若是想监听`useState`某个值, 可以使用副作用钩子:
+
+```js
+useEffect(() => {
+    // 监听name变化
+}, [name]);
+```
+
+需要知道的是, 初始化时`useEffect`总会调用一次
+
+
 
 ### 11.useSate异步更新
 
