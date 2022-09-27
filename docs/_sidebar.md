@@ -99,3 +99,5 @@
   * [大前端技术](interview/前沿技术/大前端技术.md)
   * [前端监控SDK原理分析](interview/前沿技术/前端监控SDK原理分析.md)
   * [实现一个埋点监控SDK](interview/前沿技术/实现一个埋点监控SDK.md)
+  * [hybrid简单了解](interview/前沿技术/hybrid简单了解.md)
+  * [swc、esbuild和vite前端构建工具浅析](interview/前沿技术/swc、esbuild和vite前端构建工具浅析.md)
