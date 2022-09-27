@@ -6787,3 +6787,221 @@ TypeError: even is not a function
 2）ES6模块对导出模块，变量，对象是动态引用，遇到模块加载命令import时不会去执行模块，只是生成一个指向被加载模块的引用。
 
 CommonJS模块规范主要适用于后端Node.js，后端Node.js是同步模块加载，所以在模块循环引入时模块已经执行完毕。推荐前端工程中使用ES6的模块规范，通过安装Babel转码插件支持ES6模块引入的语法。
+
+## 事件循环机制
+
+### 1.JS事件循环机制（eventloop)
+
+[面试一定会问到的-js事件循环](https://juejin.cn/post/6844903968292749319)
+
+![cmd-markdown-logo](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/1EKpveALaBIcORQ.webp)
+
+#### 事件循环原理
+
+JavaScript代码的执行过程中，除了依靠函数调用栈来搞定函数的执行顺序外，还依靠任务队列(task queue)来搞定另外一些代码的执行。整个执行过程，我们称为事件循环过程。一个线程中，事件循环是唯一的，但是任务队列可以拥有多个。任务队列又分为macro-task（宏任务）与micro-task（微任务），在最新标准中，它们被分别称为task与jobs。
+
+macro-task大概包括：
+
+- script(整体代码)
+- setTimeout
+- setInterval
+- setImmediate
+- I/O
+- UI render
+
+micro-task大概包括:
+
+- process.nextTick
+- Promise
+- Async/Await(实际就是promise)
+- MutationObserver(html5新特性)
+
+![GitHub](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/p3JGf61tdc5QzbX.webp)
+
+![16dd55ca2fd82de5tplv-t2oaga2asx](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/IwVzj93RFNDu21a.png)
+
+
+
+
+
+**当某个宏任务执行完后,会查看是否有微任务队列。如果有，先执行微任务队列中的所有任务，如果没有，会读取宏任务队列中排在最前的任务，执行宏任务的过程中，遇到微任务，依次加入微任务队列。栈空后，再次读取微任务队列里的任务，依次类推。**
+
+总的结论就是，执行宏任务，然后执行该宏任务产生的微任务，若微任务在执行过程中产生了新的微任务，则继续执行微任务，微任务执行完毕后，再回到宏任务中进行下一轮循环
+
+事件循环执行流程如下:
+
+1. 检查 Macrotask 队列是否为空,若不为空，则进行下一步，若为空，则跳到3
+2. 从 Macrotask 队列中取队首(在队列时间最长)的任务进去执行栈中执行(仅仅一个)，执行完后进入下一步
+3. 检查 Microtask 队列是否为空，若不为空，则进入下一步，否则，跳到1（开始新的事件循环）
+4. 从 Microtask 队列中取队首(在队列时间最长)的任务进去事件队列执行,执行完后，跳到3 其中，在执行代码过程中新增的microtask任务会在当前事件循环周期内执行，而新增的macrotask任务只能等到下一个事件循环才能执行了。
+
+> 简而言之，一次事件循环只执行处于 Macrotask 队首的任务，执行完成后，立即执行 Microtask 队列中的所有任务。
+
+![image-20220715174521597](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/Mw6BqGxh3mc5kbT.png)
+
+结合流程图理解，答案输出为：async2 end => Promise => async1 end => promise1 => promise2 => setTimeout 但是，对于async/await 有个细节还要处理一下
+
+#### async/await执行顺序
+
+我们知道`async`隐式返回 Promise 作为结果的函数,那么可以简单理解为，await后面的函数执行完毕时，await会产生一个微任务(Promise.then是微任务)。但是我们要注意这个微任务产生的时机，它是执行完await之后，直接跳出async函数，执行其他代码(此处就是协程的运作，A暂停执行，控制权交给B)。其他代码执行完毕后，再回到async函数去执行剩下的代码，然后把await后面的代码注册到微任务队列当中。
+
+```js
+console.log('script start')
+
+async function async1() {
+await async2()
+console.log('async1 end')
+}
+async function async2() {
+console.log('async2 end')
+}
+async1()
+
+setTimeout(function() {
+console.log('setTimeout')
+}, 0)
+
+new Promise(resolve => {
+console.log('Promise')
+resolve()
+})
+.then(function() {
+console.log('promise1')
+})
+.then(function() {
+console.log('promise2')
+})
+
+console.log('script end')
+//
+script start
+async2 end 
+Promise 
+script end 
+async1 end 
+promise1 
+promise2
+setTimeout
+```
+
+#### 优先级问题
+
+异步任务队列中会优先执行微任务，当执行完所有微任务才会执行下一个宏任务。
+
+**宏任务**：
+
+1. I/O操作：这种比较耗性能的操作浏览器会交给单独的线程去办，得到结果后再通知回来
+2. 定时器系列：`setTimeOut`、`setInterval`、`requestAnimationFrame`
+
+**微任务**：
+
+1. process.nextTick（node）
+2. Promise.than() / catch() / finaly()
+
+**requestAnimationFrame**
+
+- 仅对浏览器生效，回调属于**高优先级**任务
+- 会将每一帧中所有DOM操作集中一次渲染
+- 重绘或回流的时间会随着浏览器的**刷新频率**动态改变，**不能主动控制**（使用时用递归调用，可以中途取消）
+- 浏览器页面不是激活状态下，会**自动暂停**执行
+- 根据以上特性该方法常用于**处理帧动画**操作，而不是使用 `setInterval`
+
+**requestIdleCallback**
+
+- 回调属于**低优先级**任务，仅在浏览器**空闲时期**被调用（目前仍处于实验功能阶段，在微前端中常有应用）
+
+### 2.node和浏览器环境区别
+
+#### 1.Node简介
+
+Node 中的 Event Loop 和浏览器中的是完全不相同的东西。Node.js采用V8作为js的解析引擎，而I/O处理方面使用了自己设计的libuv，libuv是一个基于事件驱动的跨平台抽象层，封装了不同操作系统一些底层特性，对外提供统一的API，事件循环机制也是它里面的实现（下文会详细介绍）。
+
+![image-20220715174452171](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/zkDmFCT1gV7uE2d.png)
+
+Node.js的运行机制如下:
+
+- V8引擎解析JavaScript脚本。
+- 解析后的代码，调用Node API。
+- libuv库负责Node API的执行。它将不同的任务分配给不同的线程，形成一个Event Loop（事件循环），以异步的方式将任务的执行结果返回给V8引擎。
+- V8引擎再将结果返回给用户。
+
+#### 2.六个阶段
+
+其中libuv引擎中的事件循环分为 6 个阶段，它们会按照顺序反复运行。每当进入某一个阶段的时候，都会从对应的回调队列中取出函数去执行。当队列为空或者执行的回调函数数量到达系统设定的阈值，就会进入下一阶段。
+
+
+
+![image-20220715174439681](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/X8GDN9I4Esbale5.png)
+
+
+
+从上图中，大致看出node中的事件循环的顺序：
+
+外部输入数据-->轮询阶段(poll)-->检查阶段(check)-->关闭事件回调阶段(close callback)-->定时器检测阶段(timer)-->I/O事件回调阶段(I/O callbacks)-->闲置阶段(idle, prepare)-->轮询阶段（按照该顺序反复运行）
+
+- timers 阶段：这个阶段执行timer（setTimeout、setInterval）的回调
+- I/O callbacks 阶段：处理一些上一轮循环中的少数未执行的 I/O 回调
+- idle, prepare 阶段：仅node内部使用
+- poll 阶段：获取新的I/O事件, 适当的条件下node将阻塞在这里
+- check 阶段：执行 setImmediate() 的回调
+- close callbacks 阶段：执行 socket 的 close 事件回调
+
+注意：**上面六个阶段都不包括 process.nextTick()**
+
+接下去我们详细介绍`timers`、`poll`、`check`这3个阶段，因为日常开发中的绝大部分异步任务都是在这3个阶段处理的。
+
+##### (1) timer
+
+timers 阶段会执行 setTimeout 和 setInterval 回调，并且是由 poll 阶段控制的。 同样，**在 Node 中定时器指定的时间也不是准确时间，只能是尽快执行**。
+
+##### (2) poll
+
+poll 是一个至关重要的阶段，这一阶段中，系统会做两件事情
+
+1.回到 timer 阶段执行回调
+
+2.执行 I/O 回调
+
+并且在进入该阶段时如果没有设定了 timer 的话，会发生以下两件事情
+
+- 如果 poll 队列不为空，会遍历回调队列并同步执行，直到队列为空或者达到系统限制
+- 如果 poll 队列为空时，会有两件事发生
+    - 如果有 setImmediate 回调需要执行，poll 阶段会停止并且进入到 check 阶段执行回调
+    - 如果没有 setImmediate 回调需要执行，会等待回调被加入到队列中并立即执行回调，这里同样会有个超时时间设置防止一直等待下去
+
+当然设定了 timer 的话且 poll 队列为空，则会判断是否有 timer 超时，如果有的话会回到 timer 阶段执行回调。
+
+##### (3) check阶段
+
+setImmediate()的回调会被加入check队列中，从event loop的阶段图可以知道，check阶段的执行顺序在poll阶段之后。 我们先来看个例子:
+
+```js
+console.log('start')
+setTimeout(() => {
+  console.log('timer1')
+  Promise.resolve().then(function() {
+    console.log('promise1')
+  })
+}, 0)
+setTimeout(() => {
+  console.log('timer2')
+  Promise.resolve().then(function() {
+    console.log('promise2')
+  })
+}, 0)
+Promise.resolve().then(function() {
+  console.log('promise3')
+})
+console.log('end')
+//start=>end=>promise3=>timer1=>timer2=>promise1=>promise2
+```
+
+- 一开始执行栈的同步任务（这属于宏任务）执行完毕后（依次打印出start end，并将2个timer依次放入timer队列）,会先去执行微任务（**这点跟浏览器端的一样**），所以打印出promise3
+- 然后进入timers阶段，执行timer1的回调函数，打印timer1，并将promise.then回调放入microtask队列，同样的步骤执行timer2，打印timer2；这点跟浏览器端相差比较大，**timers阶段有几个setTimeout/setInterval都会依次执行**，并不像浏览器端，每执行一个宏任务后就去执行一个微任务（关于Node与浏览器的 Event Loop 差异，下文还会详细介绍）。
+
+#### 3.Micro-Task 与 Macro-Task
+
+Node端事件循环中的异步队列也是这两种：macro（宏任务）队列和 micro（微任务）队列。
+
+- 常见的 macro-task 比如：setTimeout、setInterval、 setImmediate、script（整体代码）、 I/O 操作等。
+- 常见的 micro-task 比如: process.nextTick、new Promise().then(回调)等。

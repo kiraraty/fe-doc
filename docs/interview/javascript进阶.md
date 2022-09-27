@@ -3778,8 +3778,6 @@ person1.say() //hanmeimei
 
 ## 异步编程
 
-
-
 ### 1.promise的出现解决了什么问题
 
 Promise 是异步编程的一种解决方案： 从语法上讲，promise是一个对象，从它可以获取异步操作的消息；从本意上讲，它是承诺，承诺它过一段时间会给你一个结果。 promise有三种状态：**pending(等待态)，fulfiled(成功态)，rejected(失败态)**；状态一旦改变，就不会再变。创造promise实例后，它会立即执行。
@@ -5219,7 +5217,7 @@ ExecutionContext = {
 
 如果创建全局变量的话，它很容易就会被污染，同名变量，或者被一些函数修改等。为了避免它被篡改，又想让它长时间保存，让他变得形似一个全局变量，可以随时去用，我们就会在这个时候，使用闭包
 
-- 1. `return` 回一个函数
+- `return` 回一个函数
 
 ```js
 var n = 10
@@ -5239,7 +5237,7 @@ x() // 21
 
 > 这里的 return `f`, `f()`就是一个闭包，存在上级作用域的引用。
 
-- 1. 函数作为参数
+- 函数作为参数
 
 ```js
 var a = '林一一'
@@ -5263,7 +5261,7 @@ f(foo())
 
 > 使用 return `fo` 返回回来，`fo()` 就是闭包，`f(foo())` 执行的参数就是函数 `fo`，因为 `fo() 中的 a` 的上级作用域就是函数`foo()`，所以输出就是`foo`
 
-- 1. IIFE（自执行函数）
+- IIFE（自执行函数）
 
 ```js
 var n = '林一一';
@@ -5277,7 +5275,7 @@ var n = '林一一';
 
 > 同样也是产生了闭包`p()`，存在 `window`下的引用 `n`。
 
-- 1. 循环赋值
+- 循环赋值
 
 ```js
 for(var i = 0; i<10; i++){
@@ -5291,7 +5289,7 @@ for(var i = 0; i<10; i++){
 
 > 因为存在闭包的原因上面能依次输出1~10，闭包形成了10个互不干扰的私有作用域。将外层的自执行函数去掉后就不存在外部作用域的引用了，输出的结果就是连续的 10。为什么会连续输出10，因为 JS 是单线程的遇到异步的代码不会先执行(会入栈)，等到同步的代码执行完 `i++` 到 10时，异步代码才开始执行此时的 `i=10` 输出的都是 10。
 
-- 1. 使用回调函数就是在使用闭包
+- 使用回调函数就是在使用闭包
 
 ```js
 window.name = '林一一'
@@ -5300,7 +5298,7 @@ setTimeout(function timeHandler(){
 }, 100)
 ```
 
-- 1. 节流防抖
+- 节流防抖
 
 ```js
 // 节流
@@ -5327,7 +5325,7 @@ function debounce(fn, timeout){
 }
 ```
 
-- 1. 柯里化实现
+- 柯里化实现
 
 ```js
 function curry(fn, len = fn.length) {
@@ -5361,59 +5359,59 @@ fn(1)(2)(3)(4)(5)
 
 - 内存泄漏的例子：
 
-    - 意外的全局变量
+    意外的全局变量
 
-        - 在函数内未声明的变量就赋值，这样会在全局对象创建一个新的变量。
+    - 在函数内未声明的变量就赋值，这样会在全局对象创建一个新的变量。
 
-            ```js
-            function bar() {
-                say = 'hehe';
-            }
-            
-            即==
-            function bar() {
-                window.say ='hehe';
-            }
-            ```
+        ```js
+        function bar() {
+            say = 'hehe';
+        }
+        
+        即==
+        function bar() {
+            window.say ='hehe';
+        }
+        ```
 
-        - 或者是使用this创建了全局的变量
+    - 或者是使用this创建了全局的变量
 
-            ```js
-            function foo() {
-                this.name = 'hehe';
-            }
-            foo();
-            ```
+        ```js
+        function foo() {
+            this.name = 'hehe';
+        }
+        foo();
+        ```
 
-    - 被遗忘的计时器或回调函数
+    被遗忘的计时器或回调函数
 
-        - 使用计时器setInterval()未清除，在老版本的IE6是无法处理循环引用的，会造成内存泄漏。
+    - 使用计时器setInterval()未清除，在老版本的IE6是无法处理循环引用的，会造成内存泄漏。
 
-    - 脱离DOM的引用的
+    脱离DOM的引用的
 
 怎么解决
 
 - 手动释放
 
-    - 代码实现
+    代码实现
 
-        ```js
-        var arr = [1, 2, 3];
-        arr = null;
-        ```
+    ```js
+    var arr = [1, 2, 3];
+    arr = null;
+    ```
 
 - 使用弱引用（weakset和weakmap）
 
-    - 优点：WeakMap里面对element的引用就是弱引用，不会被计入垃圾回收机制的。也就是说一旦消除对该节点的引用，它的占用内存就会被垃圾回收机制释放。WeakMap保存的这个键值对，也会自动消失。
+    优点：WeakMap里面对element的引用就是弱引用，不会被计入垃圾回收机制的。也就是说一旦消除对该节点的引用，它的占用内存就会被垃圾回收机制释放。WeakMap保存的这个键值对，也会自动消失。
 
-    - 代码实现
+    代码实现
 
-        ```js
-        const vm = new WeakMap();
-        const element = document.getElementById('example');
-        vm.set(element, 'something');
-        vm.get(element);
-        ```
+    ```js
+    const vm = new WeakMap();
+    const element = document.getElementById('example');
+    vm.set(element, 'something');
+    vm.get(element);
+    ```
 
 ### 5.Js预编译
 
@@ -5572,8 +5570,166 @@ fn()
     2. 找变量声明，将变量声明作为GO对象的属性名，值赋予undefined
     3. 找全局里的函数声明，将函数名作为GO对象的属性名，值赋予函数体
 
+### 6.从JS引擎V8的角度看待闭包
 
-------
+#### 原理分析
+
+闭包的设计目的是为了存储私有变量，延长变量的生命周期，只有特定的接口才能访问该私有变量，可以防止防止全局变量命名冲突。
+闭包常见例子：
+
+```javascript
+        function fn() {
+            var a = 1;
+            function foo1() {
+                console.log(a++);
+            }
+            return foo1;
+        }
+        var foo2 = fn();
+        foo2();
+        foo2();
+```
+
+这个闭包包括了javascript的三个特性：
+1、父元素嵌套了子元素
+2、子元素里引用了父元素里的变量
+3、函数是一等公民，可以作为返回值返回给变量
+
+现在看看V8引擎是如何实现这个闭包这个技术的
+
+1、创建全局上下文，函数fn被创建，V8将函数声明转换为函数对象，保存作用域链到[[scope]]属性中,将代码转换成字符串保存到code属性中
+
+```javascript
+fn.[[scope]]={
+globalContext.VO;
+}
+```
+
+2、创建函数执行上下文，fn函数执行上下文被压入执行上下文栈顶端
+
+```javascript
+ECStack = [
+    fnContext,
+    globalContext
+];
+```
+
+3、进行预解析，赋值函数对象中的[[scope]]属性值创建作用域链
+
+```javascript
+fnContext = {
+    Scope: fn.[[scope]],
+}
+```
+
+4、用arguement创建活动对象，随后初始化活动对象，加入形参，变量提升，函数提升
+
+```javascript
+fnContext = {
+    AO: {
+        arguments: {
+            length: 0
+        },
+        a: undefined
+    },
+    Scope: [AO, [[Scope]]]
+}
+```
+
+此时如果碰到了函数，V8不会直接跳过，而是会快速地解析内部代码，判断是否使用了外部变量，如果使用了，那么会复制一份保存到堆内存中其名为closure(闭包)，并将closure保存到子函数的[[scope]]属性中，该赋值操作会在父函数执行上下文销毁之前进行。在这个例子中，foo1使用了fn中的变量，会将其保存到[[scope]]中，可以在foo1的prototype中看到。
+
+![在这里插入图片描述](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/20210619141601322.png)
+5、执行函数中的代码，并修改AO中属性的值
+
+```javascript
+fnContext = {
+    AO: {
+        arguments: {
+            length: 0
+        },
+        a: 1
+    },
+    Scope: [AO, [[Scope]]]
+}
+```
+
+6、最后返回了foo1的指针给[全局变量](https://so.csdn.net/so/search?q=全局变量&spm=1001.2101.3001.7020)foo2,函数上下文从执行上下文栈中弹出
+
+```javascript
+ECStack = [
+    globalContext
+];
+```
+
+#### 为什么闭包对象没有被垃圾回收清除
+
+根据垃圾回收规则，没有被引用的对象会被回收，而fn函数最后把闭包函数对象的指针返回给了全局变量foo2，虽然foo1的父元素执行上下文最后出栈，foo1中指向闭包函数对象的指针也被销毁，但是全局变量依然保存了，导致闭包函数对象一直保留在内存中，而Closure对象一直保存在[[scope]]中，所以不会被清除，下次再次调用foo2时可以直接从堆内存中取出a。
+
+#### 为什么返回给全局变量可以叠加，不返回就不行？
+
+```javascript
+        function fn() {
+            var a = 1;
+            function foo1() {
+                console.log(a++);
+            }
+            return foo1;
+        }
+        var foo2 = fn();
+        foo2();
+        foo2();
+```
+
+![在这里插入图片描述](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/20210619144500652.png)
+
+```javascript
+function fn() {
+            var a = 1;
+            function foo1() {
+                console.log(a++);
+            }
+            return foo1;
+        }
+        fn()();
+        fn()();
+```
+
+![在这里插入图片描述](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/20210619144616568.png)
+
+如果返回给全局变量可以实现叠加器的效果，因为每次调用的都是指向同一个对象
+而如果不返回，那么闭包函数对象的生命周期到父函数执行上下文销毁就结束了，会被回收，那么对象中的闭包对象也就不复存在了，再次调用的话，就是重新分配内存空间。
+
+#### 柯里化函数里的闭包
+
+```javascript
+        function sum(a) {
+            return function (b) {
+                return function (c) {
+                    return a + b + c;
+                }
+            }
+        }
+        var sum1 = sum(1)(2)(3);
+```
+
+执行结果为
+![在这里插入图片描述](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/20210622105610169.png)
+看看function©这个匿名闭包函数的[[scope]]
+
+```javascript
+        function sum(a) {
+            return function (b) {
+                return function (c) {
+                    return a + b + c;
+                }
+            }
+        }
+        var sum1 = sum(1)(2);
+        console.log(sum1.prototype);
+```
+
+![在这里插入图片描述](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/2021062210574912.png)
+保存了两个闭包函数对象，分别存储了变量a和b
 
 ## this
 
@@ -6589,7 +6745,109 @@ V8 的垃圾回收策略主要基于分代式垃圾回收机制，这我们说�
 
 同时，清理的任务会采用增量的方式分批在各个 `JavaScript` 任务之间执行
 
-### 3.内存泄露原因
+### 3.JS内存的使用
+
+JavaScript，会在创建变量（对象，字符串等）时分配内存，并且在不再使用它们时“自动”释放内存，这个自动释放内存的过程称为垃圾回收。
+
+因为自动垃圾回收机制的存在，让大多Javascript开发者感觉他们可以不关心内存管理，所以会在一些情况下导致内存泄漏。
+
+**内存生命周期**
+
+ JS 环境中分配的内存有如下声明周期：
+
+1. 内存分配：当我们申明变量、函数、对象的时候，系统会自动为他们分配内存
+2. 内存使用：即读写内存，也就是使用变量、函数等
+3. 内存回收：使用完毕，由垃圾回收机制自动回收不再使用的内存
+
+**JS 的内存分配**
+
+为了不让程序员费心分配内存，JavaScript 在定义变量时就完成了内存分配。
+
+```js
+var n = 123; // 给数值变量分配内存
+var s = "azerty"; // 给字符串分配内存
+var o = {
+ a: 1,
+ b: null
+}; // 给对象及其包含的值分配内存
+// 给数组及其包含的值分配内存（就像对象一样）
+var a = [1, null, "abra"]; 
+function f(a){
+ return a + 2;
+} // 给函数（可调用的对象）分配内存
+// 函数表达式也能分配一个对象
+someElement.addEventListener('click', function(){
+ someElement.style.backgroundColor = 'blue';
+}, false);
+```
+
+有些函数调用结果是分配对象内存：
+
+```js
+var d = new Date(); // 分配一个 Date 对象
+var e = document.createElement('div'); // 分配一个 DOM 元素
+```
+
+有些方法分配新变量或者新对象：
+
+```js
+var s = "azerty";
+var s2 = s.substr(0, 3); // s2 是一个新的字符串
+// 因为字符串是不变量，
+// JavaScript 可能决定不分配内存，
+// 只是存储了 [0-3] 的范围。
+var a = ["ouais ouais", "nan nan"];
+var a2 = ["generation", "nan nan"];
+var a3 = a.concat(a2); 
+// 新数组有四个元素，是 a 连接 a2 的结果
+```
+
+**JS 的内存使用**
+
+使用值的过程实际上是对分配内存进行读取与写入的操作。
+
+读取与写入可能是写入一个变量或者一个对象的属性值，甚至传递函数的参数。
+
+```js
+var a = 10; // 分配内存
+console.log(a); // 对内存的使用
+```
+
+**JS 的内存回收**
+
+JS 有自动垃圾回收机制，那么这个自动垃圾回收机制的原理是什么呢？
+
+其实很简单，就是找出那些不再继续使用的值，然后释放其占用的内存。
+
+大多数内存管理的问题都在这个阶段。
+
+在这里最艰难的任务是找到不再需要使用的变量。
+
+不再需要使用的变量也就是生命周期结束的变量，是局部变量，局部变量只在函数的执行过程中存在，
+
+当函数运行结束，没有其他引用(闭包)，那么该变量会被标记回收。
+
+全局变量的生命周期直至浏览器卸载页面才会结束，也就是说全局变量不会被当成垃圾回收。
+
+因为自动垃圾回收机制的存在，开发人员可以不关心也不注意内存释放的有关问题，但对无用内存的释放这件事是客观存在的。
+
+不幸的是，即使不考虑垃圾回收对性能的影响，目前最新的垃圾回收算法，也无法智能回收所有的极端情况。
+
+### 4.内存泄露原因和案例
+
+**什么是内存泄漏**
+
+程序的运行需要内存。只要程序提出要求，操作系统或运行时(runtime)就必须提供内存。对于持续运行的服务进程(daemon)，必须及时释放不再用到的内存。否则，内存占用越来越高，轻则影响系统性能，重则导致进程崩溃。
+
+本质上讲，内存泄漏就是由于疏忽或错误造成程序未能释放那些不再使用的内存，照成内存的浪费。
+
+简单地说就是申请了一块内存空间，使用完毕后没有释放掉。它的一般表现方式是程序运行时间越长，占用内存越多，最终用尽全部内存，整个系统崩溃。由程序申请的一块内存，且没有任何一个指针指向它，那么这块内存就泄露了。
+
+经验法则是，如果连续5次垃圾回收之后，内存占用一次比一次大，就有内存泄漏。
+
+这就要求实时查看内存的占用情况。
+
+#### 造成内存的泄漏情况
 
 以下四种情况会造成内存的泄漏：
 
@@ -6597,3 +6855,175 @@ V8 的垃圾回收策略主要基于分代式垃圾回收机制，这我们说�
 - **被遗忘的计时器或回调函数：** 设置了 setInterval 定时器，而忘记取消它，如果循环函数有对外部变量的引用的话，那么这个变量会被一直留在内存中，而无法被回收。
 - **脱离 DOM 的引用：** 获取一个 DOM 元素的引用，而后面这个元素被删除，由于一直保留了对这个元素的引用，所以它也无法被回收。
 - **闭包：** 不合理的使用闭包，从而导致某些变量一直被留在内存当中。
+
+#### **常见的内存泄露案例：**
+
+##### **1.意外的全局变量**
+
+```js
+function foo() {
+ bar1 = 'some text'; // 没有声明变量 实际上是全局变量 => window.bar1
+ this.bar2 = 'some text' // 全局变量 => window.bar2
+}
+foo();
+```
+
+在这个例子中，意外的创建了两个全局变量 bar1 和 bar2
+
+##### **2.被遗忘的定时器和回调函数**
+
+在很多库中, 如果使用了观察者模式, 都会提供回调方法, 来调用一些回调函数。
+
+要记得回收这些回调函数。举一个 setInterval的例子：
+
+```js
+var serverData = loadData();
+setInterval(function() {
+ var renderer = document.getElementById('renderer');
+ if(renderer) {
+ renderer.innerHTML = JSON.stringify(serverData);
+ }
+}, 5000); // 每 5 秒调用一次
+```
+
+如果后续 renderer 元素被移除，整个定时器实际上没有任何作用。
+
+但如果你没有回收定时器，整个定时器依然有效, 不但定时器无法被内存回收，
+
+定时器函数中的依赖也无法回收。在这个案例中的 serverData 也无法被回收。
+
+##### **3.闭包**
+
+在 JS 开发中，我们会经常用到闭包，一个内部函数，有权访问包含其的外部函数中的变量。
+
+下面这种情况下，闭包也会造成内存泄露:
+
+```js
+var theThing = null;
+var replaceThing = function () {
+ var originalThing = theThing;
+ var unused = function () {
+ if (originalThing) // 对于 'originalThing'的引用
+ console.log("hi");
+ };
+ theThing = {
+ longStr: new Array(1000000).join('*'),
+ someMethod: function () {
+ console.log("message");
+ }
+ };
+};
+setInterval(replaceThing, 1000);
+```
+
+这段代码，每次调用 replaceThing 时，theThing 获得了包含一个巨大的数组和一个对于新闭包 someMethod 的对象。
+
+同时 unused 是一个引用了 originalThing 的闭包。
+
+这个范例的关键在于，闭包之间是共享作用域的，尽管 unused 可能一直没有被调用，但是 someMethod 可能会被调用，就会导致无法对其内存进行回收。
+
+当这段代码被反复执行时，内存会持续增长。
+
+##### **4.DOM 引用**
+
+很多时候, 我们对 Dom 的操作, 会把 Dom 的引用保存在一个数组或者 Map 中。
+
+```js
+var elements = {
+ image: document.getElementById('image')
+};
+function doStuff() {
+ elements.image.src = 'http://example.com/image_name.png';
+}
+function removeImage() {
+ document.body.removeChild(document.getElementById('image'));
+ // 这个时候我们对于 #image 仍然有一个引用, Image 元素, 仍然无法被内存回收.
+}
+```
+
+上述案例中，即使我们对于 image 元素进行了移除，但是仍然有对 image 元素的引用，依然无法对齐进行内存回收。
+
+另外需要注意的一个点是，对于一个 Dom 树的叶子节点的引用。
+
+举个例子: 如果我们引用了一个表格中的td元素，一旦在 Dom 中删除了整个表格，我们直观的觉得内存回收应该回收除了被引用的 td 外的其他元素。
+
+但是事实上，这个 td 元素是整个表格的一个子元素，并保留对于其父元素的引用。
+
+这就会导致对于整个表格，都无法进行内存回收。所以我们要小心处理对于 Dom 元素的引用。
+
+#### **如何避免内存泄漏**
+
+**记住一个原则：不用的东西，及时归还。**
+
+1. 减少不必要的全局变量，使用严格模式避免意外创建全局变量。
+2. 在你使用完数据后，及时解除引用（闭包中的变量，dom引用，定时器清除）。
+3. 组织好你的逻辑，避免死循环等造成浏览器卡顿，崩溃的问题。
+
+### 5.内存泄露检测手段
+
+#### 什么是内存泄漏
+
+ javaScript会在创建变量时分配内存并且在不适用变量时会自动的释放内存，这个释放内存的过程极为垃圾回收，程序运行需要内存，只要程序提出要求操作系统或者运行时就必须提供内存，对于持续运行的服务进行必须及时释放不在用到内存，否则内存占用越来越高，进一步导致系统的性能，有时会导致进程崩溃
+
+#### **内存泄漏的识别**
+
+ 如果连续几次垃圾回收之后内存占用一次比一次大，证明就有内存泄漏 需要实时查看内存的占比情况
+
+#### **怎么在chrome浏览器中查看内存占用情况**
+
+1：观察chrome浏览器，打开开发者模式，选择Memory
+
+2：在顶部勾选Memory
+
+3：点击坐上角的record
+
+4：在页面上进行各种操作，模拟用户的使用情况
+
+5：一段时间后，点击对话框的stop按钮，面板上就会显示这段时间的内存占用情况
+
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/1995383-20201217093943687-338293254.png)
+
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/1995383-20201026172850684-141752845.png)
+
+ ![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/1995383-20201217095403068-280809507.png)
+
+ 6：观察几分钟查看这个蓝色波动是否有逐渐消失
+
+有消失证明没有泄漏
+
+没有消失证明页面有内存泄漏
+
+#### **怎么判断当前是否存在内存泄漏**
+
+**注：查看查看 JS Heap size 和 DOM Nodes的数量**
+
+1：多次快照之后，比较每次快照中内存的占用情况，如果呈上升趋势那么可以可能存在内存泄漏
+
+2：某次快照之后，当前内存占用的趋势图，如果走势不平稳呈上升趋势，可能存在内存泄漏
+
+3：如果内存占用处于平稳趋势，证明没有内存泄漏
+
+#### node.js内存泄露检测
+
+**在服务器环境中使用 Node 提供的 process.memoryUsage 方法查看内存情况**
+
+```js
+console.log(process.memoryUsage());
+// { 
+// rss: 27709440,
+// heapTotal: 5685248,
+// heapUsed: 3449392,
+// external: 8772 
+// }
+```
+
+process.memoryUsage返回一个对象，包含了 Node 进程的内存占用信息。
+
+该对象包含四个字段，单位是字节，含义如下:
+
+- rss（resident set size）：所有内存占用，包括指令区和堆栈。
+- heapTotal："堆"占用的内存，包括用到的和没用到的。
+- heapUsed：用到的堆的部分。
+- external： V8 引擎内部的 C++ 对象占用的内存。
+
+判断内存泄漏，以heapUsed字段为准。
