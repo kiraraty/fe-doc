@@ -382,7 +382,7 @@ PureComponent不可滥用，他使用在class组件内，只有那些状态和�
 - 再判断两个props的key数量，是否相同，如果相同就继续下一步的判断；如果不相同，就直接返回false
 - 最后一步，分别判断每个key对应的value值，是否相同。判断value是否相同，使用的是object.is()
 
-##### 此处附上shallowEqual的源码
+##### shallowEqual的源码
 
 ```js
 // shallowEqual.js
@@ -1571,7 +1571,7 @@ function enqueueUpdate(component) {
 
 在代码中调用setState函数之后，React 会将**传入的参数对象与组件当前的状态合并**，然后触发调和过程(Reconciliation)。经过调和过程，React 会以相对高效的方式根据新的状态构建 React 元素树并且着手重新渲染整个UI界面。
 
-在 React 得到元素树之后，React 会自动计算出新的树与老树的节点差异，然后根据差异对界面进行最小化重渲染。在差异计算算法中，React 能够相对精确地知道哪些位置发生了改变以及应该如何改变，这就保证了按需更新，而不是全部重新渲染。
+在 React 得到**元素树之后，React 会自动计算出新的树与老树的节点差异，然后根据差异对界面进行最小化重渲染。在差异计算算法中，React 能够相对精确地知道哪些位置发生了改变以及应该如何改变，这就保证了按需更新，而不是全部重新渲染**。
 
 如果在短时间内频繁setState。React会将state的改变压入栈中，在合适的时机，批量更新state和视图，达到提高性能的效果。
 
@@ -1581,8 +1581,8 @@ function enqueueUpdate(component) {
 
 setState 并不是单纯同步/异步的，它的表现会因调用场景的不同而不同。**在源码中，通过 `isBatchingUpdates` 来判断setState 是先存进 state 队列还是直接更新，如果值为 true 则执行异步操作，为 false 则直接更新。**
 
--   **异步：** 在 React 可以控制的地方，就为 true，比如在 React 生命周期事件和合成事件中，都会走合并操作，延迟更新的策略。
--   **同步：** 在 React 无法控制的地方，比如**原生事件，具体就是在 addEventListener 、setTimeout、setInterval 等事件中，就只能同步更新**。
+-   **异步：** 在 React 可以控制的地方，就为 true，比如在 React 生命周期事件和合成事件中，都会走**合并操作，延迟更新的策略**。
+-   **同步：** 在 **React 无法控制的地方**，比如**原生事件，具体就是在 addEventListener 、setTimeout、setInterval 等事件中，就只能同步更新**。
 
 一般认为，做异步设计是为了性能优化、减少渲染次数：
 
@@ -3076,9 +3076,9 @@ class Parent extends Component {
 
 ## 路由
 
-https://blog.csdn.net/hsany330/article/details/106198493
+[React-Router 的 Hooks 实现(推荐阅读)](https://blog.csdn.net/hsany330/article/details/106198493)
 
-https://www.baidu.com/link?url=xVUW5vULvLnkKTAkWVzeozk3z8Bpn3_mF6madkH4tdG8Rd9r_73HaHAu4LHkQJ2kIQN-1LTeDYKl3LVfTBNkHa&wd=&eqid=f8b943f70001978a00000006630474e8
+[从零实现react-router](https://www.bilibili.com/video/av973312837/?vd_source=2f86d510fad313ff38cc4685adff7ab0)
 
 ### 1\.React-Router的实现原理是什么？
 
@@ -6120,7 +6120,7 @@ function Index(){
 }
 ```
 
-② 如果两次 dispatchAction 传入相同的 state 值，那么组件就不会更新。
+② 如果两次 dispatchAction **传入相同的 state 值**，那么组件就不会更新。
 
 ```js
 export default function Index(){
@@ -7069,9 +7069,9 @@ useEffect(() => {
 - 可以使用函数组合，嵌套，实现功能更加强大的组件。
 - 组件不会被实例化，整体渲染性能得到提升。
 
-但是 hooks 模拟的[生命周期](https://so.csdn.net/so/search?q=生命周期&spm=1001.2101.3001.7020)与class中的生命周期不尽相同，我们在使用时，还是需要思考业务场景下那种方式最适合。
+但是 hooks 模拟的生命周期与class中的生命周期不尽相同，我们在使用时，还是需要思考业务场景下那种方式最适合。
 
-### 8.**谈谈 React Hook 的设计模式**
+### 8.**React Hook 的设计模式**
 
 Dan 在 React Hooks 的介绍中 曾经说过：“忘记生命周期，以 effects 的方式开始思考”
 
@@ -7170,7 +7170,7 @@ function useAddUserModalManagement() {
 
 最后来看看在代码中运用的情况，引入 useUsersManagement 和 useAddUserModalManagement 两个自定义 Hook，然后在组件 UsersTable 与 AddUserModal 直接使用。UsersTable 直接展示 users 相关信息，通过操作 deleteUser 可以控制删减 User。AddUserModal 通过 isAddUserModalOpened 控制显隐，完成 addUser 操作。代码如下所示：
 
-```jsx
+```js
 import React from 'react';
 import AddUserModal from './AddUserModal';
 import UsersTable from './UsersTable';
@@ -7216,7 +7216,7 @@ export default Users;
 
 在这样一个认知基础上，我总结了一些在团队内部开发实践的心得，做成了开发规范进行推广。
 
-第一点就是 React.useMemo 取代 React.memo，因为 React.memo 并不能控制组件内部共享状态的变化，而 React.useMemo 更适合于 Hooks 的场景。
+第一点就是 **React.useMemo 取代 React.memo，因为 React.memo 并不能控制组件内部共享状态的变化，而 React.useMemo 更适合于 Hooks 的场景**。
 
 第二点就是常量，在类组件中，我们很习惯将常量写在类中，但在组件函数中，这意味着每次渲染都会重新声明常量，这是完全无意义的操作。其次就是组件内的函数每次会被重新创建，如果这个函数需要使用函数组件内部的变量，那么可以用 useCallback 包裹下这个函数。
 
@@ -7338,11 +7338,11 @@ react代码如上图：
 
 #### 简单分析
 
-Fiber 对象的上有一个记录内部 `State` 对象的属性，以便让我们能在下次渲染的时候取到上一次的值，叫做 `memoizedState` 。有了这个属性，我们的 FunctionComponent 就能有和 ClaassComponent 一样使用 `this.setState` 的能力了。
+**Fiber 对象**的上有一个**记录内部 `State` 对象的属性**，以便让我们能在**下次渲染的时候取到上一次的值**，叫做 `memoizedState` 。有了这个属性，我们的 FunctionComponent 就能有和 ClaassComponent 一样使用 `this.setState` 的能力了。
 
 `Fiber.memoizedState` 是一个**单项链表**的结构。首先，我们的每一个 useState 都会在后面生成一个 hook 节点。而它会把当前组件所有 useState 对应的 hook 节点用 `next` 指针串起来，头结点就是 `Fiber.memoizedState`。 我们初始化的目的就是为了构造完成它。
 
-hooks 以链表的形式存储在fiber节点的memoizedState属性上 **
+hooks 以链表的形式存储在fiber节点的memoizedState属性上 
 
 ![[外链图片转存失败,源站可能有防盗链机制,建议将图片保存下来直接上传(img-gUZAW6IT-1653354708608)(/Users/jianshuangpeng/Library/Application Support/typora-user-images/image-20220124173020063.png)]](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/1c9519aa1712481ea2f8c0ef03de19e5.png)
 
@@ -7415,6 +7415,8 @@ a<=0
 
 #### 解决方法
 
+1.利用函数，接收旧值，进行更新
+
 ```js
 // 利用函数，接收旧值，进行更新
 setState( x => x+1 )
@@ -7423,7 +7425,129 @@ setState( x => x+1 )
 - 接收的函数 `x=>x+1` 并未保持对n的引用，而是表达了一种 **加1** 操作
 - 推荐使用函数代码进行 `setState`
 
-### 12.useEffect的执行
+2.通过useEffect
+
+```js
+const [state,setState] = useState(123);
+useEffect(()=>{
+// 这里能拿到最新的state
+},[state])
+```
+
+
+
+### 12.使用useState更新变量后，怎么拿到变量更新后的值
+
+场景： const [count, setCount] = useState(0)；
+
+在setCount() 更新变量的值后，立即调用某个函数query，在函数中需要读取到这个变量的新值；但是此时直接调用的话拿到的是旧值； 
+
+**为什么变量更新后不能立即拿到新值？** 因为setCount 函数用于更新 count值。它接收一个新的 count 值并将组件的一次重新渲染加入队列中，在组件的重新渲染中，useState()返回的第一个值始终是count更新后的新值，所以**如果组件还未重新渲染就直接读取count变量的话，拿到的就是未更新的旧值**；
+
+```typescript
+const UseState = () => {
+  // 函数组件中没有this
+  const [count, setCount] = useState(0)
+ 
+  const add = () => {
+    let newCount = count
+    console.log('value1', count);  // 0
+    setCount( newCount+= 1)
+    console.log('value2', count);  // 0
+    query() 
+  }
+ 
+  const query = () => {
+    console.log('query函数中：', count);  // 0
+  }
+  return (
+    <div>
+      <p>{count}</p>
+      <button onClick={add} >增加</button>
+    </div>
+  )
+}
+```
+
+ 打印结果：
+
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/11541613c7b245458f5cf25d7a5153a3.png) 
+
+ 解决方法：
+
+1）可以将count的新值通过函数传参的方式传入query函数；
+
+```js
+// 改写add和query函数；
+ 
+const add = () => {
+    let newCount = count
+    console.log('value1', count);
+    setCount( newCount+= 1)
+    console.log('value2', count);
+    query(newCount)   
+ }
+ const query = (count) => {
+    console.log('query函数中：', count);
+ }
+```
+
+打印结果： 
+
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/8e58daf8256d48c299e533c692083253.png)
+
+ 2）在useEffect中调用query函数，因为**在useEffect中，组件dom已经更新完毕**，可以拿到count的最新值；（缺点：每次count值改变，都会触发useEffect，从而执行query函数；）
+
+```js
+  // 组件每次渲染之后执行的操作，执行该操作时dom都已经更新完毕
+  useEffect(()=>{
+    // 1、可在此处拿到count更新后的值
+    console.log('value3', count);
+    query()
+  }, [count])
+ 
+  const add = () => {
+    let newCount = count
+    console.log('value1', count);
+    setCount( newCount+= 1)
+    console.log('value2', count);
+  }
+ const query = () => { 
+   console.log('query函数中：', count);
+ }
+```
+
+打印结果： 
+
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/b8c0487eb1ce4e3e8ac74beae8912b9a.png)
+
+ 3）通过useRef()定义一个可变的ref变量，通过current属性保存count可变值，从而在count更新后，通过ref的current属性拿到更新后的count值；注意：调用query函数时需要加上setTimeout()进行调用；
+
+```js
+// 定义一个可变的countRef对象，该对象的current属性被初始化为传入的参数count;
+const countRef = useRef(count)
+ 
+// 在countRef.current属性中保存一个可变值count的盒子；
+countRef.current = count
+ 
+const add = () => {
+   let newCount = count
+   console.log('value1', count);
+   setCount( newCount+= 1)
+   console.log('value2', count);
+   setTimeout(() => query(), 0);
+}
+ 
+const query = () => {
+   console.log('query函数中：', countRef.current);
+}
+```
+
+打印结果： 
+
+ ![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/611e36640f634bf88387b36c65276aa8.png)
+
+### 13.useEffect的执行
 
 #### 问题
 
@@ -7776,7 +7900,7 @@ export default function Demo() {
 
 ```
 
-12.useState的同步异步
+
 
 ### hooks原理
 

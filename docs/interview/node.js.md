@@ -1928,6 +1928,8 @@ middlewareA
 
 ### 2.Koa的中间件使用和原理
 
+[【Node】深入浅出 Koa 的洋葱模型](https://juejin.cn/post/7012031464237694983)
+
 中间件（Middleware）是介于应用系统和系统软件之间的一类软件，它使用系统软件所提供的基础服务（功能），衔接网络上应用系统的各个部分或不同的应用，能够达到资源共享、功能共享的目的
 
 在`NodeJS`中，中间件主要是指封装`http`请求细节处理的方法
@@ -3880,341 +3882,6 @@ node和浏览器相比一个明显的不同就是node在**每个阶段结束后�
 
 ![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs113903.png)
 
-### Node.js实现多线程
-
-[Node.js多线程完全指南](https://juejin.cn/post/6844903968405979143)
-
-[【Nodejs】Node.js中的"多线程" ](https://www.cnblogs.com/vickylinj/p/16281914.html)
-
-worker_threads 的出现让 Node.js 拥有**多工作线程，但**这个概念不同于Java等其它后端语言中的多线程。
-
-Node.js 通过提供 cluster、child_process API 创建子进程的方式来赋予Node.js “多线程”能力。但是这种创建进程的方式会牺牲共享内存，并且数据通信必须通过json进行传输。（有一定的局限性和性能问题）
-
-基于此 Node.js V10.5.0 提供了 worker_threads，它比 child_process 或 cluster更轻量级。 与child_process 或 cluster 不同，worker_threads 可以**共享内存**，通过传输 ArrayBuffer 实例或共享 SharedArrayBuffer 实例来实现。
-
-**这里有一个误区：很多人可能认为在node.js核心模块中添加一个新的模块，来创建线程以及实现线程间同步问题，从而解决CPU密集型操作的问题？**
-
-但事实并非如此，Node.js 并没有其它支持多线的程语言（如：java），诸如"synchronized"之类的关键字来实现线程同步的概念。**Node.js的 worker_threads 区别于它们的多线程**。如果添加线程，语言本身的性质将发生变化，所以不能将线程作为一组新的可用类或函数添加。
-
-我们可以将其理解为：**JavaScript和Node.js永远不会有线程**，只有基于Node.js 架构的**多工作线程**。
-
-**这张图很好的诠释了多工作线程机制。**（1.理解node.js的event loop机制 2.和其它多线程语言对比性理解）
-
-![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/1228394-20220517164235974-1885245290.png)
-
-#### 前置知识
-
-Node.js 保持了JavaScript在浏览器中单线程的特点。它的优势是没有线程间数据同步的性能消耗也不会出现死锁的情况。所以它是线程安全并且性能高效的。
-
-单线程有它的弱点，无法充分利用多核CPU 资源，CPU 密集型计算可能会导致 I/O 阻塞，以及出现错误可能会导致应用崩溃。
-
-为了解决单线程弱点：
-
-浏览器端： HTML5 制定了 Web Worker 标准（Web Worker 的作用，就是为 JavaScript 创造**多线程环境**，允许主线程创建 Worker 线程，将一些任务分配给后者运行）。
-
-Node端：采用了和 Web Worker相同的思路来解决单线程中大量计算问题 ，官方提供了 child_process 模块和 cluster 模块， cluster 底层是基于child_process实现。
-
-child_process、cluster都是用于创建子进程，然后子进程间通过事件消息来传递结果，这个可以很好地保持应用模型的简单和低依赖。从而解决无法利用多核 CPU 和程序健壮性问题。
-
-Node V10.5.0： 提供了实验性质的 worker_threads模块，才让Node拥有了多工作线程。
-
-Node V12.0.0：worker_threads 已经成为正式标准，可以在生产环境放心使用。
-
-也有很多开发者认为 worker_threads 违背了nodejs设计的初衷，事实上那是它并没有真正理解 worker_threads 的底层原理。其次是每一种语言的出现都有它的历史背景和需要解决的问题，在技术发展的过程中各种语言都是在取长补短，worker_threads 的设计就是技术发展的需要。
-
-**cluster**
-
-如今的机器基本都是多核 cpu。为了能充分利用 cpu 计算能力，node.js V0.8（2012-06-22） 新增了一个内置模块 cluster。它可以通过一个父进程管理一堆子进程的方式来实现集群的功能。
-
-cluster 底层就是 child_process，master 进程做总控，启动 1 个 agent 和 n 个 worker，agent 来做任务调度，获取任务，并分配给某个空闲的 worker 来做。
-
-需要注意的是：每个 worker 进程通过使用 child_process.fork() 函数，基于 IPC（Inter-Process Communication，进程间通信），实现与 master 进程间通信。
-
-fork 出的子进程拥有和父进程一致的数据空间、堆、栈等资源（fork 当时），但是是独立的，也就是说二者不能共享这些存储空间。 那我们直接用 fork 自己实现不就行了。
-
-这样的方式仅仅实现了多进程。多进程运行还涉及父子进程通信，子进程管理，以及负载均衡等问题，这些特性 cluster 帮你实现了。
-
-**child_process**
-
-在Node.js中，提供了一个 child_process 模块，通过它可以开启多个子进程，在多个子进程之间可以共享内存空间，可以通过子进程的互相通信来实现信息的交换。
-
-#### Nodejs事件循环模型
-
-
-
-Node.js是构建在 Chrome’s V8 引擎之上的JavaScript 运行时环境。事件驱动(event-driven)和非阻塞 I/O 模型(non-blocking I/O model)的语言特性使 Node.js 天生高效(efficient)且轻量(lightweight)。它使用 npm 作为包管理器。
-
-**Event Loop**
-
-事件循环（Event Loop）分发 I/O 任务，最终工作线程（Work Thread）将任务丢到线程池（Thread Pool）里去执行，而事件循环只要等待执行结果就可以了。
-
-![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/1228394-20220517164729826-1571292476.png)
-
- 
-
- 
-
- 将上一张图再细化
-
-![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/647943-20211019090108753-658988618.jpg) 
-
-- Node Standard Library：Node.js 标准库
-- Node Bindings：将 V8 等暴露的 C/C++ 接口转成JavaScript Api
-- Chrome v8：JavaScript 引擎，采用 C/C++ 编写
-- libuv：由事件循环（Event Loop）和线程池（Async I/O）组成，负责所有 I/O 任务的分发与执行
-
-![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/647943-20211019090130339-213713226.jpg)
-
-1. 1. Client 请求到达 node api，该请求被添加到Event Queue（事件队列）。这是因为Node.js 无法同时处理多个请求。
-    2. Event Loop（事件循环） 始终检查 Event Queue 中是否有待处理事件，如果有就从 Event Queue 中从前到后依次取出，然后提供服务。
-    3. Event Loop 是单线程非阻塞I/O，它会把请求发送给 C++ Thread Pool(线程池)去处理，底层是基于C++ Libuv 异步I/O模型结构可以支持高并发。
-    4. 现在 C++ Thread Pool有大量的请求，如数据库请求，文件请求等。
-    5. 任何线程完成任务时，Callback（回调函数）就会被触发，并将响应发送给 Event Loop。
-    6. 最终 Event Loop 会将请求返回给 Client。
-
-
-
-#### Node.js到底是如何工作的
-
-Node.js 使用两种线程：一个主线程由*event loop*处理，其他辅助线程由*worker pool*处理。
-
-事件循环是一种获取回调(函数)并将其注册以备将来执行的机制。它与平常的JavaScript代码在相同的线程中运行。当JavaScript操作阻塞线程时，事件循环也被阻塞。
-
-Worker pool 是一种执行模型，它生成并处理单独的线程，然后这些线程同步执行任务并将结果返回给事件循环。然后，事件循环使用上述结果执行提供的回调。
-
-简而言之，它负责异步I/O操作——主要是与系统的磁盘和网络的交互。它主要用于 `fs`(I/O密集型)或`crypto` (CPU密集型)等模块。Worker pool 是在[libuv](https://link.juejin.cn/?target=http%3A%2F%2Fdocs.libuv.org%2Fen%2Fv1.x%2F)中实现的，每当Node需要在JavaScript和C++之间进行内部通信时，它都会导致轻微的延迟，但这并不明显。
-
-有了这两种机制，我们可以这样写代码:
-
-```javascript
-fs.readFile(path.join(__dirname, './package.json'), (err, content) => {
- if (err) {
-   return null;
- }
-
- console.log(content.toString());
-});
-```
-
-前面提到的fs模块告诉worker pool使用它的一个线程来读取文件的内容，并在完成时通知事件循环。然后，事件循环接受提供的回调函数并使用文件的内容执行它。
-
-以上是一个非阻塞代码的例子。因此，我们不必同步等待某件事发生。我们告诉worker pool读取文件并使用执行结果调用提供的函数。由于worker pool有自己的线程，所以在读取文件时，事件循环可以继续正常执行。
-
-在需要同步执行某些复杂的操作之前，一切都是正常的：任何花费太长时间运行的函数都会阻塞线程。如果一个应用程序有很多这样的功能，它可能会显著降低服务器的吞吐量，或者完全卡死。在这种情况下，无法将工作分配给worker pool。
-
-需要复杂计算的领域——如AI、机器学习或大数据——实际上不能有效地使用Node.js，因为这些操作阻塞了仅有的一个线程（主线程)，使服务器无响应。这种情况一直持续到Node.js v10.5.0出现，它增加了对多线程的支持。
-
-#### worker_threads
-
-`worker_threads`模块是一个包，它允许我们创建全功能的多线程Node.js应用程序。
-
-线程worker是在单独的线程中生成的一段代码(通常从文件中获取)。
-
-注意，术语*thread worker*、*worker*和*thread*经常交替使用；它们都指的是同一件事。
-
-要开始使用线程worker，我们必须导入 `worker_threads`模块。我们先创建一个函数来帮助生成这些线程worker，然后再讨论它们的属性。
-
-```js
-type WorkerCallback = (err: any, result?: any) => any;
-
-export function runWorker(path: string, cb: WorkerCallback, workerData: object | null = null) {
- const worker = new Worker(path, { workerData });
-
- worker.on('message', cb.bind(null, null));
- worker.on('error', cb);
-
- worker.on('exit', (exitCode) => {
-   if (exitCode === 0) {
-     return null;
-   }
-
-   return cb(new Error(`Worker has stopped with code ${exitCode}`));
- });
-
- return worker;
-}
-```
-
-要创建worker，我们必须创建`Worker`类的一个实例。在第一个参数中，我们提供了包含worker代码的文件的路径；第二个参数，我们提供了一个对象，其中包含一个名为`workerData`的属性。这是我们希望线程在开始运行时能够访问的数据。
-
-注意，无论你使用的是JavaScript本身，还是可转换为JavaScript的语言(比如TypeScript)，路径都应该是指向带有 `.js`或`.mjs`扩展名的文件。
-
-我还想指出为什么我们使用回调方法，而不是返回一个在`message` 事件触发时被解决的promise。这是因为worker可以发送多个 `message` 事件，而不是一个。
-
-正如你在上面的示例中所看到的，线程之间的通信是基于事件的，这就是说我们可以设置事件监听器，以便在worker触发指定事件时调用它。
-
-以下是最常见的事件：
-
-```javascript
-worker.on('error', (error) => {});
-```
-
-当worker中出现未捕获的异常时，就会发出`error`事件。然后终止worker，错误作为回调函数的第一个参数传递。
-
-```javascript
-worker.on('exit', (exitCode) => {});
-```
-
-当worker 退出时，会发送`exit`事件。如果在worker内部调用了`process.exit()` ，则会向回调函数提供状态码`exitCode` 。如果使用`worker.terminate()`终止worker ，状态码为1。
-
-```dart
-worker.on('online', () => {});
-```
-
-在worker 停止解析JavaScript代码并开始执行时发送`online`事件。它不常用，但可以在特定的情况下提供有效信息。
-
-```javascript
-worker.on('message', (data) => {});
-```
-
-worker 向父线程发送数据时会发送`message`事件。
-
-现在，我们来看看如何在线程之间共享数据。
-
-#### 线程之间交换数据
-
-要将数据发送到另一个线程，我们使用`port.postMessage()` 方法。函数签名如下:
-
-```js
-port.postMessage(data[, transferList])
-```
-
-端口对象可以是`parentPort`，也可以是 `MessagePort`的一个实例。稍后再详细介绍。
-
-##### data 参数
-
-第一个参数 `data`  是一个复制到另一个线程的对象。它可以包含复制算法支持的任何内容。
-
-数据由[结构化克隆算法](https://link.juejin.cn/?target=https%3A%2F%2Fdeveloper.mozilla.org%2Fen-US%2Fdocs%2FWeb%2FAPI%2FWeb_Workers_API%2FStructured_clone_algorithm)复制。据Mozilla：
-
-> 它通过递归遍历输入对象来构建克隆，同时维护以前访问过的引用的映射，以避免无限遍历循环。
-
-该算法不复制函数、错误对象、属性描述符或原型链。还应该注意，以这种方式复制对象与JSON不同，因为它可以包含循环引用和类型化数组，而JSON不能。
-
-通过支持类型化数组的复制，该算法使得在线程之间共享内存成为可能。
-
-##### 线程间共享内存
-
-人们可能会说，`cluster` 或`child_process`之类的模块在很久以前就启用了线程。对，也不对。
-
-`cluster`模块可以创建多个node实例，由一个主进程在它们之间路由分发收到的请求。集群应用程序有效地成倍增加服务器吞吐量；但是，我们不能使用 `cluster` 模块派生一个单独的线程。
-
-人们倾向于使用PM2这样的工具管理集群应用程序，而不是在代码中手动处理。但是如果你有兴趣，你可以看下我的这篇关于如何使用`cluster`模块的[帖子](https://link.juejin.cn/?target=https%3A%2F%2Fmedium.freecodecamp.org%2Fhow-to-add-socket-io-to-multi-threaded-node-js-df404b424276)。
-
-`child_process`模块可以生成任何可执行文件，不管它是不是JavaScript。它非常类似，但是它缺少`worker_threads` 所具有的几个重要特性。
-
-具体来说，线程worker更轻量级，并且与父线程共享相同的进程ID。它们还可以与父线程共享内存，这使它们可以避免序列化大的数据负载，从而更有效地来回发送数据。
-
-现在让我们看一个如何在线程之间共享内存的示例。为了共享内存，必须将`ArrayBuffer`或`SharedArrayBuffer` 的实例作为数据参数或置于数据参数内部发送给另一个线程。
-
-这是一个与父线程共享内存的worker :
-
-```js
-import { parentPort } from 'worker_threads';
-
-parentPort.on('message', () => {
- const numberOfElements = 100;
- const sharedBuffer = new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * numberOfElements);
- const arr = new Int32Array(sharedBuffer);
-
- for (let i = 0; i < numberOfElements; i += 1) {
-   arr[i] = Math.round(Math.random() * 30);
- }
-
- parentPort.postMessage({ arr });
-});
-```
-
-首先，我们创建一个`SharedArrayBuffer`，其中的内存需要包含100个32位整数。接下来，我们创建一个`Int32Array`的实例，它将使用缓冲区来保存它的结构，然后我们用一些随机数填充数组并将其发送给父线程。
-
-父线程：
-
-```javascript
-import path from 'path';
-
-import { runWorker } from '../run-worker';
-
-const worker = runWorker(path.join(__dirname, 'worker.js'), (err, { arr }) => {
- if (err) {
-   return null;
- }
-
- arr[0] = 5;
-});
-
-worker.postMessage({});
-```
-
-通过将'`arr[0]`更改为`5`，我们实际上在两个线程中都修改了它。
-
-当然，通过共享内存，我们可能面临一个风险：在一个线程中更改一个值，另一个线程中也随之改变了。但是我们同时也获得了一个非常好的特性：不需要序列化值就可以在另一个线程中使用，这极大地提高了效率。只需记住正确地管理对数据的引用，以便在完成数据处理后对其进行垃圾收集。
-
-共享一个整数数组是可以的，但我们真正感兴趣的是共享对象——存储信息的默认方式。不幸的是，没有`SharedObjectBuffer`或类似的东西，但我们可以[自己创建一个类似的结构](https://link.juejin.cn/?target=https%3A%2F%2Fstackoverflow.com%2Fquestions%2F51053222%2Fnodejs-work-thread-share-objectstore)。
-
-##### transferList 参数
-
-`transferList` 只能包含`ArrayBuffer`和`MessagePort`。一旦它们被转移到另一个线程，就不能再在发送线程中使用：内存被移动到另一个线程，因此在发送线程中不可用。
-
-目前，我们还不能通过将它们包含在`transferList`中来传输网络套接字(这个可以通过`child_process`模块来实现)。
-
-##### 为通信创建通道
-
-线程之间的通信通过端口进行，端口是`MessagePort`类的实例，支持基于事件的通信。
-
-使用端口在线程之间进行通信有两种方法。第一个是默认的，也是两个中比较简单的一个。在worker的代码中，我们从`worker_threads`模块导入一个名为`parentPort`的对象，并使用该对象的`.postMessage()` 方法向父线程发送消息。
-
-这里有一个例子：
-
-```js
-import { parentPort } from 'worker_threads';
-
-const data = { 
-    // ...
-};
-
-parentPort.postMessage(data);
-```
-
-`parentPort` 是Node.js在后台为我们创建的`MessagePort`的一个实例，它支持与父线程的通信。这样，我们可以通过使用`parentPort` 和 `worker`对象在线程之间进行通信。
-
-线程之间通信的第二种方式是实际创建一个自己的`MessageChannel`并将它发送给worker。下面演示了如何创建一个新的`MessagePort`，并与worker共享：
-
-```javascript
-import path from 'path';
-import { Worker, MessageChannel } from 'worker_threads';
-
-const worker = new Worker(path.join(__dirname, 'worker.js'));
-
-const { port1, port2 } = new MessageChannel();
-
-port1.on('message', (message) => {
- console.log('message from worker:', message);
-});
-
-worker.postMessage({ port: port2 }, [port2]);
-```
-
-创建`port1`和`port2`之后，我们在`port1`上设置事件监听器，并将`port2`发送给wroker。我们必须把它包括在`transferList`中，以便转移到worker一方。
-
-现在，在worker内部：
-
-```javascript
-import { parentPort, MessagePort } from 'worker_threads';
-
-parentPort.on('message', (data) => {
- const { port }: { port: MessagePort } = data;
-
- port.postMessage('heres your message!');
-});
-
-```
-
-通过这种方式，我们使用父线程发送的端口。
-
-使用`parentPort`不一定是一个错误的方法，但更好的方法是创建一个新的`MessagePort` ，其中包含一个`MessageChannel` 实例，然后与派生的worker共享它(即：关注点分离)。
-
-请注意，在下面的示例中，我使用了 `parentPort`来简化。
-
 ### Express和Koa的区别
 
 ##### Koa
@@ -4235,7 +3902,7 @@ parentPort.on('message', (data) => {
 -   ES5;
 -   connect的执行流程： connect的中间件模型是线性的，即一个一个往下执行；
 
-### Egg.js的特点
+### egg.js的特点
 
 **Egg**
 
@@ -4741,6 +4408,7 @@ formdata.append('filename', md5code+'.'+fileType);
     <input type="text" name="password"><br>
     <button>提交</button> 
 </form>
+复制代码
 ```
 
 当提交的时候，查看浏览器的网络请求：
@@ -4753,6 +4421,7 @@ Host: localhost:3000
 Accept-Encoding: gzip, deflate
 Content-Type: multipart/form-data; boundary=---------------------------340073633417401055292887335273
 Content-Length: 303
+复制代码
 ```
 
 请求体：
@@ -4768,7 +4437,7 @@ Content-Disposition: form-data; name="password"
 123456
 -----------------------------340073633417401055292887335273--
 
-
+复制代码
 ```
 
 这就是 `multipart/form-data` 的传输过程了，但是这里面有三个大坑：
@@ -4790,7 +4459,7 @@ Content-Disposition: form-data; name="password"
   > console.log(Buffer.from('a1').length) // 2
   > console.log('张三'.length) // 2
   > console.log(Buffer.from('张三').length) // 6
-  > 
+  > 复制代码
   > ```
 
 如果仅仅是基本的字符串类型，完全可以用 `www-form-urlencoded` 来进行传输，`multipart/form-data` 强大的地方是其能够传输二进制文件的能力，我们看一下如果包含二进制文件的话应该如何处理。我们增加一个 file 类型的 input，上传一张图片作为头像，发现请求体多出了一部分：
@@ -5010,7 +4679,7 @@ const sql = `SELECT * FROM record limit ${pageSize} OFFSET ${start};`
 
 关于查询数据总数的`SQL`语句为，`record`为表名：
 
-```sql
+```text
 SELECT COUNT(*) FROM record
 ```
 
@@ -5242,10 +4911,6 @@ const leak = [];
 例如有个图片请求接口，每次请求，都需要用到类。若每次都需要重新new这些类，并不是很合适，在大量请求时，频繁创建和销毁这些类，造成内存抖动
 
 使用对象池的机制，对这种频繁需要创建和销毁的对象保存在一个对象池中。每次用到该对象时，就取对象池空闲的对象，并对它进行初始化操作，从而提高框架的性能
-
-### Node 服务中如何写日志
-
-[实现日志](https://juejin.cn/post/7045999468843368462)
 
 ### 获取一个目录下面所有文件
 
