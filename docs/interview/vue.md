@@ -5310,6 +5310,7 @@ const vm = new Vue({
 });
 console.log(vm.name); // 我是pino
 vm.print(); // 我是pino
+
 但是我们自己实现一个构造函数却实现不了这种效果呢？
 
 function Super(options){}
@@ -5737,6 +5738,27 @@ get()：获取属性值时所调用的函数。
 通过`this`直接访问到`methods`里面的函数的原因是：因为`methods`里的方法通过 `bind` 指定了`this`为 `new Vue`的实例(`vm`)。
 
 通过 `this` 直接访问到 `data` 里面的数据的原因是：data里的属性最终会存储到`new Vue`的实例（`vm`）上的 `_data`对象中，访问 `this.xxx`，是访问`Object.defineProperty`代理后的 `this._data.xxx`。
+
+### 31.Vue在beaforeCreate时获取data中的数据
+
+众所周知，vue在beforecreate时期是获取不到data中的 数据的
+
+但是通过一些方法可以实现在beforecreate时获取到data中的数据
+
+暂时想到两种放发可以实现，vue在beforecreate时获得data中的数据
+
+1.异步获取即：通过`$this.$nextTick`或者setTimeout，这连dom都可以拿出来
+
+```js
+beforeCreate() {
+      this.$nextTick(function() {
+      console.log(this.属性名);
+})
+}
+```
+
+ 2.同步获取：在beforeCreate之前，所有的iptions都会先存到`vm.$options`中，
+     也就是说使用`this.$options.data`就行了
 
 ## 生命周期
 
