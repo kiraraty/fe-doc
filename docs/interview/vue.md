@@ -5263,7 +5263,7 @@ VueComponent.prototype.**proto** === Vue.prototype (这里的proto前后都是�
 
 
 
-### 29.Vue组件化的理解
+### 29.vue组件化的理解
 
 ![在这里插入图片描述](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/d8f19e37fa4345db8e20190da1b3f02e.png)
 如果要编写一个页面，需要结构（html），样式（css），交互（js）。
@@ -5293,7 +5293,7 @@ VueComponent.prototype.**proto** === Vue.prototype (这里的proto前后都是�
 组件的定义：
 组件就是实现应用中局部功能的代码和资源的集合，代码指的是html、css、js，资源指的是音频、视频、图片等资源。也就是说一个组件就是一个局部功能的所有，注意，是局部功能，组件要划分得足够细才有较高的复用率，比如我编写了一个包含顶部和底部的组件，但是我的同事只要想顶部，那么我的这个组件他就复用不了了，因为他不想要底部，如果引入我的这个组件，就必须要有顶部和底部。
 
-### 30.Vue2 this 为什么能够直接获取到 data 和 methods
+### 30.vue2 this 为什么能够直接获取到 data 和 methods
 
 ```js
 在平时使用vue来开发项目的时候，对于下面这一段代码，我们可能每天都会见到：
@@ -5739,7 +5739,7 @@ get()：获取属性值时所调用的函数。
 
 通过 `this` 直接访问到 `data` 里面的数据的原因是：data里的属性最终会存储到`new Vue`的实例（`vm`）上的 `_data`对象中，访问 `this.xxx`，是访问`Object.defineProperty`代理后的 `this._data.xxx`。
 
-### 31.Vue在beaforeCreate时获取data中的数据
+### 31.vue在beaforeCreate时获取data中的数据
 
 众所周知，vue在beforecreate时期是获取不到data中的 数据的
 
@@ -5759,6 +5759,62 @@ beforeCreate() {
 
  2.同步获取：在beforeCreate之前，所有的iptions都会先存到`vm.$options`中，
      也就是说使用`this.$options.data`就行了
+
+### 32.vue中`$`符号
+
+挂载在this上的vue内部属性
+一个特殊标记。增强区分的，来说明这是内置的实例方法属性
+
+这些只是Vue的命名规则，为了区分普通变量属性，避免我们自己声明或者添加自定义属性导致覆盖
+
+内部 api 的命名空间
+带 $ 的是 VUE 框架（或插件）定义的属性方法
+
+vue中所有带$的方法
+
+```js
+<div id="example">
+    <p ref="myp">{{msg}}</p>
+    <div ref="warp">
+       <div v-for="a in arr" ref="mydiv">a</div>
+    </div>
+</div>
+let vm = new Vue({
+        el:'#example',
+        
+        data:{msg:'hello',arr:[1,2,3]},
+        mounted(){
+            this.$nextTick(()=>{
+                console.log(vm);
+            })
+
+         console.log(this.$refs.myp)//无论有多少个只能拿到一个
+
+         console.log(this.$refs.mydiv)//可以拿到一个数组
+
+         this.arr=[1,2,3,4]
+        console.log(this.$refs.wrap)
+        debugger 
+//这里debugger的话只能看到warp打印出来的是有3个，因为dom渲染是异步的。
+//所以如果数据变化后想获取真实的数据的话需要等页面渲染完毕后在获取，就用$nextTick
+} })
+vm.$watch('msg', function (newValue, oldValue) {  // 这个回调将在 `vm.msg` 改变后调用 })
+//this.$data: vm上的数据
+
+//this.$el:当前el元素
+
+//this.$nextTick :异步方法，等待渲染dom完成后来获取vm
+
+ //this.$watch:监控
+
+//this.$set:后加的属性实现响应式变化
+
+//this.$refs:被用来给元素或子组件注册引用信息。引用信息将会注册在父组件的 $refs 对象上。
+
+//如果在普通的 DOM 元素上使用，引用指向的就是 DOM 元素；如果用在子组件上，引用就指向组件实例
+```
+
+
 
 ## 生命周期
 
@@ -8743,7 +8799,7 @@ function install() {
 
 通过生命周期给每个组件单独挂载`$store`，而不是直接`Vue.prototype.$store =`，这样可以防止声明多个`vuex`实例后覆盖
 
-```
+```javascript
 vue3`中挂载`vuex`要执行`app.use(store)`。最终会执行到`Store.prototype.install
 function install (app, injectKey) {
     // globalProperties属性上挂载的属性可以在app下所有组件实例中访问到
@@ -8754,8 +8810,6 @@ function install (app, injectKey) {
 ### 8.Vuex源码分析
 
 [Vuex源码分析](https://juejin.cn/post/6895980141466386440)
-
-
 
 ```js
 // store/index
@@ -8804,7 +8858,7 @@ new Vue({
 
 ```
 
-使用vuex有如下3个步骤；
+使用vuex有如下3个步骤
 
   **1. 显式地通过 Vue.use() 来安装 Vuex；**
 
@@ -8814,11 +8868,11 @@ new Vue({
 
 Vuex是专门为Vuejs应用程序设计的**状态管理工具**。它采用集中式存储管理应用的所有组件的状态，并以相应的规则保证状态以一种可预测的方式发生变化。
 
-#### **1、Vuex的构成和使用**
+#### **1.Vuex的构成和使用**
 
 
 
-![img](https://pic4.zhimg.com/v2-f330e46f1a97cfe60b8914802688083b_r.jpg)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/v2-f330e46f1a97cfe60b8914802688083b_r.jpg)
 
 
 
@@ -8875,11 +8929,11 @@ Vuex提供了mapState、MapGetters、MapActions、mapMutations等辅助函数给
 
 
 
-![img](https://pic1.zhimg.com/v2-90437dee8c4d7b465b2d0e6e07778ff0_r.jpg)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/v2-90437dee8c4d7b465b2d0e6e07778ff0_r.jpg)
 
 
 
-```text
+```js
 import Vuex from 'vuex';
 Vue.use(Vuex); // 1. vue的插件机制，安装vuex
 let store = new Vuex.Store({ // 2.实例化store，调用install方法
@@ -8902,8 +8956,8 @@ Vuex的设计思想，借鉴了Flux、Redux，将数据存放到全局的store�
 
 看了Vuex设计思想，心里难免会有这样的疑问：
 
-- vuex的store是如何挂载注入到组件中呢？
-- vuex的state和getters是如何映射到各个组件实例中响应式更新状态呢？
+- vuex的store是**如何挂载注入到组件中**呢？
+- vuex的state和**getters是如何映射到各个组件实例中响应式更新状态**呢？
 
 #### 2.**Vuex的原理解析**
 
@@ -8913,14 +8967,14 @@ Vuex的设计思想，借鉴了Flux、Redux，将数据存放到全局的store�
 
 1、在vue项目中先安装vuex，核心代码如下：
 
-```text
+```js
 import Vuex from 'vuex';
 Vue.use(vuex);// vue的插件机制
 ```
 
 2、利用vue的[插件机制](https://cn.vuejs.org/v2/guide/plugins.html)，使用Vue.use(vuex)时，会调用vuex的install方法，装载vuex，install方法的代码如下：
 
-```text
+```js
 export function install (_Vue) {
   if (Vue && _Vue === Vue) {
     if (process.env.NODE_ENV !== 'production') {
@@ -8937,7 +8991,7 @@ export function install (_Vue) {
 
 3、applyMixin方法使用vue[混入机制](https://cn.vuejs.org/v2/guide/mixins.html)，vue的生命周期beforeCreate钩子函数前混入vuexInit方法，核心代码如下：
 
-```text
+```js
 Vue.mixin({ beforeCreate: vuexInit });
 
 function vuexInit () {
@@ -8953,7 +9007,7 @@ function vuexInit () {
 }
 ```
 
-分析源码，我们知道了vuex是利用vue的mixin混入机制，在beforeCreate钩子前混入vuexInit方法，vuexInit方法实现了store注入vue组件实例，并注册了vuex store的引用属性$store。store注入过程如下图所示：
+分析源码，我们知道了**vuex是利用vue的mixin混入机制**，在beforeCreate钩子前**混入vuexInit方法**，vuexInit方法实现了store注入vue组件实例，**并注册了vuex store的引用属性$store**。store注入过程如下图所示：
 
 ![img](https://pic4.zhimg.com/v2-a8b969f8771a1fc13b7cedfdfe86f0e7_r.jpg)
 
@@ -8965,7 +9019,7 @@ store实现的源码在src/store.js
 
 1、我们在源码中找到resetStoreVM核心方法：
 
-```text
+```js
 function resetStoreVM (store, state, hot) {
   const oldVm = store._vm
 
@@ -9004,11 +9058,11 @@ function resetStoreVM (store, state, hot) {
 }
 ```
 
-从上面源码，我们可以看出Vuex的state状态是响应式，是借助vue的data是响应式，将state存入vue实例组件的data中；Vuex的getters则是借助vue的计算属性computed实现数据实时监听。
+从上面源码，我们可以看出Vuex的state状态是响应式，是**借助vue的data是响应式，将state存入vue实例组件的data中**；Vuex的getters则是**借助vue的计算属性computed实现数据实时监听**。
 
-computed计算属性监听data数据变更主要经历以下几个过程：
+computed计算属性**监听data数据变更**主要经历以下几个过程：
 
-![img](https://pic3.zhimg.com/v2-2730644102b66eef140110b814a90496_r.jpg)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/v2-2730644102b66eef140110b814a90496_r.jpg)
 
 
 
@@ -9167,8 +9221,6 @@ export default {
     install, Store
 }
 ```
-
-
 
 ## Vue3
 
@@ -13839,7 +13891,7 @@ TemplateRenderer.prototype.render = function render (content, context) {
 
 组件化
 
-```vue
+```js
 <template>
 	<div>
     </div>
@@ -13870,7 +13922,7 @@ export default{
 
 html
 
-```html
+```js
 <!DOCTYPE html>
 <html>
   <head>
@@ -13956,7 +14008,7 @@ export default defineComponent({
 
 vue3.2
 
-```html
+```js
 <template>
 	<div>
     </div>
@@ -14875,5 +14927,317 @@ body{
 .pc .main{
 	margin:  0 auto;
 }
+```
+
+### 8.实现简单的弹窗组件实现
+
+基于 Vue 或 React 实现一个弹窗，
+  1、弹窗带有半透明的全屏遮罩；
+
+  2、弹窗可以点击遮罩和关闭按钮隐藏，也可以通过设置 visible 的 prop 隐藏；
+
+  3、弹窗可以设置 title 和主内容；
+
+  4、弹窗打开和关闭时可以 emit 事件 open 和 close；
+
+  5、场景弹窗显示时可以带动画（加分项）；
+
+#### 实现步骤
+
+1. 先搭建组件的html和css样式，遮罩层和内容层。
+2. 定制弹窗内容：弹窗组件通过`slot`插槽接受从父组件那里传过来弹窗内容。
+3. 定制弹窗样式：弹窗组件通过`props`接收从父组件传过来的弹窗宽度，上下左右的位置。
+4. 组件开关：通过父组件传进来的`props`控制组件的显示与隐藏，子组件关闭时通过事件`$emit`触发父组件改变值。
+
+#### 1.搭建组件的html和css样式
+
+html结构：一层遮罩层，一层内容层，内容层里面又有一个头部title和主体内容和一个关闭按钮。
+
+下面是组件中的html结构，里面有一些后面才要加进去的东西，如果看不懂的话可以先跳过，
+
+```js
+<template>
+  <div class="dialog">
+      <!--外层的遮罩 点击事件用来关闭弹窗，isShow控制弹窗显示 隐藏的props-->
+      <div class="dialog-cover back"  v-if="isShow"  @click="closeMyself"></div>
+      <!-- transition 这里可以加一些简单的动画效果 -->
+      <transition name="drop">
+         <!--style 通过props 控制内容的样式  -->
+        <div class="dialog-content" :style="{top:topDistance+'%',width:widNum+'%',left:leftSite+'%'}"  v-if="isShow">
+          <div class="dialog_head back">
+             <!--弹窗头部 title-->
+              <slot name="header">提示信息</slot>
+          </div>
+          <div class="dialog_main" :style="{paddingTop:pdt+'px',paddingBottom:pdb+'px'}">
+            <!--弹窗的内容-->
+            <slot name="main">弹窗内容</slot>
+          </div>
+          <!--弹窗关闭按钮-->
+          <div  class="foot_close" @click="closeMyself">
+              <div class="close_img back"></div>
+          </div>
+        </div>
+    </transition>
+  </div>
+</template>
+```
+
+下面是组件中的主要的css样式，里面都做了充分的注释，主要通过`z-index`和`background`达到遮罩的效果，具体内容的css可以根据自己的需求来设置。
+
+```js
+<style lang="scss" scoped>
+ // 最外层 设置position定位 
+  .dialog {
+    position: relative;
+    color: #2e2c2d;
+    font-size: 16px;
+  }
+  // 遮罩 设置背景层，z-index值要足够大确保能覆盖，高度 宽度设置满 做到全屏遮罩
+  .dialog-cover {
+    background: rgba(0,0,0, 0.8);
+    position: fixed;
+    z-index: 200;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+  // 内容层 z-index要比遮罩大，否则会被遮盖，
+  .dialog-content{
+    position: fixed;
+    top: 35%;
+    // 移动端使用felx布局 
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 300;
+ }
+</style>
+```
+
+#### 2.通过`slot`定制弹窗内容
+
+这一步，只要理解了`slot`的作用以及用法，就没有问题了。
+
+##### 单个插槽：
+
+```js
+<slot>这是在没有slot传进来的时候，才显示的弹窗内容</slot>
+```
+
+上面是单个插槽也叫默认插槽，在父组件中使用插槽的正确姿势：
+
+```js
+<my-component>
+   <!--在my-component里面的所有内容片段都将插入到slot所在的DOM位置，并且会替换掉slot标签-->
+   <!--这两个p标签，将替换整个slot标签里面的内容-->
+    <p>这是一些初始内容</p>
+    <p>这是更多的初始内容</p>
+  </my-component>
+```
+
+ps:如果子组件里面包含`slot`插槽，那么上面的p标签的内容将会被丢弃。
+
+##### 具名插槽：
+
+所谓的具名插槽，即为`slot`标签赋一个`name`属性，具名插槽可以父组件中不同的内容片段放到子组件的不同地方，具名插槽还是可以拥有一个默认插槽。下面可以看一下弹窗组件插槽的使用方式：
+
+```js
+<div class="dialog_head back ">
+  <!--弹窗头部 title-->
+  <slot name="header">提示信息</slot>
+ </div>
+ <div class="dialog_main " :style="{paddingTop:pdt+'px',paddingBottom:pdb+'px'}">
+    <!--弹窗的内容-->
+    <slot name="main">弹窗内容</slot>
+ </div>
+```
+
+在父组件中的使用方式：
+
+1. 将弹窗组件引入要使用的组件中，并通过`components`注册成为组件。
+2. 父组件中弹窗组件插槽的使用方法如下。
+
+```js
+<dialogComponent>
+ 
+     <div slot="header">插入到name为header的slot标签里面</div>
+      <div class="dialog_publish_main" slot="main">
+         这里是内容插入到子组件的slot的name为main里面，可以在父组件中添加class定义样式，事件类型等各种操作
+      </div>
+ </dialogComponent>
+```
+
+关于组件中用到的插槽的介绍就到这里了，插槽在弹窗组件中的应用是一个典型的栗子，可以看到插槽作用相当强大，而插槽本身的使用并不难，同学们爱上插槽了没有？
+
+#### 3.通过`props`控制弹窗显隐&&定制弹窗style
+
+`psops`是Vue中父组件向子组件传递数据的一种方式，不熟悉的小伙伴们可以看一下[props文档](https://link.juejin.cn?target=https%3A%2F%2Fcn.vuejs.org%2Fv2%2Fguide%2Fcomponents.html%23Prop)。
+
+因为弹窗组件都是引到别的组件里面去用的，为了适合不同组件场景中的弹窗，所以弹窗组件必须具备一定的可定制性，否则这样的组件将毫无意义,下面介绍一下props的使用方式，以弹窗组件为例：
+
+1. 首先需要在被传入的组件中定义props的一些特性，验证之类的。
+2. 然后在父组件中绑定props数据。
+
+```js
+<script>
+export default {
+  props: {
+    isShow: { 
+    //弹窗组件是否显示 默认不显示
+      type: Boolean,
+      default: false,
+      required:true, //必须
+    },
+    //下面这些属性会绑定到div上面 详情参照上面的html结构
+    // 如： :style="{top:topDistance+'%',width:widNum+'%'}"
+    widNum:{ 
+    //内容宽度
+      type: Number,
+      default:86.5
+    },
+    leftSite:{
+      // 左定位
+      type: Number,
+      default:6.5
+    },
+    topDistance: {
+        //top上边距
+      type: Number,
+      default:35
+    },
+    pdt:{
+      //上padding
+      type: Number,
+      default:22
+    },
+    pdb:{
+      //下padding
+      type: Number,
+      default:47
+    }
+  },
+}
+</script>
+```
+
+父组件中使用方式：
+
+```js
+<dialogComponent :is-show="status.isShowPublish" :top-distance="status.topNum">
+ </dialogComponent>
+```
+
+ps：props传递数据不是双向绑定的，而是**单向数据流**，父组件的数据变化时，也会传递到子组件中，这就意外着我们不应该在子组件中修改props。所以我们在关闭弹窗的时候就**需要通过`$emit`来修改父组件的数据**，然后数据会自动传到子组件中。
+
+现在基本上弹窗组件都已实现的差不多了，还差一个弹窗的关闭事件，这里就涉及到子组件往父组件传参了。
+
+#### 4.`$emit`触发父组件事件修改数据，关闭弹窗
+
+Vue中在子组件往父组件传参，很多都是通过`$emit`来触发父组件的事件来修改数据。
+
+在子组件中，在点击关闭，或者遮罩层的时候触发下面这个方法：
+
+```js
+methods: {
+    closeMyself() {
+      this.$emit("on-close"); 
+      //如果需要传参的话，可以在"on-close"后面再加参数，然后在父组件的函数里接收就可以了。
+    }
+  }
+```
+
+父组件中的写法：
+
+```js
+<dialogComponent :is-show="status.isShowPublish" :top-distance="status.topNum"  @on-close="closeDialog"> 
+  </dialogComponent>
+  //"on-close是监听子组件的时间有没有触发，触发的时候执行closeDialog函数
+methods:{
+  closeDialog(){
+    // this.status.isShowPublish=false;
+    //把绑定的弹窗数组 设为false即可关闭弹窗
+  },
+}
+```
+
+#### 5.实现点击弹框外关闭弹框功能
+
+[实现点击弹框外关闭弹框功能](https://blog.csdn.net/weixin_43294560/article/details/122701956)
+
+[vue中实现点击空白区域关闭弹窗](https://juejin.cn/post/6911863086487961607)
+
+核心是监听全局点击事件,通过判断点击时的dom元素是否包含在弹框的dom中，即弹框
+
+```js
+dom.contains(event.target)
+<body>
+    <div class="modal">Modal</div>
+    <script>
+        const model = document.querySelector('.modal');
+        function toggle(open) {
+            model.style.display = open ? 'block' : 'none';
+        }
+        window.addEventListener('click', (event) => {
+            if (!model.contains(event.target)) {
+                toggle(false);
+            }
+        });
+    </script>
+</body>
+```
+
+
+
+```js
+<template>
+  <div>
+    <div class="mask" v-if="showModal" @click="showModal=false"></div>
+    <div class="pop" v-if="showModal">
+        <button @click="showModal=false" class="btn">点击出现弹框</button>
+    </div>
+    <button @click="showModal=true" class="btn">点击出现弹框</button>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      showModal: false
+    };
+  }
+};
+</script>
+
+<style scoped>
+.mask {
+  background-color: #000;
+  opacity: 0.3;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1
+}
+.pop {
+  background-color: #fff;
+ 
+  position: fixed;
+  top: 100px;
+  left: 300px;
+  width: calc(100% - 600px);
+  height:calc(100% - 200px);
+  z-index: 2
+}
+.btn {
+  background-color: #fff;
+  border-radius: 4px;
+  border: 1px solid blue;
+  padding: 4px 12px;
+}
+</style>
 ```
 

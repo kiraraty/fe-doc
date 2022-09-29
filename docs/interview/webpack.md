@@ -22,7 +22,144 @@ webpack解决了什么问题？
 
 - 打包问题。需要使用额外的平台如 jekins 打包，自己编写打包脚本，对各个环节如压缩图片，打包 js、打包 css 都要一一处理
 
-  
+### 常见打包工具
+
+#### 分类
+
+如果把工具按类型分可以分为这三类：
+
+1. 基于任务运行的工具：
+    Grunt、Gulp
+    它们会自动执行指定的任务，就像流水线，把资源放上去然后通过不同插件进行加工，它们包含活跃的社区，丰富的插件，能方便的打造各种工作流。
+2. 基于模块化打包的工具：
+    Browserify、Webpack、rollup.js
+    有过 Node.js 开发经历的应该对模块很熟悉，需要引用组件直接一个 `require` 就 OK，这类工具就是这个模式，还可以实现按需加载、异步加载模块。
+3. 整合型工具：
+    Yeoman、FIS、jdf、Athena、cooking、weflow
+    使用了多种技术栈实现的脚手架工具，好处是即开即用，缺点就是它们约束了技术选型，并且学习成本相对较高。
+
+#### 一. 后端语言打包阶段（ -2009年）
+
+2009年之前，前端刚发展，市面上没有一个为前端开发设计的打包工具。所以这个阶段问题，需求，解决办法：
+
+- 问题：没有为前端开发的打包工具，手动打包费时费力
+- 需求：需要自动打包的方法。
+- 办法：用 PHP/Python/Java/Ruby/BashScript 写打包脚本，用 make 做构建工具
+- 好处：解决了手动打包的困扰
+- 痛点：前端必须学一门后端语言
+
+**每个阶段的痛点都为新一代打包工具产生提供了方向。**
+
+#### 二. 文件打包阶段（2009年-2014年）
+
+为什么这个阶段的开始节点是2009年？
+
+因为，**nodejs诞生了，这也意味着前端不在学习需要后端语言就可以操作文件了**！
+
+这个阶段代表工具有：**Grunt，Gulp等**
+
+##### Grunt
+
+Grunt可以说是一个任务执行器，为什么这么说，看例子：
+
+```js
+// Gruntfile.js
+grunt.initConfig({
+  jshint: {...}, watch: {files, tasks: ['jshint']}
+})
+
+grunt.loadNpmTasks('grunt-contrib-jshint');
+grunt.loadNpmTasks('grunt-contrib-qunit);
+grunt.loadNpmTasks('grunt-contrib-concat');
+grunt.loadNpmTasks('grunt-contrib-uglify');
+grunt.loadNpmTasks('grunt-contrib-watch');
+
+grunt.registerTask('default', ['jshint', 'qunit', 'concat', 'uglify']);
+
+// 在命令行运行 grunt 命令，就会触发 default 任务 
+```
+
+grunt语句是由**任务任务构成的，操作对象是文件**。每个任务官方都定义好了。他有这些特点：
+
+- 问题：之前打包需要学习后端语言。
+- 需求：需要简单的打包方法。
+- 办法：Grunt通过配置任务，操作文件解决
+- 好处：有了简单，配置性的打包办法。
+- 痛点：Grunt一次打包由多个任务组成，每个任务都要吞吐文件，多个任务存在重复吞吐文件的情况，**性能非常拉胯**
+
+##### Gulp
+
+Gulp是另一个任务执行器，他主要针对Grunt问题做了改进：
+
+```js
+// gulpfile.js
+const clean = ()=> {...} 
+const css = ()=> gulp.src('scss/**/*.scss').pipe(sass())...
+const jslint = ()=> gulp.src('js/**/*').pipe(...
+const minify = ()=> gulp.src('js/**/*').pipe(...
+const watch = ()=> {
+  gulp.watch("scss/**/*", css)
+  gulp.watch("js/**/*", gulp.series(jslint, minify))
+}
+const js = gulp.series(jslint, minify)
+const build = gulp.series(clean, gulp.parallel(css, js))
+
+exports.css = css
+exports.js = js
+exports.default = build 
+```
+
+- 问题：Grunt打包太慢了
+- 需求：想要快速打包的方法
+- 办法：Gulp引入管道、流、并行、串行等概念,将操作放在内存，而不是硬盘。
+- 好处：有了更快的打包办法。
+- 痛点：只是对Grunt进行了优化，本质没有变。当前端开始向模块化发展，特别当react，vue出来，项目文件越来越多。基于文件的操作打包工具越来越吃力。
+
+#### 三. Webpack阶段（2014年-2019年）
+
+##### Webpack
+
+2014年Webpack发布，这是专门为前端设计开发的打包工具。它有这些特点：
+
+- 问题：前端模块化，文件越来越多，基于文件打包的工具无法满足需求
+- 需求：想要一种新的打包工具
+- 办法：webpack以打包 JS 为主要功能，不再是任务运行。loader 用于加载文件、plugin 用于扩展功能。提供 webpack-dev-server、热更新
+- 好处：极大满足了前端的打包需求，不管多么复杂都能搞定
+- 痛点：配置复杂，基本没人能不出错。随着项目变大，大家发现打包越来越慢了。
+
+##### Rollup
+
+ Rollup又一个前端打包器，有着这些特点：
+
+- 问题：webpack太慢了
+- 需求：想要一种更快的打包工具
+- 办法：面向 ES Modules 而不是 AMD / CommonJS，支Tree-shaking。不提供 dev server，只做生产环境打包
+- 好处：打包性能比 Webpack 好
+- 痛点：功能不如 Webpack 全，支持生成环境
+
+##### **Parcel**
+
+Parcel是一款“速度快、零配置的web应用程序打包器”。有以下这些特点：很快、捆绑项目的所有资产、没有配置代码拆分。
+
+Parcel 是 2017 年发布的，出现的原因是因为当时的 `Webpack` 使用过于烦琐，文档也不是很清晰明了，
+
+所以 Parcel 一经推出就迅速被推上风口浪尖。
+
+其核心特点就是：
+
+- 真正做到了完全零配置，对项目没有任何的侵入；
+- 自动安装依赖，开发过程更专注；
+- 构建速度更快，因为内部使用了多进程同时工作，能够充分发挥多核 CPU 的效率。
+
+#### 四. vite阶段
+
+vite是面向下一代的前端构建工具，他有接下来的特点：
+
+- 问题：webpack太慢了，Rollup只支持生成环境打包
+- 需求：想要一种生产，开发环境，更简单更快的打包工具
+- 办法：**开发时，不打包**，充分利用浏览器的 module 能力。**发布时，用 Rollup 打包**
+- 好处：开发速度甩 Webpack 十八条街
+- 痛点：插件不够多，但问题不大，自己写插件即可。热更新会失灵，但问题不大，自己点刷新即可
 
 ### 1.常用的loader和plugin有哪些
 
@@ -886,8 +1023,6 @@ module.exports = {
 9. 再把每个Chunk转换成一个单独的文件加入到输出列表
 10. 在确定好输出内容后，根据配置确定输出的路径和文件名，把文件内容写入到文件系统
 11. 以上过程中，webpack会在特性的时间点广播出特定的事件，插件在监听到感兴趣的事件后执行特定的逻辑，并且插件可以调用webpack提供的API改变webpack的运行结果。
-
-
 
 ### 3.Webpack打包后代码的结构
 
@@ -2185,7 +2320,9 @@ webpack dev server 在启动时需要先build一遍，而这个过程需要消�
 
 但是webpack 这类工具的做法是将所有模块提前编译、打包进bundle里，换句话说，不管模块是否会被执行，都要被编译和打包到bundle里。随着项目越来越大，打包后的bundle也越来越大，打包的速度自然会越来越慢。
 
-#### webpack打包过程
+#### webpack原理
+
+##### webpack打包过程
 
 1.识别入口文件
 
@@ -2195,7 +2332,7 @@ webpack dev server 在启动时需要先build一遍，而这个过程需要消�
 
 4.最终形成打包后的代码
 
-#### webpack打包原理
+##### webpack打包原理
 
 1.先逐级递归识别依赖，构建依赖图谱
 
@@ -2247,7 +2384,7 @@ createApp(App).mount('#app')
 如：GET http://localhost:3000/src/App.vue
 ```
 
-Vite 的主要功能就是通过劫持浏览器的这些请求，并在后端进行相应的处理将项目中使用的文件通过简单的分解与整合，然后再返回给浏览器,Vite整个过程中没有对文件进行打包编译，所以其运行速度比原始的webpack开发编译速度快出许多！
+Vite 的**主要功能就是通过劫持浏览器的这些请求，并在后端进行相应的处理将项目中使用的文件通过简单的分解与整合，然后再返回给浏览器**,Vite**整个过程中没有对文件进行打包编译**，所以其运行速度比原始的webpack开发编译速度快出许多！
 
 #### webpack缺点1.缓慢的服务器启动
 
@@ -2255,7 +2392,7 @@ Vite 的主要功能就是通过劫持浏览器的这些请求，并在后端进
 
 #### vite改进
 
-Vite 通过在一开始将应用中的模块区分为 依赖 和 源码 两类，改进了开发服务器启动时间。依赖 大多为纯 JavaScript 并在开发时不会变动。一些较大的依赖（例如有上百个模块的组件库）处理的代价也很高。依赖也通常会以某些方式（例如 ESM 或者 CommonJS）被拆分到大量小模块中。Vite 将会使用 esbuild 预构建依赖。Esbuild 使用 Go 编写，并且比以 JavaScript 编写的打包器预构建依赖快 10-100 倍。
+Vite 通过在一开始将应用中的**模块区分为 依赖 和 源码 两类**，改进了开发服务器启动时间。依赖 大多为纯 JavaScript 并在开发时不会变动。一些较大的依赖（例如有上百个模块的组件库）处理的代价也很高。**依赖也通常会以某些方式（例如 ESM 或者 CommonJS）被拆分到大量小模块中**。**Vite 将会使用 esbuild 预构建依赖。Esbuild 使用 Go 编写，并且比以 JavaScript 编写的打包器预构建依赖快 10-100 倍**。
 
 源码 通常包含一些并非直接是 JavaScript 的文件，需要转换（例如 JSX，CSS 或者 Vue/Svelte 组件），时常会被编辑。同时，并不是所有的源码都需要同时被加载。（例如基于路由拆分的代码模块）。Vite 以 原生 ESM 方式服务源码。这实际上是让浏览器接管了打包程序的部分工作：Vite 只需要在浏览器请求源码时进行转换并按需提供源码。根据情景动态导入的代码，即只在当前屏幕上实际使用时才会被处理。
 
@@ -2274,17 +2411,7 @@ Vite 将会使用 esbuild 预构建依赖。Esbuild 使用 Go 编写，并且比
 
 在 Vite 中，HMR 是在原生 ESM 上执行的。当编辑一个文件时，Vite 只需要精确地使已编辑的模块与其最近的 HMR 边界之间的链失效（大多数时候只需要模块本身），使 HMR 更新始终快速，无论应用的大小。Vite 同时利用 HTTP 头来加速整个页面的重新加载（再次让浏览器为我们做更多事情）：源码模块的请求会根据 304 Not Modified 进行协商缓存，而依赖模块请求则会通过 Cache-Control: max-age=31536000,immutable 进行强缓存，因此一旦被缓存它们将不需要再次请求。
 
-#### vite缺点1
 
-1.生态，生态，生态不如webpack，wepback牛逼之处在于loader和plugin非常丰富,不过我认为生态只是时间问题，现在的vite,更像是当时刚出来的M1芯片Mac，我当时非常看好M1的Mac，毫不犹豫买了，现在也没什么问题
-
-#### vite缺点2
-
-1.prod环境的构建，目前用的Rollup，原因在于esbuild对于css和代码分割不是很友好
-
-#### vite缺点3
-
-1.还没有被大规模使用,很多问题或者诉求没有真正暴露出来，vite真正崛起那一天，是跟vue3有关系的,当vue3广泛开始使用在生产环境的时候，vite也就大概率意味着被大家慢慢开始接受了
 
 #### Vite快速原因
 
@@ -2319,6 +2446,10 @@ Vite在冷启动的时候，将代码分为依赖和源码两部分，源码部�
 >   当我们开始构建越来越大型的应用时，需要处理的 JavaScript 代码量也呈指数级增长。包含数千个模块的大型项目相当普遍。我们开始遇到性能瓶颈 —— 使用 JavaScript 开发的工具通常需要很长时间（甚至是几分钟！）才能启动开发服务器，即使使用 HMR，文件修改后的效果也需要几秒钟才能在浏览器中反映出来。如此循环往复，迟钝的反馈会极大地影响开发者的开发效率和幸福感。
 >
 >   Vite 旨在利用生态系统中的新进展解决上述问题：浏览器开始原生支持 ES 模块，且越来越多 JavaScript 工具使用编译型语言编写。
+
+
+
+
 
 ### 13.如何进行css的抽离
 
@@ -2555,7 +2686,7 @@ new webpack.IgnorePlugin(/\.\/locale/, /moment/),
 然后需要在plugin中配置babel的happyPack实例：
 
 ```js
-new HappyPack({
+        new HappyPack({
             // 用唯一的标识符 id 来代表当前的 HappyPack 是用来处理一类特定的文件
             id: 'babel',
             // 如何处理 .js 文件，用法和 Loader 配置中一样
@@ -2807,6 +2938,7 @@ optimization: {
 mkdir webpack-demo && cd webpack-demo
 npm init -y
 npm install webpack webpack-cli --save-dev
+
 ```
 
 然后在项目里创建一个`src`文件夹，里面新建一个`index.js`和`module1.js`两个文件：
@@ -2908,6 +3040,7 @@ var __webpack_modules__ = {
     // 返回模块
     return module.exports;
   }
+复制代码
 ```
 
 首先是一个`__webpack_module_cache__`，它是一个缓存对象，具体是干啥的下面再说，让我们继续往下看。
@@ -4030,46 +4163,6 @@ module.exports={
 ```
 
 ### 23.tapable
-
-#### webpack 生命周期
-
-> 概念：webpack 工作流中最核心的两个模块 Compiler Compilation 都扩展与 Tapable 类，用于实现工作流中的生命周期的划分，以便在不同的生命周期注册和调用插件，所以暴露出各个生命周期的节点称为Hook。（俗称钩子函数）
-
-webpack 插件
-
-> webpack 插件是一个包含apply方法的 js 类。这个apply方法 通常是注册 webpack 中某一个生命周期的 hook，并添加对应的处理函数。
-
-Hook 的使用方式：
-
-> 1.在 Compiler 构造函数中定义参数和类型，生成 hook 对象。
->
-> 2.在插件中注册 hook，添加对应 Hook 触发时的执行函数。
->
-> 3.生成插件实例，运行 apply 方法。
->
-> 4.在运行到对应生命周期节点时调用 Hook，执行注册过的插件的回调函数。
-
-Compiler Hooks
-
-构建器实例的生命周期可以分为 3 个阶段：初始化阶段、构建过程阶段、产物生成阶段。
-
-初始化阶段
-
-> environment、afterEnvironment：在创建完 compiler 实例且执行了配置内定义的插件的 apply 方法后触发。
->
-> entryOption、afterPlugins、afterResolvers：在 WebpackOptionsApply.js 中，这 3 个 Hooks 分别在执行 EntryOptions 插件和其他 Webpack 内置插件，以及解析了 resolver 配置后触发。
-
-构建过程阶段
-
-> normalModuleFactory、contextModuleFactory：在两类模块工厂创建后触发。
->
-> beforeRun、run、watchRun、beforeCompile、compile、thisCompilation、compilation、make、afterCompile：在运行构建过程中触发。
-
-产物生成阶段
-
-> shouldEmit、emit、assetEmitted、afterEmit：在构建完成后，处理产物的过程中触发。
->
-> failed、done：在达到最终结果状态时触发。
 
 tapable 是一个类似于 Node.js 中的 EventEmitter的库，但更专注于自定义事件的触发和处理
 webpack本质上是一种事件流的机制，它的工作流程就是将各个插件串联起来，而实现这一切的核心就是Tapable。Tapable其实就是一个用于事件发布订阅执行的插件架构。webpack 通过 tapable 将实现与流程解耦，所有具体实现通过插件的形式存在。

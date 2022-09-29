@@ -10364,6 +10364,308 @@ export default B;
 
 
 
+### 7.React中使用css的各种方式
+
+[react中css实现方式](https://blog.csdn.net/kuizuo12/article/details/122486443)
+
+[react中使用css的7种方式 ](https://www.cnblogs.com/furenjian/p/15498917.html)
+
+#### 第一种: 在组件中直接使用style
+
+不需要组件从外部引入css文件，直接在组件中书写。
+
+```javascript
+import react, { Component } from "react";
+
+const div1 = {
+  width: "300px",
+  margin: "30px auto",
+  backgroundColor: "#44014C",  //驼峰法
+  minHeight: "200px",
+  boxSizing: "border-box"
+};
+
+class Test extends Component {
+  constructor(props, context) {
+    super(props);
+  }
+ 
+  render() {
+    return (
+     <div style={div1}>123</div>
+     <div style="">
+    );
+  }
+}
+
+export default Test;
+```
+
+注意事项:
+
+1. 在正常的css中，比如background-color，box-sizing等属性，在style对象div1中的属性中，必须转换成驼峰法，backgroundColor，boxSizing。而没有连字符的属性，如margin，width等，则在style对象中不变。
+2. 在正常的css中，css的值不需要用双引好("")，如
+
+```css
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+```
+
+而在react中使用style对象的方式时。值必须用双引号包裹起来。
+
+这种方式的react样式，只作用于当前组件。
+
+ 
+
+#### 第二种: 在组件中引入[name].css文件
+
+需要在当前组件开头使用import引入css文件。
+
+```javascript
+import React, { Component } from "react";
+import TestChidren from "./TestChidren";
+import "@/assets/css/index.scss";
+
+class Test extends Component {
+  constructor(props, context) {
+    super(props);
+  }
+ 
+  render() {
+    return (
+      <div>
+        <div className="link-name">123</div>
+        <TestChidren>测试子组件的样式</TestChidren>
+      </div>
+
+    );
+  }
+}
+
+export default Test;
+```
+
+这种方式引入的css样式，会作用于**当前组件及其所有后代组件**。
+
+ 
+
+#### 第三种: 在组件中引入[name].scss文件
+
+引入react内部已经支持了后缀为scss的文件，所以只需要安装node-sass即可，因为有个node-sass，scss文件才能在node环境上编译成css文件。
+
+```csharp
+>yarn add node-sass
+```
+
+然后编写scss文件
+
+```php
+//index.scss
+.App{
+  background-color: #282c34;
+  .header{
+    min-height: 100vh;
+    color: white;
+  }
+}
+```
+
+关于如何详细的使用sass，请查看sass官网
+
+这种方式引入的css样式，同样会作用于**当前组件及其所有后代组件**。
+
+
+
+#### 第四种: 在组件中引入[name].module.css文件
+
+将css文件作为一个模块引入，这个模块中的所有css，只作用于当前组件。不会影响当前组件的后代组件。
+
+```javascript
+import React, { Component } from "react";
+import TestChild from "./TestChild";
+import moduleCss from "./test.module.css";
+
+class Test extends Component {
+  constructor(props, context) {
+    super(props);
+  }  
+ 
+  render() {
+    return (
+     <div>
+       <div className={moduleCss.linkName}>321321</div>
+       <TestChild></TestChild>
+     </div>
+    );
+  }
+}
+
+export default Test;
+```
+
+这种方式可以看做是前面第一种在组件中使用style的升级版。完全将css和组件分离开，又不会影响其他组件。
+
+ 
+
+#### 第五种: 在组件中引入 [name].module.scss文件
+
+类似于第四种，区别是第四种引入css module，而这种是引入 scss module而已。
+
+```javascript
+import React, { Component } from "react";
+import TestChild from "./TestChild";
+import moduleCss from "./test.module.scss";
+
+class Test extends Component {
+  constructor(props, context) {
+    super(props);
+  }  
+ 
+  render() {
+    return (
+     <div>
+       <div className={moduleCss.linkName}>321321</div>
+       <TestChild></TestChild>
+     </div>
+    );
+  }
+}
+
+export default Test;
+```
+
+同样这种方式可以看做是前面第一种在组件中使用style的升级版。
+
+ 
+
+#### 第六种: 使用styled-components
+
+需要先安装
+
+```csharp
+>yarn add styled-components
+```
+
+然后创建一个js文件(注意是js文件，不是css文件)
+
+```javascript
+//style.js
+import styled, { createGlobalStyle } from "styled-components";
+
+export const SelfLink = styled.div`
+  height: 50px;
+  border: 1px solid red;
+  color: yellow;
+`;
+
+export const SelfButton = styled.div`
+  height: 150px;
+  width: 150px;
+  color: ${props => props.color};
+  background-image: url(${props => props.src});
+  background-size: 150px 150px;
+`;
+```
+
+组件中使用styled-components样式
+
+```javascript
+import React, { Component } from "react";
+
+import { SelfLink, SelfButton } from "./style";
+
+class Test extends Component {
+  constructor(props, context) {
+    super(props);
+  }  
+ 
+  render() {
+    return (
+     <div>
+       <SelfLink title="People's Republic of China">app.js</SelfLink>
+       <SelfButton color="palevioletred" style={{ color: "pink" }} src={fist}>
+          SelfButton
+        </SelfButton>
+     </div>
+    );
+  }
+}
+
+export default Test;
+```
+
+这种方式是将整个css样式，和html节点整体合并成一个组件。引入这个组件html和css都有了。
+它的好处在于可以随时通过往组件上传入 属性，来动态的改变样式。对于处理变量、媒体查询、伪类等较方便的。
+
+这种方式的css也只对当前组件有效。
+
+具体用法，请查看styled-components官网
+
+[广州vi设计](http://www.maiqicn.com/)http://www.maiqicn.com [办公资源网站大全](https://www.wode007.com/)https://www.wode007.com
+
+#### 第七种: 使用radium
+
+需要先安装
+
+```csharp
+>yarn add radium
+```
+
+然后在react组件中直接引入使用
+
+```javascript
+import React, { Component } from "react";
+import Radium from 'radium';
+
+let styles = {
+  base: {
+    color: '#fff',
+    ':hover': {
+      background: '#0074d9'
+    }
+  },
+  primary: {
+    background: '#0074D9'
+  },
+  warning: {
+    background: '#FF4136'
+  }
+};
+
+class Test extends Component {
+  constructor(props, context) {
+    super(props);
+  }  
+ 
+  render() {
+    return (
+     <div>
+      <button style={[ styles.base, styles.primary ]}>
+        this is a primary button
+      </button>
+     </div>
+    );
+  }
+}
+
+export default Radium(Test); 
+```
+
+对于处理变量、媒体查询、伪类等是不方便的。
+
+使用Radium可以直接处理变量、媒体查询、伪类等，并且可以直接使用js中的数学，连接，正则表达式，条件，函数等。
+
+注意:
+**在export之前，必须用Radium包裹。**
+
 ## Demo实现
 
 ### 1.react实现一个全局的 dialog
