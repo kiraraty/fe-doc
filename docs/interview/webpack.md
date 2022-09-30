@@ -3512,7 +3512,7 @@ require.ensure("title") // 先加载代码块,这里的参数"title"就是魔法
 
 ### 22.webpack打包性能优化
 
-#### 1.优化大纲
+#### 优化大纲
 
 > weibapck性能优化主要可以考虑以下几方面
 
@@ -3543,7 +3543,7 @@ require.ensure("title") // 先加载代码块,这里的参数"title"就是魔法
 1.  speed-measure-webpack-plugin 测试每个核心步骤耗费的事件
 2.  webpack-bundle-analyzer 代码分析工具，生成代码体积等分析报告
 
-#### 2.具体操作
+
 
 #### 1.缩小查找范围，加快查找速度
 
@@ -4162,7 +4162,53 @@ module.exports={
 }
 ```
 
-### 23.tapable
+### 23.tapable的使用和原理
+
+#### webpack生命周期
+
+![TB1GVGFNXXXXXaTapXXXXXXXXXX-4436-4244](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/TB1GVGFNXXXXXaTapXXXXXXXXXX-4436-4244.jpg)
+
+webpack 生命周期
+
+> 概念：webpack 工作流中最核心的两个模块 Compiler Compilation 都扩展与 Tapable 类，用于实现工作流中的生命周期的划分，以便在不同的生命周期注册和调用插件，所以暴露出各个生命周期的节点称为Hook。（俗称钩子函数）
+
+webpack 插件
+
+> webpack 插件是一个包含apply方法的 js 类。这个apply方法 通常是注册 webpack 中某一个生命周期的 hook，并添加对应的处理函数。
+
+Hook 的使用方式：
+
+> 1.在 Compiler 构造函数中定义参数和类型，生成 hook 对象。
+>
+> 2.在插件中注册 hook，添加对应 Hook 触发时的执行函数。
+>
+> 3.生成插件实例，运行 apply 方法。
+>
+> 4.在运行到对应生命周期节点时调用 Hook，执行注册过的插件的回调函数。
+
+Compiler Hooks
+
+构建器实例的生命周期可以分为 3 个阶段：初始化阶段、构建过程阶段、产物生成阶段。
+
+初始化阶段
+
+> environment、afterEnvironment：在创建完 compiler 实例且执行了配置内定义的插件的 apply 方法后触发。
+>
+> entryOption、afterPlugins、afterResolvers：在 WebpackOptionsApply.js 中，这 3 个 Hooks 分别在执行 EntryOptions 插件和其他 Webpack 内置插件，以及解析了 resolver 配置后触发。
+
+构建过程阶段
+
+> normalModuleFactory、contextModuleFactory：在两类模块工厂创建后触发。
+>
+> beforeRun、run、watchRun、beforeCompile、compile、thisCompilation、compilation、make、afterCompile：在运行构建过程中触发。
+
+产物生成阶段
+
+> shouldEmit、emit、assetEmitted、afterEmit：在构建完成后，处理产物的过程中触发。
+>
+> failed、done：在达到最终结果状态时触发。
+
+
 
 tapable 是一个类似于 Node.js 中的 EventEmitter的库，但更专注于自定义事件的触发和处理
 webpack本质上是一种事件流的机制，它的工作流程就是将各个插件串联起来，而实现这一切的核心就是Tapable。Tapable其实就是一个用于事件发布订阅执行的插件架构。webpack 通过 tapable 将实现与流程解耦，所有具体实现通过插件的形式存在。
