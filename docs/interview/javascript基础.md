@@ -1622,7 +1622,7 @@ for (let index in arr) {
 
 `for of`遍历的是数组元素值，而且`for of`遍历的只是数组内的元素，不包括原型属性和索引
 
-`for of`适用遍历数/数组对象/字符串/`map`/`set`等拥有迭代器对象（`iterator`）的集合，但是不能遍历对象，因为没有迭代器对象，但如果想遍历对象的属性，你可以用`for in`循环（这也是它的本职工作）或用内建的`Object.keys()`方法
+**`for of`适用遍历数/数组对象/字符串/`map`/`set`等拥有迭代器对象（`iterator`）的集合，但是不能遍历对象**，因为没有迭代器对象，但如果想遍历对象的属性，你可以用`for in`循环（这也是它的本职工作）或用内建的`Object.keys()`方法
 
 ```javascript
 var myObject={
@@ -4825,7 +4825,7 @@ Chrome会把嵌套5层以上的setTimeout后当作阻塞方法，在第6次调�
 
 >定时器指定的时间间隔，表示的是**何时将定时器的代码添加到消息队列**，而**不是何时执行代码**。所以真正何时执行代码的时间是不能保证的，取决于何时被主线程的事件循环取到，并执行。
 
-```
+```js
 setInterval(function, N)
 //即：每隔N秒把function事件推到消息队列中
 ```
@@ -4843,12 +4843,14 @@ setInterval(function, N)
 
 ### 14.Object方法
 
+[Object对象API及方法](https://juejin.cn/post/7084651424272875528)
+
 Object常用方法总结：
 
-#### 1.Object.assign(target,source1,source2,...)
+#### Object.assign(target,source1,source2,...)
 
-该方法主要用于对象的合并，将源对象source的所有可枚举属性合并到目标对象target上,此方法只拷贝源对象的自身属性，不拷贝继承的属性。
-Object.assign方法实行的是浅拷贝，而不是深拷贝。也就是说，如果源对象某个属性的值是对象，那么目标对象拷贝得到的是这个对象的引用。同名属性会替换。
+该方法主要用于对象的合并，**将源对象source的所有可枚举属性合并到目标对象target上,此方法只拷贝源对象的自身属性，不拷贝继承的属性**。
+Object.assign方法实行的是**浅拷贝**，而不是深拷贝。也就是说，如果源对象某个属性的值是对象，那么目标对象拷贝得到的是这个对象的引用。同名属性会替换。
 Object.assign只能进行值的复制，如果要复制的值是一个取值函数，那么将求值后再复制。
 Object.assign可以用来处理数组，但是会把数组视为对象。
 
@@ -4876,7 +4878,7 @@ Object.assign([1, 2, 3], [4, 5])                      // 把数组当作对象�
 
 
 
-#### 2.Object.create(prototype,[propertiesObject])
+#### Object.create(prototype,[propertiesObject])
 
 使用指定的原型对象及其属性去创建一个新的对象
 
@@ -4895,7 +4897,7 @@ console.log(child.x) //1
 
 
 
-#### 3.Object.defineProperties(obj,props)
+#### Object.defineProperties(obj,props)
 
 直接在一个对象上定义新的属性或修改现有属性，并返回该对象。
 
@@ -4916,7 +4918,7 @@ console.log(obj)   // {property1: true, property2: "Hello"}
 
 
 
-#### 4.Object.defineProperty(obj,prop,descriptor)
+#### Object.defineProperty(obj,prop,descriptor)
 
 在一个对象上定义一个新属性，或者修改一个对象的现有属性， 并返回这个对象。
 
@@ -4940,7 +4942,7 @@ Object.defineProperty(Object, 'is', {
 
 // 注意不能同时设置(writable，value) 和 get，set方法，否则浏览器会报错 ： Invalid property descriptor. Cannot both specify accessors and a value or writable attribute
 
-#### 5.Object.keys(obj)
+#### Object.keys(obj)
 
 返回一个由一个给定对象的自身可枚举属性组成的数组，数组中属性名的排列顺序和使用 for...in 循环遍历该对象时返回的顺序一致 （两者的主要区别是 一个 for-in 循环还会枚举其原型链上的属性）。
 
@@ -4958,7 +4960,7 @@ console.log(keys);
 
 
 
-#### 6.Object.values()
+#### Object.values(obj)
 
 方法返回一个给定对象自己的所有可枚举属性值的数组，值的顺序与使用for...in循环的顺序相同 ( 区别在于 for-in 循环枚举原型链中的属性 )。
 Object.values会过滤属性名为 Symbol 值的属性。
@@ -4971,9 +4973,7 @@ var obj = { 0: 'a', 1: 'b', 2: 'c' };
 console.log(Object.values(obj)); // ['a', 'b', 'c']
 ```
 
-
-
-#### 7.Object.entries()
+#### Object.entries(obj)
 
 返回一个给定对象自身可枚举属性的键值对数组，其排列与使用 for...in 循环遍历该对象时返回的顺序一致（区别在于 for-in 循环也枚举原型链中的属性）。
 
@@ -4985,7 +4985,51 @@ const simuArray = { 0: 'a', 1: 'b', 2: 'c' };
 console.log(Object.entries(simuArray)); // [ ['0', 'a'], ['1', 'b'], ['2', 'c'] ]
 ```
 
-#### 8.hasOwnProperty()
+#### Object.fromEntries(obj)
+
+把**键值对列表转换为一个对象**。
+
+**Map转Object**
+
+```js
+const map = new Map([['foo', 'bar'], ['baz', 42]]);
+
+const obj = Object.fromEntries(map);
+
+console.log(obj); // { foo: "bar", baz: 42 }
+```
+
+**Array转Object**
+
+```js
+const arr = [['0', 'a'], ['1', 'b'], ['2', 'c']];
+
+const obj = Object.fromEntries(arr);
+
+console.log(obj); // { 0: "a", 1: "b", 2: "c" }
+```
+
+**对象转换**
+
+对象先通过 `Object.entries()`转变为数组
+
+然后数组通过map过滤一遍
+
+然后返回的新数组再通过`Object.fromEntries()`转换为对象，达到对象转换的效果
+
+```js
+const object1 = { a: 1, b: 2, c: 3 };
+
+const object2 = Object.fromEntries(
+    Object.entries(object1)
+        .map(([key, val]) => [key, val * 2])
+);
+
+console.log(object2);
+// { a: 2, b: 4, c: 6 }
+```
+
+#### Object.prototype.hasOwnProperty(key)
 
 判断对象自身属性中是否具有指定的属性。
 `obj.hasOwnProperty('name')`
@@ -5031,7 +5075,7 @@ for(var i in foo) {
 
 
 
-#### 9.Object.getOwnPropertyNames()
+#### Object.getOwnPropertyNames()
 
 返回一个由指定对象的所有自身属性的属性名（**包括不可枚举属性但不包括Symbol值作为名称的属性**）组成的数组。
 
@@ -5086,17 +5130,302 @@ console.log(Object.getOwnPropertyNames(obj2))
 //['2', '3', 'e', 'f']
 ```
 
+#### **Object.getOwnPropertySymbols(obj)**
 
+`Object.getOwnPropertySymbols`返回一个数组，包含对象自身的所有Symbol属性。
 
-#### 10.isPrototypeOf()
+#### Object.getOwnPropertyDescriptor()
+
+ES5有一个`Object.getOwnPropertyDescriptor`方法，返回**某个对象属性**的描述对象（descriptor）。
+
+```js
+var obj = { p: 'a' };
+
+Object.getOwnPropertyDescriptor(obj, 'p')
+// Object { value: "a",
+//   writable: true,
+//   enumerable: true,
+//   configurable: true
+// }
+```
+
+#### Object.getOwnPropertyDescriptors()
+
+ES2017 引入了`Object.getOwnPropertyDescriptors`方法，返回指定对象**所有自身属性**（非继承属性）的描述对象。
+
+```js
+const obj = {
+    foo: 123,
+    get bar() { return 'abc' }
+};
+
+Object.getOwnPropertyDescriptors(obj)
+  // { foo:
+  //    { value: 123,
+  //      writable: true,
+  //      enumerable: true,
+  //      configurable: true },
+  //   bar:
+  //    { get: [Function: bar],
+  //      set: undefined,
+  //      enumerable: true,
+  //      configurable: true } }
+```
+
+上面代码中，`Object.getOwnPropertyDescriptors`方法返回一个对象，所有原对象的属性名都是该对象的属性名，对应的属性值就是该属性的描述对象。
+
+该方法的实现非常容易。
+
+```js
+function getOwnPropertyDescriptors(obj) {
+    const result = {};
+    for (let key of Reflect.ownKeys(obj)) {
+        result[key] = Object.getOwnPropertyDescriptor(obj, key);
+    }
+return result;
+}
+```
+
+该方法的引入目的，主要是为了解决`Object.assign()`无法正确拷贝`get`属性和`set`属性的问题。
+
+```javascript
+const source = {
+    set foo(value) {
+        console.log(value);
+    }
+};
+
+const target1 = {};
+Object.assign(target1, source);
+
+Object.getOwnPropertyDescriptor(target1, 'foo')
+  // { value: undefined,
+  //   writable: true,
+  //   enumerable: true,
+  //   configurable: true }
+```
+
+上面代码中，`source`对象的`foo`属性的值是一个赋值函数，`Object.assign`方法将这个属性拷贝给`target1`对象，结果该属性的值变成了`undefined`。这是因为`Object.assign`方法总是拷贝一个属性的值，**而不会拷贝它背后的赋值方法或取值方法。**
+
+这时，`Object.getOwnPropertyDescriptors`方法配合`Object.defineProperties`方法，就可以实现正确拷贝。
+
+```javascript
+const source = {
+    set foo(value) {
+        console.log(value);
+    }
+};
+
+const target2 = {};
+Object.defineProperties(target2, Object.getOwnPropertyDescriptors(source));
+Object.getOwnPropertyDescriptor(target2, 'foo')
+  // { get: undefined,
+  //   set: [Function: foo],
+  //   enumerable: true,
+  //   configurable: true }
+```
+
+上面代码中，将两个对象合并的逻辑提炼出来，就是下面这样。
+
+```javascript
+const shallowMerge = (target, source) => Object.defineProperties(
+    target,
+    Object.getOwnPropertyDescriptors(source)
+);
+```
+
+`Object.getOwnPropertyDescriptors`方法的另一个用处，是配合`Object.create`方法，将对象属性克隆到一个新对象。这属于浅拷贝。
+
+```javascript
+const clone = Object.create(
+    Object.getPrototypeOf(obj),
+    Object.getOwnPropertyDescriptors(obj)
+    );
+    
+// 或者
+
+const shallowClone = (obj) => Object.create(
+    Object.getPrototypeOf(obj),
+    Object.getOwnPropertyDescriptors(obj)
+);
+```
+
+上面代码会克隆对象`obj`。
+
+另外，`Object.getOwnPropertyDescriptors`方法可以实现一个对象继承另一个对象。以前，继承另一个对象，常常写成下面这样。
+
+```js
+const obj = {
+    __proto__: prot,
+foo: 123,
+};
+```
+
+ES6 规定`__proto__`只有浏览器要部署，其他环境不用部署。如果去除`__proto__`，上面代码就要改成下面这样。
+
+```js
+const obj = Object.create(prot);
+obj.foo = 123;
+
+// 或者
+
+const obj = Object.assign(
+    Object.create(prot),
+    {
+        foo: 123,
+    }
+);
+```
+
+有了`Object.getOwnPropertyDescriptors`，我们就有了另一种写法。
+
+```js
+const obj = Object.create(
+    prot,
+    Object.getOwnPropertyDescriptors({
+        foo: 123,
+    })
+);
+```
+
+`Object.getOwnPropertyDescriptors`也可以用来实现 Mixin（混入）模式。
+
+```js
+let mix = (object) => ({
+    with: (...mixins) => mixins.reduce(
+        (c, mixin) => Object.create(
+            c, Object.getOwnPropertyDescriptors(mixin)
+        ), object)
+});
+
+// multiple mixins example
+
+let a = { a: 'a' };
+let b = { b: 'b' };
+let c = { c: 'c' };
+
+let d = mix(c).with(a, b);
+```
+
+上面代码中，对象`a`和`b`被混入了对象`c`。
+
+出于完整性的考虑，`Object.getOwnPropertyDescriptors`进入标准以后，还会有`Reflect.getOwnPropertyDescriptors`方法。
+
+#### Object.prototype.isPrototypeOf()
 
 判断一个对象是否存在于另一个对象的原型链上。
 
-#### 11.Object.setPrototypeOf(obj,prototype)
+#### Object.setPrototypeOf(obj,prototype)
 
 设置对象的原型对象
 
-#### 12.Object.is()
+`Object.setPrototypeOf`方法的作用与`__proto__`相同，用来设置一个对象的`prototype`对象，返回参数对象本身。它是 ES6 正式推荐的设置原型对象的方法。
+
+```js
+// 格式
+Object.setPrototypeOf(object, prototype)
+
+// 用法
+var o = Object.setPrototypeOf({}, null);
+```
+
+该方法等同于下面的函数。
+
+```js
+function (obj, proto) {
+    obj.__proto__ = proto;
+return obj;
+}
+```
+
+下面是一个例子。
+
+```js
+let proto = {};
+let obj = { x: 10 };
+Object.setPrototypeOf(obj, proto);
+
+proto.y = 20;
+proto.z = 40;
+
+obj.x // 10
+obj.y // 20
+obj.z // 40
+```
+
+上面代码将`proto`对象设为`obj`对象的原型，所以从`obj`对象可以读取`proto`对象的属性。
+
+如果第一个参数不是对象，会自动转为对象。但是由于返回的还是第一个参数，所以这个操作不会产生任何效果。
+
+```javascript
+Object.setPrototypeOf(1, {}) === 1                // true
+Object.setPrototypeOf('foo', {}) === 'foo'        // true
+Object.setPrototypeOf(true, {}) === true          // true
+```
+
+由于`undefined`和`null`无法转为对象，所以如果第一个参数是`undefined`或`null`，就会报错。
+
+```javascript
+Object.setPrototypeOf(undefined, {})
+// TypeError: Object.setPrototypeOf called on null or undefined
+
+Object.setPrototypeOf(null, {})
+// TypeError: Object.setPrototypeOf called on null or undefined
+```
+
+#### Object.getPrototypeOf(obj)
+
+该方法与`Object.setPrototypeOf`方法配套，用于读取一个对象的原型对象。
+
+下面是一个例子。
+
+```javascript
+function Rectangle() {
+    // ...
+}
+
+var rec = new Rectangle();
+
+Object.getPrototypeOf(rec) === Rectangle.prototype
+// true
+
+Object.setPrototypeOf(rec, Object.prototype);
+Object.getPrototypeOf(rec) === Rectangle.prototype
+  // false
+```
+
+如果参数不是对象，会被自动转为对象。
+
+```lua
+// 等同于 Object.getPrototypeOf(Number(1))
+
+Object.getPrototypeOf(1)
+// Number {[[PrimitiveValue]]: 0}
+
+// 等同于 Object.getPrototypeOf(String('foo'))
+Object.getPrototypeOf('foo')
+// String {length: 0, [[PrimitiveValue]]: ""}
+
+// 等同于 Object.getPrototypeOf(Boolean(true))
+Object.getPrototypeOf(true)
+// Boolean {[[PrimitiveValue]]: false}
+
+Object.getPrototypeOf(1) === Number.prototype     // true
+Object.getPrototypeOf('foo') === String.prototype // true
+Object.getPrototypeOf(true) === Boolean.prototype // true
+```
+
+如果参数是`undefined`或`null`，它们无法转为对象，所以会报错。
+
+```javascript
+Object.getPrototypeOf(null)
+// TypeError: Cannot convert undefined or null to object
+
+Object.getPrototypeOf(undefined)
+// TypeError: Cannot convert undefined or null to object
+```
+
+#### Object.is()
 
 判断两个值是否相同。
 如果下列任何一项成立，则两个值相同：
@@ -5130,7 +5459,7 @@ Object.is(-0, -0);           // true
 Object.is(NaN, 0/0);         // true
 ```
 
-#### 13.Object.freeze()
+#### Object.freeze()
 
 冻结一个对象，冻结指的是不能向这个对象添加新的属性，不能修改其已有属性的值，不能删除已有属性，以及不能修改该对象已有属性的可枚举性、可配置性、可写性。也就是说，这个对象永远是不可变的。该方法返回被冻结的对象。
 
@@ -5160,11 +5489,11 @@ obj.quaxxor = 'the friendly duck';
 console.log(obj)
 ```
 
-#### 14.Object.isFrozen()
+#### Object.isFrozen()
 
 判断一个对象是否被冻结 .
 
-#### 15.Object.preventExtensions()
+#### Object.preventExtensions()
 
 对象不能再添加新的属性。可修改，删除现有属性，不能添加新属性。
 
@@ -5489,7 +5818,7 @@ console.log(Object.keys(obj2)); //  ["1.1", "1.0", "-1", "jack"]
 
 尽管会遵循上面的规则，但是 `for...in` 还会遍历原型的属性。所以 `for...in` 的变量元素的规则是先按照我们上面讲的对象遍历规则去变量对象本身，接下来再按照此规则去遍历对象的原型，以此类推，直到遍历到顶部。
 
-### 19.Object.create()、new Object()和{}的区别
+### 19.js创建对象方式
 
 平时代码中必定会使用对象，通常是用最直接的字面量方法创建`var obj = {}`，最近在整理[JS继承方式](https://link.juejin.cn/?target=https%3A%2F%2Flijing0906.github.io%2Fpost%2FjsInherit "https://lijing0906.github.io/post/jsInherit")时遇到`Object.create()`也可以创建对象，另外，也可以用`new Object()`关键字创建。 那这三种方式有差别吗？
 

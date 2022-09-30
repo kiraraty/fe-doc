@@ -867,7 +867,9 @@ const proxy = new Proxy({}, {
 obj.name // 'detanx'
 ```
 
-`Proxy` 支持的拦截操作一览，一共 `13` 种
+#### Proxy拦截操作
+
+`Proxy` 支持的**拦截操作**一览，一共 `13` 种
 
 1. `get(target, propKey, receiver)`：拦截对象属性的读取，比如`proxy.foo`和`proxy['foo']`。
 2. `set(target, propKey, value, receiver)`：拦截对象属性的设置，比如`proxy.foo = v`或`proxy['foo'] = v`，返回一个布尔值。
@@ -960,10 +962,40 @@ proxy.foo // "bar"
     1. 可以劫持整个对象，并返回一个新对象。
     2. 有 `13` 种劫持操作。
 
+#### Proxy存在的问题
+
+在JS中任何函数本质上都是通过某个对象来调用的，比如`obj.fun`，默认情况下`fun`中的`this`就是对象`obj`。当然了，我们其实一直在享受这种特殊机制所带来的便利，但如果将这种机制发挥在代理对象中，可能会出现不符合我们预期的情况，最典型的问题莫过于在源对象中是否依赖于`this`作为标识
+
+```js
+const origin = {
+    name: '鲨鱼辣椒',
+    say() {
+        // 两次的this并不相同
+        return this
+    }}
+const handler = {}
+
+const proxy = new Proxy(origin, handler)
+
+console.log(origin.say()) // {name: '鲨鱼辣椒', say: ƒ}
+console.log(proxy.say()) // Proxy {name: '鲨鱼辣椒', say: ƒ}
+```
+
+还有一个特殊的例子就是`Date`类型了。根据ECMAScript规范，Date类型方法的执行依赖于`this`上的内部槽位`[[ NumberDate ]]`，但代理对象毫无疑问是不存在这个槽位的，所以在使用代理对象访问`Date`类上的方法时会抛出`TypeError`
+
+```js
+const origin = new Date()
+const handler = {}
+
+const proxy = new Proxy(origin, handler)
+
+console.log(proxy.getDate()) // TypeError
+```
+
 #### Reflect
 
-1. 将`Object`对象的一些明显属于语言内部的方法（比如`Object.defineProperty`），放到`Reflect`对象上。
-2. 修改某些`Object`方法的返回结果，让其变得更合理。比如，`Object.defineProperty(obj, name, desc)`在无法定义属性时，会抛出一个错误，而`Reflect.defineProperty(obj, name, desc)`则会返回`false`。
+1. 将`Object`对象的一些**明显属于语言内部的方法**（比如`Object.defineProperty`），放到`Reflect`对象上。
+2. 修改某些`Object`方法的返回结果，让其变得更合理。比如，`Object.defineProperty(obj, name, desc)`在无法定义属性时，会抛出一个错误，通常我们需要使用`try catch`去捕获这个错误，而`Reflect.defineProperty(obj, name, desc)`则会返回`false`。
 
 ```js
 // 老写法
@@ -993,6 +1025,138 @@ Reflect.has(Object, 'assign') // true
 ```
 
 4.`Reflect`对象的方法与`Proxy`对象的方法一一对应，只要是`Proxy`对象的方法，就能在`Reflect`对象上找到对应的方法。**每一个`Proxy`对象的拦截操作（`get、delete、has、...`），内部都调用对应的`Reflect`方法。**
+
+#### Reflect常用方法
+
+##### get
+
+接收两个参数
+
+- 要访问的对象
+- 访问的属性
+
+```js
+const obj = { name: '鲨鱼辣椒' }
+console.log(Reflect.get(obj, 'name')) // 鲨鱼辣椒
+```
+
+##### set
+
+该方法的返回值为`true`或`false`，`true`代表本次操作成功，`false`代表失败；操作成功是指对于那些可写且可配置的属性。要注意的是，当操作失败时，在严格模式下会抛出`TypeError`。该方法接收三个参数
+
+- 要添加新属性的对象
+- 要添加新属性
+- 描述属性
+
+```js
+const obj = { name: '鲨鱼辣椒' }
+Object.defineProperty(obj, 'age', {
+    value: 25,
+    writable: false,
+    configurable: false
+})
+console.log(obj.age) // 25
+console.log(Reflect.set(obj, 'age', 26)) // false
+console.log(obj.age) // 25
+```
+
+##### has
+
+检查一个对象中是否包含(继承)某个属性，相当于`in`操作符。接收两个参数
+
+- 要检查的对象
+- 要检查的属性
+
+返回一个`布尔值`，代表是否检测到了当前属性
+
+```js
+const origin = {age: 25}
+const obj = { name: '鲨鱼辣椒' }
+obj.__proto__ = origin
+console.log('age' in obj) // true
+console.log(Reflect.has(obj,'age')) // true
+```
+
+##### defineProperty
+
+用法基本同`Reflect.set`一致
+
+```js
+const obj = { name: '鲨鱼辣椒' }
+Object.defineProperty(obj, 'age', {
+    value: 25,
+    writable: false,
+    configurable: false
+})
+console.log(obj.age) // 25
+console.log(Reflect.defineProperty(obj, 'age', {
+    get() { return }
+})) // false
+console.log(obj.age) // 25
+```
+
+##### deleteProperty
+
+相当于 `delete property`，该方法接收两个参数
+
+- 要删除属性的对象
+- 要删除的属性
+
+返回一个`布尔值`，代表是否删除成功，删除成功是指对于那些可写且可配置的属性
+
+```js
+const obj = { name: '鲨鱼辣椒' }
+Object.defineProperty(obj, 'age', {
+    value: 25,
+    writable: false,
+    configurable: false
+})
+console.log(Reflect.deleteProperty(obj, 'name')) // true
+console.log(Reflect.deleteProperty(obj, 'age')) // false
+```
+
+##### ownKeys
+
+接收一个对象作为参数，并将该对象中`自有属性`、`符号值`、`不可枚举属性`作为数组返回，该数组中的每个成员都是字符串或符号值
+
+> 类似于Object.getOwnPropertyNames和Object.getOwnPropertySymbols
+
+```js
+const origin = { bigName: 'SYLJ' }
+const obj = {
+    name: '鲨鱼辣椒',
+    [Symbol.for('age')]: 25,
+}
+obj.__proto__ = origin
+Object.defineProperty(obj, 'gender', {
+    value: '男',
+    writable: false,
+    configurable: false,
+    enumerable: false
+})
+console.log(Reflect.ownKeys(obj)) // ['name', 'gender', Symbol(age)]
+```
+
+属性排序
+
+一般来说，当我们列举对象中的键(属性名)时，其顺序由于不同引擎的实现所以总是飘忽不定的，有可能这一次列举时A属性在B属性前面，而又有可能在下一次列举时B属性跑到了A属性的前面。为了避免这种尴尬的情况，我们可以使用`Reflect.ownkeys`来列举对象中的属性，这个方法会遵循以下顺序
+
+1. 按照数字上升排序
+2. 按照创建顺序列举字符串属性名
+3. 按照创建顺序列举符号属性名
+
+```js
+const obj = {
+    1: '我的键是整数1',
+    one: '我的键是字符串1',
+    [Symbol.for('s1')]: '我的键是符号值1',
+}
+obj.two = '我的键是字符串2'
+obj[Symbol.for('s2')] = '我的键是符号值2'
+obj[2] = '我的键是整数2'
+
+console.log(Reflect.ownKeys(obj)) // ['1', '2', 'one', 'two', Symbol(s1), Symbol(s2)]
+```
 
 ### 8.Set Map数组有什么特性和区别
 
@@ -2258,7 +2422,7 @@ class Foo {}
 
 
 
-### 12.JS Object的实现
+### 12.JS Object的底层实现
 
 [从Chrome源码看JS Object的实现](https://zhuanlan.zhihu.com/p/26169639)
 
@@ -2511,8 +2675,6 @@ int DescriptorLookupCache::Lookup(Map* source, Name* name) {
 
 如果一个元素的属性值超过64个呢？那也是同样的处理，后面设置的会覆盖前面设置的。学过哈希的都知道，当元素的个数大于容器容量的一半时，重复的概率将会大大增加。所以一个object的属性的比较优的最大大小为32。一旦超过32，在一个：
 
-
-
 ```js
 for(var key in obj){
     obj[key] //do sth.
@@ -2531,7 +2693,7 @@ for循环里面，这种查找的开销将会很大。但是考虑到属性个�
 
 如下的判断：
 
-```text
+```js
  const int kMapCacheSize = 128;
 
   // We do not cache maps for too many properties or when running builtin code.
@@ -2546,7 +2708,7 @@ for循环里面，这种查找的开销将会很大。但是考虑到属性个�
 
 往这个哈希表插入一个元素前，会先检查表的容量是否足够，不够进行扩容，在EnsureCapacity的函数里面：
 
-```text
+```js
  int capacity = table->Capacity();
   int nof = table->NumberOfElements() + n;
 
@@ -2584,7 +2746,7 @@ uint32_t HashTable<Derived, Shape, Key>::FindInsertionEntry(uint32_t hash) {
 
 在所有属性插入完成之后，查找的过程类似于上面的插入，如下面FindEntry的函数：
 
-```text
+```js
 // Find entry for key otherwise return kNotFound.
 template <typename Derived, typename Shape>
 int NameDictionaryBase<Derived, Shape>::FindEntry(Handle<Name> key) {
@@ -2604,7 +2766,7 @@ int NameDictionaryBase<Derived, Shape>::FindEntry(Handle<Name> key) {
 
 在while循环里，要么找到一个undefined的元素，返回无结果的标志，要么命中元素，返回FixedArray的索引index，然后通过这个数组index就可以很快地取出数据：
 
-```text
+```js
 property_details_ = dictionary->DetailsAt(entry);
 ```
 
@@ -2782,10 +2944,6 @@ inline uint32_t ComputeIntegerHash(uint32_t key, uint32_t seed) {
 
 这里有一个比较有趣的事情，就是V8的Map的核心逻辑是用JS实现的，具体文件是在[v8/src/js/collection.js](https://cs.chromium.org/chromium/src/v8/src/js/collection.js)，用JS来实现JS，比写C++要高效多了，但是执行效率可能就没有直接写C++的高，可以来看一下set函数的实现：
 
-
-
-
-
 ```js
 function MapSet(key, value) {
   //添加一个log
@@ -2868,8 +3026,6 @@ console.timeEnd("obj time");
 
 
 属性不超过128个，使用Search Cache，当属性是较为连续的数字时，使用数组，此种方式最快。其它情况使用哈希表，并且数字和字符串的哈希不一样。
-
-
 
 可以把Object当成哈希map使用，但是在效率上可能会比不上ES6的Map，并且还有Object原型查找的问题。
 
@@ -4737,7 +4893,7 @@ JavaScript 运行时，除了一个正在运行的主线程，引擎还提供一
 区别
 并发和并行是即相似又有区别的两个概念，并行是指两个或者多个事件在同一时刻发生；而并发是指两个或多个事件在同一时间间隔内发生。在多道程序环境下，并发性是指在一段时间内宏观上有多个程序在同时运行，但在单处理机系统中，每一时刻却仅能有一道程序执行，故微观上这些程序只能是分时地交替执行。倘若在计算机系统中有多个处理机，则这些可以并发执行的程序便可被分配到多个处理机上，实现并行执行，即利用每个处理机来处理一个可并发执行的程序，这样，多个程序便可以同时执行。所以微观上说，多核CPU可以同时执行多个进程，进程数与CPU核数相当。但宏观上说，由于CPU会分时间片执行多个进程，所以实际执行进程个数会远多于CPU核数。
 
-### 8.setTimeOut setInterval有什么区别
+### 8.setTimeOut和setInterval有什么区别
 
 异步编程当然少不了定时器了，常见的定时器函数有 `setTimeout`、`setInterval`、`requestAnimationFrame`。最常用的是`setTimeout`，很多人认为 `setTimeout` 是延时多久，那就应该是多久后执行。
 
