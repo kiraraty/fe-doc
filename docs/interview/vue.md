@@ -1834,7 +1834,7 @@ function __watcher(fn){
 </html>
 ```
 
-### 10.slot的应用场景
+### 10.slot的使用
 
 我们知道在Vue中 Child 组件的标签 的中间是不可以包着什么的 。
 
@@ -1913,6 +1913,153 @@ v-solt可以解构接收 解构接收的字段要和传的字段一样才可以
 效果图
 
 ![image-20220621091246267](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgsUAzp31qG6lXSrhn.png)
+
+#### 总结和理解
+
+插槽父子组件
+
+一般是子组件内使用`<slot></slot>`进行占位
+
+父组件进行slot内容的替换  组件标签内数据  或者  template设置
+
+
+
+**内容插槽**
+
+slot相当于占位的  调用组件 在组件标签内的东西会替换slot 实际上就是对内容替换
+
+**具名插槽**
+
+slot设置name `<slot name="header"></slot>`    
+
+然后通过template`<template v-slot:header>  </template>`的内容替换slot  可以进行简写 `<template #header>`
+
+**作用域插槽**
+
+ 父组件访问自组件的数据 
+
+  test组件  `<slot v-bind:usertext="user">{{user.lastName}}</slot>`
+
+```js
+//test.vue
+<div>
+	<!-- 设置默认值：{{user.lastName}}获取 Jun -->
+	<!-- 如果home.vue中给这个插槽值的话，则不显示 Jun -->
+	<!-- 设置一个 usertext 然后把user绑到设置的 usertext 上 -->
+	<slot v-bind:usertext="user">{{user.lastName}}</slot>
+</div>
+
+//定义内容
+data(){
+  return{
+	user:{
+	  firstName:"Fan",
+	  lastName:"Jun"
+	}
+  }
+}
+```
+
+   home组件内部
+
+```js
+<test v-slot:default="slotProps">  //可以把 :default 去掉，仅限于默认插槽
+    {{slotProps.usertext.firstName}}
+</test>
+```
+
+
+
+只要出现**多个插槽**，始终要为所有的插槽使用完整的基于`<template>`的语法：
+
+```xml
+<test>
+  <template v-slot:default="slotProps">
+    {{ slotProps.user.firstName }}
+  </template>
+
+  <template v-slot:other="otherSlotProps">
+    ...
+  </template>
+</test>
+```
+
+解构插槽Prop
+
+因为 作用域插槽 的内部工作原理是将你的插槽内容包括在一个传入单个参数的函数里
+ 这意味着 `v-slot` 的值实际上可以是任何能够作为函数定义中的参数的 JS 表达式
+
+所以本来是这样写的：
+
+```js
+<div>
+  <test v-slot="slotProps">
+    {{slotProps.usertext.firstName}}
+  </test>
+</div>
+```
+
+还可以这样写：
+
+```js
+<div>
+  <test v-slot={usertext}>
+    {{usertext.firstName}}
+  </test>
+</div>
+```
+
+动态插槽名(2.6.0新增)
+
+**动态指令参数**(需要自己了解)也可以用在`v-slot`上，来定义动态的插槽名：
+
+```xml
+<base-layout>
+  <template v-slot:[dynamicSlotName]>
+    ...
+  </template>
+</base-layout>
+```
+
+**具名插槽**的缩写(2.6.0新增)
+
+跟 `v-on` 和 `v-bind` 一样，`v-slot` 也有缩写，即把参数之前的所有内容 `(v-slot:)` 替换为字符 `#`。例如 `v-slot:header` 可以被重写为 `#header`：
+
+原来是这样写的：
+
+```less
+<div>
+   <template v-slot:header>
+    <h1>Here might be a page title</h1>
+   </template>
+
+  <p>A paragraph for the main content.</p>
+  <p>And another one.</p>
+
+  <template v-slot:footer>
+    <p>Here some contact info</p>
+  </template>
+</div>  
+```
+
+现在可以这样写：
+
+```less
+<div>
+   <template #header>
+    <h1>Here might be a page title</h1>
+   </template>
+
+  <p>A paragraph for the main content.</p>
+  <p>And another one.</p>
+
+  <template #footer>
+    <p>Here some contact info</p>
+  </template>
+</div>
+```
+
+
 
 ### 11.保存当前页面状态，keep-alive原理
 

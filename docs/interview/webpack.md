@@ -2297,6 +2297,107 @@ babel-runtime插件能够将这些工具函数的代码转换成require语句，
   - Taro就是利用 babel 完成的小程序语法转换
 - 生成：以新的 AST 为基础生成代码
 
+#### shim与polyfill的区别
+
+针对`es6-shim`与`es6-promise`这两个库，认识下`shim`与`polyfill`的功能定义上有何不同。
+
+##### shim
+
+分析了下`es6-shim`的源码，现在把整体逻辑梳理为下面代码：
+
+```javascript
+// UMD
+(function (root, factory) {
+  if (typeof define === 'function' && define.amd) {
+    define(factory);
+  } else if (typeof exports === 'object') {
+    module.exports = factory();
+  } else {
+    // Browser globals (root is window)
+    root.returnExports = factory();
+  }
+}(this, function () {
+  'use strict';
+  // 判断并获取全局对象
+  var getGlobal = function () {
+    if (typeof self !== 'undefined') { return self; }
+    if (typeof window !== 'undefined') { return window; }
+    if (typeof global !== 'undefined') { return global; }
+    throw new Error('unable to locate global object');
+  }
+  // 得到环境下的全局对象
+  var globals = getGlobal();
+  // es6 Map
+  globals.Map = ...
+  // es6 Set
+  globals.Set = ...
+  // es6 Symbol
+  globals.Symbol = ...
+  
+  // 将全局对象返回，当es6-shim库被引入时，会自动在全局对象挂载API，也就是重新造了一个新环境。
+  return globals
+}))
+```
+
+说明：当引入`shim`库时，它会影响全局对象。通过对全局对象增加API，从而创建一个新的环境。`shim`不会判断API是否已经存在。
+
+##### polyfill
+
+`es6-promise`的`polyfill`代码逻辑：
+
+```javascript
+import Promise from './promise';
+
+export default function polyfill() {
+  let local;
+  // 这里同样是用的UMD
+  if (typeof global !== 'undefined') {
+    local = global;
+  } else if (typeof self !== 'undefined') {
+    local = self;
+  } else {
+    try {
+      local = Function('return this')();
+    } catch (e) {
+      throw new Error('polyfill failed because global object is unavailable in this environment');
+    }
+  }
+
+  let P = local.Promise;
+    // 这里判断了全局对象下是否有Promise这个属性。   
+  if (P) {
+    var promiseToString = null;
+    try {
+      promiseToString = Object.prototype.toString.call(P.resolve());
+    } catch(e) {
+      ...
+    }
+    if (promiseToString === '[object Promise]' && !P.cast){
+        // 如果已经有了Promise，就直接返回，不会再给全局对象增加Promise属性。
+      return;
+    }
+  }
+    // 代码执行到这里，给全局对象添加Promise的API
+  local.Promise = Promise;
+}
+```
+
+说明：从上面的源码，可以看出，`polyfill`库与`shim`库大致逻辑基本一致。但是有所不同的是，`polyfill`会先判断当前环境是否已经有了目标API，如果有了，会停止，没有时才会添加`polyfill`实现的API。
+
+##### 总结
+
+由上面的分析对比，可以知道的是，**`shim`针对的是环境，`polyfill`针对的是API**。
+
+在使用`shim`时，不会在意旧环境是否已经存在某API，它会直接重新改变全局对象，为旧环境提供API(它是一个**垫片**，为旧环境提供新功能，从而创建一个新环境)。
+
+而在`polyfill`中，它会判断旧环境是否已经存在API，不存在时才会添加新API(它是**腻子**，抹平不同环境下的API差异)。
+
+这二者的目的并不相同。
+
+[es6-shim](https://link.juejin.cn/?target=https%3A%2F%2Fgithub.com%2Fpaulmillr%2Fes6-shim)
+
+[es6-promise](https://link.juejin.cn/?target=https%3A%2F%2Fgithub.com%2Fstefanpenner%2Fes6-promise)
+
 ### 12.vite和webpack
 
 如果应用过于复杂，使用Webpack 的开发过程会出现以下问题

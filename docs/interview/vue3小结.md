@@ -26,11 +26,11 @@
 -   Vue 3 的 `Template` 支持多个根标签，Vue 2 不支持
 -   对虚拟DOM进行了重写、对模板的编译进行了优化操作...
 
-## 一、setup 函数
+## 1.setup 函数
 
 `setup()` 函数是 `vue3` 中，专门为组件提供的新属性。它为我们使用 `vue3` 的 `Composition API` 新特性提供了统一的入口, `setup` 函数会在 `beforeCreate` 、`created` 之前执行, `vue3`也是取消了这两个钩子，统一用`setup`代替, 该函数相当于一个生命周期函数，`vue`中过去的`data`，`methods`，`watch`等全部都用对应的新增`api`写在`setup()`函数中
 
-```
+```js
 setup(props, context) {
     // Attribute (非响应式对象，等同于 $attrs)
     context.attrs
@@ -43,7 +43,6 @@ setup(props, context) {
     
     return {}
   }
-
 ```
 
 -   `props`: 用来接收 `props` 数据, `props` 是响应式的，当传入新的 `props` 时，它将被更新。
@@ -53,7 +52,7 @@ setup(props, context) {
 
 > 注意： 因为 `props` 是响应式的， 你**不能使用 ES6 解构**，它会消除 prop 的响应性。不过你可以使用如下的方式去处理
 
-```
+```js
 <script lang="ts">
 import { defineComponent, reactive, ref, toRefs } from 'vue';
 export default defineComponent({
@@ -67,12 +66,11 @@ export default defineComponent({
   }
 });
 </script>
-
 ```
 
 如果 `title` 是可选的 prop，则传入的 `props` 中可能没有 `title` 。在这种情况下，`toRefs` 将不会为 `title` 创建一个 ref 。你需要使用 `toRef` 替代它：
 
-```
+```js
 <script lang="ts">
 import { defineComponent, reactive, toRef, toRefs } from 'vue';
 export default defineComponent({
@@ -86,16 +84,15 @@ export default defineComponent({
   }
 });
 </script>
-
 ```
 
-## 二、reactive、shallowReactive 函数
+## 2.reactive、shallowReactive 函数
 
 ### 2.1 reactive()
 
-`reactive()` 函数接收一个普通对象，返回一个响应式的数据对象, 相当于 `Vue 2.x` 中的 `Vue.observable()` API，响应式转换是“深层”的——它影响所有嵌套属性。基于proxy来实现，想要使用创建的响应式数据也很简单，创建出来之后，在`setup`中`return`出去，直接在`template`中调用即可
+`reactive()` 函数接收一个**普通对象，返回一个响应式的数据对象**, 相当于 `Vue 2.x` 中的 `Vue.observable()` API，响应式转换是“深层”的——它影响所有嵌套属性。基于proxy来实现，想要使用创建的响应式数据也很简单，创建出来之后，在`setup`中`return`出去，直接在`template`中调用即可
 
-```
+```js
 <template>
   {{state.name}} // test
 <template>
@@ -113,17 +110,15 @@ export default defineComponent({
   }
 });
 </script>
-
 ```
 
 > 注意： 该 API 返回一个响应式的对象状态。该响应式转换是“深度转换”——它会影响传递对象的所有嵌套 property。
 
 ### 2.1 shallowReactive()
 
-创建一个响应式代理，它跟踪其自身属性的响应性`shallowReactive`生成非递归响应数据，只监听第一层数据的变化，但不执行嵌套对象的深层响应式转换 (暴露原始值)。
+创建一个响应式代理，它**跟踪其自身属性的响应性**`shallowReactive`生成非递归响应数据，只监听第一层数据的变化，但不执行嵌套对象的深层响应式转换 (暴露原始值)。
 
-```
-
+```js
 <script lang="ts">
 import { shallowReactive } from "vue";
 export default defineComponent({
@@ -131,8 +126,7 @@ export default defineComponent({
     
     const test = shallowReactive({ num: 1, creator: { name: "撒点了儿" } });
     console.log(test);
-
-    
+ 
     test.creator.name = "掘金";
 
     return {
@@ -141,15 +135,13 @@ export default defineComponent({
   },
 });
 </script>
-
-
 ```
 
-## 三、ref() 函数
+## 3.ref() 函数
 
-`ref()` 函数用来根据给定的值创建一个响应式的数据对象，`ref()` 函数调用的返回值是一个对象，这个对象上只包含一个 `value` 属性, 只在setup函数内部访问`ref`函数需要加`.value`，其用途创建独立的原始值
+`ref()` 函数用来根据**给定的值创建一个响应式的数据对象**，`ref()` 函数调用的返回值是一个对象，这个对象上只包含一个 `value` 属性, 只在setup函数内部访问`ref`函数需要加`.value`，其用途创建独立的原始值
 
-```
+```js
 <template>
     <div class="mine">
         {{count}} // 10
@@ -169,12 +161,11 @@ export default defineComponent({
    }
 });
 </script>
-
 ```
 
 在 `reactive` 对象中访问 `ref` 创建的响应式数据
 
-```
+```js
 <template>
     <div class="mine">
         {{count}} -{{t}} // 10 -100
@@ -211,16 +202,15 @@ export default defineComponent({
    }
 });
 </script>
-
 ```
 
 `reactive` 将解包所有深层的 `refs`，同时维持 ref 的响应性。当将 `ref`分配给 `reactive` property 时，ref 将被自动解包
 
-## 四、isRef() 函数
+## 4.isRef() 函数
 
 `isRef()` 用来判断某个值是否为 `ref()` 创建出来的对象
 
-```
+```js
 <script lang="ts">
 import { defineComponent, isRef, ref } from 'vue';
 export default defineComponent({
@@ -237,14 +227,13 @@ export default defineComponent({
   }
 });
 </script>
-
 ```
 
-## 五、toRefs() 函数
+## 5.toRefs() 函数
 
 `toRefs()` 函数可以将 `reactive()` 创建出来的响应式对象，转换为普通的对象，只不过，这个对象上的每个属性节点，都是 `ref()` 类型的响应式数据
 
-```
+```js
 <template>
   <div class="mine">
     {{name}} // test
@@ -269,19 +258,17 @@ export default defineComponent({
   }
 });
 </script>
-
 ```
 
-## 六、readonly()、isReadonly()、shallowReadonly()
+## 6.readonly()、isReadonly()、shallowReadonly()
 
 ### 6.1 readonly() 和 isReadonly()
 
 -   `readonly`: 传入`ref`或 `reactive`对象,并返回一个原始对象的只读代理,对象内部任何嵌套的属性也都是只读的、 并且是递归只读。
   
 -   `isReadonly`: 检查对象是否是由 `readonly` 创建的只读对象
-  
 
-```
+```js
 <script lang="ts">
 import { readonly, reactive } from "vue";
 export default defineComponent({
@@ -312,8 +299,6 @@ export default defineComponent({
   },
 });
 </script>
-
-
 ```
 
 我们知道`const`定义的变量也是不能改的，那`readonly`和`const`有什么区别？
@@ -325,8 +310,7 @@ export default defineComponent({
 
 `shallowReadonly` 作用只处理对象最外层属性的响应式（浅响应式）的只读，但不执行嵌套对象的深度只读转换 (暴露原始值)
 
-```
-
+```js
 <script lang="ts">
 import { readonly, reactive } from "vue";
 export default defineComponent({
@@ -347,17 +331,15 @@ export default defineComponent({
  },
 });
 </script>
-
-
 ```
 
-## 七、computed()
+## 7.computed()
 
 该函数用来创造计算属性，和过去一样，它返回的值是一个ref对象。 里面可以传方法，或者一个对象，对象中包含`set()`、`get()`方法
 
 ### 7.1 创建只读的计算属性
 
-```
+```js
 import { computed, defineComponent, ref } from 'vue';
 export default defineComponent({
   setup(props, context) {
@@ -373,12 +355,11 @@ export default defineComponent({
   }
 });
 </script>
-
 ```
 
 ### 7.2 通过`set()`、`get()`方法创建一个可读可写的计算属性
 
-```
+```js
 <script lang="ts">
 import { computed, defineComponent, ref } from 'vue';
 export default defineComponent({
@@ -398,16 +379,15 @@ export default defineComponent({
   }
 });
 </script>
-
 ```
 
-## 八、 watch() 函数
+## 8.watch() 函数
 
 `watch` 函数用来侦听特定的数据源，并在回调函数中执行副作用。默认情况是懒执行的，也就是说仅在侦听的源数据变更时才执行回调。
 
 ### 8.1 监听用reactive声明的数据源
 
-```
+```js
 <script lang="ts">
 import { computed, defineComponent, reactive, toRefs, watch } from 'vue';
 interface Person {
@@ -433,12 +413,11 @@ export default defineComponent({
   }
 });
 </script>
-
 ```
 
 ### 8.2 监听用ref声明的数据源
 
-```
+```js
 <script lang="ts">
 import { defineComponent, ref, watch } from 'vue';
 interface Person {
@@ -459,12 +438,11 @@ export default defineComponent({
   }
 });
 </script>
-
 ```
 
 ### 8.3 同时监听多个值
 
-```
+```js
 <script lang="ts">
 import { computed, defineComponent, reactive, toRefs, watch } from 'vue';
 interface Person {
@@ -494,15 +472,13 @@ export default defineComponent({
   }
 });
 </script>
-
-
 ```
 
 ### 8.4 stop 停止监听
 
 在 `setup()` 函数内创建的 `watch` 监视，会在当前组件被销毁的时候自动停止。如果想要明确地停止某个监视，可以调用 `watch()` 函数的返回值即可，语法如下：
 
-```
+```js
 <script lang="ts">
 import { set } from 'lodash';
 import { computed, defineComponent, reactive, toRefs, watch } from 'vue';
@@ -541,14 +517,13 @@ export default defineComponent({
   }
 });
 </script>
-
 ```
 
-## 九、LifeCycle Hooks(新的生命后期)
+## 9.LifeCycle Hooks(新的生命后期)
 
 新版的生命周期函数，可以按需导入到组件中，且只能在 `setup()` 函数中使用, 但是也可以在`setup` 外定义, 在 `setup` 中使用
 
-```
+```js
 <script lang="ts">
 import { set } from 'lodash';
 import { defineComponent, onBeforeMount, onBeforeUnmount, onBeforeUpdate, onErrorCaptured, onMounted, onUnmounted, onUpdated } from 'vue';
@@ -583,10 +558,9 @@ export default defineComponent({
   }
 });
 </script>
-
 ```
 
-## 十、Template refs
+## 10.Template refs
 
 通过`refs` 来回去真实`dom`元素, 这个和`react` 的用法一样,为了获得对模板内元素或组件实例的引用，我们可以像往常一样在`setup()`中声明一个`ref`并返回它
 
@@ -595,7 +569,7 @@ export default defineComponent({
 3.  `steup` 中返回 `ref`的实例
 4.  `onMounted` 中可以得到 `ref`的`RefImpl`的对象, 通过`.value` 获取真实`dom`
 
-```
+```js
 <template>
   <!--第一步：还是跟往常一样，在 html 中写入 ref 的名称-->
   <div class="mine" ref="elmRefs">
@@ -620,53 +594,48 @@ export default defineComponent({
   }
 });
 </script>
-
 ```
 
-## 十一、vue 的全局配置
+## 11.vue 的全局配置
 
 通过`vue` 实例上`config`来配置,包含`Vue`应用程序全局配置的对象。您可以在挂载应用程序之前修改下面列出的属性:
 
-```
+```js
 const app = Vue.createApp({})
 
 app.config = {...}
-
 ```
 
 为组件渲染功能和观察程序期间的未捕获错误分配处理程序。错误和应用程序实例将调用处理程序
 
-```
+```js
 app.config.errorHandler = (err, vm, info) => {}
-
 ```
 
 可以在应用程序内的任何组件实例中访问的全局属性，组件的属性将具有优先权。这可以代替`Vue` 2.xVue.prototype扩展：
 
-```
+```js
 const app = Vue.createApp({})
 
 app.config.globalProperties.$http = 'xxxxxxxxs'
-
 ```
 
 可以在组件用通过 `getCurrentInstance()` 来获取全局`globalProperties` 中配置的信息,`getCurrentInstance` 方法获取当前组件的实例，然后通过 `ctx` 属性获得当前上下文，这样我们就能在`setup`中使用`router`和`vuex`, 通过这个属性我们就可以操作变量、全局属性、组件属性等等
 
-```
+```js
 setup( ) {
   const { ctx } = getCurrentInstance();
   ctx.$http   
 }
-
 ```
 
-## 十二、Suspense 组件
+## 12.Suspense 组件
 
 在开始介绍 `Vue` 的 `Suspense` 组件之前，我们有必要先了解一下 `React` 的 `Suspense` 组件，因为他们的功能类似。
 
 `React.lazy` 接受一个函数，这个函数需要动态调用 `import()`。它必须返回一个 `Promise`，该 `Promise` 需要 `resolve` 一个 `default export` 的 `React` 组件。
 
-```
+```js
 import React, { Suspense } from 'react';
  
  
@@ -682,12 +651,11 @@ function MyComponent() {
     </div>
   );
 }
-
 ```
 
 `Vue3` 也新增了 `React.lazy` 类似功能的 `defineAsyncComponent` 函数，处理动态引入（的组件）。`defineAsyncComponent`可以接受返回承诺的工厂函数。当您从服务器检索到组件定义时，应该调用`Promise`的解析回调。您还可以调用`reject(reason)`来指示负载已经失败
 
-```
+```js
 import { defineAsyncComponent } from 'vue'
 
 const AsyncComp = defineAsyncComponent(() =>
@@ -695,12 +663,11 @@ const AsyncComp = defineAsyncComponent(() =>
 )
 
 app.component('async-component', AsyncComp)
-
 ```
 
 Vue3 也新增了 Suspense 组件:
 
-```
+```js
 <template>
   <Suspense>
     <template #default>
@@ -725,12 +692,10 @@ export default defineComponent({
    }
 })
  
- 
 </script>
-
 ```
 
-## 十三、Provide/Inject
+## 13.Provide/Inject
 
 通常，当我们需要从父组件向子组件传递数据时，我们使用 `props`。想象一下这样的结构：有一些深度嵌套的组件，而深层的子组件只需要父组件的部分内容。在这种情况下，如果仍然将 `prop` 沿着组件链逐级传递下去，可能会很麻烦。
 
@@ -740,7 +705,7 @@ export default defineComponent({
 
 ### 13.1 基础使用
 
-```
+```js
 // 父组件
 <script lang="ts">
 import { defineComponent } from 'vue';
@@ -768,9 +733,6 @@ export default defineComponent({
   inject: ["provideData"],
 });
 </script>
-
-
-
 ```
 
 ### 13.2 setup()中使用
@@ -782,8 +744,7 @@ export default defineComponent({
 -   `name`：参数名称
 -   `value`：属性的值
 
-```
-
+```js
 <script lang="ts">
 import { provide } from "vue";
 import HelloWorldVue from "./components/HelloWorld.vue";
@@ -818,15 +779,13 @@ export default defineComponent({
   },
 });
 </script>
-
-
 ```
 
 ### 13.3 传递响应数据
 
 为了增加 `provide` 值和 `inject` 值之间的响应性，我们可以在 `provide` 值时使用 `ref` 或 `reactive`。
 
-```
+```js
 
 <script lang="ts">
 import { provide, reactive, ref } from "vue";
@@ -866,14 +825,11 @@ export default defineComponent({
   },
 });
 </script>
-
-
-
 ```
 
 > 如果要确保通过 provide 传递的数据不会被 inject 的组件更改，我们建议对提供者的 property 使用 readonly。
 
-## 十四、vue 3.x 完整组件模版结构
+## 14.vue 3.x 完整组件模版结构
 
 一个完成的`vue 3.x` 完整组件模版结构包含了:组件名称、 `props`、`components`、`setup(hooks、computed、watch、methods 等)`
 
@@ -923,7 +879,6 @@ export default defineComponent({
     console.log(props.name)
     console.log(props.list)
     
-    
     const state = reactive<IState>({
       name: 'vue 3.0 组件',
       count: 0,
@@ -938,19 +893,14 @@ export default defineComponent({
         }
       ]
     })
-
     const a = computed(() => state.name)
-
     onMounted(() => {
-
     })
-
     function handleClick () {
       state.count ++
       // 调用父组件的方法
       context.emit('emits-name', state.count)
     }
-  
     return {
       ...toRefs(state),
       handleClick
@@ -958,8 +908,127 @@ export default defineComponent({
   }
 });
 </script>
-
 ```
+
+## 15.Vue3对typescript支持
+
+[TypeScript 与组合式 API](https://cn.vuejs.org/guide/typescript/composition-api.html)
+
+[Vue3 + TS 最佳实践](https://juejin.cn/post/7001897686567747598)
+
+### `defineComponent()`
+
+为了让 TypeScript 正确地推导出组件选项内的类型，我们需要通过 [`defineComponent()`](https://cn.vuejs.org/api/general.html#definecomponent) 这个全局 API 来定义组件：
+
+```ts
+import { defineComponent } from 'vue'
+
+export default defineComponent({
+  // 启用了类型推导
+  props: {
+    name: String,
+    msg: { type: String, required: true }
+  },
+  data() {
+    return {
+      count: 1
+    }
+  },
+  mounted() {
+    this.name // 类型：string | undefined
+    this.msg // 类型：string
+    this.count // 类型：number
+  }
+})
+```
+
+当没有结合 `<script setup>` 使用组合式 API 时，`defineComponent()` 也支持对传递给 `setup()` 的 prop 的推导：
+
+```ts
+import { defineComponent } from 'vue'
+
+export default defineComponent({
+  // 启用了类型推导
+  props: {
+    message: String
+  },
+  setup(props) {
+    props.message // 类型：string | undefined
+  }
+})
+```
+
+### 在单文件组件中的用法
+
+要在单文件组件中使用 TypeScript，需要在 `<script>` 标签上加上 `lang="ts"` 的 attribute。当 `lang="ts"` 存在时，所有的模板内表达式都将享受到更严格的类型检查。
+
+```vue
+<script lang="ts">
+import { defineComponent } from 'vue'
+
+export default defineComponent({
+  data() {
+    return {
+      count: 1
+    }
+  }
+})
+</script>
+
+<template>
+  <!-- 启用了类型检查和自动补全 -->
+  {{ count.toFixed(2) }}
+</template>
+```
+
+`lang="ts"` 也可以用于 `<script setup>`：
+
+```js
+<script setup lang="ts">
+// 启用了 TypeScript
+import { ref } from 'vue'
+
+const count = ref(1)
+</script>
+
+<template>
+  <!-- 启用了类型检查和自动补全 -->
+  {{ count.toFixed(2) }}
+</template>
+```
+
+### 模板中的 TypeScript
+
+在使用了 `<script lang="ts">` 或 `<script setup lang="ts">` 后，`<template>` 在绑定表达式中也支持 TypeScript。这对需要在模板表达式中执行类型转换的情况下非常有用。
+
+这里有一个假想的例子：
+
+```vue
+<script setup lang="ts">
+let x: string | number = 1
+</script>
+
+<template>
+  <!-- 出错，因为 x 可能是字符串 -->
+  {{ x.toFixed(2) }}
+</template>
+```
+
+可以使用内联类型强制转换解决此问题：
+
+```vue
+<script setup lang="ts">
+let x: string | number = 1
+</script>
+
+<template>
+  {{ (x as number).toFixed(2) }}
+</template>
+```
+
+>如果正在使用 Vue CLI 或基于 webpack 的配置，支持模板内表达式的 TypeScript 需要 `vue-loader@^16.8.0`。
+
+
 
 ## vue 3 的生态
 

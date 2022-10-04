@@ -3316,3 +3316,48 @@ S extends `${infer L}${infer R}`
 如果当前的字符串已拆解完，则读取存放数组`T`的长度。
  如果没有拆解完，则递归调用`LengthOfString<R, [...T, L]> `，并将取出的字符，放入`T`中。
 
+## 项目使用
+
+### (.d.ts)文件
+
+[一文读懂TS的(.d.ts)文件](https://www.jianshu.com/p/cd875a4a6c15)
+
+- 在使用TS的时候，最大的一个好处就是可以给JS各种类型约束，使得JS能够完成静态代码分析，推断代码中存在的类型错误或者进行类型提示
+- TS完成类型推断，需要事先知道变量的类型，如果我们都是用TS书写代码，并且给变量都指定了明确的类型，这时TS可以很好的完成类型推断工作
+- 但是有时，我们不免会引入外部的 JS库，这时TS就对引入的JS文件里变量的具体类型不明确了，为了告诉TS变量的类型，因此就有了.d.ts (d即declare)，ts的声明文件。
+
+TS身为 JS的超集，那么如何让这些第三方库也可以进行类型推导呢，自然需要考虑到如何让 JS 库也能定义静态类型
+
+#### 什么是“.d.ts” 文件
+
+基于 Typescript 开发的时候，很麻烦的一个问题就是类型定义。导致在编译的时候，经常会看到一连串的找不到类型的提示。“d.ts”文件用于为 TypeScript 提供有关用 JavaScript 编写的 API 的类型信息。简单讲，就是你可以在 ts 中调用的 js 的声明文件。TS的核心在于静态类型，我们在编写 TS 的时候会定义很多的类型，但是主流的库都是 JS编写的，并不支持类型系统。这个时候你不能用TS重写主流的库，这个时候我们只需要编写仅包含类型注释的 d.ts 文件，然后从您的 TS 代码中，可以在仍然使用纯 JS 库的同时，获得静态类型检查的 TS 优势。在此期间，解决的方式经过了许多的变化，从 DefinitelyTyped 到 typings。最后是 @types。在 Typescript 2.0 之后，推荐使用 @types 方式。
+
+#### @types
+
+在 Typescript 2.0 之后，TypeScript 将会默认的查看 ./node_modules/@types 文件夹，自动从这里来获取模块的类型定义，当然了，你需要独立安装这个类型定义。
+
+默认情况下，所有的 @types 包都会在编译时应用，任意层的 node_modules/@types 都会被使用，进一步说，在 `./node_modules/@types/` , `../node_modules/@types/`, `../../node_modules/@types/` 都被应用。如果你的类型定义不在这个文件夹中，可以使用 typesRoot 来配置，只有在 typeRoots 中的包才会被包含，配置如下：
+
+```json
+ {
+    "compilerOptions": {
+        "typeRoots" : ["./typings"]
+    }
+ }
+```
+
+现在，只有在 ./typings 中的才会应用，而 ./node_modules/@types 中的则不会。 如果配置了 types，则只有列出的包才会包含。
+
+```json
+ {
+    "compilerOptions": {
+        "types" : ["node", "lodash", "express"]
+    }
+ }
+```
+
+这样将只会包含 `./node_modules/@types/node`, `./node_modules/@types/lodash` 和 `./node_modules/@types/express`，其它的则不会被包含进来。如果配置为`"types": []`则不会包含任何包。
+
+#### *.d.ts和@types关系
+
+`@types`是`npm`的一个分支，用来存放`*.d.ts`文件，如果对应的`npm`包存放在`@types`中，要使用必须下载！如果是自己本地的`*.d.ts`申明文件，则和@types没有任何关系！

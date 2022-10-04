@@ -577,7 +577,8 @@ console.log(999999999999999);  //=>10000000000000000
 同时也会有一定的安全性问题:
 
 ```text
-9007199254740992 === 9007199254740993;    // → true 居然是true! 
+9007199254740992 === 9007199254740993;    
+// → true 居然是true! 
 ```
 
 **如何创建并使用BigInt？**
@@ -689,7 +690,7 @@ console.log(function(){} instanceof Function); // true
 console.log({} instanceof Object);            // true
 ```
 
-可以看到，`instanceof`**只能正确判断引用数据类型**，而不能判断基本数据类型。`instanceof` 运算符可以用来测试一个对象在其原型链中是否存在一个构造函数的 `prototype` 属性。
+可以看到，`instanceof`**只能正确判断引用数据类型**，而不能判断基本数据类型。`instanceof` 运算符可以用**来测试一个对象在其原型链中是否存在一个构造函数**的 `prototype` 属性。
 
 `instanceof` 运算符用于判断构造函数的 `prototype` 属性是否出现在对象的原型链中的任何位置。
 
@@ -1365,8 +1366,6 @@ Date()对象是一个构造函数，必须使用new来调用创建我们的日�
 
 如果没有输入任何参数，则Date的构造器会依据系统设置的当前时间来创建一个Date对象。
 
-
-
 | Date Creation                                                | Output                                              |
 | ------------------------------------------------------------ | --------------------------------------------------- |
 | `new Date()`                                                 | Current date and time                               |
@@ -1387,8 +1386,6 @@ Date()对象是一个构造函数，必须使用new来调用创建我们的日�
 | getSeconds        | 获取当前秒钟                  |
 | getMilliseconds() | 获取当前毫秒                  |
 | getTime()         | 获取时间戳                    |
-
-
 
 #### 字符串对象
 
@@ -1461,8 +1458,6 @@ new RegExp(pattern, attributes)
 | [exec](https://www.w3school.com.cn/jsref/jsref_exec_regexp.asp) | 检索字符串中指定的值。返回找到的值，并确定其位置。 ans=reg.exec(str)   ans[0]为匹配的全部字符串   ans[1]...ans[n]为分组捕获的字符 |
 | [test](https://www.w3school.com.cn/jsref/jsref_test_regexp.asp) | 检索字符串中指定的值。返回 true 或 false。     reg.test(str) |
 
-
-
 ##### 支持正则表达式的 String 对象的方法
 
 | 方法                                                         | 描述                             |
@@ -1505,8 +1500,6 @@ console.log(obj.valueOf()) //1
 ```
 
 **valueOf() 和 toString()在特定的场合下会自行调用**
-
-
 
 ### 2.js全局变量和全局函数
 
@@ -1566,8 +1559,6 @@ var test4= new String("999"); //999
 var test5= new String("999 888");  //NaN
 ```
 
-
-
 ##### parseFloat()
 
  解析一个字符串并返回一个浮点数。
@@ -1592,7 +1583,56 @@ var test6 = new String("999 888");
 var test7 = 12345;
 ```
 
+##### Number与parseInt
 
+```dart
+
+Number("123")       //123     字符串
+Number("")          //0       字符串
+Number(true)        //1       布尔
+Number(null)        //0       对象
+Number(1.1)         //1.1     浮点数
+Number("123abc")    //NaN
+
+parseInt("123"）  //123       字符串
+parseInt("");     //NaN       字符串
+parseInt(true)    //NaN       Boolean
+parseInt(null)    //NaN       对象
+parseInt(1.1)     //1         浮点数
+parseInt("123abc")   
+```
+
+在进行数值转换的过程中
+(1)Number有较为复杂的转换规则
+
+如果是boolean值，true和false将分别转换为十进制数值
+如果是数字值，只是简单的传入与返回
+如果是null， 返回0
+如果是undefined ，返回NaN
+如果是字符串，遵循下列原则：
+`1.只包含数字，八进制的数值将会被忽略前面的0，直接显示为十进制 如：“011” 应为 ‘9’但只能转换为‘11’；`
+`2.浮点数可以转换为对应的浮点数值`
+`3.如果是十六进制会转换为十进制值`
+`4.如果字符串为空转换为0`
+`5.其他转为NaN`
+
+（2） parseInt()在转换字符是更看其是否符合数值模式。它会忽略字符串前面的空格，知道找到第一个非空格字符。它是逐个解析字符的
+`e.g：parseInt("1234aaa"）输出为“1234” 如果第一个字符是数字字符，会继续解析第二个字符，直到解析完所有的后续字符或者遇到了一个非数字字符。`
+
+parseInt()同样不具有解析八进制的能力，所以可以给parseInt()加入第二个参数
+`e.g：parseInt("AF",16); //175 后面还可以为2,8,10,16，默认情况下为10`
+
+接收两个参数parseInt(string,radix)
+
+string：字母（大小写均可）、数组、特殊字符（不可放在开头,特殊字符及特殊字符后面的内容不做解析）的任意字符串，如 '2'、'2w'、'2!'
+
+radix：解析字符串的基数，基数规则如下：
+
+1） 区间范围介于2~36之间，否则返回NaN
+
+2 ） 当参数为 0，parseInt() 会根据十进制来解析；
+
+3 ） 如果忽略该参数，默认的基数规则：
 
 ### 3.for in和for of有什么区别
 
@@ -5652,6 +5692,17 @@ event.offsetX 相对容器的水平坐标
 event.offsetY 相对容器的垂直坐标 
 document.documentElement.scrollTop 垂直方向滚动的值
 event.clientX+document.documentElement.scrollTop 相对文档的水平座标+垂直方向滚动的量
+
+#### 判断元素到达可视区域
+
+以图片显示为例：
+
+- `window.innerHeight` 是浏览器可视区的高度；
+- `document.body.scrollTop || document.documentElement.scrollTop` 是浏览器滚动的过的距离；
+- `imgs.offsetTop` 是元素顶部距离文档顶部的高度（包括滚动条的距离）；
+- 内容达到显示区域的：`img.offsetTop < window.innerHeight + document.body.scrollTop;`
+
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/xtohnuXfY3mqzlJ.webp)
 
 ### 16.Node 和 Element
 
