@@ -1028,14 +1028,12 @@ let x: string | number = 1
 
 >如果正在使用 Vue CLI 或基于 webpack 的配置，支持模板内表达式的 TypeScript 需要 `vue-loader@^16.8.0`。
 
-
-
 ## vue 3 的生态
 
 -   [官网](https://link.juejin.cn/?target=https%3A%2F%2Fv3.vuejs.org%2F "https://v3.vuejs.org/")
 -   [源码](https://link.juejin.cn/?target=https%3A%2F%2Fgithub.com%2Fvuejs%2Fvue-next "https://github.com/vuejs/vue-next")
 -   [vite构建器](https://link.juejin.cn/?target=https%3A%2F%2Fgithub.com%2Fvitejs%2Fvite "https://github.com/vitejs/vite")
--   [脚手架:](https://link.juejin.cn/?target=https%3A%2F%2Fcli.vuejs.org%2F "https://cli.vuejs.org/")[cli.vuejs.org/](https://link.juejin.cn/?target=https%3A%2F%2Fcli.vuejs.org%2F "https://cli.vuejs.org/")
+-   [脚手架:](https://link.juejin.cn/?target=https%3A%2F%2Fcli.vuejs.org%2F "https://cli.vuejs.org/")
 -   [vue-router-next](https://link.juejin.cn/?target=https%3A%2F%2Fgithub.com%2Fvuejs%2Fvue-router-next "https://github.com/vuejs/vue-router-next")
 -   [vuex4.0](https://link.juejin.cn/?target=https%3A%2F%2Fgithub.com%2Fvuejs%2Fvuex%2Ftree%2F4.0 "https://github.com/vuejs/vuex/tree/4.0")
 
