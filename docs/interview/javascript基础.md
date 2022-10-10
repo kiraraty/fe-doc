@@ -102,7 +102,7 @@ console.log(typeof data); // "object"
 
 严格相等运算符`===`可以正确区分`undefined`和`null`：
 
-```ini
+```js
 let nothing = undefined;
 let missingObject = null;
 nothing === missingObject; // => false
@@ -242,11 +242,73 @@ a == 1 && a == 2 && a == 3       => true
     Number.isInteger(0)                     //=> true
     Number.isInteger(1)                     //=> true
     Number.isInteger(1.1)                   //=> false
+   
+方法用来检测传入的参数是否是一个有穷数。
+    Number.isFinite()
+
 
 指定小数位数，进行四舍五入 toFixed
      const num = 1.1
      num.toFixed(2)                       //=>1.10
 ```
+
+##### 常用属性
+
+###### Number.EPSILON
+
+**`Number.EPSILON`** 属性表示 1 与[`Number`](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Number)可表示的大于 1 的最小的浮点数之间的差值。
+
+```js
+x = 0.2;
+y = 0.3;
+z = 0.1;
+equal = (Math.abs(x - y + z) < Number.EPSILON);
+```
+
+###### Number.MAX_SAFE_INTEGER
+
+**`Number.MAX_SAFE_INTEGER`** 常量表示在 JavaScript 中最大的安全整数（maxinum safe integer)（`2^53 - 1`）。
+
+`MAX_SAFE_INTEGER` 是一个值为 9007199254740991 的常量。因为 Javascript 的数字存储使用了 [IEEE 754](http://en.wikipedia.org/wiki/IEEE_floating_point) 中规定的[双精度浮点数](https://zh.wikipedia.org/zh-cn/雙精度浮點數)数据类型，而这一数据类型能够安全存储 `-(2^53 - 1)` 到 `2^53 - 1` 之间的数值（包含边界值）
+
+```js
+Number.MAX_SAFE_INTEGER // 9007199254740991
+Math.pow(2, 53) - 1     // 9007199254740991
+```
+
+###### Number.MAX_VALUE
+
+**`Number.MAX_VALUE`** 属性表示在 JavaScript 里所能表示的最大数值。
+
+`MAX_VALUE` 属性值接近于 `1.79E+308`。
+
+大于 `MAX_VALUE` 的值代表 "`Infinity`"。
+
+因为 `MAX_VALUE` 是 `Number` 对象的一个静态属性，所以你应该直接使用`Number.MAX_VALUE` ，而不是作为一个创建的 `Number` 实例的属性。
+
+###### Number.MIN_SAFE_INTEGER
+
+**`Number.MIN_SAFE_INTEGER`** 代表在 JavaScript 中最小的安全的 integer 型数字 (`-(2^53 - 1)`)。
+
+`MIN_SAFE_INTEGER` 的值是`-9007199254740991`. 
+
+###### Number.MIN_VALUE
+
+**`Number.MIN_VALUE`** 属性表示在 JavaScript 中所能表示的最小的正值。
+
+`MIN_VALUE` 属性是 JavaScript 里最接近 0 的正值，而不是最小的负值。
+
+`MIN_VALUE` 的值约为 5e-324。小于 `MIN_VALUE` ("underflow values") 的值将会转换为 0。
+
+因为 `MIN_VALUE` 是 `Number` 的一个静态属性，因此应该直接使用： `Number.MIN_VALUE，` 而不是作为一个创建的 `Number` 实例的属性。
+
+###### Number.NEGATIVE_INFINITY
+
+**`Number.NEGATIVE_INFINITY`** 属性表示负无穷大。
+
+###### Number.POSITIVE_INFINITY
+
+**`Number.POSITIVE_INFINITY`** 属性表示正无穷大。
 
 ##### 类型转换
 
@@ -1345,6 +1407,8 @@ JS中对象分为3类：
 - 浏览器对象：JS独有的，JS API学习
 
 #### Math对象
+
+[mdn-Math](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Math)
 
 Math不是构造函数，不需要new来调用，直接使用里面的属性和方法。
 
@@ -2942,7 +3006,7 @@ array.copyWithin(target, start, end)
 
 #### 2.转化方法
 
-###### （1）toString()
+##### （1）toString()
 
 toString()方法返回的是由数组中每个值的等效字符串拼接而成的一**个逗号分隔的字符串**，也就是说，对数组的每个值都会调用toString()方法，以得到最终的字符串：
 
@@ -2951,7 +3015,7 @@ let colors = ["red", "blue", "green"];
 console.log(colors.toString())  // red,blue,green
 ```
 
-###### （2）valueOf()
+##### （2）valueOf()
 
 valueOf()方法返回的是数组本身，如下面代码：
 
@@ -2960,7 +3024,7 @@ let colors = ["red", "blue", "green"];
 console.log(colors.valueOf())  // ["red", "blue", "green"]
 ```
 
-###### （3）toLocaleString()
+##### （3）toLocaleString()
 
 toLocaleString()方法可能会返回和toString()方法相同的结果，但也不一定。在调用toLocaleString()方法时会得到一个逗号分隔的数组值的字符串，它与toString()方法的区别是，为了得到最终的字符串，会调用每个值的toLocaleString()方法，而不是toString()方法，看下面的例子：
 
@@ -2997,7 +3061,7 @@ console.log(array.join("-"));   // one-two-three-four-five
 
 #### 3.栈方法
 
-###### （1）push()
+##### （1）push()
 
 ！！！**注意：push的返回值是数组加入元素之后的长度**
 
@@ -3016,9 +3080,7 @@ console.log(array); // ["football", "basketball", "badminton", "golfball"]
 console.log(i);     // 4
 ```
 
-###### （2）pop()
-
-
+##### （2）pop()
 
 pop() 方法用于删除并返回数组的最后一个元素。它没有参数。**该方法会改变原数组。** 其语法形式如下：
 
@@ -3037,7 +3099,7 @@ console.log(item);  // mouse
 
 #### 4.队列方法
 
-###### （1）shift()
+##### （1）shift()
 
 shift()方法会删除数组的第一项，并返回它，然后数组长度减一，**该方法会改变原数组。** 语法形式如下：
 
@@ -3056,7 +3118,7 @@ console.log(item);  // 1
 
 注意：如果数组是空的，那么 shift() 方法将不进行任何操作，返回 undefined 值。
 
-###### （2）unshift()
+##### （2）unshift()
 
 unshift()方法可向数组的开头添加一个或更多元素，并返回新的长度。**该方法会改变原数组。** 其语法形式如下：
 
@@ -3075,7 +3137,9 @@ console.log(length); // 4
 
 #### 5.排序方法
 
-###### （1）sort()
+##### （1）sort()
+
+[V8 sort](https://juejin.cn/post/6961559041457946632)
 
 sort()方法是我们常用给的数组排序方法，该方法会在原数组上进行排序，**会改变原数组**，其使用语法如下：
 
@@ -3084,6 +3148,8 @@ arrayObject.sort(sortby)
 ```
 
 其中参数sortby是可选参数，用来规定排序顺序，它是一个比较函数，用来判断哪个值应该排在前面。默认情况下，sort()方法会按照升序重新排列数组元素。为此，sort()方法会在每一个元素上调用String转型函数，然后比较字符串来决定顺序，即使数组的元素都是数值，也会将数组元素先转化为字符串在进行比较、排序。这就造成了排序不准确的情况，如下代码：
+
+元素按照转换为的字符串的各个字符的 Unicode 位点进行排序。是**Unicode位点由小到大** 升序排列
 
 ```javascript
 let array = [5, 4, 3, 2, 1];
@@ -3097,69 +3163,94 @@ console.log(array2)  //  [0, 1, 10, 15, 5]
 
 可以看到，上面第二段代码就出现了问题，虽然5是小于10的，但是字符串10在5的前面，所以10还是会排在5前面，因此可知，在很多情况下，不添加参数是不行的。
 
-对于sort()方法的参数，它是一个比较函数，它接收两个参数，**如果第一个参数应该排在第二个参数前面，就返回-1；如果两个参数相等，就返回0；如果第一个参数应该排在第二个参数后面，就返回1**。
+对于sort()方法的参数，它是一个比较函数，它接收两个参数，
 
-sort((a,b)=>{})
+**如果第一个参数应该排在第二个参数前面，就返回-1；**
 
-a是后面的数，b是前面的数
+**如果两个参数相等，就返回0；**
 
-```js
-var arr=[1,2,3,4,5,6]
-arr.sort((a,b)=>{
-		console.log(a,b)
-})
-2 1
-3 2
-4 3
-5 4
-6 5
-```
+**如果第一个参数应该排在第二个参数后面，就返回1**。
 
-return 正数是保持现状
+> 如果指定了 **compareFunction**，那么数组会按照调用该函数的返回值进行排序，即 a 和 b 是两个将要被比较的元素：
 
-```js
-var arr=[1,2,3,4,5,6]
-arr.sort((a,b)=>{
-	return 1
-})
-console.log(arr);
-//[ 1, 2, 3, 4, 5, 6 ]
-```
-
-return 负数是交换
-
-```js
-var arr=[1,2,3,4,5,6]
-arr.sort((a,b)=>{
-		return -1
-})
-console.log(arr);
-//[ 6, 5, 4, 3, 2, 1 ]
-```
-
-a是后面的数，b是前面的数
-
-==a-b是升序  如果a-b>0 后面的大 是正数 保持现状 就是升序  否则进行交换==
-
-==b-a是降序  如果b-a>0 后面的小 是正数 保持现状 就是降序  否则进行交换==
+- 如果 **compareFunction(a, b)** 小于 0， 那么 a 会排在 b 的前面
+- 如果 **compareFunction(a, b)** 大于 0， 那么 a 会排在 b 的后面
+- 如果 **compareFunction(a, b)** 等于 0， 那么 a 和 b 的相对位置不变
 
 一个比较函数的形式可以如下：
 
 ```javascript
-function compare(value1, value2) {
-	if(value1 < value2){
-  	return -1
-  } else if(value1 > value2){
-  	return 1
-  } else{
-  	return 0
+function compareFn(a, b) {
+  if (在某些排序规则中，a 小于 b) {
+    return -1;
   }
+  if (在这一排序规则下，a 大于 b) {
+    return 1;
+  }
+  // a 一定等于 b
+  return 0;
 }
 
 let array = [0, 1, 5, 10, 15];
 let array2 = array.sort(compare);
 console.log(array2)  // [0, 1, 5, 10, 15]
 ```
+
+```js
+let array1 = [0, 1, 5, 10, 15];
+array1.sort((a,b)=>a-b)
+console.log(array1)  //[0, 1, 5, 10, 15]
+let array2 = [0, 1, 5, 10, 15];
+array2.sort((a,b)=>b-a)
+console.log(array2)  // [15, 10, 5, 1, 0]
+```
+
+```js
+let array3 = [15,10,5,1,0];
+array3.sort((a,b)=>a-b)
+console.log(array3)   //[0, 1, 5, 10, 15]
+let array4 = [15,10,5,1,0];
+array4.sort((a,b)=>b-a)
+console.log(array4)  // [15, 10, 5, 1, 0]
+```
+
+更清晰的验证(chrome下)
+
+```js
+var arr1 = [1, 2, 3, 4, 5, 6]
+arr1.sort((a, b) => {
+	console.log(a, b)  //2 1
+	console.log(a-b);  //1
+	return  a-b  //a会排在b的后面
+})
+var arr2 = [6,5,4,3,2,1]  
+arr2.sort((a, b) => {
+	console.log(a, b)  //5 6
+	console.log(a-b);  //-1
+	return a-b   //a会排在b的前面
+}) 
+```
+
+
+
+```js
+var arr3 = [1, 2, 3, 4, 5, 6]
+arr3.sort((a, b) => {
+	console.log(b,a) //1 2
+	console.log(b-a); //-1
+	return b-a  //a会排在b的前面
+})
+console.log(arr3);  //[ 6, 5, 4, 3, 2, 1 ]
+var arr4 = [6, 5, 4, 3, 2, 1]
+arr4.sort((a, b) => {
+	console.log(b,a)  //6 5
+	console.log(b-a); //1
+	return b-a  //a会排在b的后面
+})
+console.log(arr4);  //[ 6, 5, 4, 3, 2, 1 ]
+```
+
+
 
 对二维数组进行排序  数值相等序号小的在前面
 
@@ -3193,7 +3284,7 @@ console.log(array3)  // [15, 10, 5, 1, 0]
 
 
 
-###### （2）reverse()
+##### （2）reverse()
 
 reverse() 方法用于颠倒数组中元素的顺序。该方法会改变原来的数组，而不会创建新的数组。其使用语法如下：
 
@@ -3293,7 +3384,7 @@ console.log(array.splice(2, 1, 996));      // 替换：["three"]
 
 ECMAScript为数组提供了两个归并方法：reduce()和reduceRight()。下面就分别来看看这两个方法。
 
-###### （1）reduce()
+##### （1）reduce()
 
 reduce() 方法对数组中的每个元素执行一个reducer函数(升序执行)，将其结果汇总为单个返回值。其使用语法如下：
 
@@ -3381,7 +3472,7 @@ arr.reduce((prev, cur) => {
 
 
 
-###### （2）reduceRight()
+##### （2）reduceRight()
 
 该方法和的上面的`reduce()`用法几乎一致，只是该方法是对数组进行倒序查找的。而`reduce()`方法是正序执行的。
 
@@ -3408,7 +3499,7 @@ console.log(arr, sum);
 
 ECMAScript提供了两类搜索数组的方法：按照严格相等搜索和按照断言函数搜索。
 
-###### （1）严格相等
+##### （1）严格相等
 
 ECMAScript通过了3个严格相等的搜索方法：indexOf()、lastIndexOf()、includes()。这些方法都接收两个参数：**要查找的元素和可选的其实搜索位置**。lastIndexOf()方法**会从数组结尾元素开始向前搜索**，其他两个方法则**会从数组开始元素向后进行搜索**。indexOf()和lastIndexOf()返回的是查找元素在**数组中的索引值**，如果没有找到，则**返回-1**。includes()方法会**返回布尔值**，表示是否**找到至少一个**与指定元素匹配的项。在比较第一个参数和数组的每一项时，会使用全等（===）比较，也就是说**两项必须严格相等**。
 
@@ -3421,7 +3512,7 @@ console.log(arr.lastIndexOf(3))  // 2
 console.log(arr.includes(4))     // true
 ```
 
-###### （2）断言函数
+##### （2）断言函数
 
 ECMAScript也允许按照定义的断言函数搜索数组，每个索引都会调用这个函数，断言函数的返回值决定了相应索引的元素是否被认为匹配。使用断言函数的方法有两个，分别是find()和findIndex()方法。这两个方法对于空数组，函数是不会执行的。并且没有改变数组的原始值。他们的都有三个参数：元素、索引、元素所属的数组对象，其中元素是数组中当前搜索的元素，索引是当前元素的索引，而数组是当前正在搜索的数组。
 
@@ -6756,6 +6847,22 @@ ES6 模块化编译时加载，通过 export,import 静态输出输入代码，�
 -   ES6 模块提前加载并执行模块文件，
 -   ES6 Module 导入模块在严格模式下。
 -   ES6 Module 的特性可以很容易实现 Tree Shaking 和 Code Splitting。
+
+**1. CommonJS 模块输出的是一个值的拷贝，ES6 模块输出的是值的引用。**
+
+- CommonJS 模块输出的是值的**拷贝**(浅拷贝)，也就是说，一旦输出一个值，模块内部的变化就影响不到这个值。
+- ES6 模块的运行机制与 CommonJS 不一样。JS 引擎对脚本静态分析的时候，遇到模块加载命令import，就会生成一个只读引用。等到脚本真正执行时，再根据这个只读引用，到被加载的那个模块里面去取值。原始值变了，import加载的值也会跟着变。**因此，ES6 模块是动态引用，并且不会缓存值，模块里面的变量绑定其所在的模块。**
+
+**2. CommonJS 模块是运行时加载，ES6 模块是编译时输出接口。**
+
+- 运行时加载: CommonJS 模块就是对象；即在输入时是先加载整个模块，生成一个对象，然后再从这个对象上面读取方法，这种加载称为“运行时加载”。
+- 编译时加载: ES6 模块不是对象，而是通过 export 命令显式指定输出的代码，import时采用静态命令的形式。即在import时可以指定加载某个输出值，而不是加载整个模块，这种加载称为“编译时加载”。
+
+CommonJS 加载的是一个对象（即module.exports属性），该对象只有在脚本运行完才会生成。而 ES6 模块不是对象，它的对外接口只是一种静态定义，在代码静态解析阶段就会生成。
+
+CommonJS 模块输出的是值的拷贝，也就是说，一旦输出一个值，模块内部的变化就影响不到这个值。
+
+ES6 模块的运行机制与 CommonJS 不一样。JS 引擎对脚本静态分析的时候，遇到模块加载命令`import`，就会生成一个只读引用。等到脚本真正执行时，再根据这个只读引用，到被加载的那个模块里面去取值。换句话说，ES6 的`import`有点像 Unix 系统的“符号连接”，原始值变了，`import`加载的值也会跟着变。因此，ES6 模块是动态引用，并且不会缓存值，模块里面的变量绑定其所在的模块。
 
 ### 4.export 是什么?
 
