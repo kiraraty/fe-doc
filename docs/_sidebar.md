@@ -103,3 +103,6 @@
   * [swc、esbuild和vite前端构建工具浅析](interview/前沿技术/swc、esbuild和vite前端构建工具浅析.md)
   * [Node性能监控指标获取方法](interview/前沿技术/Node性能监控指标获取方法.md)
   * [一文了解Node性能监控](interview/前沿技术/一文了解Node性能监控.md)
+  * [从0到1搭建前端异常监控系统](interview/前沿技术/从0到1搭建前端异常监控系统.md)
+  * [现代前端工程Monorepo](interview/前沿技术/现代前端工程Monorepo.md)
+  * [pnpm 是凭什么对 npm 和 yarn 降维打击的](interview/前沿技术/pnpm 是凭什么对 npm 和 yarn 降维打击的.md)
