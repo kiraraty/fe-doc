@@ -2369,7 +2369,9 @@ LRU 缓存策略∶ 从内存中找出最久未使用的数据并置换新的数
 
 **正如 Vue 文档所说：**
 
-由于 JavaScript 的限制，Vue 无法检测到以下数组变动：
+由于 JavaScript 的限制(出于性能考虑)，Vue 无法检测到以下数组变动（vue做了阉割）：
+
+vue2不是不能监听数组的变化，而是效率太低。
 
 数组通过索引值修改内容 vm.arr[1] = ‘aa’
 
@@ -10086,7 +10088,6 @@ count()
 ```js
 activeEffect = logCount 
 logCount()
-复制代码
 ```
 
 顺着这个思路，我们可以利用高阶函数的思想，对 `logCount` 做一层封装：
@@ -10101,7 +10102,6 @@ function wrapper(fn) {
 }
 const wrappedLog = wrapper(logCount)
 wrappedLog()
-复制代码
 ```
 
 `wrapper` 本身也是一个函数，它接受 `fn` 作为参数，返回一个新的函数 `wrapped`，然后维护一个全局变量 `activeEffect`，当 `wrapped` 执行的时候，把 `activeEffect` 设置为 `fn`，然后执行 `fn` 即可。
@@ -10235,7 +10235,6 @@ function cleanup(effect) {
     deps.length = 0
   }
 }
-复制代码
 ```
 
 为什么需要 `cleanup` 呢？如果遇到这种场景：
@@ -13051,7 +13050,7 @@ Vue3 提供 Teleport 组件可将部分 DOM 移动到 Vue app 之外的位置。
 
 Vue2 响应式原理基础是 Object.defineProperty；Vue3 响应式原理基础是 Proxy。
 
--   Object.defineProperty
+##### Object.defineProperty
 
 基本用法：直接在一个对象上定义新的属性或修改现有的属性，并返回对象。
 
@@ -13132,13 +13131,35 @@ function defineReactive(obj, key, val) {
 
 那 Vue3 为何会抛弃它呢？那肯定是因为它存在某些局限性。
 
-主要原因：无法监听对象或数组新增、删除的元素。
+主要原因：无法监听对象或数组新增、删除的元素。Vue2 里的响应式其实有点像是一个半完全体，对于对象上新增的属性无能为力，对于数组则需要拦截它的原型方法来实现响应式。
 
 Vue2 相应解决方案：针对常用数组原型方法push、pop、shift、unshift、splice、sort、reverse进行了hack处理；提供Vue.set监听对象/数组新增属性。对象的新增/删除响应，还可以new个新对象，新增则合并新属性和旧对象；删除则将删除属性后的对象深拷贝给新对象。
 
--   Proxy
+##### Proxy
+
+Vue响应式系统的核心依然是对数据进行劫持，只不过Vue3采样点是Proxy类，而Vue2采用的是Object.defineProperty()。Vue3之所以采用Proxy类主要有两个原因:
+
+1.可以提升性能，由于 Object.defineProperty 只能对属性进行劫持，需要遍历对象的每个属性，如果属性值也是对象，则需要深度遍历。而 Proxy 直接代理对象，不需要遍历操作。
+
+2.Proxy可以实现对整个对象的劫持，而Object.defineProperty()只能实现对对象的属性进行劫持。所以对于对象上的方法或者新增、删除的属性需要手动进行 Observe。也正是因为这个原因，使用 Vue 给 data 中的数组或对象新增属性时，需要使用 vm.$set 才能保证新增的属性也是响应式的。
+
+\- Object.defineProperty 只能劫持对象的属性，而 Proxy 是直接代理对象。
+
+\- Object.defineProperty 对新增属性需要手动进行 Observe。
+
+**\- Object.defineProperty 阉割导致监听不到数组下标的变化，在 Vue 的实现中，从性能 / 体验的性价比考虑，放弃了这个特性。实际上**改变了`arr`的长度，在其首部增加一位数据，而且会触发多次**get、set**，证明使用`Object.defineProperty`是可以对数组进行数据劫持的，因此对于Vue中对于数组的特殊处理，并不是因为`Object.defineProperty`不能劫持数组，而是出于性能的考虑重写了7个数组的方法。
+
+\- Proxy支持 13 种拦截操作，这是 defineProperty 所不具有的。
 
 Proxy 是 ES6 新特性，通过第2个参数 handler 拦截目标对象的行为。相较于 Object.defineProperty 提供语言全范围的响应能力，消除了局限性。
+
+proxy，还是单层的拦截，也就是说，只会拦截第一层属性的访问，不会管第二层属性，第三层属性...。
+
+如果想要实现深层次的监听，还是要用递归。
+
+reactive的深层响应就是用的递归方式 。
+
+proxy是对于数组的监听，效率更高。
 
 局限性：
 
