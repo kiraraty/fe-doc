@@ -161,15 +161,16 @@
 ###### 常用的投影方法
 
 -   [UTM投影](https://baike.baidu.com/item/UTM%E6%8A%95%E5%BD%B1)  
-          UTM投影全称为"通用横轴墨卡托投影"，是一种"等角横轴割圆柱投影"，椭圆柱割地球于南纬80度、北纬84度两条等高圈，投影后两条相割的经线上没有变形，而中央经线上长度比0.9996。
-
+    
+    **UTM投影全称为"通用横轴墨卡托投影"，是一种"等角横轴割圆柱投影"，椭圆柱割地球于南纬80度、北纬84度两条等高圈，投影后两条相割的经线上没有变形，而中央经线上长度比0.9996。**
+    
 -   [高斯—克吕格投影](https://baike.baidu.com/item/%E9%AB%98%E6%96%AF-%E5%85%8B%E5%90%95%E6%A0%BC%E6%8A%95%E5%BD%B1)（Gauss-Kruger）  
-          高斯-克吕格投影，是一种“横轴等角切圆柱投影”，中央经线没有变形，不在中央经线上的点，长度比均大于1。且离开中央经线越远，长度变形越大。
+    **高斯-克吕格投影，是一种“横轴等角切圆柱投影”，中央经线没有变形，不在中央经线上的点，长度比均大于1。且离开中央经线越远，长度变形越大。**
 
     以上两种方法都要进行分带投影。即按一定的间隔选取经线作为投影的中央经线，中央经线两侧一定范围内的地区按所选中央经线进行投影。这样做的目的是减小投影变形，方便在工程中使用。
 
 -   [墨卡托投影](https://baike.baidu.com/item/%E5%A2%A8%E5%8D%A1%E6%89%98%E6%8A%95%E5%BD%B1)（Mercator Projection）  
-          墨卡托投影，是一种“正轴等角圆柱投影”，假想一个与地轴方向一致的圆柱切或割于地球，按等角条件，将经纬网投影到圆柱面上，将圆柱面展为平面后，即得本投影。该投影具有等角航线被表示成直线的特性，故广泛用于编制航海图和航空图等。其缺点是在两极的变形严重。
+    **墨卡托投影，是一种“正轴等角圆柱投影”，假想一个与地轴方向一致的圆柱切或割于地球，按等角条件，将经纬网投影到圆柱面上，将圆柱面展为平面后，即得本投影。该投影具有等角航线被表示成直线的特性，故广泛用于编制航海图和航空图等。其缺点是在两极的变形严重。**
 
 **_具体的投影方法请点击小标题查看。_**
 
@@ -197,6 +198,12 @@
 
     从名字上可以看出，WGS84 Web Mercator坐标系的投影方法和Mercator（墨卡托）投影有关，但是这个投影方法和不是标准的墨卡托投影。他们之间的区别在于，WGS84 Web Mercator在投影时将地球椭球当做圆球看待，这会导致本来是等角投影的墨卡托投影变得不再等角了，而是近似等角，也就是出现角度变形。
 
+主要原因是墨卡托投影保留了方向。无论您在世界的哪个地方使用此投影，方向都是真实的。
+
+从用户的角度来看，知道北方在上升是非常有用的。尽管某些区域会变形，但它在整个过程中都相当均匀地变形。此外，不保留形状或局部角度（非保角）。
+
+当远离赤道时，失真会增加。与墨卡托投影类似，区域向两极延伸。这意味着不应使用此投影来显示两极。由于明显的变形，Web 墨卡托投影也不适合任何空间分析或面积计算。
+
 ###### WGS84 Web Mercator的坐标范围
 
     以赤道为标准纬线，以本初子午线为中央经线，分别得到X轴和Y轴。两者的交点设为原点，规定纬度向北为正，向南为负；经度向东为正，向西为负。
@@ -209,7 +216,7 @@
 -   经度： \[-180, 180\]
 -   纬度： \[-85.051128779，85.051128779\]
 
-###### 1.4 EPSG
+##### 1.4 EPSG
 
     讨论坐标系不得不提到EPSG，EPSG的英文全称是European Petroleum Survey Group，中文名称为欧洲石油调查组织。这个组织成立于1986年，2005年并入IOGP(International Association of Oil & Gas Producers)，中文名称为国际油气生产者协会。EPSG对几乎所有常用的坐标系统都进行了编号，统一了坐标系的表示，于是我们经常会看到使用EPSG编号来指代某一坐标系。
 
@@ -785,6 +792,383 @@ var TO_GLAT =function(lat){return lat-0.0060;};
 说到地图，大家一定很熟悉，平时应该都使用过百度地图、高德地图、腾讯地图等，如果涉及到地图相关的开发需求，也有很多选择，比如前面的几个地图都会提供一套`js API`，此外也有一些开源地图框架可以使用，比如`OpenLayers`、`Leaflet`等。
 
 那么大家有没有想过这些地图是怎么渲染出来的呢，为什么根据一个经纬度就能显示对应的地图呢，不知道没关系，本文会带各位从零实现一个简单的地图引擎，来帮助大家了解`GIS`基础知识及`Web`地图的实现原理。
+
+### WGS84、WebMercator、GCJ02和BD09坐标系简介与转换
+
+**WGS84（GPS）**：
+
+- 地心坐标系，空间直角坐标系，原点与地球质心重合，为GPS采用的坐标系，也是目前广泛使用的GPS全球卫星定位系统使用的坐标系。
+
+- 通过GPS可以直接获取WGS84下的坐标(B，L，H)，B为纬度，L为经度，H为大地高即到WGS84椭球面的高度；
+
+- 我国地图采用的是北京1954或西安1980坐标系下的高斯投影坐标(x,y)，也有采用北京1954或西安1980坐标系下的经纬度坐标(B,L)，高程一般为海拔高度；
+
+- 世界大地坐标系是美国国防部制图局（Defence Mapping Agency， DMA）为统一世界大地坐标系统，实现全球测量标准的一致性，定义用于制图、大地、导航的坐标基准。
+
+- 它包括标准地球坐标框架、用于处理原始观测数据的标准椭球参考面（即基准和参考椭球）和定义标准海平面的重力等势面（大地水准面）。
+
+- GPS的测量结果与北京54或西安80坐标相差几十米到一百多米，随区域各异；
+
+-  WGS 1984 的具体定义参数
+
+    GCS_WGS_1984
+    WKID: 4326 Authority: EPSG
+
+    Angular Unit: Degree (0.0174532925199433)
+    Prime Meridian: Greenwich (0.0)
+    Datum: D_WGS_1984
+    Spheroid: WGS_1984
+    Semimajor Axis: 6378137.0
+    Semiminor Axis: 6356752.314245179
+    Inverse Flattening: 298.257223563
+
+**WebMercator**：投影坐标系统，其基准面是 WGS1984
+
+- Web Mercator 坐标系使用的投影方法不是严格意义的墨卡托投影，而是一个被 EPSG（European Petroleum Survey Group）称为伪墨卡托的投影方法，这个伪墨卡托投影方法的大名是 Popular Visualization Pseudo Mercator，PVPM。
+- 该坐标系统是 Google Map 最先使用的，或者更确切地说，是Google 最先发明的。
+- 谷歌地图（WGS_1984_Pseudo_mercator）、Virtual Earth、Bing Maps、百度地图、Mapabc、ArcGIS Online等采用Web Mercator或Spherical Mercator坐标系，天地图采用CGCS2000国家大地坐标系；
+- 在投影过程中，将表示地球的参考椭球体近似的作为正球体处理（正球体半径 R = 椭球体半长轴 a）。这也是为什么在 ArcGIS 中我们经常看到这个坐标系叫 WGS 1984 Web Mercator (Auxiliary Sphere)。Auxiliary Sphere 就是在告知你，这个坐标在投影过程中，将椭球体近似为正球体做投影变换，虽然基准面是WGS 1984 椭球面。**（Web Mercator与常规墨卡托投影的主要区别就是把地球模拟为球体而非椭球体）**
+- 尽管这个坐标系由于精度问题一度不被GIS专业人士接受，但最终 EPSG 还是给了 WKID:3857。
+
+**GCJ02**：又称火星坐标系，是由中国国家测绘局制定的地理坐标系统，是由WGS84加密后得到的坐标系。
+
+**BD09（百度GCJ02）**：百度坐标系，在GCJ02坐标系基础上再次加密。其中bd09ll表示百度经纬度坐标，bd09mc表示百度墨卡托米制坐标。
+
+**百度坐标转WebMercator**
+
+```js
+  BMapToWebMercatorTransform:function (lng,lat) {
+          console.log("百度地图坐标是（"+lng+","+lat+")");
+          //百度转GCJ-02
+          var x_pi = 3.14159265358979324 * 3000.0 / 180.0;
+          var x = lng - 0.0065;
+          var y = lat - 0.006;
+          var z = Math.sqrt(x * x + y * y) - 0.00002 * Math.sin(y * x_pi);
+          var theta = Math.atan2(y, x) - 0.000003 * Math.cos(x * x_pi);
+          var gg_lng = z * Math.cos(theta);
+          var gg_lat = z * Math.sin(theta);
+          //GCJ02转web墨卡托84
+          var earthRad = 6378137.0;
+          lng = gg_lng * Math.PI / 180 * earthRad;
+          var a = gg_lat * Math.PI / 180;
+          lat = earthRad / 2 * Math.log((1.0 + Math.sin(a)) / (1.0 - Math.sin(a)));
+          console.log("WebMercator坐标是（"+lng+","+lat+")");
+        },
+```
+
+***\*WebMercator转\**百度坐标**
+
+```js
+WebMercatorToBMapTransform:function (lng,lat) {
+          console.log("WebMercator坐标是（"+lng+","+lat+")");
+          //Web墨卡托转GCJ02
+          lng = lng / 20037508.34 * 180;
+          var mmy = lat / 20037508.34 * 180;
+          lat = 180 / Math.PI * (2 * Math.atan(Math.exp(mmy * Math.PI / 180)) - Math.PI / 2);
+          //GCJ02转百度
+          var x_PI = 3.14159265358979324 * 3000.0 / 180.0;
+          var z = Math.sqrt(lng * lng + lat * lat) + 0.00002 * Math.sin(lat * x_PI);
+          var theta = Math.atan2(lat, lng) + 0.000003 * Math.cos(lng * x_PI);
+          lng = z * Math.cos(theta) + 0.0065;
+          lat = z * Math.sin(theta) + 0.006;
+          console.log("百度地图坐标是（"+lng+","+lat+")");
+        }
+```
+
+84转web墨卡托
+
+```js
+function WGS84ToWebMercator(wx,wy){
+    var x = wx *20037508.34/180;
+    var y = Math.log(Math.tan((90+wy)*Math.PI/360))/(Math.PI/180);
+    y = y * 20037508.34/180;
+    return {x:x,y:y};
+}
+```
+
+web墨卡托转84
+
+```js
+function WebMercatorToWGS84(cx,cy){
+    var x = cx/20037508.34*180;
+    var y = cy/20037508.34*180;
+    y = 180/Math.PI*(2*Math.atan(Math.exp(y*Math.PI/180))-Math.PI/2);
+    return {x:x,y:y};
+}
+```
+
+## openLayer
+
+> OpenLayers使在任何网页中放置动态地图变得很容易。它可以显示地图瓷砖，矢量数据和标记加载从任何来源。OpenLayers的开发是为了进一步利用各种地理信息。它是完全免费的开源JavaScript gis库。
+
+- 瓦片图层 从OSM、Bing、MapBox、Stamen和任何其他你能找到的XYZ源中拉瓷砖。还支持OGC映射服务和非瓦片层。
+- 矢量图层 从GeoJSON、TopoJSON、KML、GML、Mapbox矢量图块和其他格式渲染矢量数据
+- 尖端、快速、可移动 利用画布2D、WebGL和HTML5的所有最新功能。移动支持开箱即用。只使用所需的组件构建轻量级自定义配置文件。
+- 易于扩展 使用直接的CSS样式您的地图控件。连接到不同级别的API中，或者使用第三方库来定制和扩展功能。
+
+### openLayer介绍
+
+#### OL整体结构图
+
+![image-20220911100756927](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/image-20220911100756927.png)
+
+### Hello World GIS
+
+> 注意此示例功能基于vue进行创建,需提前引入依赖:"ol": "^6.5.0",
+
+1. 创建容器对象填充map
+
+```xml
+<template>
+    <div id="map" style="width: 700px;height: 700px">
+    </div>
+</template>
+```
+
+1. 引入openlayer相关依赖(css,js)
+
+```javascript
+import 'ol/ol.css';
+import {Map, View} from 'ol';
+import TileLayer from 'ol/layer/Tile';
+import OSM from 'ol/source/OSM';
+import XYZ from 'ol/source/XYZ';
+import {fromLonLat} from 'ol/proj.js';
+```
+
+1. 使用api创建对象
+
+```css
+const map = new Map({
+               target: 'map',
+               layers: [
+                       new TileLayer({
+                             //使用osm数据源
+                             source: new OSM()
+                        })
+                    ],
+                    view: new View({
+                        center: fromLonLat([106.57, 29.588]),
+                        zoom: 10
+                    })
+});
+```
+
+### **Hello World**
+
+新建目录，然后`npm init -y`初始化一下，修改`package.json`。
+
+```json
+{
+  "name": "openlayers",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "webpack-dev-server --open"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ol": "^5.3.3"
+  },
+  "devDependencies": {
+    "html-webpack-plugin": "^3.2.0",
+    "webpack": "^4.39.1",
+    "webpack-cli": "^3.3.6",
+    "webpack-dev-server": "^3.7.2"
+  }
+}
+```
+
+新建`webpack.config.js`文件，以下几乎是最小化的配置了
+
+```js
+const path = require("path");
+const webpack = require("webpack");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+
+module.exports = {
+  mode: "development",
+  entry: {
+    app: "./src/index.js"
+  },
+  devtool: "inline-source-map",
+  devServer: {
+    //静态资源放这个目录下，不然会找不到
+    contentBase: "./dist",
+    hot: true
+  },
+  plugins: [
+    new HtmlWebpackPlugin({
+      template: "./dist/index.html"
+    }),
+    new webpack.HotModuleReplacementPlugin()
+  ],
+  output: {
+    filename: "[name].bundle.js",
+    path: path.resolve(__dirname, "dist")
+  }
+};
+```
+
+入口的`html.js`文件
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Hello Openlayers</title>
+    <link rel="stylesheet" href="./ol.css" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+      }
+      #map {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+  </body>
+</html>
+```
+
+入口的`index.js`文件
+
+```js
+import { Map, View } from "ol";
+import TileLayer from "ol/layer/Tile";
+import OSM from "ol/source/OSM";
+import { fromLonLat } from "ol/proj";
+new Map({
+  target: "map",
+  layers: [
+    new TileLayer({
+      source: new OSM()
+    })
+  ],
+  view: new View({
+    center: fromLonLat([121.47, 31.23]),
+    zoom: 15
+  })
+});
+```
+
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/v2-f8a08834cd400b145ab39bb66a728934_r.jpg)
+
+不需要几行代码就搭建出了一个地图，这里加载的是OpenStreetMap，没有版权、费用的困扰。
+
+### **基础概念**
+
+OpenLayers里有几个重要的概念，理清它们后有助于我们开发。
+
+#### **Map**
+
+Map就是地图，它是一个抽象的概念。Map上可以关联多个Layer或者一个View。它的定义在`ol/Map`下。
+
+#### **Layer**
+
+Layer表示一个图层。OpenLayers的名字里就带有Layer，表示最终它的展现效果是通过一层层的Layer来显示出来的，比如你可以在底部显示基础的地图，然后在地图的上方显示一些标记、线路、提示等效果。
+
+它的定义在`ol/layer`下，有如下四种基础的Layer，前两种属于栅格，后两种属于矢量。
+
+- `ol/layer/Tile` - 渲染瓦片图片，就是那种将整个地图分解为一张张图片最后拼起来的
+- `ol/layer/Image` - 渲染图像
+- `ol/layer/Vector` - 渲染矢量数据
+- `ol/layer/VectorTile` - 渲染矢量瓦片
+
+#### **Source**
+
+Source就是地图的来源，在OpenLayers里可以支持多种地图源，比如OpenStreetMap 、Bing、XYZ或者矢量的KML等。
+
+Source是跟Layer关联的。它的定义在`ol/source`下。
+
+#### **View**
+
+View用来表示一组属性，比如中心点，缩放大小以及映射等。它的定义在`ol/View`下。
+
+#### **控件**
+
+在`ol/control`下已经定义了一些内置的控件，如果不满意，部分也是可以定制的。
+
+大致有如下一些内置控件
+
+- 全屏
+- 鼠标经纬度
+- 旋转
+- 缩放
+- 小地图(类似于打游戏时的那种小地图)
+
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/v2-8a5de5bdbc2f11b771a1b7a4872841c9_r.jpg)
+
+#### **交互**
+
+交互事件定义在`ol/interaction`下，大致有如下一些交互事件
+
+- DragRotate
+- DoubleClickZoom
+- DragPan
+- PinchRotate
+- PinchZoom
+- KeyboardPan
+- KeyboardZoom
+- MouseWheelZoom
+- DragZoom
+
+下图是测距和测面积的交互实例
+
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/v2-c1b6b29dca7fd3a0389fe46f87e74811_r.jpg)
+
+
+
+### openLayer api 介绍
+
+#### Map
+
+> 地图核心对象,其中包含图层、数据源、视图、控制条，事件等相关进行配置
+
+#### View
+
+> 管理地图视图的视觉参数，如分辨率或旋转。
+
+#### Layers
+
+> 图层是从数据源获取数据的轻量级容器。
+
+#### Controls
+
+> 用来控制地图的，就是设置地图的缩放(zoom)，全屏(fullscreen)、地图全局视图（鹰眼图）( overviewmap)等控件
+
+#### Interactions
+
+> 主要是用来配置地图交互的，且交互功能包含很多，如地图双击放大，鼠标滚轮缩放，矢量要素点选，地图上绘制图形等等。只要是涉及到与地图的交互，就会涉及到 intercation 类。
+
+#### Sources and formats
+
+> Sources：地图图层数据来源，比如切片数据、矢量数据、图片数据等数据源 Formats：对地图图层数据格式进行转换
+
+#### Projections
+
+> 实现坐标系转换，可以转换为指定的坐标系坐标，可以坐标系间坐标互相转换，转换Extent为指定坐标系。
+
+#### Observable objects
+
+> 
+
+#### Other components
+
+> 其中使用的最多的是overlay类，主要是地图覆盖物的意思，一般与popup连用来实现弹出效果
+
+
 
 ## 从零打造一个Web地图引擎
 
@@ -1497,4 +1881,3 @@ export default {
 
 在线`demo`：[wanglin2.github.io/web\_map\_dem…](https://link.juejin.cn/?target=https%3A%2F%2Fwanglin2.github.io%2Fweb_map_demo%2F "https://wanglin2.github.io/web_map_demo/")
 
-完整源码：[github.com/wanglin2/we…

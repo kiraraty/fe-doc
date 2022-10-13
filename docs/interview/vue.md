@@ -497,7 +497,7 @@ dep.notify()
 
 在自己封装组件的时在Vue中，我们可以使用`v-bind`实现单向的数据绑定，也就是通过**父组件向子组件传入数据** ，但是反过来，**子组件不可以修改父组件传递过来的数据** ，这也就是所谓的单向数据绑定。
 
-而`v-model`就实现了双向数据绑定，实际上它就是通过Vue提供的事件机制。即在子组件通过`$emit()`触发一个事件，在父组件使用`v-on`来监听对应的事件并修改相应的数据时候，特别是输入框，下拉选择框等交互组件的时候，一般绑定值的时候，采用的是 `v-model`，使用 `v-model` 的主要好处是无需记特定的 `prop` 字段名，即可绑定到组件中的值，降低组件的使用成本。
+而`v-model`就实现了双向数据绑定，实际上它就是**通过Vue提供的事件机制**。即在子组件通过`$emit()`触发一个事件，在父组件使用`v-on`来**监听对应的事件并修改相应的数据时候**，特别是输入框，下拉选择框等交互组件的时候，一般绑定值的时候，采用的是 `v-model`，使用 `v-model` 的主要好处是无需记特定的 `prop` 字段名，即可绑定到组件中的值，降低组件的使用成本。
 
 毕竟，一个好的公共组件，首先是 `API` 的设计应该让人容易理解，并且使用方便。
 
@@ -2582,10 +2582,13 @@ vue的模版编译过程主要如下：**template -> ast -> render函数**
 vue 在模版编译版本的码中会执行 compileToFunctions 将template转化为render函数：
 
 ```javascript
-// 将模板编译为render函数const { render, staticRenderFns } = compileToFunctions(template,options//省略}, this)
+// 将模板编译为render函数
+const { render, staticRenderFns } = compileToFunctions(template,options//省略}, this)
 ```
 
-CompileToFunctions中的主要逻辑如下∶ **（1）调用parse方法将template转化为ast（抽象语法树）**
+CompileToFunctions中的主要逻辑如下∶
+
+ **（1）调用parse方法将template转化为ast（抽象语法树）**
 
 ```javascript
 constast = parse(template.trim(), options)
@@ -9963,7 +9966,7 @@ const reactive = (obj) => {
 
 在源码中
 
-核心就是在访问响应式数据的时候，触发 `getter` 函数，进而执行 `track` 函数收集依赖：
+核心就是**在访问响应式数据的时候**，触发 `getter` 函数，进而执行 `track` 函数收集依赖：
 
 ```js
 let shouldTrack = true
@@ -10076,7 +10079,6 @@ function count() {
 }
 logCount()
 count()
-复制代码
 ```
 
 我们定义了响应式对象 `counter`，然后在 `logCount` 中访问了 `counter.num`，我们希望在执行 `count` 函数修改 `counter.num` 值的时候，能自动执行 `logCount` 函数。
@@ -10173,7 +10175,7 @@ function createReactiveEffect(fn, options) {
 
 结合上述代码来看，`effect` 内部通过执行 `createReactiveEffect` 函数去创建一个新的 `effect` 函数，为了和外部的 `effect` 函数区分，我们把它称作 `reactiveEffect` 函数，并且还给它添加了一些额外属性（我在注释中都有标明）。另外，`effect` 函数还支持传入一个配置参数以支持更多的 `feature`，这里就不展开了。
 
-`reactiveEffect` 函数就是响应式的副作用函数，当执行 `trigger` 过程派发通知的时候，执行的 `effect` 就是它。
+`reactiveEffect` **函数就是响应式的副作用函数，当执行 `trigger` 过程派发通知的时候，执行的 `effect` 就是它。**
 
 按我们之前的分析，`reactiveEffect` 函数只需要做两件事情：让全局的 `activeEffect` 指向它， 然后执行被包装的原始函数 `fn`。
 
@@ -10714,8 +10716,6 @@ setup script语法糖提供了三个新的API来供我们使用：`defineProps`�
 
 其中`defineProps`用来接收父组件传来的值props。`defineEmit`用来声明触发的事件表。`useContext`用来获取组件上下文context
 
-
-
 ### 7.Vue3 中 watch 与 watchEffect 有什么区别？
 
 - `watch` 与 `watchEffect` 的不同
@@ -10780,7 +10780,7 @@ watchEffect(
 
 前端开发中异步请求是非常常见的事情,比如远程读取图片,调用后端接口等等 Suspense是有两个template插槽的，第一个default代表异步请求完成后，显示的模板内容。fallback代表在加载中时，显示的模板内容。 子组件 child
 
-```xml
+```js
 <template>
   <h1>{{result}}</h1>
 </template>
@@ -10802,7 +10802,7 @@ export default defineComponent({
 
 父组件 当异步没有执行完的时候。使用fallback里面的组件，当执行成功之后使用default
 
-```xml
+```js
 <Suspense>
   <template #default>
     <Child />
@@ -12012,10 +12012,7 @@ patch
     <li>C</li>
   </ul>
 </div>
-
 ```
-
-
 
 `patch`函数的定义在`src/core/vdom/patch.js`中，我们先来看下这个函数的逻辑
 
@@ -12122,7 +12119,7 @@ key 是为 Vue 中 vnode 的唯一标记，通过这个 key，diff 操作可以�
 
 ### 7.vnode的挂载和更新流程
 
-本文主要介绍在视图的渲染过程中，Vue 是如何把 vnode 解析并挂载到页面中的。我们通过一个最简单的例子来分析主要流程：
+在视图的渲染过程中，Vue 是如何把 vnode 解析并挂载到页面中的。我们通过一个最简单的例子来分析主要流程：
 
 ```html
   <div id="app">
@@ -13257,7 +13254,7 @@ export const enum PatchFlags {
 
 Vue3 的`cacheHandler`可在第一次渲染后缓存我们的事件。相比于 Vue2 无需每次渲染都传递一个新函数。加一个 click 事件。
 
-```vue
+```js
 <div id="app">
   <h1>vue3事件缓存讲解</h1>
   <p>今天天气真不错</p>
