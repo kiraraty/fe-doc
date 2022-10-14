@@ -3361,3 +3361,8 @@ TS身为 JS的超集，那么如何让这些第三方库也可以进行类型推
 #### *.d.ts和@types关系
 
 `@types`是`npm`的一个分支，用来存放`*.d.ts`文件，如果对应的`npm`包存放在`@types`中，要使用必须下载！如果是自己本地的`*.d.ts`申明文件，则和@types没有任何关系！
+
+#### shims-vue.d.ts
+
+shims-vue.d.ts是为了typescript做的适配定义文件，因为.vue文件不是一个常规的文件类型，TypeScript是不能理解vue文件是干嘛的，加这一段是是告诉 TypeScript，vue文件是这种类型的。没有这个文件，会发现 import 导入的所有.vue类型的文件都会报错。
+

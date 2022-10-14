@@ -24,7 +24,7 @@ Node.js面试题
 
 比如读取一个文件，文件读取完毕后，就会触发对应的状态，然后通过对应的回调函数来进行处理
 
-![img](https://static.vue-js.com/a7729590-c1e8-11eb-ab90-d9ae814b240d.png)
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/img/a7729590-c1e8-11eb-ab90-d9ae814b240d.png)
 
 **可扩展性Scalability**
 
@@ -1014,6 +1014,127 @@ npm i --save nodemon
 ### pm2
 
 [pm2 实践指南](https://juejin.cn/post/6844904048768843784)
+
+[pm2](http://pm2.keymetrics.io/) 是我们在使用 Node 开发时常用的服务托管工具，功能很强大，但大部分人可能只停留在使用层面，没有去了解过它的原理，其实 `pm2`的原理并没有你想象中的复杂。
+
+在了解 `pm2` 的工作原理前，先来聊聊一些前置知识。
+
+#### 前置知识
+
+##### Node Cluster
+
+熟悉 js 的朋友都知道，js 是单线程的，在 Node 中，采用的是 **多进程单线程** 的模型。由于单线程的限制，在多核服务器上，我们往往需要启动多个进程才能最大化服务器性能。
+
+Node 在 V0.8 版本之后引入了 [cluster模块](https://nodejs.org/dist/latest-v12.x/docs/api/cluster.html)，通过一个主进程 (master) 管理多个子进程 (worker) 的方式实现集群。
+
+以下是官网上的一个简单示例
+
+```js
+const cluster = require('cluster');
+const http = require('http');
+const numCPUs = require('os').cpus().length;
+
+if (cluster.isMaster) {
+  console.log(`Master ${process.pid} is running`);
+
+  // Fork workers.
+  for (let i = 0; i < numCPUs; i++) {
+    cluster.fork();
+  }
+
+  cluster.on('exit', (worker, code, signal) => {
+    console.log(`worker ${worker.process.pid} died`);
+  });
+} else {
+  // Workers can share any TCP connection
+  // In this case it is an HTTP server
+  http.createServer((req, res) => {
+    res.writeHead(200);
+    res.end('hello world\n');
+  }).listen(8000);
+
+  console.log(`Worker ${process.pid} started`);
+}
+```
+
+##### 通信
+
+Node中主进程和子进程之间通过**进程间通信** (IPC) 实现进程间的通信，进程间通过 send 方法发送消息，监听 message 事件收取信息，这是 `cluster模块` 通过集成 `EventEmitter` 实现的。还是一个简单的官网的**进程间通信**例子
+
+```js
+const cluster = require('cluster');
+const http = require('http');
+
+if (cluster.isMaster) {
+
+  // Keep track of http requests
+  let numReqs = 0;
+  setInterval(() => {
+    console.log(`numReqs = ${numReqs}`);
+  }, 1000);
+
+  // Count requests
+  function messageHandler(msg) {
+    if (msg.cmd && msg.cmd === 'notifyRequest') {
+      numReqs += 1;
+    }
+  }
+
+  // Start workers and listen for messages containing notifyRequest
+  const numCPUs = require('os').cpus().length;
+  for (let i = 0; i < numCPUs; i++) {
+    cluster.fork();
+  }
+
+  for (const id in cluster.workers) {
+    cluster.workers[id].on('message', messageHandler);
+  }
+
+} else {
+
+  // Worker processes have a http server.
+  http.Server((req, res) => {
+    res.writeHead(200);
+    res.end('hello world\n');
+
+    // Notify master about the request
+    process.send({ cmd: 'notifyRequest' });
+  }).listen(8000);
+}
+```
+
+##### 负载均衡
+
+了解 `cluster` 的话会知道，子进程是通过 `cluster.fork()` 创建的。在 linux 中，系统原生提供了 `fork` 方法，那么为什么 Node 选择自己实现 `cluster模块` ，而不是直接使用系统原生的方法？主要的原因是以下两点：
+
+1. fork的进程监听同一端口会导致端口占用错误
+2. fork的进程之间没有负载均衡，容易导致**惊群现象**
+
+在 `cluster模块` 中，针对第一个问题，通过判断当前进程是否为 `master进程`，若是，则监听端口，若不是则表示为 fork 的 `worker进程`，不监听端口。
+
+针对第二个问题，`cluster模块` 内置了负载均衡功能，`master进程` 负责监听端口接收请求，然后通过调度算法（默认为 [Round-Robin](https://en.wikipedia.org/wiki/Round-robin_scheduling)，可以通过环境变量 `NODE_CLUSTER_SCHED_POLICY` 修改调度算法）分配给对应的 `worker进程`。
+
+#### pm2的实现
+
+[pm2](https://github.com/Unitech/pm2) 基于 `cluster模块` 进行了封装，它能自动监控进程状态、重启进程、停止不稳定进程、日志存储等。利用 `pm2` 时，可以在不修改代码的情况下实现负载均衡集群。
+
+##### 架构
+
+[![pm2架构图](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/img/20190903172556.png)](https://static.quincychen.cn/20190903172556.png)
+
+这篇文章我们要关注的是 `pm2` 的 `Satan进程`、`God Deamon守护进程` 以及 两者之间的 `进程间远程调用RPC`。
+
+> 撒旦（Satan），主要指《圣经》中的堕天使（也称堕天使撒旦），被看作与上帝的力量相对的邪恶、黑暗之源，是God的对立面。
+
+其中 Satan.js 提供程序的退出、杀死等方法，God.js 负责维持进程的正常运行，God进程启动后一直运行，相当于 cluster 中的 Master进程，维持 worker 进程的正常运行。
+
+`RPC` 是指远程过程调用协议，具体释义就不细讲了，感兴趣的自行查阅。在 `pm2` 中用于同一机器上的不同进程之间的方法调用。
+
+##### 执行流程
+
+[![pm2执行流程图](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/img/20190903174538.png)](https://static.quincychen.cn/20190903174538.png)
+
+以上是 `pm2` 的执行流程图，每次命令行输入时都会执行一次 Satan 程序，然后判断 God 进程是否正在运行，确保 God 进程正常运行后， Satan 会通过 RPC 调用 God 中对应的方法启动服务。
 
 ### nvm
 
@@ -3881,6 +4002,232 @@ node和浏览器相比一个明显的不同就是node在**每个阶段结束后�
 #### 描述一下整个异步 I/O 的流程
 
 ![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs113903.png)
+
+### Node.js中创建子进程的方法
+
+众所周知，Node.js 是单线程、异步非阻塞的程序语言，那如何充分利用多核 CPU 的优势呢？这就需要用到 child_process 模块来创建子进程了，在 Node.js 中，有四种方法可以创建子进程：
+
+- `exec`
+- `execFile`
+- `spawn`
+- `fork`
+
+上面四个方法都会返回 `ChildProcess` 实例（继承自 `EventEmitter`），该实例拥有三个标准的  stdio 流：
+
+- `child.stdin`
+- `child.stdout`
+- `child.stderr`
+
+子进程生命周期内可以注册监听的事件有：
+
+`exit`：子进程结束时触发，参数为 code 错误码和 signal 中断信号。
+
+`close`：子进程结束并且 stdio 流被关闭时触发，参数同 `exit` 事件。
+
+`disconnect`：父进程调用 `child.disconnect()` 或子进程调用 `process.disconnect()` 时触发。
+
+`error`：子进程无法创建、或无法被杀掉、或发消息给子进程失败时触发。
+
+`message`：子进程通过 `process.send()` 发送消息时触发。
+
+`spawn`：子进程创建成功时触发（Node.js v15.1版本才添加此事件）。
+
+而 `exec` 和 `execFile` 方法还额外提供了一个回调函数，会在子进程终止的时候触发。接下来进行详细分析：
+
+#### exec
+
+exec 方法用于执行 bash 命令，它的参数是一个命令字符串。例如统计当前目录下的文件数量，用 exec 函数的写法为：
+
+```
+const { exec } = require("child_process")
+exec("find . -type f | wc -l", (err, stdout, stderr) => {
+  if (err) return console.error(`exec error: ${err}`)
+  console.log(`Number of files ${stdout}`)
+})
+```
+
+exec 会新建一个子进程，然后缓存它的运行结果，运行结束后调用回调函数。
+
+可能你已经想到了，exec 命令是比较危险的，假如把用户提供的字符串作为 exec 函数的参数，会面临命令行注入的风险，例如：
+
+```
+find . -type f | wc -l; rm -rf /;
+```
+
+另外，由于 exec 会在内存中缓存全部的输出结果，当数据比较大的时候，spawn 会是更好的选择。
+
+#### execFile
+
+execFile 和 exec 的区别在于它并不会创建 shell，而是直接执行命令，所以会更高效一点，例如：
+
+```
+const { execFile } = require("child_process")
+const child = execFile("node", ["--version"], (error, stdout, stderr) => {
+  if (error) throw error
+  console.log(stdout)
+})
+```
+
+由于没有创建 shell，程序的参数作为数组传入，因此具有较高的安全性。
+
+#### spawn
+
+spawn 函数和  execFile 类似，默认不开启 shell，但区别在于 execFile 会缓存命令行的输出，然后把结果传入回调函数中，而 spawn 则是以流的方式输出，有了流，就能非常方便的对接输入和输出了，例如典型的 `wc` 命令：
+
+```
+const child = spawn("wc")
+process.stdin.pipe(child.stdin)
+child.stdout.on("data", data => {
+  console.log(`child stdout:\n${data}`)
+})
+```
+
+此时就会从命令行 stdin 获取输入，当用户触发回车 + `ctrl D` 时就开始执行命令，并把结果从 stdout 输出。
+
+> wc 是 Word Count 的缩写，用于统计单词数，语法为：
+>
+> ```
+> wc [OPTION]... [FILE]...
+> ```
+>
+> 如果在终端上输入 wc 命令并回车，这时候统计的是从键盘输入终端中的字符，再次按回车键，然后按 `Ctrl + D` 会输出统计的结果。
+
+通过管道还可以组合复杂的命令，例如统计当前目录下的文件数量，在 Linux 命令行中会这么写：
+
+```
+find . -type f | wc -l
+```
+
+在 Node.js 中的写法和命令行一模一样：
+
+```
+const find = spawn("find", [".", "-type", "f"])
+const wc = spawn("wc", ["-l"])
+find.stdout.pipe(wc.stdin)
+wc.stdout.on("data", (data) => {
+  console.log(`Number of files ${data}`)
+})
+```
+
+spawn 有丰富的自定义配置，例如：
+
+```
+const child = spawn("find . -type f | wc -l", {
+  stdio: "inherit", // 继承父进程的输入输出流
+  shell: true, // 开启命令行模式
+  cwd: "/Users/keliq/code", // 指定执行目录
+  env: { ANSWER: 42 }, // 指定环境变量（默认是 process.env）
+  detached: true, // 作为独立进程存在
+})
+```
+
+#### fork
+
+fork 函数是 spawn 函数的变体，使用 fork 创建的子进程和父进程之间会自动创建一个通信通道，子进程的全局对象 process 上面会挂载 send 方法。例如父进程 parent.js 代码：
+
+```
+const { fork } = require("child_process")
+const forked = fork("./child.js")
+
+forked.on("message", msg => {
+  console.log("Message from child", msg);
+})
+
+forked.send({ hello: "world" })
+```
+
+子进程 child.js 代码：
+
+```
+process.on("message", msg => {
+  console.log("Message from parent:", msg)
+})
+
+let counter = 0
+setInterval(() => {
+  process.send({ counter: counter++ })
+}, 1000)
+```
+
+当调用 `fork("child.js")`的时候，实际上就是用 node 来执行该文件中的代码，相当于 `spawn('node', ['./child.js'])`。
+
+fork 的一个典型的应用场景如下：假如现在用 Node.js 创建一个 http 服务，当路由为 `compute` 的时候，执行一个耗时的运算。
+
+```
+const http = require("http")
+const server = http.createServer()
+server.on("request", (req, res) => {
+  if (req.url === "/compute") {
+    const sum = longComputation()
+    return res.end(Sum is ${sum})
+  } else {
+    res.end("OK")
+  }
+})
+
+server.listen(3000);
+```
+
+可以用下面的代码来模拟该耗时的运算：
+
+```
+const longComputation = () => {
+  let sum = 0;
+  for (let i = 0; i < 1e9; i++) {
+    sum += i
+  }
+  return sum
+}
+```
+
+那么在上线后，只要服务端收到了 `compute` 请求，由于 Node.js 是单线程的，耗时运算占用了 CPU，用户的其他请求都会阻塞在这里，表现出来的现象就是[服务器](https://www.yisu.com/)无响应。
+
+解决这个问题最简单的方法就是把耗时运算放到子进程中去处理，例如创建一个 `compute.js` 的文件，代码如下：
+
+```
+const longComputation = () => {
+  let sum = 0;
+  for (let i = 0; i < 1e9; i++) {
+    sum += i;
+  }
+  return sum
+}
+
+process.on("message", msg => {
+  const sum = longComputation()
+  process.send(sum)
+})
+```
+
+再把服务端的代码稍作改造：
+
+```
+const http = require("http")
+const { fork } = require("child_process")
+const server = http.createServer()
+server.on("request", (req, res) => {
+  if (req.url === "/compute") {
+    const compute = fork("compute.js")
+    compute.send("start")
+    compute.on("message", sum => {
+      res.end(Sum is ${sum})
+    })
+  } else {
+    res.end("OK")
+  }
+})
+server.listen(3000)
+```
+
+这样的话，主线程就不会阻塞，而是继续处理其他的请求，当耗时运算的结果返回后，再做出响应。其实更简单的处理方式是利用 cluster 模块，限于篇幅原因，后面再展开讲。
+
+#### **总结**
+
+掌握了上面四种创建子进程的方法之后，总结了以下三条规律：
+
+- 创建 node 子进程用 fork，因为自带通道方便通信。
+- 创建非 node 子进程用 execFile 或 spawn。如果输出内容较少用 execFile，会缓存结果并传给回调方便处理；如果输出内容多用 spawn，使用流的方式不会占用大量内存。
+- 执行复杂的、固定的终端命令用 exec，写起来更方便。但一定要记住 exec 会创建 shell，效率不如 execFile 和 spawn，且存在命令行注入的风险。
 
 ### Express和Koa的区别
 

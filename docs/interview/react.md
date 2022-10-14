@@ -8897,7 +8897,7 @@ React 的 diff 算法，触发更新的时机主要在 state 变化与 hooks 调
 
 Vue 的整体 diff 策略与 React 对齐，虽然缺乏时间切片能力，但这并不意味着 Vue 的性能更差，因为在 Vue 3 初期引入过，后期因为收益不高移除掉了。除了高帧率动画，在 Vue 中其他的场景几乎都可以使用防抖和节流去提高响应性能。
 
-### 6.如何根据 React diff 算法原理优化代码**
+### 6.如何根据 React diff 算法原理优化代码
 
 根据 diff 算法的设计原则，应尽量避免跨层级节点移动。
 
@@ -8905,7 +8905,142 @@ Vue 的整体 diff 策略与 React 对齐，虽然缺乏时间切片能力，但
 
 设置 shouldComponentUpdate 或者 React.pureComponet 减少 diff 次数。
 
-### 7.总结
+### 7.React优化Diff算法
+
+#### **三种优化策略**
+
+[**React--diff算法和三种优化策略**](https://blog.51cto.com/lengyuexin/4943871)
+
+基于树，组件，元素优化的diff三点策略，react分别进行以下算法优化
+
+tree diff
+component diff
+element diff
+**tree diff**
+react对树的算法进行了分层比较。react 通过 updateDepth对Virtual Dom树进行层级控制，只会对相同层级的节点进行比较，即同一个父节点下的所有子节点。当发现节点不存在，则该节点和其子节点都会被删除。这样是需要遍历一次dom树，就完成了整个dom树的对比
+
+**component diff**
+如果是同类型的组件，则直接对比virtual Dom tree
+如果不是同类型的组件，会直接替换掉组件下的所有子组件
+如果类型相同，但是可能virtual DOM 没有变化，这种情况下我们可以使用shouldComponentUpdate() 来判断是否需要进行diff
+
+**element diff**
+移动优化 在移动前，会将节点在新集合中的位置和在老集合中lastIndex进行比较，如果if (child._mountIndex < lastIndex) 进行移动操作，否则不进行移动操作。这是一种顺序移动优化。只有在新集合的位置 小于 在老集合中的位置 才进行移动。
+
+如果遍历的过程中，发现在新集合中没有，但是在老集合中的节点，会进行删除操作
+
+element diff 通过唯一key 进行diff 优化。
+
+#### React Diff算法的优化
+
+1. 同层节点之间相互比较，不会垮节点比较；
+2. 不同类型的节点，产生不同的树结构；
+3. 开发中，可以通过key来指定哪些节点在不同的渲染下保持稳定；
+
+#### 情况一：对比不同类型的元素
+
+##### 当节点为不同的元素，React会拆卸原有的树，并且建立起新的树：
+
+- 当一个元素从`<a>`变成`<img>`，从`<Article>`变成`<Comment>`，或从`<button>`变成`<div>`都会触发一个完整的重建流程；
+- 当卸载一颗树时，对应的DOM节点也会被销毁，组件实例将执行componentWillUnmount()方法；
+- 当建立一颗新的树时，对应的DOM节点会被创建以及插入到DOM中，组件实例将执行componentWillMont()方法，紧接着componentDidMount()方法；
+
+比如
+
+- React会销毁Counter组件并且重新建立一个新的组件，而不会对Counter进行复用；
+
+    ```html
+    <div>
+        <Counter />
+    </div>
+    
+    <span>
+    	<Counter />
+    </span>
+    ```
+
+#### 情况二：对比同一类型的元素
+
+##### 当比对两个相同类型的Reac元素时，React会保留DOM节点，仅比对及更新有改变的属性。
+
+比如
+
+- 通过比对这两个元素，React知道只需要修改DOM元素上的className属性；
+
+    ```html
+    <div className="before" title="stuff"></div>
+    <div className="after" title="stuff"></div>
+    ```
+
+- 当更新style属性时，React仅更新有所变更的属性。
+
+- 通过比对这两个属性，React知道只需要修改DOM元素上的color样式，无需修改fontWidth。
+
+    ```js
+    <div style={{color:'red', fontWidth:'bold'}}></div>
+    <div style={{color:'green', fontWidth:'bold'}}></div>
+    ```
+
+- 如果是同类型的组件元素：
+
+    - 组件会保持不变，React会更新该组件的props，并且调用componentWillReceiveProps（）和componentWillUpdate()方法；
+    - 下一步，调用render()方法，diff算法将在之前的结果以及新的结果中进行递归；
+
+#### 情况三：对子节点进行递归
+
+- 在默认条件下，当递归DOM节点的子元素时，React会同时遍历两个子元素的列表；当产生差异时，生成一个mutation。
+
+    - 我们来看一下在最后插入一条数据的情况：
+
+    - 前面两个比较时完全相同的，所以不会产生mutation；
+
+    - 最后一个比较，产生一个mutation，将其插入到新的DOM树中即可；
+
+        ```html
+        <ul>
+            <li>first</li>
+            <li>second</li>
+        </ul>
+        <ul>
+            <li>first</li>
+            <li>second</li>
+            <li>third</li>
+        </ul>
+        ```
+
+- 但是如果我们是在中间插入一条数据：
+
+    - React会对每一个子元素产生一个mutation，而不是保持前两个`<li>`的不变；
+
+    - 这种低效的比较方式会带来一定的性能问题
+
+        ```html
+        <ul>
+            <li>星际穿越</li>
+            <li>盗梦空间</li>
+        </ul>
+        <ul>
+            <li>大话西游</li>
+            <li>星际穿越</li>
+            <li>盗梦空间</li>
+        </ul>
+        ```
+
+#### keys的优化
+
+- 方式一：在最后位置插入数据
+    - 这种情况，有无key意义不大
+- 方式二：在前面插入数据
+    - 这种做法，在没有key的情况下，所有的`<li>`都需要进行修改
+- 当子元素（这里的li）拥有key时，React使用key来匹配原有树上的子元素以及最新树上的子元素：
+    - 在下面这种场景下，key为111和222的元素仅仅进行位移，不需要进行任何的修改；
+    - 将key为333的元素插入到最前面的位置即可
+- key的注意事项：
+    - key应该是唯一的；
+    - key不要使用随机数（随机数在下一次render时，会重新生成一个数字）；
+    - 使用index作为key，对性能是没有优化的；
+
+### 8.总结
 
 diff 算法是指生成更新补丁的方式，主要应用于虚拟 DOM 树变化后，更新真实 DOM。所以 diff 算法一定存在这样一个过程：触发更新 → 生成补丁 → 应用补丁。
 
