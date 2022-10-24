@@ -19,7 +19,7 @@
 
 **（6）初始值设置：** 在变量声明时，var 和 let 可以不用设置初始值。而const声明变量必须设置初始值。
 
-**（7）指针指向：** let和const都是ES6新增的用于创建变量的语法。 let创建的变量是可以更改指针指向（可以重新赋值）。但const声明的变量是不允许改变指针的指向。
+**（7）指针指向：** let和const都是ES6新增的用于创建变量的语法。 let创建的变量是可以更改指针指向（可以重新赋值）。但const声明的变量是不允许改变指针的指向。变量的值是栈中存放的内存地址，访问时会自动寻址找到堆中存放的对象
 
 | **区别**           | **var** | **let** | **const** |
 | ------------------ | ------- | ------- | --------- |
@@ -324,8 +324,6 @@ show(fun)
 >   2.  作用域能够减轻命名的压力。我们可以在不同的作用域内定义相同的变量名，并且这些变量名不会产生冲突。
 
  **作用域中取值,这里强调的是“创建”，而不是“调用”**，切记切记——其实这就是所谓的"静态作用域"
-
-
 
 ```js
 var a = 10
@@ -3138,8 +3136,6 @@ Person.prototype.constructor  // Person
 
 ### 5.Object和Function的关系
 
-
-
 原型链的底层实现顺序结论
 
 首先：js中先创建的是Object.prototype这个原型对象。  
@@ -3213,7 +3209,126 @@ function iterate(obj){
 } 
 ```
 
-------
+### 7.instanceof使用和问题
+
+`instanceof` 主要的作用就是判断一个实例是否属于某种类型
+
+```javascript
+let person = function () {
+}
+let nicole = new person()
+nicole instanceof person // true
+```
+
+当然，`instanceof` 也可以判断一个实例是否是其父类型或者祖先类型的实例。
+
+```javascript
+let person = function () {
+}
+let programmer = function () {
+}
+programmer.prototype = new person()
+let nicole = new programmer()
+nicole instanceof person // true
+nicole instanceof programmer // true
+```
+
+实现原理
+
+```js
+function new_instance_of(leftVaule, rightVaule) { 
+    let rightProto = rightVaule.prototype; // 取右表达式的 prototype 值
+    leftVaule = leftVaule.__proto__; // 取左表达式的__proto__值
+    while (true) {
+    	if (leftVaule === null) {
+            return false;	
+        }
+        if (leftVaule === rightProto) {
+            return true;	
+        } 
+        leftVaule = leftVaule.__proto__ 
+    }
+}
+```
+
+看几个特殊的例子
+
+```javascript
+function Foo() {
+}
+
+Object instanceof Object // true
+Function instanceof Function // true
+Function instanceof Object // true
+Foo instanceof Foo // false
+Foo instanceof Object // true
+Foo instanceof Function // true
+```
+
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/Imgs/cCGfONArV8pynT6.webp)
+
+- `Object instanceof Object`
+
+    由图可知，Object 的 `prototype` 属性是 `Object.prototype`, 而由于 Object 本身是一个函数，由 Function 所创建，所以 `Object.__proto__` 的值是 `Function.prototype`，而 `Function.prototype` 的 `__proto__` 属性是 `Object.prototype`，所以我们可以判断出，`Object instanceof Object` 的结果是 true 。用代码简单的表示一下
+
+    ```javascript
+    leftValue = Object.__proto__ = Function.prototype;
+    rightValue = Object.prototype;
+    // 第一次判断
+    leftValue != rightValue
+    leftValue = Function.prototype.__proto__ = Object.prototype
+    // 第二次判断
+    leftValue === rightValue
+    // 返回 true
+    ```
+
+    `Function instanceof Function` 和 `Function instanceof Object` 的运行过程与 `Object instanceof Object` 类似，故不再详说。
+
+- `Foo instanceof Foo`
+
+    Foo 函数的 `prototype` 属性是 `Foo.prototype`，而 Foo 的 `__proto__` 属性是 `Function.prototype`，由图可知，Foo 的原型链上并没有 `Foo.prototype` ，因此 `Foo instanceof Foo` 也就返回 false 。
+
+    我们用代码简单的表示一下
+
+    ```javascript
+    leftValue = Foo, rightValue = Foo
+    leftValue = Foo.__proto = Function.prototype
+    rightValue = Foo.prototype
+    // 第一次判断
+    leftValue != rightValue
+    leftValue = Function.prototype.__proto__ = Object.prototype
+    // 第二次判断
+    leftValue != rightValue
+    leftValue = Object.prototype = null
+    // 第三次判断
+    leftValue === null
+    // 返回 false
+    ```
+
+- `Foo instanceof Object`
+
+    ```javascript
+    leftValue = Foo, rightValue = Object
+    leftValue = Foo.__proto__ = Function.prototype
+    rightValue = Object.prototype
+    // 第一次判断
+    leftValue != rightValue
+    leftValue = Function.prototype.__proto__ = Object.prototype
+    // 第二次判断
+    leftValue === rightValue
+    // 返回 true 
+    ```
+
+- `Foo instanceof Function`
+
+    ```js
+    leftValue = Foo, rightValue = Function
+    leftValue = Foo.__proto__ = Function.prototype
+    rightValue = Function.prototype
+    // 第一次判断
+    leftValue === rightValue
+    // 返回 true 
+    ```
 
 ## 对象创建和对象继承
 
@@ -5272,9 +5387,9 @@ setTimeout(() => req.abort('用户手动终止请求'), 2000) // 这里可以是
 
 ##### 变量对象（`variable object` 简称 `VO`）
 
-每个执行环境文都有一个表示变量的对象——**变量对象**，全局执行环境的变量对象始终存在，而函数这样局部环境的变量，只会在函数执行的过程中存在，在函数被调用时且在具体的函数代码运行之前，JS 引擎会用当前函数的**参数列表**（`arguments`）初始化一个 “变量对象” 并将当前执行上下文与之关联 ，函数代码块中声明的 **变量** 和 **函数** 将作为属性添加到这个变量对象上。
+每个执行环境文都有一个表示变量的对象——**变量对象**，全局执行环境的**变量对象始终存在**，而函数这样局部环境的变量，只会在函数执行的过程中存在，**在函数被调用时且在具体的函数代码运行之前**，JS 引擎会用当前函数的**参数列表**（`arguments`）初始化一个 “变量对象” 并将当前执行上下文与之关联 ，函数代码块中**声明的 变量 和 函数 将作为属性添加到这个变量对象上**。
 
-有一点需要注意，只有函数声明（function declaration）会被加入到变量对象中，而函数表达式（function expression）会被忽略。
+有一点需要注意，**只有函数声明（function declaration）会被加入到变量对象中，而函数表达式（function expression）会被忽略**。
 
 全局执行上下文和函数执行上下文中的变量对象还略有不同，它们之间的差别简单来说：
 
@@ -5283,7 +5398,7 @@ setTimeout(() => req.abort('用户手动终止请求'), 2000) // 这里可以是
 
 #### 活动对象（`activation object` 简称 `AO`）
 
-函数进入执行阶段时，原本不能访问的变量对象被激活成为一个活动对象，自此，我们可以访问到其中的各种属性。
+函数进入**执行阶段时，原本不能访问的变量对象被激活成为一个活动对象**，自此，我们可以访问到其中的各种属性。
 
 > 其实变量对象和活动对象是一个东西，只不过处于不同的状态和阶段而已。
 
@@ -5351,16 +5466,14 @@ sayA();
 
     2. 创建 `arguments object` 检查上下文中的参数，初始化名称和值并创建引用副本
 
-    3. 扫描上下文找到所有函数声明：
-
+    3. **扫描上下文找到所有函数声明**：
         1. 对于每个找到的函数，用它们的原生函数名，在变量对象中创建一个属性，该属性里存放的是一个指向实际内存地址的指针
         2. 如果函数名称已经存在了，属性的引用指针将会被覆盖
-
-    4. 扫描上下文找到所有var 的变量声明：
-
+        
+    4. **扫描上下文找到所有var 的变量声明**：
         1. 对于每个找到的变量声明，用它们的原生变量名，在变量对象中创建一个属性，并且使用 `undefined` 来初始化
         2. 如果变量名作为属性在变量对象中已存在，则不做任何处理并接着扫描
-
+        
     5. 确定 `this` 值
 4. 进入执行上下文的执行阶段：
 
@@ -5382,55 +5495,225 @@ ExecutionContext = {
 
 1. 程序启动，全局上下文被创建
 
-    1. 创建全局上下文的
+    1. 创建全局上下文的词法环境
 
-         
-
-        词法环境
-
-        1. 创建 **对象环境记录器** ，它用来定义出现在 **全局上下文** 中的变量和函数的关系（负责处理 `let` 和 `const` 定义的变量）
+      1. 创建 **对象环境记录器** ，它用来定义出现在 **全局上下文** 中的变量和函数的关系（负责处理 `let` 和 `const` 定义的变量）
         2. 创建 **外部环境引用**，值为 **`null`**
-
-    2. 创建全局上下文的
-
-         
-
-        变量环境
-
-        1. 创建 **对象环境记录器**，它持有 **变量声明语句** 在执行上下文中创建的绑定关系（负责处理 `var` 定义的变量，初始值为 `undefined` 造成声明提升）
+        
+    2. 创建全局上下文的变量环境
+    
+      1. 创建 **对象环境记录器**，它持有 **变量声明语句** 在执行上下文中创建的绑定关系（负责处理 `var` 定义的变量，初始值为 `undefined` 造成声明提升）
         2. 创建 **外部环境引用**，值为 **`null`**
-
+        
     3. 确定 `this` 值为全局对象（以浏览器为例，就是 `window` ）
-
+    
 2. 函数被调用，函数上下文被创建
 
-    1. 创建函数上下文的
+    1. 创建函数上下文的词法环境
 
-         
-
-        词法环境
-
-        1. 创建 **声明式环境记录器** ，存储变量、函数和参数，它包含了一个传递给函数的 **`arguments`** 对象（此对象存储索引和参数的映射）和传递给函数的参数的 **length**。（负责处理 `let` 和 `const` 定义的变量）
+      1. 创建 **声明式环境记录器** ，存储变量、函数和参数，它包含了一个传递给函数的 **`arguments`** 对象（此对象存储索引和参数的映射）和传递给函数的参数的 **length**。（负责处理 `let` 和 `const` 定义的变量）
         2. 创建 **外部环境引用**，值为全局对象，或者为父级词法环境（作用域）
-
-    2. 创建函数上下文的
-
-         
-
-        变量环境
-
-        1. 创建 **声明式环境记录器** ，存储变量、函数和参数，它包含了一个传递给函数的 **`arguments`** 对象（此对象存储索引和参数的映射）和传递给函数的参数的 **length**。（负责处理 `var` 定义的变量，初始值为 `undefined` 造成声明提升）
+        
+    2. 创建函数上下文的变量环境
+    
+      1. 创建 **声明式环境记录器** ，存储变量、函数和参数，它包含了一个传递给函数的 **`arguments`** 对象（此对象存储索引和参数的映射）和传递给函数的参数的 **length**。（负责处理 `var` 定义的变量，初始值为 `undefined` 造成声明提升）
         2. 创建 **外部环境引用**，值为全局对象，或者为父级词法环境（作用域）
-
+        
     3. 确定 `this` 值
-
+    
 3. 进入函数执行上下文的执行阶段：
 
     1. 在上下文中运行/解释函数代码，并在代码逐行执行时分配变量值。
 
 > 关于 ES5 中执行上下文的变更，个人感觉就是变了个概念，本质和 ES3 差别并不大。至于变更的目的，应该是为了 ES6 中的 let 和 const 服务的。
 
-### 2.什么是闭包
+### 2.Js预编译
+
+#### 案例
+
+```js
+var global = 100
+ function fn() {
+   console.log(global);
+}
+fn()
+```
+
+面试官问你这个问题就是看你知不知道JS代码在运行时都发生了什么？ 这个时候，很多小伙伴是不是已经开始想声明提升的问题了。用声明提升去思考代码也就是这样的顺序
+
+```js
+var global //变量声明提升
+function fn(){ //函数声明提升
+console.log(global)
+}
+global = 100 //变量赋值
+fn() //函数执行
+```
+
+看到这，很多小伙伴肯定会说不过如此。那么保持这个想法，看下面的代码
+
+```js
+ function fn(a) {
+      console.log(a); // function() {}
+      var a = 123;
+      console.log(a); // 123
+      function a() {}
+      console.log(a); // 123
+      var b = function() {}
+      console.log(b); // function() {}
+      function d() {}
+      var d = a
+      console.log(d); // 123
+    }
+    fn(1)
+```
+
+请问：这段代码是怎么的运行顺序？开始声明提升？现在，大家应该就知道我要说什么，通过声明提升、作用域去思考一段代码的运行顺序，如果代码简单还好说，一旦代码的声明操作、赋值操作一大堆，就会浪费大把的时间，而且出错率极高。
+
+#### 函数体内
+
+先以上面的代码为例，在一个函数体内的代码运行。其实JS运行可以分为编译阶段和执行阶段。那么这两个阶段分别发生了什么呢？
+
+上述代码中
+
+- 编译阶段
+    - 先创建一个AO（activation object）对象
+    - 然后去找形参和变量声明，将**形参和变量声明作为AO对象的属性名**，值为undefined
+    - 再者，将实参和形参统一
+    - 最后，找函数声明，将函数名作为AO对象的属性名，值赋予函数体
+
+带着这些，我们再来看这段代码
+
+```js
+function fn(a) { //二、形参是a，值为undefined
+      console.log(a); // function() {}
+      var a = 123; //二、a变量声明，AO里已经有了，覆盖后还是一样的
+      console.log(a); // 123
+      function a() {}// 四、a 申明为一个函数
+      console.log(a); // 123
+      var b = function() {} //二、变量b声明，值为undefined
+      console.log(b); // function() {}
+      function d() {} // 四、d声明为一个函数
+      var d = a //二、变量d声明，值为undefined
+      console.log(d); // 123
+    }
+    //第一步在这、函数在执行前进行编译，创建AO对象
+    AO:{
+        //第二步，开始找形参和变量声明，并写入AO
+        a:undefined 1 function (){}
+        b:undefined 
+        d:undefined function(){}
+        //第三步，就相当于把实参传给形参，所以a的值现在就变成了1
+        //第四步，找函数声明，写入AO
+    }
+    fn(1)
+```
+
+到最后编译阶段结束，AO对象中的属性和值是：
+
+```js
+AO:{
+    a:function(){}
+    b:undefined
+    d:function(){}
+}
+```
+
+现在，我们来通过看AO对象中，属性对应的值来执行整个函数。
+
+- 从fn(1)开始执行函数
+- 第一个log要a，去AO中找a，是function(){}。然后a被赋值为123，AO对象中的a随之更新
+- 第二个log又要a，去AO中找a，现在输出的就是123了。然后变量b被赋值为一个函数，AO中也随之更新
+- 第三个log要b，去AO中找b，输出的就是function(){},然后a的值被赋给了d，AO中a的值是123，所以d也变成123，AO中随之更新
+- 第四个log要d，不就是123嘛 到这，这段代码就执行完了，不妨回过去看看，嗯？就这么简单？为了证明我不是在耍流氓，大家可以去跑一跑，对照一下。
+
+看到这，聪明的朋友们马上会有疑问，这不过是函数体内的，那在全局上又是怎么样的。我只能说：更简单，接着看。。。
+
+#### 在全局下
+
+在函数体中，整个编译阶段我总结成四部曲。在全局下，三步足以，多一步算我输。
+
+- 第一步、创建一个GO（global object）对象
+- 第二步、找变量声明，将变量声明作为GO的属性名，值为undefined
+- 第三步、找全局里的函数声明，将函数名作为GO对象的属性名，值赋予函数体 三步，结束了，老规矩，拿代码来说话：
+
+```js
+GO:{
+    fn：function(){}
+}
+global = 100
+function fn() {
+   console.log(global); // undefined
+   global = 200
+   console.log(global); // 200
+   var global = 300
+}
+AO:{
+    global:undefined
+}
+fn()
+```
+
+- 编译阶段 来，三步走起！
+    - 第一步、创建一个GO对象
+    - 第二步、找变量声明，并没有，全局中只有一个赋值语句和函数声明
+    - 第三步、找函数声明，所以GO对象中编译阶段只有fn 编译到这，全局就编译完了，接下来就是函数体内的编译了
+    - 第一步、创建一个AO对象
+    - 第二步、找形参和变量声明，这里没有形参，变量global声明，值为undefined。写入AO
+    - 第三步、传参，实参形参都没有
+    - 第四步、找函数声明，也没有 到这，整个编译就结束了，可以开始执行了。
+- 执行阶段
+    - 先执行赋值语句，因为global在全局中没有定义，这里会强制声明一个global并赋值100，写入GO中
+    - 然后到fn()执行函数体。
+    - 第一个log要global，先去自己的AO找，找到了，值为undefined。所以输出undefined
+    - 进行赋值，将AO中的global值更新为200
+    - 第二个log还要global，这里已经变成200了，所以输出200
+    - 最后AO中global被赋值为300 看到这里，再回想一下，是不是感觉很通透了。下面稍微总结下上面说的方法
+
+#### 总结
+
+- 函数体内的编译四步曲，发生在函数执行之前
+    1. 创建AO对象 （activation object）
+    2. 找形参和变量声明，将形参和变量声明作为AO对象的属性名，值为undefined
+    3. 将实参和形参统一
+    4. 在函数体里找函数声明，将函数名作为AO对象的属性名，值赋予函数体
+- 全局下的编译三步曲，发生在代码最前面
+    1. 创建GO对象
+    2. 找变量声明，将变量声明作为GO对象的属性名，值赋予undefined
+    3. 找全局里的函数声明，将函数名作为GO对象的属性名，值赋予函数体
+
+例题：
+
+![image-20221024170150212](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/img/image-20221024170150212.png)
+
+![image-20221024171104863](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/img/image-20221024171104863.png)
+
+![image-20221024171211186](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/img/image-20221024171211186.png)
+
+```js
+var foo=1;
+function bar(a){
+ var a1=a;
+ var a=foo;
+ function a(){
+	console.log(a)  //1
+ }
+ a1();
+}
+bar(3)
+GO ={
+foo: undefined, 1
+bar: fn
+｝
+AO =｛
+a1: undefined, fn
+a: undefined, 3, fn, 1
+｝
+```
+
+
+
+### 3.什么是闭包
 
 ![img](https://s2.loli.net/2022/08/01/h49rw7IofLbVBjU.webp)
 
@@ -5444,7 +5727,7 @@ ExecutionContext = {
 
 本质就是上级作用域内变量的生命周期，因为被下级作用域内引用，而没有被释放。就导致上级作用域内的变量，等到下级作用域执行完以后才正常得到释放
 
-### 3.闭包的应用场景
+### 4.闭包的应用场景
 
 - 闭包的好处：
     - 变量长期驻扎在内存中
@@ -5594,7 +5877,7 @@ fn(1, 2)(3)(4)(5)
 fn(1)(2)(3)(4)(5)
 ```
 
-### 4.闭包内存泄露问题
+### 5.闭包内存泄露问题
 
 - 内存泄漏定义：应用程序不再需要占用的时候，由于某些原因，内存没有被操作系统或可用内存池回收。
 
@@ -5653,163 +5936,6 @@ fn(1)(2)(3)(4)(5)
     vm.set(element, 'something');
     vm.get(element);
     ```
-
-### 5.Js预编译
-
-#### 案例
-
-```js
-var global = 100
- function fn() {
-   console.log(global);
-}
-fn()
-```
-
-我们来假想一下，如果面试官问你：这段代码最后会输出什么？你大概率会觉得他在侮辱你，这不就是100吗；但如果面试官再问你，这个100怎么来的？你能回答的出来吗？
-
-其实，面试官问你这个问题就是看你知不知道JS代码在运行时都发生了什么？ 这个时候，很多小伙伴是不是已经开始想声明提升的问题了。用声明提升去思考代码也就是这样的顺序
-
-```js
-var global //变量声明提升
-function fn(){ //函数声明提升
-console.log(global)
-}
-global = 100 //变量赋值
-fn() //函数执行
-```
-
-看到这，很多小伙伴肯定会说不过如此。那么保持这个想法，看下面的代码
-
-```js
- function fn(a) {
-      console.log(a); // function() {}
-      var a = 123;
-      console.log(a); // 123
-      function a() {}
-      console.log(a); // 123
-      var b = function() {}
-      console.log(b); // function() {}
-      function d() {}
-      var d = a
-      console.log(d); // 123
-    }
-    fn(1)
-```
-
-请问：这段代码是怎么的运行顺序？开始声明提升？现在，大家应该就知道我要说什么，通过声明提升、作用域去思考一段代码的运行顺序，如果代码简单还好说，一旦代码的声明操作、赋值操作一大堆，就会浪费大把的时间，而且出错率极高。
-
-#### 函数体内
-
-先以上面的代码为例，在一个函数体内的代码运行。其实JS运行可以分为编译阶段和执行阶段。那么这两个阶段分别发生了什么呢？
-
-上述代码中
-
-- 编译阶段
-    - 先创建一个AO（activation object）对象
-    - 然后去找形参和变量声明，将形参和变量声明作为AO对象的属性名，值为undefined
-    - 再者，将实参和形参统一
-    - 最后，找函数声明，将函数名作为AO对象的属性名，值赋予函数体
-
-带着这些，我们再来看这段代码
-
-```js
-function fn(a) { //二、形参是a，值为undefined
-      console.log(a); // function() {}
-      var a = 123; //二、a变量声明，AO里已经有了，覆盖后还是一样的
-      console.log(a); // 123
-      function a() {}// 四、a 申明为一个函数
-      console.log(a); // 123
-      var b = function() {} //二、变量b声明，值为undefined
-      console.log(b); // function() {}
-      function d() {} // 四、d声明为一个函数
-      var d = a //二、变量d声明，值为undefined
-      console.log(d); // 123
-    }
-    //第一步在这、函数在执行前进行编译，创建AO对象
-    AO:{
-        //第二步，开始找形参和变量声明，并写入AO
-        a:undefined 1 function (){}
-        b:undefined 
-        d:undefined function(){}
-        //第三步，就相当于把实参传给形参，所以a的值现在就变成了1
-        //第四步，找函数声明，写入AO
-    }
-    fn(1)
-```
-
-到最后编译阶段结束，AO对象中的属性和值是：
-
-```js
-AO:{
-    a:function(){}
-    b:undefined
-    d:function(){}
-}
-```
-
-现在，我们来通过看AO对象中，属性对应的值来执行整个函数。
-
-- 从fn(1)开始执行函数
-- 第一个log要a，去AO中找a，是function(){}。然后a被赋值为123，AO对象中的a随之更新
-- 第二个log又要a，去AO中找a，现在输出的就是123了。然后变量b被赋值为一个函数，AO中也随之更新
-- 第三个log要b，去AO中找b，输出的就是function(){},然后a的值被赋给了d，AO中a的值是123，所以d也变成123，AO中随之更新
-- 第四个log要d，不就是123嘛 到这，这段代码就执行完了，不妨回过去看看，嗯？就这么简单？为了证明我不是在耍流氓，大家可以去跑一跑，对照一下。
-
-看到这，聪明的朋友们马上会有疑问，这不过是函数体内的，那在全局上又是怎么样的。我只能说：更简单，接着看。。。
-
-#### 在全局下
-
-在函数体中，整个编译阶段我总结成四部曲。在全局下，三步足以，多一步算我输。
-
-- 第一步、创建一个GO（global object）对象
-- 第二步、找变量声明，将变量声明作为GO的属性名，值为undefined
-- 第三步、找全局里的函数声明，将函数名作为GO对象的属性名，值赋予函数体 三步，结束了，老规矩，拿代码来说话：
-
-```js
-GO:{
-    fn：function(){}
-}
-global = 100
-function fn() {
-   console.log(global); // undefined
-   global = 200
-   console.log(global); // 200
-   var global = 300
-}
-AO:{
-    global:undefined
-}
-fn()
-```
-
-- 编译阶段 来，三步走起！
-    - 第一步、创建一个GO对象
-    - 第二步、找变量声明，并没有，全局中只有一个赋值语句和函数声明
-    - 第三步、找函数声明，所以GO对象中编译阶段只有fn 编译到这，全局就编译完了，接下来就是函数体内的编译了
-    - 第一步、创建一个AO对象
-    - 第二步、找形参和变量声明，这里没有形参，变量global声明，值为undefined。写入AO
-    - 第三步、传参，实参形参都没有
-    - 第四步、找函数声明，也没有 到这，整个编译就结束了，可以开始执行了。
-- 执行阶段
-    - 先执行赋值语句，因为global在全局中没有定义，这里会强制声明一个global并赋值100，写入GO中
-    - 然后到fn()执行函数体。
-    - 第一个log要global，先去自己的AO找，找到了，值为undefined。所以输出undefined
-    - 进行赋值，将AO中的global值更新为200
-    - 第二个log还要global，这里已经变成200了，所以输出200
-    - 最后AO中global被赋值为300 看到这里，再回想一下，是不是感觉很通透了。下面稍微总结下上面说的方法
-
-#### 总结
-
-- 函数体内的编译四步曲，发生在函数执行之前
-    1. 创建AO对象 （activation object）
-    2. 找形参和变量声明，将形参和变量声明作为AO对象的属性名，值为undefined
-    3. 将实参和形参统一
-    4. 在函数体里找函数声明，将函数名作为AO对象的属性名，值赋予函数体
-- 全局下的编译三步曲，发生在代码最前面
-    1. 创建GO对象
-    2. 找变量声明，将变量声明作为GO对象的属性名，值赋予undefined
-    3. 找全局里的函数声明，将函数名作为GO对象的属性名，值赋予函数体
 
 ### 6.从JS引擎V8的角度看待闭包
 
@@ -6500,6 +6626,21 @@ fun1();             //输出window
 
 let fun2 = sayHi.bind(obj)();//输出obj
 fun2();                      //输出obj
+```
+
+```js
+
+var obj = {
+	say: () => {
+		console.log(this);
+		var say1= () => {
+			console.log(this);
+		}
+		say1()
+	}
+}
+obj.say() //window window
+
 ```
 
 可以看出，fun1和fun2对应的是同样的箭头函数，但是this的输出结果是不一样的。
