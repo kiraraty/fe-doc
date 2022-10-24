@@ -7729,6 +7729,34 @@ function A(props) {
 }
 ```
 
+### 14.Hooks更新机制
+
+Fiber可以保存真实的dom，真实dom对应在内存中的Fiber节点会形成Fiber树，这颗Fiber树在react中叫current Fiber，也就是当前dom树对应的Fiber树，而正在构建Fiber树叫workInProgress Fiber，这两颗树的节点通过alternate相连.
+
+构建workInProgress Fiber发生在createWorkInProgress中，它能创建或者服用Fiber
+
+在mount时：会创建fiberRoot和rootFiber，然后根据jsx对象创建Fiber节点，节点连接成current Fiber树。 
+
+在update时：会根据新的状态形成的jsx（ClassComponent的render或者FuncComponent的返回值）和current Fiber对比形（diff算法）成一颗叫workInProgress的Fiber树，然后将fiberRoot的current指向workInProgress树，此时workInProgress就变成了current Fiber。fiberRoot：指整个应用的根节点，只存在一个
+
+存在current Fiber和workInProgress Fiber两颗Fiber树，Fiber双缓存指的就是，在经过reconcile（diff）形成了新的workInProgress Fiber然后将workInProgress Fiber切换成current Fiber应用到真实dom中，存在双Fiber的好处是在内存中形成视图的描述，在最后应用到dom中，减少了对dom的操作。
+
+Fiber双缓存创建的过程图**：
+
+-   **mount时：**
+    1.  刚开始只创建了fiberRoot和rootFiber两个节点 ![react源码7.6](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/img/20210529105732.png)
+
+    2.  然后根据jsx创建workInProgress Fiber： ![react源码7.7](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/img/20210529105735.png)
+
+    3.  把workInProgress Fiber切换成current Fiber ![react源码7.8](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/img/20210529105738.png)
+
+-   **update时**
+
+    1.  根据current Fiber创建workInProgress Fiber ![react源码7.9](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/img/20210529105741.png)
+    2.  把workInProgress Fiber切换成current Fiber
+
+![react源码7.8](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/img/20210529105745.png)
+
 ### hooks案例
 
 [hooks的典型案例](https://blog.csdn.net/jiaojsun/article/details/105298510)
