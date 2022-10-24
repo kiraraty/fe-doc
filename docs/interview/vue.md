@@ -9907,6 +9907,132 @@ vue2跟vue3实现方式不同：
 >   -   Proxy 的第二个参数可以有 13 种拦截方法，这比起 Object.defineProperty() 要更加丰富
 >   -   Proxy 作为新标准受到浏览器厂商的重点关注和性能优化，相比之下 Object.defineProperty() 是一个已有的老方法。
 
+#### 为什么 Proxy 要配合 Reflect 一起使用
+
+
+
+##### 触发代理对象的劫持时保证正确的 this 上下文指向
+
+在阅读 Proxy 的 MDN 文档上可能会发现其实 Proxy 中 get 陷阱中还会存在一个额外的参数 receiver 。 
+
+那么这里的 receiver 究竟表示什么意思呢？**大多数同学会将它理解成为代理对象**
+
+```javascript
+<script type="text/javaScript">
+  const person = {
+      name:'Barry',
+      age:22
+  }
+ 
+  const p  =new Proxy(person,{
+        // get陷阱中target表示原对象 key表示访问的属性名
+        get(target, key, receiver) {
+            console.log(receiver === p);
+            return target[key];
+        },
+ 
+  })
+</script>
+```
+
+上述的例子中，**我们在 Proxy 实例对象的 get 陷阱上接收了 receiver 这个参数**。
+
+同时，我们在陷阱内部打印 ***\*`console.log(receiver === proxy);`\**** 它会打印出 true ，***\*表示这里 receiver 的确是和代理对象相等的。\****
+
+那么你可以稍微思考下这里的 receiver 究竟是什么呢？ 其实这也是 proxy 中 get 第三个 receiver 存在的意义。
+
+***\*它是为了传递正确的调用者指向\****
+
+通过我们上述对 window.Reflect 的打印可以看到，Reflect 的方法、属性和 Proxy 是一样的，所以 Reflect get 也是有这 第三个 receiver 属性的；
+
+```javascript
+<script type="text/javaScript">
+  const person = {
+      name:'Barry',
+      age:22
+  }
+ 
+  const p  =new Proxy(person,{
+        // get陷阱中target表示原对象 key表示访问的属性名
+        get(target, key, receiver) {
+            console.log(receiver === p);
+            return Reflect.get(target,key,receiver)
+        },
+ 
+  })
+  console.log(p.name);
+</script>
+```
+
+上述代码原理其实非常简单：
+
+> **我们在 Reflect 中 get 陷阱中第三个参数传递了 Proxy 中的 receiver 也就是 obj 作为形参，它会修改调用时的 this 指向。** 
+>
+> **你可以简单的将 \**`Reflect.get(target, key, receiver)`\** 理解成为 \**`target[key].call(receiver)`\**，不过这是一段伪代码，但是这样你可能更好理解。**
+
+相信看到这里你已经明白 Relfect 中的 receiver 代表的含义是什么了，没错它正是可以修改属性访问中的 this 指向为传入的 receiver 对象。
+
+#####  框架健壮性
+
+为什么会说道框架的健壮性呢？我们一起看一段代码
+
+```javascript
+<script type="text/javaScript">
+  const person = {
+      name:'Barry',
+      age:22
+  }
+ 
+ 
+  Object.defineProperty(person,'height',{
+      get(){
+          return 180
+      }
+  })
+  Object.defineProperty(person,'height',{
+      get(){
+          return 170
+      }
+  })
+</script>
+```
+
+看一下浏览器运行环境
+
+![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/img/026fa64e0baa4a7e8cbaeef12bc9a19c.png)
+
+我们可以看到，使用 Object.defineProperty() 重复声明的属性 报错了，因为 JavaScript 是单线程语言，一旦抛出异常，后边的任何逻辑都不会执行，所以为了避免这种情况，我们在底层就要写 大量的 try catch 来避免，不够优雅。
+
+**我们来看一下 Reflect 会是什么情况？**
+
+```javascript
+<script type="text/javaScript">
+   const person = {
+       name:'Barry',
+       age:22
+   }
+ 
+ 
+  const h1 = Reflect.defineProperty(person,'height',{
+       get(){
+           return 180
+       }
+   })
+   const h2 =  Reflect.defineProperty(person,'height',{
+       get(){
+           return 175
+       }
+   })
+   console.log(h1); // true
+   console.log(h2); // false
+   console.log(person); //age: 22,name: "Barry",height: 180
+</script>
+```
+
+ ![img](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/img/d3bb0b4a505b4d7c82f1c771d4a17c1e.png)
+
+我们可以看到使用 **Reflect.defineProperty() 是有返回值的**，所以通过 返回值 来判断你当前操作是否成功。
+
 #### 依赖收集
 
 每当我们改变代理对象(vue2对象)的时候，比如我们新增一个`age`属性，即使`change`函数里面没有使用到`age`, 我们也会触发`change`函数。 所以我们要正确收集依赖，怎样正确收集依赖呢
@@ -9922,6 +10048,8 @@ vue2跟vue3实现方式不同：
 
 >   **`Map`** 对象保存键值对，并且能够记住键的原始插入顺序。任何值(对象或者[原始值](https://link.juejin.cn/?target=https%3A%2F%2Fdeveloper.mozilla.org%2Fzh-CN%2Fdocs%2FGlossary%2FPrimitive)) 都可以作为一个键或一个值。
 
+**Dep是一个集合Set存储对应的effect**
+
 ![image.png](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/imgs/202208202301735.webp)
 
 ```js
@@ -9936,7 +10064,7 @@ const getDepend = (target, key) => {
   // 根据key获取 depend类
   let depend = desMap.get(key)
   if (!depend) {
-    depend = new Depend()
+    depend = new Set()
     desMap.set(key, depend)
   }
   return depend
@@ -9963,6 +10091,8 @@ const reactive = (obj) => {
   })
 }
 ```
+
+![image-20221022215111581](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/img/image-20221022215111581.png)
 
 在源码中
 
@@ -10813,7 +10943,149 @@ export default defineComponent({
 </Suspense>
 ```
 
-### 10.实现一个mini-vue3
+### 10.实现一个reactive
+
+reactive内使用proxy 
+
+handler的get方法调用track收集依赖，使用Reflect.get(),然后进行对象递归
+
+handler的set方法会进行值的新老对比，使用Reflect.set(),然后触发trigger进行更新
+
+targetMap(weakMap) 收集不同的对象target和depsMap作为key-value
+
+depsMap(Map)收集对象属性和包含effect的Set集合做为key-value
+
+```js
+const isObject = val => val !== null && typeof val === 'object'
+const convert = target => isObject(target) ? reactive(target) : target
+const hasOwnProperty = Object.prototype.hasOwnProperty
+const hasOwn = (target, key) => hasOwnProperty.call(target, key)
+
+export function reactive (target) {
+  if (!isObject(target)) return target
+
+  const handler = {
+    get (target, key, receiver) {
+      // 收集依赖
+      track(target, key)
+      const result = Reflect.get(target, key, receiver)
+      return convert(result)
+    },
+    set (target, key, value, receiver) {
+      const oldValue = Reflect.get(target, key, receiver)
+      let result = true
+      if (oldValue !== value) {
+        result = Reflect.set(target, key, value, receiver)
+        // 触发更新
+        trigger(target, key)
+      }
+      return result
+    },
+    deleteProperty (target, key) {
+      const hadKey = hasOwn(target, key)
+      const result = Reflect.deleteProperty(target, key)
+      if (hadKey && result) {
+        // 触发更新
+        trigger(target, key)
+      }
+      return result
+    }
+  }
+
+  return new Proxy(target, handler)
+}
+
+let activeEffect = null
+export function effect (callback) {
+  activeEffect = callback
+  callback() // 访问响应式对象属性，去收集依赖
+  activeEffect = null
+}
+
+let targetMap = new WeakMap()
+
+export function track (target, key) {
+  if (!activeEffect) return
+  let depsMap = targetMap.get(target)
+  if (!depsMap) {
+    targetMap.set(target, (depsMap = new Map()))
+  }
+  let dep = depsMap.get(key)
+  if (!dep) {
+    depsMap.set(key, (dep = new Set()))
+  }
+  dep.add(activeEffect)
+}
+
+export function trigger (target, key) {
+  const depsMap = targetMap.get(target)
+  if (!depsMap) return
+  const dep = depsMap.get(key)
+  if (dep) {
+    dep.forEach(effect => {
+      effect()
+    })
+  }
+}
+
+export function ref (raw) {
+  // 判断 raw 是否是ref 创建的对象，如果是的话直接返回
+  if (isObject(raw) && raw.__v_isRef) {
+    return
+  }
+  let value = convert(raw)
+  const r = {
+    __v_isRef: true,
+    get value () {
+      track(r, 'value')
+      return value
+    },
+    set value (newValue) {
+      if (newValue !== value) {
+        raw = newValue
+        value = convert(raw)
+        trigger(r, 'value')
+      }
+    }
+  }
+  return r
+}
+
+export function toRefs (proxy) {
+  const ret = proxy instanceof Array ? new Array(proxy.length) : {}
+
+  for (const key in proxy) {
+    ret[key] = toProxyRef(proxy, key)
+  }
+
+  return ret
+}
+
+function toProxyRef (proxy, key) {
+  const r = {
+    __v_isRef: true,
+    get value () {
+      return proxy[key]
+    },
+    set value (newValue) {
+      proxy[key] = newValue
+    }
+  }
+  return r
+}
+
+export function computed (getter) {
+  const result = ref()
+
+  effect(() => (result.value = getter()))
+
+  return result
+}
+```
+
+
+
+### 11.实现一个mini-vue3
 
 #### dom渲染过程
 
@@ -11072,7 +11344,7 @@ function createApp(rootComponent) {
 }
 ```
 
-### 11.vue3性能提升主要是通过哪几方面体现的
+### 12.vue3性能提升主要是通过哪几方面体现的
 
 #### 一、编译阶段
 
