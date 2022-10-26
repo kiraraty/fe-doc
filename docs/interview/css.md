@@ -179,7 +179,7 @@ border和所有简写属性一样，如果有缺省值会被设置成对应属�
 }
 ```
 
-![img](https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/3/24/1710a215d59c1697~tplv-t2oaga2asx-zoom-in-crop-mark:3024:0:0:0.awebp)
+![image-20221026225957635](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/img/image-20221026225957635.png)
 
 ###### 属性值
 
@@ -227,9 +227,7 @@ border和所有简写属性一样，如果有缺省值会被设置成对应属�
 | inset  | 显示为有陷入效果的边框，样式与 outset 相反。当它指定到 border-collapse 为 collapsed 的单元格时，会显示为 groove 的样式。 |
 | outset | 显示为有突出效果的边框，样式与 inset 相反。当它指定到 border-collapse 为 collapsed 的单元格时，会显示为 ridge 的样式。 |
 
-
-
-![img](https://p1-jj.byteimg.com/tos-cn-i-t2oaga2asx/gold-user-assets/2020/3/24/1710a4cdf51c7417~tplv-t2oaga2asx-zoom-in-crop-mark:3024:0:0:0.awebp)
+![image-20221026230009024](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/img/image-20221026230009024.png)
 
 #### border-radius
 
@@ -241,11 +239,11 @@ border-radius: 50px;
 
 会在元素四个角形成半径为 50px 的圆角效果：
 
-![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/dc66c860da64403e980ca8acea6c8bc0~tplv-k3u1fbpfcp-zoom-in-crop-mark:3024:0:0:0.awebp)
+![image-20221026230034975](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/img/image-20221026230034975.png)
 
 当圆角的半径不断增加，直到等于正方形边长的一半的时候，整个正方形就会裁剪成一个大的圆形，相当于四个角的小圆合成了一个居中的大圆，动画效果如下：
 
-![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/527cd552bf1d4bc1a85e303d8bbfabd2~tplv-k3u1fbpfcp-zoom-in-crop-mark:3024:0:0:0.awebp)
+![527cd552bf1d4bc1a85e303d8bbfabd2_tplv-k3u1fbpfcp-zoom-in-crop-mark_3024_0_0_0](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/img/527cd552bf1d4bc1a85e303d8bbfabd2_tplv-k3u1fbpfcp-zoom-in-crop-mark_3024_0_0_0.gif)
 
 那如果圆角半径超过正方形边长一半的话，浏览器会如何处理呢？其实规范里面有详细的描述：
 
@@ -283,7 +281,7 @@ border-radius: 100px 50px / 50px 100px;
 
 用图形表示如下：
 
-![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/9dddc0e0b32240368f0411ae98fd621b~tplv-k3u1fbpfcp-zoom-in-crop-mark:3024:0:0:0.awebp)
+![image-20221026230131624](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/img/image-20221026230131624.png)
 
 上图的完整演示代码：
 
@@ -362,19 +360,19 @@ border-radius: 100px 50px / 50px 100px;
 
 绝大多数时候上下左右四个方向的颜色都是一样的，此时并不能看出来真正区别，可能都没有意识到左上角、右上角、左下角和右下角的边框交界处是什么效果。当我们把边框的宽度设置大一点，四个方向设置不同颜色，就能够非常清晰的看到边框的本质：
 
-![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/e37582549819455d949b91d39f7ba275~tplv-k3u1fbpfcp-zoom-in-crop-mark:3024:0:0:0.awebp)
+![image-20221026230146159](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/img/image-20221026230146159.png)
 
 当 border 的宽度等于正方形宽度的时候，我们会发现上下左右边框都变成了等腰直角三角形：
 
-![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/6a91fcd312894e0b891ce2dc7b1686d8~tplv-k3u1fbpfcp-zoom-in-crop-mark:3024:0:0:0.awebp)
+![image-20221026230158652](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/img/image-20221026230158652.png)
 
 那如果只设置部分边框又会怎样呢？例如去掉 border-top 或者只设置 border-right 和 border-bottom，可以先脑补一下，然后再看实际效果：
 
-![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/1b5a8207fc844a4e95ab5af1c3339461~tplv-k3u1fbpfcp-zoom-in-crop-mark:3024:0:0:0.awebp)
+![image-20221026230209292](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/img/image-20221026230209292.png)
 
 掌握了这个知识点之后，就可以做小箭头的气泡效果啦，例如对掘金的真情表白：
 
-![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/12598e2807654674914cb00b432778d5~tplv-k3u1fbpfcp-zoom-in-crop-mark:3024:0:0:0.awebp)
+![image-20221026230234847](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/img/image-20221026230234847.png)
 
 这里就是利用把顶部和底部的 border 给设置成透明色，仅透出右侧的 border，就形成了向左的箭头。
 
@@ -397,7 +395,7 @@ border-left: 4px solid green;
 
 有一点需要强调，当子元素相对于父元素进行绝对定位时，它的参照原点是父元素的 padding-box，而不是 border-box，如下图所示：
 
-![img](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/6139f67ae023451688787580b8b59fd9~tplv-k3u1fbpfcp-zoom-in-crop-mark:3024:0:0:0.awebp)
+![image-20221026230248133](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/img/image-20221026230248133.png)
 
 
 
@@ -1763,6 +1761,9 @@ will-change:transform,opacity
 
 translate 是 transform 属性的⼀个值。改变transform或opacity不会触发浏览器重新布局（reflow）或重绘（repaint），只会触发复合（compositions）。⽽改变绝对定位会触发重新布局，进⽽触发重绘和复合。transform使浏览器为元素创建⼀个 GPU 图层，但改变绝对定位会使⽤到 CPU。 因此translate()更⾼效，可以缩短平滑动画的绘制时间。 ⽽translate改变位置时，元素依然会占据其原始空间，绝对定位就不会发⽣这种情况。
 
+渲染流水线是这样的顺序：重排 -> 重绘 -> 合成
+transform: translate是直接合成，跳过了前面的重排重绘。
+
 ### 11.requestAnimationframe和**requestIdleCallback**
 
 #### requestAnimationFrame
@@ -2983,7 +2984,7 @@ position有以下属性值：
 
 |   属性值   | 概述                                                         |
 | :--------: | ------------------------------------------------------------ |
-|  absolute  | 生成绝对定位的元素，相对于非static定位的一个父元素进行定位。元素的位置通过left、top、right、bottom属性进行规定。没有就以html元素为基准 **脱离文档流** |
+|  absolute  | 生成绝对定位的元素，相对于非static定位的一个父元素进行定位。元素的位置通过left、top、right、bottom属性进行规定。没有就**以html元素**为基准 **脱离文档流** |
 |  relative  | 生成相对定位的元素，相对于其原来的位置进行定位。元素的位置通过left、top、right、bottom属性进行规定。 |
 |   fixed    | 生成绝对定位的元素，指定元素相对于屏幕视⼝（viewport）的位置来指定元素位置。元素的位置在屏幕滚动时不会改变，⽐如回到顶部的按钮⼀般都是⽤此定位⽅式。相对于浏览器窗口进行定位，怎么拖动滚动条都不会发生变化    **脱离文档流** |
 |   static   | 默认值，没有定位，元素出现在正常的文档流中，会忽略 top, bottom, left, right 或者 z-index 声明，块级元素从上往下纵向排布，⾏级元素从左向右排列。 |
@@ -3801,11 +3802,35 @@ flex-shrink: <number>;
 
 默认情况下，第一个div宽度是200，第二个div宽度是300，两个相加应该超过父元素的400，但是由于 flex-shrink 都设置为1，将两个div都收缩在父元素中
 
+flex-shrink的默认值为1，如果没有显示定义该属性，将会自动按照默认值1在所有因子相加之后计算比率来进行空间收缩。
+
+根据溢出量 会按照加权（系数`*`宽度）和进行比例计算 然后减去  各自比例`*`溢出的宽度
+
 ```css
-.item {  width: 400px;    height: 300px;    background: skyblue;    display: flex;    padding: 5px; }
-.item div {    height: 100px;    font-size: 20px;}
-.item div:nth-child(1) {    flex-shrink: 1;    width: 200px;    background: pink;}
-.item div:nth-child(2) {    flex-shrink: 1;    width: 300px;    background: cadetblue;}
+.item {
+	width: 400px;
+	height: 300px;
+	background: skyblue;
+	display: flex;
+	padding: 5px;
+}
+
+.item div {
+	height: 100px;
+	font-size: 20px;
+}
+
+.item div:nth-child(1) {
+	flex-shrink: 1;
+	width: 200px;
+	background: pink;
+}
+
+.item div:nth-child(2) {
+	flex-shrink: 1;
+	width: 300px;
+	background: cadetblue;
+}
 ```
 
 ![img](https://s2.loli.net/2022/08/01/PLWExztwQkA5Vd2.webp)
@@ -3967,7 +3992,7 @@ html, body {    margin: 0;    padding: 0;}
 
 `flex`属性是`flex-grow`, `flex-shrink` 和 `flex-basis`的简写，默认值为`0 1 auto`。后两个属性可选。
 
-```
+```css
 .item {
   flex: none | [ <'flex-grow'> <'flex-shrink'>? || <'flex-basis'> ]
 }
