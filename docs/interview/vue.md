@@ -3139,7 +3139,7 @@ $ masoneast init my-project
 
 当我们使用`vue-cli`时， 其实依赖了两个东西： 一个是`vue-cli`命令行， 一个是`vue-template`模板， 用于生成工程。
 
-#### 流程：
+
 
 1. 当我们**全局安装了`vue-cli`后**， 会注册环境变量，生成软连接， 这样我们在命令行中任意路径就可以使用该命令了。
 2. 当我们**敲下`vue init webpack my-project`时**， `vue-cli`会提示你正在下载模板。
@@ -3197,7 +3197,7 @@ function getUrl (repo, clone) {
 
 在模板中， 你的`src/App.vue`长这样：
 
-```vue
+```js
 <template>
   <div id="app">
     <img src="./assets/logo.png">
@@ -3236,7 +3236,7 @@ export default {
 
 如果在选择是否需要路由， 你选是，那最后生成在你的项目的`App.vue`长这样：
 
-```vue
+```js
 <template>
   <div id="app">
     <img src="./assets/logo.png">
@@ -5990,6 +5990,29 @@ Vue 实例有⼀个完整的⽣命周期，也就是从开始创建、初始化�
 8. **destroyed（销毁后）**：实例销毁后调用，调用后，Vue 实例指示的所有东西都会解绑定，所有的事件监听器会被移除，所有的子实例也会被销毁。该钩子在服务端渲染期间不被调用。
 
 另外还有 `keep-alive` 独有的生命周期，分别为 `activated` 和 `deactivated` 。用 `keep-alive` 包裹的组件在切换时不会进行销毁，而是缓存到内存中并执行 `deactivated` 钩子函数，命中缓存渲染后会执行 `activated` 钩子函数。
+
+created 和 mounted 都是同步的，API请求是异步的
+
+一般请求都是异步的，一般无论放到哪里请求都会在mounted之后返回，所以放哪儿页面都会至少更新两次
+
+**created 里的情况**
+
+![image](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/img/2718076-20220223231908634-1883404271.png)
+
+也就是说，再发送 API 请求以后，就会产生 2 个分支，代码逻辑比较混乱
+
+**mounted 里的情况**
+created => mounted =>  mounte组件首次渲染 => API请求 => 获取到数据 => update组件重新渲染
+
+建议放在created里
+
+created:在模板渲染成html前调用，即通常初始化某些属性值，然后再渲染成视图。这时已经拿到数据，然后在进行渲染。
+
+mounted:在模板渲染成html后调用，通常是初始化页面完成后，再对html的dom节点进行一些需要的操作。
+
+如果在mounted钩子函数中请求数据可能导致页面闪屏问题
+
+其实就是加载时机问题，放在created里会比mounted触发早一点，如果在页面挂载完之前请求完成的话就不会看到闪屏了
 
 首先给出结论：created 和 mounted 中发起 ajax 请求是一样的，没有区别。
 为啥没有区别：created 和 mounted 是在同一个 tick 中执行的，而ajax 请求的时间一定会超过一个 tick。所以即便ajax的请求耗时是 0ms， 那么也是在 nextTick 中更新数据到 DOM 中。所以说在不依赖 DOM 节点的情况下一点区别都没有。
@@ -11084,6 +11107,240 @@ export function computed (getter) {
 ```
 
 
+
+#### effect的基本实现
+
+```js
+export let activeEffect = undefined;// 当前正在执行的effect
+class ReactiveEffect {
+    active = true;
+    deps = []; // 收集effect中使用到的属性
+    parent = undefined;
+    constructor(public fn) { }
+    run() {
+        if (!this.active) { // 不是激活状态
+            return this.fn();
+        }
+        try {
+            this.parent = activeEffect; // 当前的effect就是他的父亲
+            activeEffect = this; // 设置成正在激活的是当前effect
+            return this.fn();
+        } finally {
+            activeEffect = this.parent; // 执行完毕后还原activeEffect
+            this.parent = undefined;
+        }
+    }
+}
+export function effect(fn, options?) {
+    const _effect = new ReactiveEffect(fn); // 创建响应式effect
+    _effect.run(); // 让响应式effect默认执行
+}
+```
+
+
+
+#### 依赖收集
+
+```js
+get(target, key, receiver) {
+    if (key === ReactiveFlags.IS_REACTIVE) {
+        return true;
+    }
+    const res = Reflect.get(target, key, receiver);
+    track(target, 'get', key);  // 依赖收集
+    return res;
+}
+```
+
+```js
+const targetMap = new WeakMap(); // 记录依赖关系
+export function track(target, type, key) {
+    if (activeEffect) {
+        let depsMap = targetMap.get(target); // {对象：map}
+        if (!depsMap) {
+            targetMap.set(target, (depsMap = new Map()))
+        }
+        let dep = depsMap.get(key);
+        if (!dep) {
+            depsMap.set(key, (dep = new Set())) // {对象：{ 属性 :[ dep, dep ]}}
+        }
+        let shouldTrack = !dep.has(activeEffect)
+        if (shouldTrack) {
+            dep.add(activeEffect);
+            activeEffect.deps.push(dep); // 让effect记住dep，这样后续可以用于清理
+        }
+    }
+}
+```
+
+将属性和对应的effect维护成映射关系，后续属性变化可以触发对应的effect函数重新run
+
+#### 触发更新
+
+```js
+set(target, key, value, receiver) {
+    // 等会赋值的时候可以重新触发effect执行
+    let oldValue = target[key]
+    const result = Reflect.set(target, key, value, receiver);
+    if (oldValue !== value) {
+        trigger(target, 'set', key, value, oldValue)
+    }
+    return result;
+}
+```
+
+```js
+export function trigger(target, type, key?, newValue?, oldValue?) {
+    const depsMap = targetMap.get(target); // 获取对应的映射表
+    if (!depsMap) {
+        return
+    }
+    const effects = depsMap.get(key);
+    effects && effects.forEach(effect => {
+        if (effect !== activeEffect) effect.run(); // 防止循环
+    })
+}
+```
+
+
+
+#### 分支切换与cleanup
+
+在渲染时我们要避免副作用函数产生的遗留
+
+```js
+const state = reactive({ flag: true, name: 'jw', age: 30 })
+effect(() => { // 副作用函数 (effect执行渲染了页面)
+    console.log('render')
+    document.body.innerHTML = state.flag ? state.name : state.age
+});
+setTimeout(() => {
+    state.flag = false;
+    setTimeout(() => {
+        console.log('修改name，原则上不更新')
+        state.name = 'zf'
+    }, 1000);
+}, 1000)
+```
+
+```js
+function cleanupEffect(effect) {
+    const { deps } = effect; // 清理effect
+    for (let i = 0; i < deps.length; i++) {
+        deps[i].delete(effect);
+    }
+    effect.deps.length = 0;
+}
+class ReactiveEffect {
+    active = true;
+    deps = []; // 收集effect中使用到的属性
+    parent = undefined;
+    constructor(public fn) { }
+    run() {
+        try {
+            this.parent = activeEffect; // 当前的effect就是他的父亲
+            activeEffect = this; // 设置成正在激活的是当前effect
++           cleanupEffect(this);
+            return this.fn(); // 先清理在运行
+        }
+    }
+}
+```
+
+这里要注意的是：触发时会进行清理操作（清理effect），在重新进行收集（收集effect）。在循环过程中会导致死循环。
+
+```js
+let effect = () => {};
+let s = new Set([effect])
+s.forEach(item=>{s.delete(effect); s.add(effect)}); // 这样就导致死循环了
+```
+
+#### 停止effect
+
+```js
+export class ReactiveEffect {
+    stop(){
+        if(this.active){ 
+            cleanupEffect(this);
+            this.active = false
+        }
+    }
+}
+export function effect(fn, options?) {
+    const _effect = new ReactiveEffect(fn); 
+    _effect.run();
+    const runner = _effect.run.bind(_effect);
+    runner.effect = _effect;
+    return runner; // 返回runner
+}
+```
+
+#### 调度执行
+
+trigger触发时，我们可以自己决定副作用函数执行的时机、次数、及执行方式
+
+```js
+export function effect(fn, options:any = {}) {
+    const _effect = new ReactiveEffect(fn,options.scheduler); // 创建响应式effect
+    // if(options){
+    //     Object.assign(_effect,options); // 扩展属性
+    // }
+    _effect.run(); // 让响应式effect默认执行
+    const runner = _effect.run.bind(_effect);
+    runner.effect = _effect;
+    return runner; // 返回runner
+}
+export function trigger(target, type, key?, newValue?, oldValue?) {
+    const depsMap = targetMap.get(target);
+    if (!depsMap) {
+        return
+    }
+    let effects = depsMap.get(key);
+    if (effects) {
+        effects = new Set(effects);
+        for (const effect of effects) {
+            if (effect !== activeEffect) { 
+                if(effect.scheduler){ // 如果有调度函数则执行调度函数
+                    effect.scheduler()
+                }else{
+                    effect.run(); 
+                }
+            }
+        }
+    }
+}
+```
+
+#### 深度代理 
+
+```js
+get(target, key, receiver) {
+    if (key === ReactiveFlags.IS_REACTIVE) {
+        return true;
+    }
+    // 等会谁来取值就做依赖收集
+    const res = Reflect.get(target, key, receiver);
+    track(target, 'get', key);
+    if(isObject(res)){
+        return reactive(res);
+    }
+    return res;
+}
+```
+
+当取值时返回的值是对象，则返回这个对象的代理对象，从而实现深度代理
+
+#### 总结
+
+为了实现响应式，我们使用了new Proxy
+
+effect默认数据变化要能更新，我们先将正在执行的effect作为全局变量，渲染（取值），然后在get方法中进行依赖收集
+
+依赖收集的数据格式weakMap（对象：map（属性：set（effect））
+
+用户数据发生变化，会通过对象属性来查找对应的effect集合，全部执行；
+
+调度器的实现，创建effect时，把scheduler存在实例上，调用runner时，判断如果有调度器就调用调度器，否则执行runner
 
 ### 11.实现一个mini-vue3
 
