@@ -7531,3 +7531,128 @@ Node端事件循环中的异步队列也是这两种：macro（宏任务）队�
 
 - 常见的 macro-task 比如：setTimeout、setInterval、 setImmediate、script（整体代码）、 I/O 操作等。
 - 常见的 micro-task 比如: process.nextTick、new Promise().then(回调)等。
+
+## 函数式编程
+
+### 纯函数
+
+仅仅因为你的程序包含函数并不一定意味着你正在做函数式编程。函数式编程区分纯函数和非纯函数。它鼓励你编写纯函数。纯函数必须满足以下两个属性：
+
+- 引用透明性：函数总是为相同的参数提供相同的返回值。 这意味着该函数不能依赖于任何可变状态。
+- 无副作用：该函数不会引起任何副作用。副作用可能包括 I/O（例如，写入控制台或日志文件）、修改可变对象、重新赋值变量等。
+
+让我们用几个例子来说明。 首先，**multiply** 函数是纯函数的一个例子。它总是为相同的输入返回相同的输出，并且不会产生副作用。
+
+![img](https://pics1.baidu.com/feed/3ac79f3df8dcd10007f67d9f24e5471ab8122f9a.jpeg@f_auto?token=76410e449fa7dca39e42621e405f396c)
+
+以下是非纯函数的示例。 **canRide** 函数取决于捕获的 **heightRequirement** 变量。捕获的变量不一定会使函数不纯，但可变（或可重新分配）的变量会。对于本例来说，它是使用 **let** 声明的，这意味着它可以被重新赋值。 **multiply** 函数是非纯函数，因为它把日志打印到控制台会产生副作用。
+
+![img](https://pics5.baidu.com/feed/fd039245d688d43f3ace1ff22a70d2110ff43bc7.png@f_auto?token=0e2a83b55503ec242fd1062642a1793f)
+
+
+
+以下列表包含 JavaScript 中内置的几个非纯函数。 你能说出这两个属性中的哪一个不满足吗？
+
+- **console.log**
+- **element.addEventListener**
+- **Math.random**
+- **Date.now**
+- **$.ajax**（这里的 **$** 指的是你选用的 Ajax 库）
+
+生活在一个我们所有的函数都是纯函数的完美世界中会很好，但是从上面的列表中可以看出，任何有意义的程序都将会包含非纯函数。大多数情况下，我们需要进行 Ajax 调用、检查当前日期或获取随机数。一个好的经验法则是遵循 80/20 法则：80% 的函数应该是纯函数，剩下的 20% 是非纯函数。
+
+纯函数有几个好处：
+
+- 它们更容易推理和调试，因为它们不依赖于可变状态。
+- 返回值可以被缓存或“记忆”以避免将来重新计算。
+- 它们更容易测试，因为没有需要模拟的依赖项（例如日志记录、Ajax、数据库等）。
+
+如果你正在编写或使用的函数返回值是 void（即它没有返回值），则表明它是非纯函数。如果函数没有返回值，那么它要么是空操作，要么会导致一些副作用。同样，如果调用一个函数但不使用它的返回值，那么你可能再次依赖它来产生一些副作用，它是一个非纯函数。
+
+### 不变性
+
+让我们回到捕获变量的概念。在上面我们看到了 **canRide** 函数。我们认为它是一个非纯函数，因为 **heightRequirement** 可以重新赋值。 这是一个人为的示例，展示了重新赋值是如何产生不可预测的结果的：
+
+![img](https://pics0.baidu.com/feed/adaf2edda3cc7cd978de2f326f6f2135ba0e91e6.png@f_auto?token=4c265fc4d86e30c6114acc9841024fcd)
+
+再次强调一下，捕获的变量不一定会使函数不纯。我们可以重写 **canRide** 函数使其成为一个纯函数，只需要修改声明 **heightRequirement** 变量的方式即可。
+
+![img](https://pics7.baidu.com/feed/8601a18b87d6277f014324ff7c561f3ae824fc18.png@f_auto?token=ff7dfbaa48eab2d4cdf66ae9499479f3)
+
+用 **const** 声明变量意味着它不可能被重新赋值。如果尝试重新复制，引擎会抛出错误； 但是，如果存储“常量”是一个对象而不是数字时会怎么样？
+
+![img](https://pics2.baidu.com/feed/c2cec3fdfc039245509f3a96defaa4c87c1e25fd.png@f_auto?token=6455d867a69809a7549566c74c15e1ec)
+
+我们使用了 **const** 声明变量，因此它无法重新赋值，但仍然有一个问题。对象可以被修改。如下代码所示，要获得真正的不变性，需要防止变量被重新赋值，同时还需要不可变的数据结构。 JavaScript 语言为我们提供了 **Object.freeze** 方法来防止对象被修改。
+
+![img](https://pics2.baidu.com/feed/a08b87d6277f9e2f3ad957ab445ee92eb999f319.png@f_auto?token=ff843ff314e5c2dab6942b18411ec121)
+
+不变性适用于所有数据结构，包括 Array、Map 和 Set。这意味着我们不能调用诸如 **Array.prototype.push** 之类的方法，因为它会修改现有数组。我们可以创建一个新数组，其中包含与原始数组相同的所有项，再加上一个附加项，而不是将一项推入现有数组。事实上，每个修改原数组的方法都可以被一个函数替换，该函数返回一个新数组。
+
+![img](https://pics4.baidu.com/feed/b812c8fcc3cec3fd77c2794883e6d43586942783.png@f_auto?token=b2d13ea93c5b2f02ec8ce833426e3868)
+
+使用 **Map** 或 **Set** 时也是如此。我们可以通过返回一个新 **Map** 或 **Set** 来避免使用修改原数据的方法。
+
+![img](https://pics1.baidu.com/feed/14ce36d3d539b600ca1f2cbcbc3e3520c75cb764.png@f_auto?token=de9759c5800144e4a7a845840773bdac)
+
+![img](https://pics1.baidu.com/feed/a08b87d6277f9e2f81621206485ee92eb999f3e5.png@f_auto?token=923ef04b4520c19a62c3289a1f054f62)
+
+补充一点，如果你用的是 TypeScript，那么可以使用 **Readonly<T>**、**ReadonlyArray<T>**、**ReadonlyMap<K, V>** 和 **ReadonlySet<T>** 接口，如果尝试改变这些对象中的任何一个，则会出现编译时错误。如果在对象或数组上调用 **Object.freeze**，那么编译器将自动推断它是只读的。
+
+![img](https://pics3.baidu.com/feed/9e3df8dcd100baa146ed9657127eb918cafc2e95.png@f_auto?token=e659de831136dbfce8ce0d02ed81317f)
+
+好了，我们可以创建新对象而不是改变现有对象，但这不会对性能产生不利影响吗？没错，的确有影响。请一定在应用程序中进行性能测试。如果需要性能提升，可以考虑使用 Immutable.js。 Immutable.js 使用持久数据结构实现了 List、Stack、Map、Set 和其他数据结构。 这与 Clojure 和 Scala 等函数式编程语言内部使用的技术相同。
+
+![img](https://pics6.baidu.com/feed/d62a6059252dd42a4a15afc856555bbfc9eab829.png@f_auto?token=ba0eac85eea3ff55853e158acee0d2f9)
+
+### 复合函数
+
+
+
+
+
+
+关于函数组合的几个要点：
+
+
+
+
+
+
+
+1. 我们可以组合任意数量的函数（不限于两个）。
+2. 组合函数的一种方法是从一个函数获取输出并将其传递给下一个函数（即 f(g(x))）。
+
+
+
+![img](https://pics2.baidu.com/feed/8435e5dde71190ef99d7e1469b759d1cfcfa60f7.png@f_auto?token=0605c784a694ba422c5cacdf2f0b22f8)
+
+Ramda 和 lodash 等库提供了一种更优雅的函数组合方式。与其简单地将返回值从一个函数传递给下一个函数，我们可以从数学的意义上来处理函数组合。 我们可以创建一个由其他函数组成的单个复合函数（即 **(f g)(x)**）。
+
+![img](https://pics3.baidu.com/feed/728da9773912b31bb9c85225d0763670dbb4e18a.png@f_auto?token=22c4f38e8d3612acf2ada46005abcf19)
+
+### 高阶函数
+
+我们都知道 JavaScript 中的函数是一等公民，可以像其他值那样传递。因此，我们把一个函数传递给另一个函数也就不足为奇了。我们也可以从一个函数中返回另一个函数。 没错！我们有高阶函数。 你可能已经熟悉了 **Array.prototype** 中存在的几个高阶函数。 例如，**filter**、**map** 和 **reduce** 等。 可以这样理解高阶函数：它是一个接受回调函数的函数。让我们看一个使用内置高阶函数的例子：
+
+![img](https://pics7.baidu.com/feed/eac4b74543a98226b8d52c66dcecb90b4b90ebd7.png@f_auto?token=6f02944af51d2292f96d339de6c4fb44)
+
+请注意，我们在数组对象上调用方法，这是面向对象编程的特征。 如果我们想让它更能代表函数式编程，我们可以使用 Ramda 或 lodash/fp 提供的函数。 我们还可以使用我们在上一节中探讨过的复合函数。请注意，如果我们使用 R.compose，我们需要颠倒函数的顺序，因为它从右到左（即从下到上）应用函数；但是，如果我们想从左到右（即从上到下）应用它们，就像上面的例子一样，那么我们可以使用 R.pipe。 下面使用 Ramda 给出这两个示例。 请注意，Ramda 有一个可以用来代替 reduce 的 mean 函数。
+
+![img](https://pics7.baidu.com/feed/a686c9177f3e67091755f7c663a99f37f8dc552e.png@f_auto?token=f7e245b8f5d22cd769b292047c6e55a5)
+
+函数式编程的优点是它清楚地将数据（即 **vehicles** ）与逻辑（即 **filter**, **map** 和 **reduce** 函数）分开。
+
+### 柯里化
+
+通俗地说，柯里化是将一个接受 n 个参数的函数转换为 n 个函数的过程，每个函数都接受一个参数。函数的数量是它接受的参数的数量。接受单个参数的函数是一元的，两个参数是二元的，三个参数是三元的，n 个参数是 n 元的。因此，我们可以将柯里化定义为取一个 n 元函数并将其转换为 n 个一元函数的过程。让我们从一个简单的例子开始。
+
+![img](https://pics7.baidu.com/feed/ac6eddc451da81cbeb96066b0508d01c08243198.png@f_auto?token=17176d51b32f687dd8e92ca47fd0620a)
+
+**dot** 函数是二元的，因为它接受两个参数； 但是，我们可以手动将其转换为两个一元函数，如以下代码示例所示。 请注意 **curriedDot** 是如何接受一个向量并返回另一个接受第二个向量的一元函数的一元函数。
+
+![img](https://pics0.baidu.com/feed/0e2442a7d933c89580c092058b7d73fa8302008d.png@f_auto?token=f64ccf5ed72e0eefea5139d59457b64d)
+
+对我们来说幸运的是，我们不必手动将每个函数转换为柯里化形式。包括 Ramda 和 lodash 在内的库都有这个功能。 实际上，它们进行了一种混合类型的柯里化，你可以一次调用函数一个参数，也可以像原来一样继续一次传递所有参数。
+
+![img](https://pics0.baidu.com/feed/e1fe9925bc315c60d343127ae5dfcb194b5477cd.png@f_auto?token=6f9a41cff2a60733776bf679c3ae101a)
