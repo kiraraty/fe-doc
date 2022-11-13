@@ -140,7 +140,7 @@ href是指向**⽹络资源所在位置（的超链接）**，⽤来建⽴和当
 - `prefetch`：其利用浏览器空闲时间来下载或预取用户在不久的将来可能访问的文档。`<link href="/js/xx.js" rel="prefetch">`
 - `preload` : 可以指明哪些资源是在页面加载完成后即刻需要的，浏览器在主渲染机制介入前就进行预加载，这一机制使得资源可以更早的得到加载并可用，且更不易阻塞页面的初步渲染，进而提升性能。 `<link href="/js/xxx.js" rel="preload" as="script">`需要 `as` 指定资源类型**目前可用的属性类型有如下**：
 
-```text
+```js
 audio: 音频文件。
 document: 一个将要被嵌入到<frame>或<iframe>内部的HTML文档。
 embed: 一个将要被嵌入到<embed>元素内部的资源。
@@ -208,7 +208,7 @@ video: 视频文件。
 
 - 通常我们使用iframe直接直接在页面嵌套iframe标签指定src就可以了。
 
-```xml
+```html
 <iframe src="demo_iframe_sandbox.htm"></iframe>
 ```
 
@@ -234,7 +234,7 @@ video: 视频文件。
 就是判断你的url首部是否一样，下面会有讲解，这里只是提及。
 同域不同域的问题:
 
-```jsx
+```js
 A:<iframe id="mainIframe" name="mainIframe" src="/main.html" frameborder="0" scrolling="auto" ></iframe>
 B:<iframe id="mainIframe" name="mainIframe" src="http://www.baidu.com" frameborder="0" scrolling="auto" ></iframe>
 ```
@@ -251,7 +251,7 @@ iframe.contentWindow, 获取iframe的window对象
 iframe.contentDocument, 获取iframe的document对象
 这两个API只是DOM节点提供的方式(即getELement系列对象)
 
-```jsx
+```js
 var iframe = document.getElementById("iframe1");
 var iwindow = iframe.contentWindow;
 var idoc = iwindow.document;
@@ -266,7 +266,7 @@ var idoc = iwindow.document;
 
 
 
-```xml
+```html
 <iframe src ="/index.html" id="ifr1" name="ifr1" scrolling="yes">
   <p>Your browser does not support iframes.</p>
 </iframe>
@@ -293,7 +293,7 @@ var idoc = iwindow.document;
 
 如果写过ajax的童鞋，应该知道，长轮询就是在ajax的readyState = 4的时，再次执行原函数即可。 这里使用iframe也是一样，异步创建iframe，然后reload, 和后台协商好, 看后台哥哥们将返回的信息放在,然后获取里面信息即可. 这里是直接放在body里.
 
-```jsx
+```js
 var iframeCon = docuemnt.querySelector('#container'),
         text; //传递的信息
     var iframe = document.createElement('iframe'),
@@ -326,13 +326,13 @@ var iframeCon = docuemnt.querySelector('#container'),
 
 认情况下，iframe会自带滚动条，不会全屏.如果你想自适应iframe的话:第一步：去掉滚动条
 
-```xml
+```html
 <iframe src="./iframe1.html" id="iframe1" scrolling="no"></iframe>
 ```
 
 第二步,设置iframe的高为body的高
 
-```dart
+```js
 var iwindow = iframe.contentWindow;
 var idoc = iwindow.document;
 iframe.height = idoc.body.offsetHeight;
@@ -347,7 +347,7 @@ iframe.height = idoc.body.offsetHeight;
 
 例子:
 
-```xml
+```html
 <iframe id="google_ads_frame2" name="google_ads_frame2" width="160" height="600" frameborder="0" src="target.html" marginwidth="0" marginheight="0" vspace="0" hspace="0" allowtransparency="true" scrolling="no" allowfullscreen="true"></iframe>
 ```
 
@@ -362,7 +362,7 @@ iframe出现安全性有两个方面，一个是你的网页被别人iframe,一�
 比如，最出名的clickhacking就是使用iframe来 拦截click事件。因为iframe享有着click的最优先权，当有人在伪造的主页中进行点击的话，如果点在iframe上，则会默认是在操作iframe的页面。 所以，钓鱼网站就是使用这个技术，通过诱导用户进行点击，比如，设计一个"妹妹寂寞了"等之类的网页，诱导用户点击，但实际结果，你看到的不是"妹妹",而是被恶意微博吸粉。
 所以，为了防止网站被钓鱼，可以使用window.top来防止你的网页被iframe.
 
-```dart
+```js
 //iframe2.html
 if(window != window.top){
  window.top.location.href = correctURL;
@@ -371,7 +371,7 @@ if(window != window.top){
 
 这段代码的主要用途是限定你的网页不能嵌套在任意网页内。如果你想引用同域的框架的话，可以判断域名。
 
-```dart
+```js
 if (top.location.host != window.location.host) {
 　　top.location.href = window.location.href;
 }
@@ -383,7 +383,7 @@ if (top.location.host != window.location.host) {
 
 
 
-```dart
+```js
 try{
 　　top.location.hostname;  //检测是否出错
 　　//如果没有出错，则降级处理
@@ -413,7 +413,7 @@ X-Frame-Options是一个相应头，主要是描述服务器的网页资源的if
 > 只允许指定网页的iframe请求，不过兼容性较差Chrome不支持
 > X-Frame-Options其实就是将前端js对iframe的把控交给服务器来进行处理。
 
-```dart
+```js
 //js
 if(window != window.top){
     window.top.location.href = window.location.href;
@@ -440,8 +440,8 @@ X-Frame-Options: SAMEORIGIN
 Content-Security-Policy: default-src 'self'
 这就表明，你的网页是启用CSP的。通常我们可以在CSP后配置各种指定资源路径，有
 
-```csharp
- default-src,
+```js
+default-src,
 script-src,
 style-src,
 img-src,
@@ -461,7 +461,7 @@ child-src就是用来指定iframe的有效加载路径。其实和X-Frame-Option
 而，sandbox其实就和iframe的sandbox属性（下文介绍）,是一样一样的，他可以规定来源能够带有什么权限.
 来个demo:
 
-```csharp
+```js
 Content-Security-Policy: child-src 'self' http://example.com; sandbox allow-forms allow-same-origin
 ```
 
@@ -480,7 +480,7 @@ ok, 上面基本上就是防止自己页面被嵌套而做的一些安全防护�
 > sandbox是h5的一个新属性,IE10+支持(md~).
 > 启用方式就是使用sandbox属性:
 
-```xml
+```html
  <iframe sandbox src="..."></iframe>
 ```
 
@@ -495,7 +495,7 @@ ok, 上面基本上就是防止自己页面被嵌套而做的一些安全防护�
 
 看到这里，我也是醉了。 好好的一个iframe，你这样是不是有点过分了。 不过，你可以放宽一点权限。在sandbox里面进行一些简单设置
 
-```xml
+```html
 <iframe sandbox="allow-same-origin" src="..."></iframe>
 ```
 
@@ -514,7 +514,7 @@ ok, 上面基本上就是防止自己页面被嵌套而做的一些安全防护�
 
 
 
-```xml
+```html
 <iframe sandbox="allow-forms allow-same-origin allow-scripts" src="..."></iframe>
 ```
 
@@ -545,7 +545,7 @@ window.location.protocol +window.location.host
 
 
 
-```jsx
+```js
 //b.html是以iframe的形式嵌套在a.html中
 //www.foo.com上的a.html
 document.domain = 'foo.com';
@@ -582,7 +582,7 @@ targetOrigin: 接受你传递消息的域名，可以设置绝对路径，也可
 
 来个栗子:
 
-```jsx
+```js
 <iframe src="http://tuhao.com" name="sendMessage"></iframe>
 //当前脚本
 let ifr = window.frames['sendMessage'];
