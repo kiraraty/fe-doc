@@ -102,7 +102,7 @@
   * [前端监控SDK原理分析](interview/前沿技术/前端监控SDK原理分析.md)
   * [实现一个埋点监控SDK](interview/前沿技术/实现一个埋点监控SDK.md)
   * [Node性能监控指标获取方法](interview/前沿技术/Node性能监控指标获取方法.md)
-  * [一文了解Node.js性能监控](interview/前沿技术/一文了解Node.js性能监控.md)
+  * [一文了解Node性能监控](interview/前沿技术/一文了解Node性能监控.md)
   * [从0到1搭建前端异常监控系统](interview/前沿技术/从0到1搭建前端异常监控系统.md)
   * [现代前端工程Monorepo](interview/前沿技术/现代前端工程Monorepo.md)
   * [pnpm对npm和yarn优势](interview/前沿技术/pnpm对npm和yarn优势.md)
