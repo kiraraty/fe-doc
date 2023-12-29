@@ -34,8 +34,8 @@ setup：组件的启动函数，两个参数: props（父组件传递的数据�
 
 [新增特性](https://vuejs.org/api/sfc-script-setup.html#typescript-only-features)
 
-- <script setup>+内部的编译器宏defineProps和defineEmits
-- 新增<style> v-bind  以在内使用组件定义的动态值
+- setup+内部的编译器宏defineProps和defineEmits
+- 新增style v-bind  以在内使用组件定义的动态值
 - 新增 defineCustomElement 方法，可以使用 Vue 组件 API 轻松创建原生自定义元素
 - 新的指令v-memo，会记住模板树的一部分，不仅跳过虚拟 DOM 差异，而且完全跳过新 VNode 的创建
 
