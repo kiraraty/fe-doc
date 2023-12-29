@@ -1703,7 +1703,7 @@ app.listen(3000);
      return server.listen.apply(server, arguments);
    };
    ```
-   
+
 2. 当连接建立会调用app实例，app实例中会立即执行**app.handle()**函数，app.handle()函数会立即调用路由系统的处理函数**router.handle()**
 
    ```javascript
@@ -1718,7 +1718,7 @@ app.listen(3000);
      router.handle(req, res, done);
    };
    ```
-   
+
 3. router.handle()主要是根据路径获取是否有匹配的layer，当匹配到之后则调用layer.prototype.handle_request()去执行route中内容的处理
 
    ```javascript
@@ -1786,7 +1786,7 @@ app.listen(3000);
      }
    };
    ```
-   
+
 4. layer.handle_request()会调用**route.dispatch()**触发route中内容的执行
 
    ```javascript
@@ -1805,7 +1805,7 @@ app.listen(3000);
      }
    };
    ```
-   
+
 5. route中的通过**判断请求的方法和route中layer的方法**是否匹配，匹配的话则执行相应函数，若所有route中的layer都不匹配，则调到外层的layer中继续执行。
 
    ```javascript
@@ -3818,7 +3818,210 @@ module.exports = {
 - 扩展 Request/Response 就是把 `app/extend/<request|response>.js` 中定义的对象与内置 `request` 或 `response` 的 prototype 对象进行合并，在处理请求时会基于扩展后的 prototype 生成`request` 或 `response` 对象。
 - 扩展 Helper 就是把 `app/extend/helper.js` 中定义的对象与内置 `helper` 的 prototype 对象进行合并，在处理请求时会基于扩展后的 prototype 生成 `helper` 对象。
 
+## Midway
 
+### 特点
+
+MidwayJS 是一款基于 TypeScript 的 Node.js 微服务框架，它的设计灵感来自于 Spring Boot。MidwayJS 具有许多优点，适用于构建大规模的企业级应用和微服务架构。以下是一些 MidwayJS 的主要优点：
+
+1. **基于 TypeScript：** MidwayJS 基于 TypeScript，提供了强类型支持和更好的代码提示。TypeScript 提供了更严格的类型检查，减少了潜在的运行时错误，并提高了代码的可维护性。
+2. **IoC（控制反转）容器：** MidwayJS 提供了一个内建的 IoC 容器，使得开发者可以更轻松地管理组件之间的依赖关系，实现松耦合的组件设计。
+3. **一体化开发模式：** MidwayJS 提供了一体化的开发模式，包括路由、中间件、控制器等。开发者可以在一个框架中完成大部分开发任务，简化了开发流程。
+4. **基于装饰器的开发：** MidwayJS 使用装饰器来定义路由、控制器、中间件等，使得代码更加简洁，易于理解和维护。这也提高了代码的可读性。
+5. **自动加载：** MidwayJS 支持自动加载机制，能够自动扫描并加载项目中的路由、控制器等，减少了手动配置的工作，提高了开发效率。
+6. **基于 Egg.js：** MidwayJS 是在 Egg.js 的基础上进行扩展的，继承了 Egg.js 的优点。Egg.js 是一款极具可扩展性和高性能的框架，因此 MidwayJS 也具备了这些优势。
+7. **支持 GraphQL：** MidwayJS 对 GraphQL 提供了原生支持，开发者可以方便地构建和管理 GraphQL 接口。
+8. **中间件体系：** MidwayJS 使用中间件体系，使得开发者可以方便地扩展和定制框架的功能。这也有助于实现更灵活的拓展和插件开发。
+9. **完备的插件生态：** MidwayJS 有一个丰富的插件生态系统，提供了许多现成的插件，可以快速集成各种功能，如数据库连接、日志管理、性能监控等。
+
+### 原理
+
+
+Midway 是一款基于 TypeScript 和 IoC（Inversion of Control）容器思想的 Node.js 框架。它是 Egg.js 生态的一部分，同时也提供了一些新的特性和增强。以下是 Midway 框架的一些基本原理和关键特性：
+
+### 1. IoC（控制反转）容器：
+
+Midway 使用 IoC 容器来管理组件的依赖关系和生命周期。这种设计模式允许开发者定义组件，并由容器负责创建、注入依赖、解析依赖，以及管理组件的生命周期。通过 IoC 容器，Midway 实现了一种松耦合的组件架构。
+
+控制反转（Inversion of Control，IoC）是一种软件设计原则，它通过改变程序的控制权来降低组件之间的耦合度。通俗地说，IoC 就是将应用程序的控制权从我们自己手动管理，转移到一个外部的框架或容器中，让框架来管理组件之间的关系和生命周期。
+
+让我们通过一个比喻来理解 IoC：
+
+假设你去餐馆用餐。在传统的情况下，你会直接去厨房告诉厨师你想吃什么，等到菜做好了，你再去厨房取菜。这时，你是在控制整个用餐的过程。
+
+现在，想象一下 IoC 的情景。在 IoC 中，你就像一个顾客，你不直接去厨房点菜，而是在菜单上选择你想要的菜品。然后，餐馆的服务员（IoC 容器）负责将你的点单传递给厨师，最后把做好的菜送到你面前。在这种情况下，你不再直接控制整个用餐过程，而是通过服务员（IoC 容器）来实现。
+
+在编程中，传统的方式就像你直接在代码中创建和控制所有的对象和组件。而 IoC 则是将对象和组件的创建、依赖关系的管理等交给一个外部的框架或容器来处理。这样，程序的控制权就发生了反转，由框架来控制整个应用的组件关系和生命周期。
+
+总的来说，IoC 是一种更加松散、灵活、可维护的设计方式，它降低了代码之间的依赖，提高了代码的可重用性和可测试性。
+
+### 2. 框架装配：
+
+Midway 使用框架装配（Framework Assembly）的概念。在框架启动过程中，框架会负责自动装配应用的组件，包括加载控制器、中间件、服务等。这种自动化的装配过程减少了手动配置的工作，提高了开发效率。
+
+### 3. 插件机制：
+
+Midway 支持插件机制，可以通过插件轻松扩展和定制应用。插件是一种组织和封装业务逻辑的方式，可以方便地集成到应用中。Midway 的插件机制有助于构建模块化和可扩展的应用。
+
+### 4. 类装饰器：
+
+Midway 使用类装饰器来定义控制器、服务、中间件等组件。这种装饰器的方式使得组件的定义更加清晰，同时提供了一种声明式的语法。类装饰器是 TypeScript 的一项特性，Midway 充分利用了 TypeScript 的类型系统。
+
+### 5. 类型注入：
+
+Midway 使用类型注入的方式进行依赖注入。通过 TypeScript 的类型系统，Midway 能够在运行时准确地注入依赖，确保类型的正确性。这种类型安全的注入方式有助于减少由于依赖错误而引发的问题。
+
+### 6. 异步编程：
+
+Midway 基于 Node.js 平台，因此天生支持异步编程。它通过异步框架 Egg.js 提供了强大的异步编程能力，支持异步函数、Generator 函数、Async/Await 等。
+
+### 7. 生命周期管理：
+
+Midway 通过 IoC 容器管理组件的生命周期，包括创建、初始化、销毁等阶段。这种生命周期管理机制有助于释放资源、执行清理操作，并提高应用的稳定性。
+
+### 8. 多模块支持：
+
+Midway 支持多模块（Multi-module）的应用架构。它允许将应用划分为多个模块，每个模块有自己的配置、控制器、服务等。这种模块化的设计有助于更好地组织和管理代码。
+
+总体来说，Midway 通过 IoC 容器、框架装配、插件机制等核心原理，提供了一种现代、可维护、可扩展的 Node.js 开发框架。通过整合 Egg.js 生态和引入一些新的特性，Midway 在企业级应用和微服务领域有着广泛的应用。
+
+### 开发中间件
+
+在 MidwayJS 中，开发一个中间件（Middleware）非常简单。中间件是一种用于在请求和响应之间执行操作的机制。以下是开发 MidwayJS 中间件的基本步骤：
+
+#### 1. 创建中间件类
+
+首先，创建一个类来表示中间件。这个类需要实现 `MidwayWebMiddleware` 接口，并定义中间件的逻辑。
+
+```
+typescriptCopy code
+// src/middleware/yourMiddleware.ts
+
+import { Provide, Middleware, MidwayWebMiddleware, App } from '@midwayjs/decorator';
+
+@Provide()
+@Middleware()
+export class YourMiddleware implements MidwayWebMiddleware {
+  resolve() {
+    // 中间件逻辑
+    return async (ctx: any, next: () => Promise<void>) => {
+      // 在请求前执行的逻辑
+
+      await next(); // 调用下一个中间件
+
+      // 在请求后执行的逻辑
+    };
+  }
+}
+```
+
+#### 2. 注册中间件
+
+在 `src/configuration.ts` 中注册创建的中间件。
+
+```
+typescriptCopy code
+// src/configuration.ts
+
+import { Configuration, App } from '@midwayjs/decorator';
+import * as yourMiddleware from './middleware/yourMiddleware';
+
+@Configuration({
+  imports: [
+    yourMiddleware, // 导入注册的中间件
+  ],
+})
+export class ContainerConfiguration {
+  // 可选的配置
+}
+```
+
+#### 3. 使用中间件
+
+中间件会按照注册的顺序在请求处理过程中执行。你可以在 Controller 或应用级别配置中使用中间件。
+
+##### 在 Controller 中使用：
+
+```
+typescriptCopy code
+// src/controller/yourController.ts
+
+import { Provide, Controller, Get, Inject } from '@midwayjs/decorator';
+import { YourMiddleware } from '../middleware/yourMiddleware';
+
+@Provide()
+@Controller('/')
+export class YourController {
+  @Inject()
+  yourMiddleware: YourMiddleware;
+
+  @Get('/')
+  async index(ctx) {
+    // 在这里使用中间件
+    await this.yourMiddleware.resolve()(ctx, async () => {
+      // 控制器逻辑
+    });
+  }
+}
+```
+
+##### 在应用级别配置中使用：
+
+```
+typescriptCopy code
+// src/configuration.ts
+
+import { Configuration, App } from '@midwayjs/decorator';
+import * as yourMiddleware from './middleware/yourMiddleware';
+
+@Configuration({
+  imports: [
+    yourMiddleware, // 导入注册的中间件
+  ],
+})
+export class ContainerConfiguration {
+  @App()
+  app;
+
+  async onReady() {
+    // 在应用级别使用中间件
+    this.app.use(yourMiddleware.resolve());
+  }
+}
+```
+
+这样，你就成功创建了一个 MidwayJS 中间件。在中间件的 `resolve` 方法中，你可以编写处理请求和响应的逻辑。中间件提供了一种方便的方式来实现请求的预处理、后处理等操作。
+
+## Lit
+
+Lit 是一个轻量级的 Web 组件库，它的设计目标是提供高性能、小巧灵活的组件构建方案。以下是 Lit 框架的一些主要特性：
+
+1. **轻量级：** Lit 是一个轻量级的框架，其核心库的体积相对较小。这使得它在加载和运行时能够更加迅速，适合于对性能和资源消耗有要求的应用。
+2. **模板语法：** Lit 使用模板字符串作为组件的模板语法。模板字符串是一种原生 JavaScript 的语法，提供了更直观和灵活的模板定义方式。Lit 支持 HTML 标签内的表达式和条件渲染，使得模板更加动态和强大。
+3. **反应性：** Lit 提供了一种简单而强大的反应性系统，通过使用 `ReactiveMixin` 或 `@property` 装饰器，可以实现组件属性的响应式更新。这意味着当属性值发生变化时，相关的 DOM 部分会自动更新，无需手动操作 DOM。
+4. **直接使用标准 DOM：** Lit 直接使用浏览器标准的 DOM API，不依赖虚拟 DOM。这有助于减小库的体积，并在运行时更高效地处理 DOM 更新。
+5. **无框架组件：** Lit 提供了一种不依赖框架的组件编写方式，可以方便地嵌入到现有的项目中。同时，Lit 也可以与一些框架集成，如 React、Angular 等。
+6. **Web 组件标准：** Lit 遵循 Web 组件标准，可以与其他遵循相同标准的库和框架协同工作。Lit 组件可以被其他支持 Web 组件的环境和框架直接使用。
+7. **模块化：** Lit 支持模块化开发，可以使用 ES 模块的语法进行组件的导入和导出。这有助于组件的组织和复用。
+8. **支持 TypeScript：** Lit 提供了 TypeScript 的类型定义，可以在 TypeScript 项目中进行开发，并享受类型检查的好处。
+
+Web 组件是一种标准化的 Web 开发技术，它提供了一种创建可重用组件的方式，可以在不同的框架和项目中共享使用。然而，就像任何技术一样，Web 组件也有其优点和缺点。
+
+### 优点：
+
+1. **独立性：** Web 组件是独立的、自包含的组件，它们不依赖于特定的框架或库。这使得它们可以在各种项目和技术栈中被使用，提高了组件的可移植性和重用性。
+2. **封装性：** Web 组件允许将 HTML、CSS 和 JavaScript 封装在一个独立的组件中。这种封装性有助于隐藏实现细节，提高组件的隔离性，防止全局作用域的污染。
+3. **复用性：** 由于独立性和封装性，Web 组件具有高度的复用性。可以在不同项目中轻松地使用相同的组件，从而减少代码冗余。
+4. **框架无关：** Web 组件不依赖于特定的前端框架，因此可以与任何框架结合使用。这使得团队可以在不同的框架中共同使用相同的组件。
+5. **标准化：** Web 组件遵循 Web 标准，并且是由 W3C 组织推动的。这意味着它们是一种官方认可的 Web 开发标准，未来会更好地融入浏览器和开发工具。
+
+### 缺点：
+
+1. **兼容性：** 尽管现代浏览器对 Web 组件的支持越来越好，但在某些旧版本的浏览器中可能存在兼容性问题。为了确保在各种环境中可靠运行，可能需要使用 polyfill 或其他额外的工具。
+2. **学习曲线：** 对于初学者来说，学习和理解 Web 组件的概念可能需要一些时间。特别是对于那些对 Web 开发标准不太熟悉的开发者，需要适应新的概念和技术。
+3. **复杂性：** 尽管 Web 组件的封装性是一项优点，但有时也可能导致组件内部的复杂性增加。组件的封装和隔离可能使得组件内部状态和逻辑相对难以访问和调试。
+4. **生态系统：** 目前 Web 组件的生态系统相对较小，相比之下，一些流行的前端框架（如 React、Vue）有更庞大的生态系统，提供了更多的工具和社区支持。
+5. **样式封装：** 尽管 Web 组件支持封装样式，但在某些情况下，样式的封装性可能会导致一些挑战，特别是对于一些全局样式的处理。
 
 ## 综合问题
 
@@ -3869,15 +4072,15 @@ nodejs架构，下图所示：
 > 这是libuv官网的一张图，很明显，nodejs的网络I/O、文件I/O、DNS操作、还有一些用户代码都是在 libuv 工作的。 既然谈到了异步，那么我们首先归纳下nodejs里的异步事件：
 
 - 非I/O：
-    - 定时器（setTimeout，setInterval）
-    - microtask（promise）
-    - process.nextTick
-    - setImmediate
-    - DNS.lookup
+  - 定时器（setTimeout，setInterval）
+  - microtask（promise）
+  - process.nextTick
+  - setImmediate
+  - DNS.lookup
 - I/O：
-    - 网络I/O
-    - 文件I/O
-    - 一些DNS操作
+  - 网络I/O
+  - 文件I/O
+  - 一些DNS操作
 
 #### 网络I/O
 
@@ -3909,47 +4112,47 @@ libuv内部还维护着一个默认4个线程的线程池，这些线程负责�
 #### 事件循环原理
 
 - node 的初始化
-    - 初始化 node 环境。
-    - 执行输入代码。
-    - 执行 **process.nextTick** 回调。
-    - 执行 microtasks。
+  - 初始化 node 环境。
+  - 执行输入代码。
+  - 执行 **process.nextTick** 回调。
+  - 执行 microtasks。
 - 进入 event-loop
-    - 进入timers阶段
-        - 检查 timer 队列是否有到期的 timer 回调，如果有，将到期的 timer 回调按照 timerId 升序执行。
-        - 检查是否有 process.nextTick 任务，如果有，全部执行。
-        - 检查是否有microtask，如果有，全部执行。
-        - 退出该阶段。
-    - 进入IO callbacks阶段。
-        - 检查是否有 pending 的 I/O 回调。如果有，执行回调。如果没有，退出该阶段。
-        - 检查是否有 process.nextTick 任务，如果有，全部执行。
-        - 检查是否有microtask，如果有，全部执行。
-        - 退出该阶段。
-    - 进入idle，prepare阶段：
-        - 这两个阶段与我们编程关系不大，暂且按下不表。
-    - 进入poll阶段
-        - 首先检查是否存在尚未完成的回调，如果存在，那么分两种情况。
-            - 第一种情况：
-                - 如果有可用回调（可用回调包含到期的定时器还有一些IO事件等），执行所有可用回调。
-                - 检查是否有 process.nextTick 回调，如果有，全部执行。
-                - 检查是否有 microtaks，如果有，全部执行。
-                - 退出该阶段。
-            - 第二种情况：
-                - 如果没有可用回调。
-                - 检查是否有 immediate 回调，如果有，退出 poll 阶段。如果没有，阻塞在此阶段，等待新的事件通知。
-        - 如果不存在尚未完成的回调，退出poll阶段。
-    - 进入check阶段。
-        - 如果有immediate回调，则执行所有immediate回调。
+  - 进入timers阶段
+    - 检查 timer 队列是否有到期的 timer 回调，如果有，将到期的 timer 回调按照 timerId 升序执行。
+    - 检查是否有 process.nextTick 任务，如果有，全部执行。
+    - 检查是否有microtask，如果有，全部执行。
+    - 退出该阶段。
+  - 进入IO callbacks阶段。
+    - 检查是否有 pending 的 I/O 回调。如果有，执行回调。如果没有，退出该阶段。
+    - 检查是否有 process.nextTick 任务，如果有，全部执行。
+    - 检查是否有microtask，如果有，全部执行。
+    - 退出该阶段。
+  - 进入idle，prepare阶段：
+    - 这两个阶段与我们编程关系不大，暂且按下不表。
+  - 进入poll阶段
+    - 首先检查是否存在尚未完成的回调，如果存在，那么分两种情况。
+      - 第一种情况：
+        - 如果有可用回调（可用回调包含到期的定时器还有一些IO事件等），执行所有可用回调。
         - 检查是否有 process.nextTick 回调，如果有，全部执行。
         - 检查是否有 microtaks，如果有，全部执行。
-        - 退出 **check** 阶段
-    - 进入closing阶段。
-        - 如果有immediate回调，则执行所有immediate回调。
-        - 检查是否有 process.nextTick 回调，如果有，全部执行。
-        - 检查是否有 microtaks，如果有，全部执行。
-        - 退出 **closing** 阶段
-    - 检查是否有活跃的 handles（定时器、IO等事件句柄）。
-        - 如果有，继续下一轮循环。
-        - 如果没有，结束事件循环，退出程序。
+        - 退出该阶段。
+      - 第二种情况：
+        - 如果没有可用回调。
+        - 检查是否有 immediate 回调，如果有，退出 poll 阶段。如果没有，阻塞在此阶段，等待新的事件通知。
+    - 如果不存在尚未完成的回调，退出poll阶段。
+  - 进入check阶段。
+    - 如果有immediate回调，则执行所有immediate回调。
+    - 检查是否有 process.nextTick 回调，如果有，全部执行。
+    - 检查是否有 microtaks，如果有，全部执行。
+    - 退出 **check** 阶段
+  - 进入closing阶段。
+    - 如果有immediate回调，则执行所有immediate回调。
+    - 检查是否有 process.nextTick 回调，如果有，全部执行。
+    - 检查是否有 microtaks，如果有，全部执行。
+    - 退出 **closing** 阶段
+  - 检查是否有活跃的 handles（定时器、IO等事件句柄）。
+    - 如果有，继续下一轮循环。
+    - 如果没有，结束事件循环，退出程序。
 
 可以发现，在事件循环的每一个子阶段退出之前都会按顺序执行如下过程：
 
