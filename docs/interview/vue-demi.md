@@ -90,9 +90,9 @@ unplugin-vue-macros
 
 https://github.com/sxzz/unplugin-vue-macros
 
-## **vue2的<script setup>**
+## **vue2的script setup**
 
-将 <script setup>引入 Vue 2，vue2.7发布后不再更新维护
+将 script setup引入 Vue 2，vue2.7发布后不再更新维护
 
 **unplugin-vue2-script-setup**
 
