@@ -1120,7 +1120,7 @@ if (cluster.isMaster) {
 
 ##### 架构
 
-[![pm2架构图](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/img/20190903172556.png)](https://static.quincychen.cn/20190903172556.png)
+##### [![pm2架构图](https://femarkdownpicture.oss-cn-qingdao.aliyuncs.com/img/20190903172556.png)](https://static.quincychen.cn/20190903172556.png)
 
 这篇文章我们要关注的是 `pm2` 的 `Satan进程`、`God Deamon守护进程` 以及 两者之间的 `进程间远程调用RPC`。
 
@@ -2334,6 +2334,154 @@ module.exports = function (dir) {
 }
 ```
 
+##### 排布顺序
+
+在一个登录验证的流程中，通常需要多个中间件来处理不同的任务，例如用户身份验证、权限检查等。以下是一个典型的登录验证流程，并描述了中间件的排布：
+
+1. **错误处理中间件：**
+
+   - 在整个流程的开头，添加一个错误处理中间件，用于捕获流程中的任何错误并进行处理。
+
+   - 例子：
+
+     ```
+     javascriptCopy code
+     app.use(async (ctx, next) => {
+       try {
+         await next();
+       } catch (err) {
+         ctx.status = err.status || 500;
+         ctx.body = { error: err.message };
+       }
+     });
+     ```
+
+2. **用户身份验证中间件：**
+
+   - 接下来，添加用于验证用户身份的中间件。这可以包括检查用户是否提供了有效的身份凭证，比如用户名和密码，或者通过令牌进行身份验证。
+
+   - 例子：
+
+     ```
+     javascriptCopy code
+     app.use(async (ctx, next) => {
+       // 检查用户身份，例如验证用户名密码或解析令牌
+       // 如果身份验证失败，抛出错误
+       if (!ctx.request.headers.authorization) {
+         const err = new Error('Unauthorized');
+         err.status = 401;
+         throw err;
+       }
+       await next();
+     });
+     ```
+
+3. **权限检查中间件：**
+
+   - 在用户身份验证后，可能需要进行一些权限检查，确保用户有权执行所请求的操作。
+
+   - 例子：
+
+     ```
+     javascriptCopy code
+     app.use(async (ctx, next) => {
+       // 检查用户权限，例如是否有访问资源的权限
+       // 如果权限不足，抛出错误
+       if (!userHasPermission(ctx.user, ctx.url)) {
+         const err = new Error('Permission Denied');
+         err.status = 403;
+         throw err;
+       }
+       await next();
+     });
+     ```
+
+4. **业务逻辑中间件：**
+
+   - 在通过身份验证和权限检查后，添加处理业务逻辑的中间件。
+
+   - 例子：
+
+     ```
+     javascriptCopy code
+     app.use(async (ctx, next) => {
+       // 处理业务逻辑，例如获取用户信息，更新数据库等
+       // ...
+       await next();
+     });
+     ```
+
+5. **最终响应中间件：**
+
+   - 在整个流程的末尾，添加一个中间件用于最终的响应处理。这可以包括设置响应头、返回数据等。
+
+   - 例子：
+
+     ```
+     javascriptCopy code
+     app.use(async (ctx) => {
+       // 设置响应头，返回数据等
+       ctx.body = { success: true, data: ctx.responseData };
+     });
+     ```
+
+这是一个简化的登录验证流程示例，实际中可能会根据具体业务需求进行调整和扩展。确保在中间件中适当地处理错误，并根据需要传递控制权给下一个中间件。
+
+```js
+// 错误处理中间件
+app.use(async (ctx, next) => {
+  try {
+    await next();
+  } catch (err) {
+    ctx.status = err.status || 500;
+    ctx.body = { error: err.message };
+  }
+});
+
+// 用户身份验证中间件
+app.use(async (ctx, next) => {
+  // 解析请求体
+  await bodyParser()(ctx, next);
+  
+  // 身份验证逻辑
+  if (!ctx.request.headers.authorization) {
+    const err = new Error('Unauthorized');
+    err.status = 401;
+    throw err;
+  }
+  // 具体的身份验证逻辑，例如解析令牌
+  // 设置用户信息到ctx.user
+  await next();
+});
+
+// 权限检查中间件
+app.use(async (ctx, next) => {
+  // 权限检查逻辑
+  if (!userHasPermission(ctx.user, ctx.url)) {
+    const err = new Error('Permission Denied');
+    err.status = 403;
+    throw err;
+  }
+  await next();
+});
+
+// 业务逻辑中间件
+app.use(async (ctx, next) => {
+  // 处理业务逻辑
+  // ...
+  await next();
+});
+
+// 最终响应中间件
+app.use(async (ctx) => {
+  // 设置响应头，返回数据等
+  ctx.body = { success: true, data: ctx.responseData };
+});
+
+```
+
+
+
 ### 3.Koa的洋葱模型
 
 ![洋葱模型](https://s2.loli.net/2022/06/19/6DNXLofT1lvgc28.webp)
@@ -2395,6 +2543,8 @@ fnMiddleware(ctx).then(handleResponse).catch(onerror);
 
 ### 4.Koa简单实现
 
+https://juejin.cn/post/6844904071934001160
+
 koa2的源码目录结构的lib文件夹，lib文件夹下放着四个koa2的核心文件：**application.js、context.js、request.js、response.js**
 
 #### application.js
@@ -2430,7 +2580,7 @@ use是收集中间件，将多个中间件放入一个缓存队列中，然后�
 
 阅读koa2的源码得知，实现koa的服务器应用和端口监听，其实就是基于node的原生代码进行了封装，如下图的代码就是通过node原生代码实现的服务器监听。
 
-```ini
+```js
 let http = require('http');
 let server = http.createServer((req, res) => {
     res.writeHead(200);
@@ -2443,7 +2593,7 @@ server.listen(3000, () => {
 
 我们需要将上面的node原生代码封装实现成koa的模式：
 
-```ini
+```js
 const http = require('http');
 const Koa = require('koa');
 const app = new Koa();
@@ -2476,7 +2626,7 @@ module.exports = Application;
 
 然后创建example.js，引入application.js，运行服务器实例启动监听代码：
 
-```ini
+```js
 let Koa = require('./application');
 let app = new Koa();
 app.use((req, res) => {
@@ -2533,7 +2683,7 @@ module.exports = {
 
 现在我们已经实现了request.js、response.js，获取到了request、response对象和他们的封装的方法，然后我们开始实现**context.js，context的作用就是将request、response对象挂载到ctx的上面**，让koa实例和代码能方便的使用到request、response对象中的方法。现在我们创建context.js文件，输入如下代码：
 
-```ini
+```js
 let proto = {};
 
 function delegateSet(property, name) {
@@ -2579,7 +2729,7 @@ context.js文件主要是对常用的request和response方法进行**挂载和�
 
 目前为止，我们已经得到了request、response、context三个模块对象了，接下来就是将request、response所有方法挂载到context下，让context实现它的承上启下的作用，修改application.js文件，添加如下代码：
 
-```ini
+```js
 let http = require('http');
 let context = require('./context');
 let request = require('./request');
@@ -2603,7 +2753,7 @@ createContext(req, res) {
 
 koa的剥洋葱模型在koa1中使用的是generator + co.js去实现的，koa2则使用了async/await + Promise去实现的，接下来我们基于async/await + Promise去实现koa2中的中间件机制。首先，假设当koa的中间件机制已经做好了，那么它是能成功运行下面代码的：
 
-```ini
+```js
 let Koa = require('../src/application');
 
 let app = new Koa();
@@ -2633,7 +2783,7 @@ app.listen(3000, () => {
 
 运行成功后会在终端输出123456，那就能验证我们的koa的剥洋葱模型是正确的。接下来我们开始实现，修改application.js文件，添加如下代码：
 
-```ini
+```js
     compose() {
         return async ctx => {
             function createNext(middleware, oldNext) {
@@ -2666,7 +2816,7 @@ app.listen(3000, () => {
 
 koa通过use函数，把**所有的中间件**push到一个**内部数组队列this.middlewares中**，剥洋葱模型能让所有的中**间件依次执行**，**每次执行完一个中间件**，遇到**next()就会将控制权传递到下一个中间件**，下一个中间件的next参数，剥洋葱模型的最关键代码是compose这个函数：
 
-```ini
+```js
 compose() {
         return async ctx => {
             function createNext(middleware, oldNext) {
@@ -2689,7 +2839,7 @@ compose() {
 
 **createNext函数的作用就是将上一个中间件的next当做参数传给下一个中间件，并且将上下文ctx绑定当前中间件**，当中间件执行完，调用next()的时候，其实就是去执行下一个中间件。
 
-```ini
+```js
 for (let i = len - 1; i >= 0; i--) {
         let currentMiddleware = this.middlewares[i];
         next = createNext(currentMiddleware, next);
@@ -2724,7 +2874,7 @@ return fn(ctx).then(respond).catch(onerror);
 
 现在我们已经实现了中间件的错误异常捕获，但是我们还缺少框架层发生错误的捕获机制，我们希望我们的服务器实例能有错误事件的监听机制，通过on的监听函数就能订阅和监听框架层面上的错误，实现这个机制不难，使用nodejs原生events模块即可，events模块给我们提供了事件**监听on函数和事件触发emit行为函数**，一个发射事件，一个负责接收事件，我们只需要将koa的构造函数继承events模块即可，构造后的伪代码如下：
 
-```ini
+```js
 let EventEmitter = require('events');
 class Application extends EventEmitter {
 
@@ -2733,7 +2883,7 @@ class Application extends EventEmitter {
 
 继承了events模块后，当我们创建koa实例的时候，加上on监听函数，代码如下：
 
-```ini
+```js
 let app = new Koa();
 
 app.on('error', err => {
@@ -2743,10 +2893,6 @@ app.on('error', err => {
 ```
 
 这样我们就实现了框架层面上的错误的捕获和监听机制了。总结一下，错误处理和捕获，分中间件的错误处理捕获和框架层的错误处理捕获，中间件的错误处理用promise的catch，框架层面的错误处理用nodejs的原生模块events，这样我们就可以把一个服务器实例上的所有的错误异常全部捕获到了。至此，我们就完整实现了一个轻量版的koa框架了。
-
-
-
-
 
 
 
@@ -3820,6 +3966,41 @@ module.exports = {
 
 ## Midway
 
+`Egg`基于`Koa`并在其能力上做了增强，奉行**【约定优于配置】**，同时它又能作为一款定制能力强的基础框架，来使得你能基于自己的技术架构封装出一套适合自己业务场景的框架。`MidwayJS`正是基于`Egg`，但在`Egg`的基础上做了一些较大的变动：
+
+- 更好的TS支持，可以说写MidwayJS比较舒服的一个地方就是它的**TypeScript支持**了，比如会作为服务的接口定义会单独存放于`interface`, 提供的能力强大的装饰器，与TypeORM这种TS支持好的框架协作起来更是愉悦。
+
+- IoC机制的路由，以我们下篇文章将要实现的接口为例：
+
+  ```typescript
+  @provide()
+  @controller('/user')
+  export class UserController {
+  
+    @get('/all')
+    async getUser(): Promise<void> {
+      // ...
+    }
+  
+    @get('/uid/:uid')
+    async findUserByUid(): Promise<void> {
+      // ...
+    }
+  
+    @post('/uid/:uid')
+    async updateUser(): Promise<void> {
+      // ...
+    }
+    
+    // ...
+  
+  }
+  ```
+
+  （Midway同时保留了Egg的路由能力，即`src/app/router.ts`的路由配置方式）
+
+  这里是否会让你想到`NestJS`？的确在路由这里二者的思想基本是相同的，但Midway的IoC机制底层基于 [Injection](https://link.juejin.cn?target=)，同样是Midway团队的作品。并且，Midway的IoC机制也是`Midway-Serverless`能力的重要支持
+
 ### 特点
 
 MidwayJS 是一款基于 TypeScript 的 Node.js 微服务框架，它的设计灵感来自于 Spring Boot。MidwayJS 具有许多优点，适用于构建大规模的企业级应用和微服务架构。以下是一些 MidwayJS 的主要优点：
@@ -3834,12 +4015,779 @@ MidwayJS 是一款基于 TypeScript 的 Node.js 微服务框架，它的设计�
 8. **中间件体系：** MidwayJS 使用中间件体系，使得开发者可以方便地扩展和定制框架的功能。这也有助于实现更灵活的拓展和插件开发。
 9. **完备的插件生态：** MidwayJS 有一个丰富的插件生态系统，提供了许多现成的插件，可以快速集成各种功能，如数据库连接、日志管理、性能监控等。
 
+### 装饰器
+
+JS与TS中的装饰器不是一回事，JS中的装饰器目前依然停留在 [stage 2](https://link.juejin.cn?target=https%3A%2F%2Fgithub.com%2Ftc39%2Fproposal-decorators) 阶段，并且目前版本的草案与TS中的实现差异相当之大（TS是基于第一版，JS目前已经第三版了），所以二者最终的装饰器实现必然有非常大的差异。
+
+其次，装饰器不是TS所提供的特性（如类型、接口），而是TS实现的ECMAScript提案（就像类的私有成员一样）。TS实际上只会对**stage-3**以上的语言提供支持，比如TS3.7.5引入了可选链（[Optional chaining](https://link.juejin.cn?target=https%3A%2F%2Fgithub.com%2Ftc39%2Fproposal-optional-chaining)）与空值合并（[Nullish-Coalescing](https://link.juejin.cn?target=https%3A%2F%2Fgithub.com%2Ftc39%2Fproposal-nullish-coalescing)）。而当TS引入装饰器时（大约在15年左右），JS中的装饰器依然处于 **stage-1** 阶段。其原因是TS与Angular团队PY成功了，Ng团队不再维护 [AtScript](https://link.juejin.cn?target=)，而TS引入了注解语法（**Annotation**）及相关特性。
+
+但是并不需要担心，即使装饰器永远到达不了stage-3/4阶段，它也不会消失的。有相当多的框架都是装饰器的重度用户，如`Angular`、`Nest`、`Midway`等。对于装饰器的实现与编译结果会始终保留，就像`JSX`一样。如果你对它的历史与发展方向有兴趣，可以读一读 [是否应该在production里使用typescript的decorator？](https://link.juejin.cn?target=https%3A%2F%2Fwww.zhihu.com%2Fquestion%2F404724504)（贺师俊贺老的回答）
+
+为什么我们需要装饰器？在后面的例子中我们会体会到装饰器的强大与魅力，基于装饰器我们能够**快速优雅的复用逻辑**，**提供注释一般的解释说明效果**，以及**对业务代码进行能力增强**。
+
+装饰器与注解实际上也有一定区别，由于并没有学过Java，这里就不与Java中的注解进行比较了。而只是说我所认为的二者差异：
+
+- **注解** 应该如同字面意义一样， 只是为某个被注解的对象提供元数据（`metadata`）的注入，本质上不能起到任何修改行为的操作，需要`scanner`去进行扫描获得元数据并基于其去执行操作，注解的元数据才有实际意义。
+- **装饰器** 没法添加元数据，只能基于已经由注解注入的元数据来执行操作，来对类、方法、属性、参数进行某种特定的操作。
+
+但实际上，TS中的装饰器通常是同时包含了这两种效能的，它可能消费元数据的同时也提供了元数据供别的装饰器消费。
+
+> 在开始前，你需要确保在`tsconfig.json`中设置了`experimentalDecorators`与`emitDecoratorMetadata`为true。
+
+首先要明确地是，**TS中的装饰器实现本质是一个语法糖，它的本质是一个函数**，如果调用形式为`@deco()`，那么这个函数应该再返回一个函数来实现调用。
+
+其次，你应该明白ES6中class的实质，如果不明白，推荐阅读我的这篇文章: [从Babel编译结果看ES6的Class实质](https://link.juejin.cn?target=https%3A%2F%2Flinbudu.top%2Fposts%2F2020%2F03%2F25%2Fbabel-class.html)
+
+#### 类装饰器
+
+```ts
+function addProp(constructor: Function) {
+  constructor.prototype.job = 'fe';
+}
+
+@addProp
+class P {
+  job: string;
+  constructor(public name: string) {}
+}
+
+let p = new P('111');
+
+console.log(p.job); // fe
+```
+
+我们发现，在以单纯装饰器方式`@addProp`调用时，不管用它来装饰哪个类，起到的作用都是相同的，因为其中要复用的逻辑是固定的。我们试试以`@addProp()`的方式来调用：
+
+```typescript
+function addProp(param: string): ClassDecorator {
+  return (constructor: Function) => {
+    constructor.prototype.job = param;
+  };
+}
+
+@addProp('fe+be')
+class P {
+  job: string;
+  constructor(public name: string) {}
+}
+
+let p = new P('111');
+
+console.log(p.job); // fe+be
+```
+
+现在我们想要添加的属性值就可以由我们决定了, 实际上由于我们拿到了原型对象，还可以进行花式操作，能够解锁更多神秘姿势~
+
+#### 方法装饰器
+
+方法装饰器的入参为 **类的原型对象**  **属性名** 以及**属性描述符(descriptor)**，其属性描述符包含`writable` `enumerable` `configurable` ，我们可以在这里去配置其相关信息。
+
+> 注意，对于静态成员来说，首个参数会是类的构造函数。而对于实例成员（比如下面的例子），则是类的原型对象
+
+```ts
+ts
+复制代码function addProps(): MethodDecorator {
+  return (target, propertyKey, descriptor) => {
+    console.log(target);
+    console.log(propertyKey);
+    console.log(JSON.stringify(descriptor));
+
+    descriptor.writable = false;
+  };
+}
+
+class A {
+  @addProps()
+  originMethod() {
+    console.log("I'm Original!");
+  }
+}
+
+const a = new A();
+
+a.originMethod = () => {
+  console.log("I'm Changed!");
+};
+
+a.originMethod(); // I'm Original! 并没有被修改
+```
+
+你是否觉得有点想起来`Object.defineProperty()`？ 的确方法装饰器也是借助它来修改类和方法的属性的，你可以去[TypeScript Playground](https://link.juejin.cn?target=https%3A%2F%2Fwww.typescriptlang.org%2Fplay)看看TS对上面代码的编译结果。
+
+#### 属性装饰器
+
+类似于方法装饰器，但它的入参少了属性描述符。原因则是目前没有方法在定义原型对象成员同时去描述一个实例的属性（创建描述符）。
+
+```typescript
+function addProps(): PropertyDecorator {
+  return (target, propertyKey) => {
+    console.log(target);
+    console.log(propertyKey);
+  };
+}
+
+class A {
+  @addProps()
+  originProps: any;
+}
+```
+
+属性与方法装饰器有一个重要作用是注入与提取元数据，这点我们在后面会体现到。
+
+#### 参数装饰器
+
+参数装饰器的入参首要两位与属性装饰器相同，第三个参数则是参数在当前函数参数中的**索引**。
+
+```ts
+function paramDeco(params?: any): ParameterDecorator {
+  return (target, propertyKey, index) => {
+    console.log(target);
+    console.log(propertyKey);
+    console.log(index);
+    target.constructor.prototype.fromParamDeco = '呀呼！';
+  };
+}
+
+class B {
+  someMethod(@paramDeco() param1: any, @paramDeco() param2: any) {
+    console.log(`${param1}  ${param2}`);
+  }
+}
+
+new B().someMethod('啊哈', '林不渡！');
+// @ts-ignore
+console.log(B.prototype.fromParamDeco);
+```
+
+参数装饰器与属性装饰器都有个特别之处，他们都不能获取到描述符descriptor，因此也就不能去修改其参数/属性的行为。但是我们可以这么做：**给类原型添加某个属性，携带上与参数/属性/装饰器相关的元数据，并由下一个执行的装饰器来读取。**(装饰器的执行顺序请参见下一节)
+
+当然像例子中这样直接在原型上添加属性的方式是十分不推荐的，后面我们会使用ES7的`Reflect Metadata`来进行元数据的读/写。
+
+#### 装饰器工厂
+
+假设现在我们同时需要四种装饰器，你会怎么做？定义四种装饰器然后分别使用吗？也行，但后续你看着这一堆装饰器可能会感觉有点头疼...，因此我们可以考虑接入工厂模式，使用一个装饰器工厂来为我们根据条件吐出不同的装饰器。
+
+首先我们准备好各个装饰器函数：
+
+（不建议把功能也写在装饰器工厂中，会造成耦合）
+
+```ts
+function classDeco(): ClassDecorator {
+  return (target: Object) => {
+    console.log('Class Decorator Invoked');
+    console.log(target);
+  };
+}
+
+function propDeco(): PropertyDecorator {
+  return (target: Object, propertyKey: string) => {
+    console.log('Property Decorator Invoked');
+    console.log(propertyKey);
+  };
+}
+
+function methodDeco(): MethodDecorator {
+  return (
+    target: Object,
+    propertyKey: string,
+    descriptor: PropertyDescriptor
+  ) => {
+    console.log('Method Decorator Invoked');
+    console.log(propertyKey);
+  };
+}
+
+function paramDeco(): ParameterDecorator {
+  return (target: Object, propertyKey: string, index: number) => {
+    console.log('Param Decorator Invoked');
+    console.log(propertyKey);
+    console.log(index);
+  };
+}
+```
+
+接着，我们实现一个工厂函数来根据不同条件返回不同的装饰器：
+
+```typescript
+enum DecoratorType {
+  CLASS = 'CLASS',
+  METHOD = 'METHOD',
+  PROPERTY = 'PROPERTY',
+  PARAM = 'PARAM',
+}
+
+type FactoryReturnType =
+  | ClassDecorator
+  | MethodDecorator
+  | PropertyDecorator
+  | ParameterDecorator;
+
+function decoFactory(type: DecoratorType, ...args: any[]): FactoryReturnType {
+  switch (type) {
+    case DecoratorType.CLASS:
+      return classDeco.apply(this, args);
+
+    case DecoratorType.METHOD:
+      return methodDeco.apply(this, args);
+
+    case DecoratorType.PROPERTY:
+      return propDeco.apply(this, args);
+
+    case DecoratorType.PARAM:
+      return paramDeco.apply(this, args);
+
+    default:
+      throw new Error('Invalid DecoratorType');
+  }
+}
+
+@decoFactory(DecoratorType.CLASS)
+class C {
+  @decoFactory(DecoratorType.PROPERTY)
+  prop: any;
+
+  @decoFactory(DecoratorType.METHOD)
+  method(@decoFactory(DecoratorType.PARAM) param: string) {}
+}
+
+new C().method();
+```
+
+（注意，这里在TS类型定义上似乎有些问题，所以需要带上顶部的`@ts-nocheck`，在后续解决了类型报错后，我会及时更新的TAT）
+
+#### 多个装饰器声明
+
+> 装饰器求值顺序来自于TypeScript官方文档一节中的装饰器说明。
+
+类中不同声明上的装饰器将按以下规定的顺序应用：
+
+1. *参数装饰器*，然后依次是*方法装饰器*，*访问符装饰器*，或*属性装饰器*应用到每个实例成员。
+2. *参数装饰器*，然后依次是*方法装饰器*，*访问符装饰器*，或*属性装饰器*应用到每个静态成员。
+3. *参数装饰器*应用到构造函数。
+4. *类装饰器*应用到类。
+
+注意这个顺序，后面我们能够实现元数据读写，也正是因为这个顺序。
+
+当存在多个装饰器来装饰同一个声明时，则会有以下的顺序：
+
+- 首先，由上至下依次对装饰器表达式求值，得到返回的真实函数（如果有的话）
+- 而后，求值的结果会由下至上依次调用
+
+（有点类似洋葱模型）
+
+```ts
+function foo() {
+    console.log("foo in");
+    return function (target, propertyKey: string, descriptor: PropertyDescriptor) {
+        console.log("foo out");
+    }
+}
+
+function bar() {
+    console.log("bar in");
+    return function (target, propertyKey: string, descriptor: PropertyDescriptor) {
+        console.log("bar out");
+    }
+}
+
+class A {
+    @foo()
+    @bar()
+    method() {}
+}
+
+// foo in
+// bar in
+// bar out
+// foo out
+```
+
+### 内置装饰器
+
+`Reflect.metadata` 是 TypeScript 中引入的 Reflect API 的一部分，它提供了一种元编程（metaprogramming）的能力，允许在运行时访问或操作 TypeScript 类的元数据。元数据是关于代码结构的信息，例如类的注解、装饰器以及其他相关信息。
+
+在 TypeScript 中，元数据的概念是为了在运行时获取与 TypeScript 类型相关的信息。`Reflect.metadata` 是 `Reflect` 对象的一个方法，用于读取或设置类和属性的元数据。
+
+#### 使用方法：
+
+1. **读取元数据：**
+
+   - 使用 `Reflect.getMetadata(key, target)` 方法可以读取指定键（key）的元数据。其中，`key` 是用于标识元数据的键，而 `target` 则是包含元数据的目标对象。
+
+   ```js
+   const metadataValue = Reflect.getMetadata('customKey', target);
+   ```
+
+2. **设置元数据：**
+
+   - 使用 `Reflect.defineMetadata(key, value, target)` 方法可以设置指定键的元数据。其中，`key` 是用于标识元数据的键，`value` 是要存储的元数据值，`target` 是要设置元数据的目标对象。
+
+   ```
+   typescriptCopy code
+   Reflect.defineMetadata('customKey', 'customValue', target);
+   ```
+
+3. **装饰器和元数据：**
+
+   - 装饰器是一种使用元数据的常见场景。装饰器可以通过 `Reflect.metadata` 来读取或设置元数据，从而在运行时实现对类、方法或属性的定制行为。
+
+   ```js
+   function MyDecorator(target: any) {
+     const existingMetadata = Reflect.getMetadata('customKey', target) || [];
+     existingMetadata.push('newMetadata');
+     Reflect.defineMetadata('customKey', existingMetadata, target);
+   }
+   ```
+
+4. **元数据的应用场景：**
+
+   - 元数据的使用场景包括但不限于装饰器、自定义注解、反射等。它为开发者提供了一种在运行时动态地获取和设置与代码结构相关信息的能力。
+
+#### 示例：
+
+```
+class ExampleClass {
+  @MyDecorator
+  exampleMethod() {}
+}
+
+function MyDecorator(target: any, key: string) {
+  const existingMetadata = Reflect.getMetadata('customKey', target) || [];
+  existingMetadata.push(key);
+  Reflect.defineMetadata('customKey', existingMetadata, target);
+}
+
+const metadataValue = Reflect.getMetadata('customKey', ExampleClass.prototype);
+console.log(metadataValue); // ['exampleMethod']
+```
+
+在这个例子中，`MyDecorator` 装饰器通过 `Reflect.metadata` 读取和设置了 `customKey` 元数据，该元数据记录了装饰有 `@MyDecorator` 的方法名。
+
+### Reflect Metadata
+
+#### 介绍
+
+`Reflect.metadata` 是 TypeScript 中引入的 Reflect API 的一部分，它提供了一种元编程（metaprogramming）的能力，允许在运行时访问或操作 TypeScript 类的元数据。元数据是关于代码结构的信息，例如类的注解、装饰器以及其他相关信息。
+
+在 TypeScript 中，元数据的概念是为了在运行时获取与 TypeScript 类型相关的信息。`Reflect.metadata` 是 `Reflect` 对象的一个方法，用于读取或设置类和属性的元数据。
+
+##### 使用方法：
+
+1. **读取元数据：**
+
+   - 使用 `Reflect.getMetadata(key, target)` 方法可以读取指定键（key）的元数据。其中，`key` 是用于标识元数据的键，而 `target` 则是包含元数据的目标对象。
+
+   ```js
+   const metadataValue = Reflect.getMetadata('customKey', target);
+   ```
+
+2. **设置元数据：**
+
+   - 使用 `Reflect.defineMetadata(key, value, target)` 方法可以设置指定键的元数据。其中，`key` 是用于标识元数据的键，`value` 是要存储的元数据值，`target` 是要设置元数据的目标对象。
+
+   ```js
+   Reflect.defineMetadata('customKey', 'customValue', target);
+   ```
+
+3. **装饰器和元数据：**
+
+   - 装饰器是一种使用元数据的常见场景。装饰器可以通过 `Reflect.metadata` 来读取或设置元数据，从而在运行时实现对类、方法或属性的定制行为。
+
+   ```js
+   function MyDecorator(target: any) {
+     const existingMetadata = Reflect.getMetadata('customKey', target) || [];
+     existingMetadata.push('newMetadata');
+     Reflect.defineMetadata('customKey', existingMetadata, target);
+   }
+   ```
+
+4. **元数据的应用场景：**
+
+   - 元数据的使用场景包括但不限于装饰器、自定义注解、反射等。它为开发者提供了一种在运行时动态地获取和设置与代码结构相关信息的能力。
+
+##### 示例：
+
+```js
+class ExampleClass {
+  @MyDecorator
+  exampleMethod() {}
+}
+
+function MyDecorator(target: any, key: string) {
+  const existingMetadata = Reflect.getMetadata('customKey', target) || [];
+  existingMetadata.push(key);
+  Reflect.defineMetadata('customKey', existingMetadata, target);
+}
+
+const metadataValue = Reflect.getMetadata('customKey', ExampleClass.prototype);
+console.log(metadataValue); // ['exampleMethod']
+```
+
+在这个例子中，`MyDecorator` 装饰器通过 `Reflect.metadata` 读取和设置了 `customKey` 元数据，该元数据记录了装饰有 `@MyDecorator` 的方法名。
+
+#### 基本元数据读写
+
+`Reflect Metadata`是属于ES7的一个提案，其主要作用是在声明时去读写元数据。TS早在1.5+版本就已经支持反射元数据的使用，目前想要使用，我们还需要安装`reflect-metadata`与在`tsconfig.json`中启用`emitDecoratorMetadata`选项。
+
+你可以将元数据理解为用于描述数据的数据，如某个对象的键、键值、类型等等就可称之为该对象的元数据。我们先不用太在意元数据定义的位置，先做一个简单的阐述：
+
+*为类或类属性添加了元数据后，构造函数的原型（或是构造函数，根据静态成员还是实例成员决定）会具有`[[Metadata]]`属性，该属性内部包含一个**Map**结构，**键为属性键，值为元数据键值对**。*
+
+`reflect-metadata`提供了对Reflect对象的扩展，在引入后，我们可以直接从`Reflect`对象上获取扩展方法。
+
+> 文档见 [reflect-metadata](https://link.juejin.cn?target=https%3A%2F%2Fgithub.com%2Frbuckton%2Freflect-metadata)，但不用急着看，其API命令还是很语义化的
+
+```ts
+import 'reflect-metadata';
+
+@Reflect.metadata('className', 'D')
+class D {
+  @Reflect.metadata('methodName', 'hello')
+  public hello(): string {
+    return 'hello world';
+  }
+}
+
+const d = new D();
+console.log(Reflect.getMetadata('className', D));
+console.log(Reflect.getMetadata('methodName', d));
+```
+
+可以看到，我们给类D与D内部的方法hello都注入了元数据，并通过`getMetadata(metadataKey, target)`这个方式取出了存放的元数据。
+
+> Reflect-metadata支持命令式(`Reflect.defineMetadata`)与声明式（上面的装饰器方式）的元数据定义
+
+我们注意到，注入在类上的元数据在取出时target为这个类D，而注入在方法上的元数据在取出时target则为实例d。原因其实我们实际上在上面的装饰器执行顺序提到了，这是由于**注入在方法、属性、参数上的元数据实际上是被添加在了实例对应的位置上，因此需要实例化才能取出。**
+
+#### 内置元数据
+
+Reflect允许程序去检视自身，基于这个效果，我们可以在装饰器运行时去检查其类型相关信息，如目标类型、目标参数的类型以及方法返回值的类型，这需要借助TS内置的**元数据metadataKey**来实现，以一个检查入参的例子为例：
+
+> 访问符装饰器的属性描述符会额外拥有`get`与`set`方法，其他与属性装饰器相同
+
+```typescript
+import 'reflect-metadata';
+
+class Point {
+  x: number;
+  y: number;
+}
+
+class Line {
+  private _p0: Point;
+  private _p1: Point;
+
+  @validate
+  set p0(value: Point) {
+    this._p0 = value;
+  }
+  get p0() {
+    return this._p0;
+  }
+
+  @validate
+  set p1(value: Point) {
+    this._p1 = value;
+  }
+  get p1() {
+    return this._p1;
+  }
+}
+
+function validate<T>(
+  target: any,
+  propertyKey: string,
+  descriptor: TypedPropertyDescriptor<T>
+) {
+  let set = descriptor.set!;
+  descriptor.set = function (value: T) {
+    let type = Reflect.getMetadata('design:type', target, propertyKey);
+    if (!(value instanceof type)) {
+      throw new TypeError('Invalid type.');
+    }
+    set(value);
+  };
+}
+```
+
+> 这个例子来自于TypeScript官方文档，但实际上不能正常执行。因为在经过装饰器处理后，set方法的this将会丢失。但我猜想官方的用意只是展示`design:type`的用法。
+
+在这个例子中，我们基于`Reflect.getMetadata('design:type', target, propertyKey);`获取到了装饰器对应声明的属性类型，并确保在`setter`被调用时检查值类型。
+
+这里的 `design:type` 即是TS的内置元数据，你可以理解为TS在编译前还手动执行了`@Reflect.metadata("design:type", Point)`。TS还内置了**`design:paramtypes`（获取目标参数类型）**与**`design:returntype`（获取方法返回值类型）**这两种元数据字段来提供帮助。但有一点需要注意，**即使对于基本类型，这些元数据也返回对应的包装类型，如`number` -> `[Function: Number]`**
+
+### IoC
+
+#### IoC、依赖注入、容器
+
+IoC的全称为 **Inversion of Control**，意为**控制反转**，它是OOP中的一种原则（虽然不在n大设计模式中，但实际上IoC也属于一种设计模式），它可以很好的解耦代码。
+
+在不使用IoC的情况下，我们很容易写出来这样的代码：
+
+```typescript
+import { A } from './modA';
+import { B } from './modB';
+
+class C {
+  constructor() {
+    this.a = new A();
+    this.b = new B();
+  }
+}
+```
+
+乍一看可能没什么，但实际上类C会强依赖于A、B，造成模块之间的耦合。要解决这个问题，我们可以这么做：用一个第三方容器来负责管理容器，当我们需要某个实例时，由这个容器来替我们实例化并交给我们实例。以`Injcetion`为例：
+
+```typescript
+import { Container } from 'injection';
+import { A } from './A';
+import { B } from './B';
+const container = new Container();
+container.bind(A);
+container.bind(B);
+
+class C {
+  constructor() {
+    this.a = container.get('a');
+    this.b = container.get('b');
+  }
+}
+```
+
+现在A、B、C之间没有了耦合，甚至当某个类D需要使用C的实例时，我们也可以把C交给IoC容器。
+
+我们现在能够知道IoC容器大概的作用了：容器内部维护着一个对象池，管理着各个对象实例，当用户需要使用实例时，容器会自动将对象实例化交给用户。
+
+再举个栗子，当我们想要处对象时，会上Soul、Summer、陌陌...等等去一个个找，找哪种的与怎么找是由我自己决定的，这叫 **控制正转**。现在我觉得有点麻烦，直接把自己的介绍上传到世纪佳缘，如果有人看上我了，就会主动向我发起聊天，这叫 **控制反转**。
+
+DI的全称为**Dependency Injection**，即**依赖注入**。依赖注入是控制反转最常见的一种应用方式，就如它的名字一样，它的思路就是在对象创建时自动注入依赖对象。再以`Injection`的使用为例：
+
+```typescript
+// provide意为当前对象需要被绑定到容器中
+// inject意为去容器中取出对应的实例注入到当前属性中
+@provide()
+export class UserService {
+ 
+  @inject()
+  userModel;
+
+  async getUser(userId) {
+    return await this.userModel.get(userId);
+  }
+}
+```
+
+我们不需要在构造函数中去手动`this.userModel = xxx`了，容器会自动帮我们做这一步。
+
+#### 实例: 基于IoC的路由简易实现
+
+我们在最开始介绍了MidwayJS的路由机制，大概长这样：
+
+```typescript
+@provide()
+@controller('/user')
+export class UserController {
+
+  @get('/all')
+  async getUser(): Promise<void> {
+    // ...
+  }
+
+  @get('/uid/:uid')
+  async findUserByUid(): Promise<void> {
+    // ...
+  }
+
+  @post('/uid/:uid')
+  async updateUser(): Promise<void> {
+    // ...
+  }
+}
+```
+
+（`@provide()`来自于底层的IoC支持`Injection`，Midway在应用启动时会去扫描被`@provide()`装饰的对象，并装载到容器中，这里不是重点，可以暂且跳过，我们主要关注如何**将装饰器路由解析成路由表**的形式）
+
+我们要解析的路由如下：
+
+```typescript
+@controller('/user')
+export class UserController {
+  @get('/all')
+  async getAllUser(): Promise<void> {
+    // ...
+  }
+
+  @post('/update')
+  async updateUser(): Promise<void> {
+    // ...
+  }
+}
+```
+
+首先思考`controller`和`get`/`post`装饰器，我们需要使用这几个装饰器注入哪些信息：
+
+- **路径**
+- **方法（方法装饰器）**
+
+首先是对于整个类，我们需要将`path: "/user"`这个数据注入：
+
+```typescript
+// 工具常量枚举
+export enum METADATA_MAP {
+  METHOD = 'method',
+  PATH = 'path',
+  GET = 'get',
+  POST = 'post',
+  MIDDLEWARE = 'middleware',
+}
+
+const { METHOD, PATH, GET, POST } = METADATA_MAP;
+
+export const controller = (path: string): ClassDecorator => {
+  return (target) => {
+    Reflect.defineMetadata(PATH, path, target);
+  };
+};
+```
+
+而后是方法装饰器，我们选择一个高阶函数（柯里化）去吐出各个方法的装饰器，而不是为每种方法定义一个。
+
+```typescript
+// 方法装饰器 保存方法与路径
+export const methodDecoCreator = (method: string) => {
+  return (path: string): MethodDecorator => {
+    return (_target, _key, descriptor) => {
+      Reflect.defineMetadata(METHOD, method, descriptor.value!);
+      Reflect.defineMetadata(PATH, path, descriptor.value!);
+    };
+  };
+};
+
+// 首先确定方法，而后在使用时才去确定路径
+const get = methodDecoCreator(GET);
+const post = methodDecoCreator(POST);
+```
+
+接下来我们要做的事情就很简单了：
+
+- 拿到注入在类上元数据的根路径
+- 拿到每个方法上元数据的方法、路径
+- 拼接，生成路由表
+
+```typescript
+const routeGenerator = (ins: Object) => {
+  const prototype = Object.getPrototypeOf(ins);
+
+  const rootPath = Reflect.getMetadata(PATH, prototype['constructor']);
+
+  const methods = Object.getOwnPropertyNames(prototype).filter(
+    (item) => item !== 'constructor'
+  );
+
+  const routeGroup = methods.map((methodName) => {
+    const methodBody = prototype[methodName];
+
+    const path = Reflect.getMetadata(PATH, methodBody);
+    const method = Reflect.getMetadata(METHOD, methodBody);
+    return {
+      path: `${rootPath}${path}`,
+      method,
+      methodName,
+      methodBody,
+    };
+  });
+  console.log(routeGroup);
+  return routeGroup;
+};
+```
+
+生成的结果大概是这样：
+
+```typescript
+[
+  {
+    path: '/user/all',
+    method: 'post',
+    methodName: 'getAllUser',
+    methodBody: [Function (anonymous)]
+  },
+  {
+    path: '/user/update',
+    method: 'get',
+    methodName: 'updateUser',
+    methodBody: [Function (anonymous)]
+  }
+]
+```
+
+基于这种思路，我们可以很容易的写一个使Koa支持IoC路由的工具。如果你有兴趣，不妨扩展一下。比如说路由还有可能长这样：
+
+```typescript
+@controller('/user', { middleware:[mw1, mw2, ...] })
+export class UserController {
+  @get('/all', { middleware:[mw11, mw22, ...] })
+  async getAllUser(): Promise<void> {
+    // ...
+  }
+
+  @get('/:uid')
+    async getUser(): Promise<void> {
+      // ...
+    }
+
+  @post('/update')
+  async updateUser(): Promise<void> {
+    // ...
+  }
+}
+```
+
+新增了几个地方：
+
+- 全局中间件
+- 路由级别中间件
+- 路由传参
+
+要不要试试整活？
+
+这个例子是否属于IoC机制的体现可能会有争议，但我个人认为`Reflect Metadata`的设计本身就是IoC的体现。如果你有别的看法，欢迎在评论区告知我。
+
+#### 依赖注入工具库
+
+我个人了解并使用过的TS依赖注入工具库包括：
+
+- [TypeDI](https://link.juejin.cn?target=https%3A%2F%2Fgithub.com%2Ftypestack%2Ftypedi)，TypeStack出品
+- [TSYringe](https://link.juejin.cn?target=https%3A%2F%2Fgithub.com%2Fmicrosoft%2Ftsyringe)，微软出品
+- [Injection](https://link.juejin.cn?target=https%3A%2F%2Fgithub.com%2Fmidwayjs%2Finjection)，MidwayJS团队出品，是MidwayJS底层IoC的能力支持
+
+其中`TypeDI`也是我日常使用较多的一个，如果你使用基本的Koa开发项目，不妨试一试`TypeORM` + `TypeORM-TypeDI-Extensions `。我们再看看上面呈现过的`Injection`的例子：
+
+```typescript
+typescript
+复制代码@provide()
+export class UserService {
+ 
+  @inject()
+  userModel;
+
+  async getUser(userId) {
+    return await this.userModel.get(userId);
+  }
+}
+```
+
+实际上，一个依赖注入工具库必定会提供的就是 **从容器中获取实例** 与 **注入对象到容器中**的两个方法，如上面的`provide`与`inject`，TypeDI的`Service`与`Inject`。
+
+#### 总结
+
+读完这篇文章，我想你应该对TypeScript中的装饰器与IoC机制有了大概的了解，如果你意犹未尽，不妨去看一下TypeScript对装饰器、反射元数据的编译结果，见[TypeScript Playground](https://link.juejin.cn?target=https%3A%2F%2Fwww.typescriptlang.org%2Fplay)。或者，如果你想早点开始了解MidwayJS，在阅读[文档](https://link.juejin.cn?target=https%3A%2F%2Fmidwayjs.org%2Fmidway%2F)的基础上，你也可以瞅瞅我写的这个简单的Demo：[Midway-Article-Demo](https://link.juejin.cn?target=https%3A%2F%2Fgithub.com%2Flinbudu599%2FMidway-Article-Demo)，基于 `Midway` + `TypeORM` + `SQLite3`，但请注意仍处于雏形，许多Midway的强大能力尚未得到体现，所以不要以这个Demo判定Midway的能力，我会尽快完善这个Demo的。
+
 ### 原理
 
 
 Midway 是一款基于 TypeScript 和 IoC（Inversion of Control）容器思想的 Node.js 框架。它是 Egg.js 生态的一部分，同时也提供了一些新的特性和增强。以下是 Midway 框架的一些基本原理和关键特性：
 
-### 1. IoC（控制反转）容器：
+#### 1. IoC（控制反转）容器：
 
 Midway 使用 IoC 容器来管理组件的依赖关系和生命周期。这种设计模式允许开发者定义组件，并由容器负责创建、注入依赖、解析依赖，以及管理组件的生命周期。通过 IoC 容器，Midway 实现了一种松耦合的组件架构。
 
@@ -3855,31 +4803,31 @@ Midway 使用 IoC 容器来管理组件的依赖关系和生命周期。这种�
 
 总的来说，IoC 是一种更加松散、灵活、可维护的设计方式，它降低了代码之间的依赖，提高了代码的可重用性和可测试性。
 
-### 2. 框架装配：
+#### 2. 框架装配：
 
 Midway 使用框架装配（Framework Assembly）的概念。在框架启动过程中，框架会负责自动装配应用的组件，包括加载控制器、中间件、服务等。这种自动化的装配过程减少了手动配置的工作，提高了开发效率。
 
-### 3. 插件机制：
+#### 3. 插件机制：
 
 Midway 支持插件机制，可以通过插件轻松扩展和定制应用。插件是一种组织和封装业务逻辑的方式，可以方便地集成到应用中。Midway 的插件机制有助于构建模块化和可扩展的应用。
 
-### 4. 类装饰器：
+#### 4. 类装饰器：
 
 Midway 使用类装饰器来定义控制器、服务、中间件等组件。这种装饰器的方式使得组件的定义更加清晰，同时提供了一种声明式的语法。类装饰器是 TypeScript 的一项特性，Midway 充分利用了 TypeScript 的类型系统。
 
-### 5. 类型注入：
+#### 5. 类型注入：
 
 Midway 使用类型注入的方式进行依赖注入。通过 TypeScript 的类型系统，Midway 能够在运行时准确地注入依赖，确保类型的正确性。这种类型安全的注入方式有助于减少由于依赖错误而引发的问题。
 
-### 6. 异步编程：
+#### 6. 异步编程：
 
 Midway 基于 Node.js 平台，因此天生支持异步编程。它通过异步框架 Egg.js 提供了强大的异步编程能力，支持异步函数、Generator 函数、Async/Await 等。
 
-### 7. 生命周期管理：
+#### 7. 生命周期管理：
 
 Midway 通过 IoC 容器管理组件的生命周期，包括创建、初始化、销毁等阶段。这种生命周期管理机制有助于释放资源、执行清理操作，并提高应用的稳定性。
 
-### 8. 多模块支持：
+#### 8. 多模块支持：
 
 Midway 支持多模块（Multi-module）的应用架构。它允许将应用划分为多个模块，每个模块有自己的配置、控制器、服务等。这种模块化的设计有助于更好地组织和管理代码。
 
@@ -3893,8 +4841,7 @@ Midway 支持多模块（Multi-module）的应用架构。它允许将应用划�
 
 首先，创建一个类来表示中间件。这个类需要实现 `MidwayWebMiddleware` 接口，并定义中间件的逻辑。
 
-```
-typescriptCopy code
+```js
 // src/middleware/yourMiddleware.ts
 
 import { Provide, Middleware, MidwayWebMiddleware, App } from '@midwayjs/decorator';
@@ -3919,7 +4866,7 @@ export class YourMiddleware implements MidwayWebMiddleware {
 
 在 `src/configuration.ts` 中注册创建的中间件。
 
-```
+```js
 typescriptCopy code
 // src/configuration.ts
 
@@ -3942,8 +4889,7 @@ export class ContainerConfiguration {
 
 ##### 在 Controller 中使用：
 
-```
-typescriptCopy code
+```js
 // src/controller/yourController.ts
 
 import { Provide, Controller, Get, Inject } from '@midwayjs/decorator';
@@ -3967,8 +4913,7 @@ export class YourController {
 
 ##### 在应用级别配置中使用：
 
-```
-typescriptCopy code
+```js
 // src/configuration.ts
 
 import { Configuration, App } from '@midwayjs/decorator';
@@ -3992,36 +4937,195 @@ export class ContainerConfiguration {
 
 这样，你就成功创建了一个 MidwayJS 中间件。在中间件的 `resolve` 方法中，你可以编写处理请求和响应的逻辑。中间件提供了一种方便的方式来实现请求的预处理、后处理等操作。
 
-## Lit
+### 中间件排列
 
-Lit 是一个轻量级的 Web 组件库，它的设计目标是提供高性能、小巧灵活的组件构建方案。以下是 Lit 框架的一些主要特性：
+在 `midwayjs` 中，中间件的使用方式与 `Koa` 类似，但由于 `midwayjs` 是基于 `Koa` 的，因此中间件的原则和排列顺序仍然适用。以下是一个在 `midwayjs` 中处理登录验证的中间件排列示例：
 
-1. **轻量级：** Lit 是一个轻量级的框架，其核心库的体积相对较小。这使得它在加载和运行时能够更加迅速，适合于对性能和资源消耗有要求的应用。
-2. **模板语法：** Lit 使用模板字符串作为组件的模板语法。模板字符串是一种原生 JavaScript 的语法，提供了更直观和灵活的模板定义方式。Lit 支持 HTML 标签内的表达式和条件渲染，使得模板更加动态和强大。
-3. **反应性：** Lit 提供了一种简单而强大的反应性系统，通过使用 `ReactiveMixin` 或 `@property` 装饰器，可以实现组件属性的响应式更新。这意味着当属性值发生变化时，相关的 DOM 部分会自动更新，无需手动操作 DOM。
-4. **直接使用标准 DOM：** Lit 直接使用浏览器标准的 DOM API，不依赖虚拟 DOM。这有助于减小库的体积，并在运行时更高效地处理 DOM 更新。
-5. **无框架组件：** Lit 提供了一种不依赖框架的组件编写方式，可以方便地嵌入到现有的项目中。同时，Lit 也可以与一些框架集成，如 React、Angular 等。
-6. **Web 组件标准：** Lit 遵循 Web 组件标准，可以与其他遵循相同标准的库和框架协同工作。Lit 组件可以被其他支持 Web 组件的环境和框架直接使用。
-7. **模块化：** Lit 支持模块化开发，可以使用 ES 模块的语法进行组件的导入和导出。这有助于组件的组织和复用。
-8. **支持 TypeScript：** Lit 提供了 TypeScript 的类型定义，可以在 TypeScript 项目中进行开发，并享受类型检查的好处。
+1. **身份验证中间件：**
 
-Web 组件是一种标准化的 Web 开发技术，它提供了一种创建可重用组件的方式，可以在不同的框架和项目中共享使用。然而，就像任何技术一样，Web 组件也有其优点和缺点。
+   - 在整个流程的开头，添加身份验证中间件，用于验证用户的身份。这可能涉及解析令牌、检查用户凭证等。
 
-### 优点：
+   - 例子：
 
-1. **独立性：** Web 组件是独立的、自包含的组件，它们不依赖于特定的框架或库。这使得它们可以在各种项目和技术栈中被使用，提高了组件的可移植性和重用性。
-2. **封装性：** Web 组件允许将 HTML、CSS 和 JavaScript 封装在一个独立的组件中。这种封装性有助于隐藏实现细节，提高组件的隔离性，防止全局作用域的污染。
-3. **复用性：** 由于独立性和封装性，Web 组件具有高度的复用性。可以在不同项目中轻松地使用相同的组件，从而减少代码冗余。
-4. **框架无关：** Web 组件不依赖于特定的前端框架，因此可以与任何框架结合使用。这使得团队可以在不同的框架中共同使用相同的组件。
-5. **标准化：** Web 组件遵循 Web 标准，并且是由 W3C 组织推动的。这意味着它们是一种官方认可的 Web 开发标准，未来会更好地融入浏览器和开发工具。
+     ```
+     javascriptCopy code
+     // src/middleware/authentication.ts
+     import { Context } from 'midway';
+     
+     export async function authentication(ctx: Context, next: () => Promise<any>) {
+       if (!ctx.request.headers.authorization) {
+         ctx.status = 401;
+         ctx.body = { error: 'Unauthorized' };
+         return;
+       }
+       // 具体的身份验证逻辑，例如解析令牌
+       // 设置用户信息到ctx.user
+       await next();
+     }
+     ```
 
-### 缺点：
+2. **权限检查中间件：**
 
-1. **兼容性：** 尽管现代浏览器对 Web 组件的支持越来越好，但在某些旧版本的浏览器中可能存在兼容性问题。为了确保在各种环境中可靠运行，可能需要使用 polyfill 或其他额外的工具。
-2. **学习曲线：** 对于初学者来说，学习和理解 Web 组件的概念可能需要一些时间。特别是对于那些对 Web 开发标准不太熟悉的开发者，需要适应新的概念和技术。
-3. **复杂性：** 尽管 Web 组件的封装性是一项优点，但有时也可能导致组件内部的复杂性增加。组件的封装和隔离可能使得组件内部状态和逻辑相对难以访问和调试。
-4. **生态系统：** 目前 Web 组件的生态系统相对较小，相比之下，一些流行的前端框架（如 React、Vue）有更庞大的生态系统，提供了更多的工具和社区支持。
-5. **样式封装：** 尽管 Web 组件支持封装样式，但在某些情况下，样式的封装性可能会导致一些挑战，特别是对于一些全局样式的处理。
+   - 在身份验证之后，添加权限检查中间件，用于确保用户有权执行所请求的操作。
+
+   - 例子：
+
+     ```
+     javascriptCopy code
+     // src/middleware/authorization.ts
+     import { Context } from 'midway';
+     
+     export async function authorization(ctx: Context, next: () => Promise<any>) {
+       // 权限检查逻辑
+       if (!userHasPermission(ctx.user, ctx.url)) {
+         ctx.status = 403;
+         ctx.body = { error: 'Permission Denied' };
+         return;
+       }
+       await next();
+     }
+     ```
+
+3. **业务逻辑中间件：**
+
+   - 在身份验证和权限检查之后，添加处理业务逻辑的中间件。
+
+   - 例子：
+
+     ```
+     javascriptCopy code
+     // src/middleware/businessLogic.ts
+     import { Context } from 'midway';
+     
+     export async function businessLogic(ctx: Context, next: () => Promise<any>) {
+       // 处理业务逻辑
+       // ...
+       await next();
+     }
+     ```
+
+4. **错误处理中间件：**
+
+   - 在整个流程的末尾，添加错误处理中间件，用于捕获流程中的任何错误并进行处理。
+
+   - 例子：
+
+     ```
+     javascriptCopy code
+     // src/middleware/errorHandler.ts
+     import { Context } from 'midway';
+     
+     export async function errorHandler(ctx: Context, next: () => Promise<any>) {
+       try {
+         await next();
+       } catch (err) {
+         ctx.status = err.status || 500;
+         ctx.body = { error: err.message };
+       }
+     }
+     ```
+
+5. **配置中间件：**
+
+   - 最后，在 
+
+     ```
+     config/config.default.ts
+     ```
+
+      中配置中间件的启用和顺序：
+
+     ```
+     typescriptCopy code
+     // config/config.default.ts
+     import { EggAppConfig, PowerPartial } from 'midway';
+     
+     export default () => {
+       const config: PowerPartial<EggAppConfig> = {};
+     
+       config.middleware = ['errorHandler', 'authentication', 'authorization', 'businessLogic'];
+     
+       return config;
+     };
+     ```
+
+确保在 `config.middleware` 中按照正确的顺序列出中间件，以确保它们按照预期的方式执行。这样，请求将依次经过身份验证、权限检查、业务逻辑处理，最终由错误处理中间件捕获任何可能的错误。
+
+### 日志服务
+
+common-error.log 记录打印的错误
+
+egg-schedule.log 记录定时任务的信息
+
+midway-agent.log 代理日志文件 记录代理模式下的相关日志信息
+
+midway-core.log   默认会输出控制台日志和文本日志 midway-core.log
+
+midway-web.log 记录 Web 请求和响应的日志文件会将 HTTP 请求和响应的相关信息记录到 midway-web.log 文件中
+
+在 Midway.js 中，错误处理和日志记录是应用程序中非常重要的两个方面。下面简要介绍一下 Midway.js 中的错误处理和日志记录的方式：
+
+#### 错误处理：
+
+1. **全局异常捕获：**
+   - Midway.js 提供了全局异常捕获机制，通过在应用层面注册异常处理器，可以捕获整个应用范围内的异常。
+2. **中间件异常处理：**
+   - 在中间件中，可以通过捕获异常并将其传递给下一个中间件或处理器，从而实现对请求过程中的异常进行处理。
+3. **自定义异常类：**
+   - 可以通过自定义异常类，继承自 `Error` 类，并在异常类中添加一些额外的信息，方便进行更精准的异常处理。
+4. **HTTP 异常处理：**
+   - Midway.js 提供了 `@Catch` 装饰器，用于捕获指定类型的异常，并进行处理。例如，可以通过 `@Catch(NotFoundException)` 处理 404 异常。
+
+#### 日志记录：
+
+1. **日志中间件：**
+   - Midway.js 内置了日志中间件，可以在应用的配置中进行简单配置，以便记录请求和错误信息。
+2. **日志文件和级别：**
+   - 可以通过配置文件指定日志的输出目标（如文件、控制台）和日志级别（如 info、warn、error），从而灵活地控制日志的记录。
+3. **日志模块：**
+   - Midway.js 通过 `@Logger` 装饰器提供了对日志模块的依赖注入支持。在控制器、服务等类中，可以使用 `@Logger` 装饰器注入日志模块，方便进行日志记录。
+4. **自定义日志：**
+   - 除了使用内置的日志中间件和日志模块外，开发者还可以使用第三方的日志库，如 log4js、winston 等，并在应用中进行配置和使用。
+
+下面是一个简单的例子，展示了如何在 Midway.js 中进行错误处理和日志记录：
+
+```js
+// 异常处理
+import { Provide, Catch, ExceptionFilter, HttpException, HttpStatus } from '@midwayjs/decorator';
+
+@Catch(HttpException)
+@Provide()
+export class HttpExceptionFilter implements ExceptionFilter {
+  catch(exception: HttpException) {
+    console.error('Handled HttpException:', exception.message);
+    // 进行异常处理逻辑
+  }
+}
+
+// 控制器中使用日志模块
+import { Inject, Controller, Get } from '@midwayjs/decorator';
+
+@Controller('/example')
+export class ExampleController {
+  @Inject()
+  logger: any;
+
+  @Get('/')
+  async index() {
+    try {
+      // 业务逻辑
+      throw new Error('Something went wrong!');
+    } catch (error) {
+      // 记录错误日志
+      this.logger.error('Error occurred:', error.message);
+      // 抛出自定义异常
+      throw new HttpException('Internal Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+}
+```
+
+在这个例子中，`HttpExceptionFilter` 被用作异常处理器，它捕获 `HttpException` 并进行处理。控制器中通过 `@Inject` 装饰器注入了日志模块，然后在业务逻辑中使用日志记录错误信息。这只是一个简单的演示，实际应用中，可以根据需求进行更灵活的配置和处理。
 
 ## 综合问题
 
@@ -4451,6 +5555,124 @@ server.listen(3000)
 -   弊端是callback回调方式，不可组合、异常不可捕获；
 -   ES5;
 -   connect的执行流程： connect的中间件模型是线性的，即一个一个往下执行；
+
+### Midway和Nest对比
+
+从技术角度和原理来看，Midway.js 和 Nest.js 在一些关键方面有一些区别。以下是它们在技术和原理层面的比较：
+
+1. **架构设计：**
+   - Nest.js 遵循了 MVC 架构，其设计理念包括模块、控制器、服务等，使代码分层清晰。
+   - Midway.js 采用类似 Egg.js 的设计理念，注重插件机制和约定式开发，更加注重约定胜于配置的开发方式。
+2. **依赖注入：**
+   - Nest.js 使用了强大的依赖注入系统，通过装饰器和 TypeScript 的元数据特性实现，使得组件之间的解耦更为灵活。
+   - Midway.js 也支持依赖注入，但具体的实现方式和注入的语法可能有一些不同。
+3. **中间件机制：**
+   - Nest.js 的中间件机制是基于 Express 中间件的，兼容 Express 的中间件。
+   - Midway.js 基于 Egg.js，其中间件机制较为灵活，支持多阶段中间件，方便进行请求的前置和后置处理。
+4. **ORM 支持：**
+   - Nest.js 使用 TypeORM 作为默认的 ORM 框架，支持多种数据库，并提供了强大的数据库交互功能。
+   - Midway.js 内置了 Sequelize 作为默认的 ORM，适合与 Egg.js 配合使用，提供了类似 Sequelize 的使用方式。
+5. **前端集成：**
+   - Nest.js 对前端集成较为灵活，可以与不同前端框架协同工作，没有特定的前端集成策略。
+   - Midway.js 针对 Vue.js 提供了更深层次的集成，提供了一些工具和特性，方便前后端协同开发。
+
+
+
+### 依赖注入原理
+
+#### Nest
+
+`@Inject` 是 Nest.js 中用于依赖注入的装饰器，它允许你在控制器、服务等类中注入其他类的实例。底层的依赖注入机制主要基于 TypeScript 的元数据反射以及设计模式中的反射和装饰器。
+
+以下是 `@Inject` 具体是如何实现的：
+
+1. **元数据反射：**
+   - TypeScript 提供了元数据反射的能力，通过 `reflect-metadata` 包，Nest.js 可以在运行时获取到类的元数据信息。
+   - 在使用 `@Inject` 装饰器时，Nest.js 利用 TypeScript 的元数据反射机制获取装饰器的参数信息。
+2. **服务提供者注册：**
+   - 在 Nest.js 应用启动时，所有的服务提供者（Service Providers）都会被注册到 Nest.js 的容器（Container）中。
+   - 服务提供者可以是普通的类、服务类等。在注册时，会将类的元数据信息存储到容器中，以备后续的注入。
+3. **依赖注入：**
+   - 当一个类需要使用 `@Inject` 装饰器注入其他类时，Nest.js 会从容器中获取被注入类的实例。
+   - 在获取实例的过程中，Nest.js 会利用 TypeScript 的元数据反射，查找被注入类的构造函数参数的元数据信息，得知需要注入的依赖。
+4. **递归注入：**
+   - 如果被注入的类也有依赖其他类，Nest.js 会递归地解析这些依赖，确保所有的依赖关系都能够正确地被满足。
+5. **生命周期管理：**
+   - Nest.js 的容器不仅负责依赖的解析，还负责管理依赖类的生命周期。当依赖注入时，容器会返回已经创建的实例，而不是每次都创建一个新的实例。
+
+一个简单的例子如下：
+
+```ts
+// 服务提供者
+@Injectable()
+class LoggerService {
+  log(message: string) {
+    console.log(message);
+  }
+}
+
+// 使用 @Inject 注入 LoggerService
+@Injectable()
+class MyService {
+  constructor(@Inject(LoggerService) private readonly logger: LoggerService) {}
+
+  doSomething() {
+    this.logger.log('Doing something...');
+  }
+}
+```
+
+在这个例子中，`LoggerService` 被 `@Injectable()` 装饰器标记为服务提供者，而 `MyService` 中使用 `@Inject` 装饰器注入了 `LoggerService`。Nest.js 的容器会在需要时自动解析并注入 `LoggerService` 的实例。
+
+#### Midway
+
+在 Midway.js 中，依赖注入的实现方式与 Nest.js 有一些相似之处，也是基于 TypeScript 的元数据反射和设计模式。以下是 Midway.js 中依赖注入的主要实现原理：
+
+1. **元数据反射：**
+   - Midway.js 同样利用 TypeScript 提供的元数据反射机制，通过 `reflect-metadata` 包，可以在运行时获取类的元数据信息。
+2. **IoC 容器：**
+   - Midway.js 使用 IoC（Inversion of Control）容器来管理依赖注入。IoC 容器是一个用于存储和解析类实例的容器，负责管理类之间的依赖关系。
+3. **服务提供者注册：**
+   - 在 Midway.js 中，类似 Nest.js，所有的服务提供者也需要通过装饰器进行标记。常见的服务提供者包括控制器、服务等。
+   - 注册时，Midway.js 会将类的元数据信息存储到 IoC 容器中。
+4. **依赖注入：**
+   - 当一个类需要使用依赖注入时，Midway.js 会从 IoC 容器中获取被注入类的实例。这个过程是透明的，开发者无需手动去管理依赖。
+5. **装饰器语法：**
+   - Midway.js 提供了一系列装饰器，用于标记不同类型的类，例如 `@Provide` 用于标记服务提供者、`@Controller` 用于标记控制器等。
+   - 装饰器的使用方式与 TypeScript 的装饰器语法相似，有助于简化代码和提高可读性。
+
+一个简单的例子如下：
+
+```ts
+import { Provide } from '@midwayjs/decorator';
+
+// 服务提供者
+@Provide()
+export class LoggerService {
+  log(message: string) {
+    console.log(message);
+  }
+}
+
+// 控制器中注入 LoggerService
+import { Inject, Controller, Get } from '@midwayjs/decorator';
+
+@Controller('/example')
+export class ExampleController {
+  @Inject()
+  logger: LoggerService;
+
+  @Get('/')
+  async index() {
+    this.logger.log('Hello, Midway.js!');
+    return 'Hello, Midway.js!';
+  }
+}
+```
+
+在这个例子中，`LoggerService` 被 `@Provide()` 装饰器标记为服务提供者，而 `ExampleController` 中通过 `@Inject()` 装饰器注入了 `LoggerService`。Midway.js 的 IoC 容器会在需要时自动解析并注入依赖。
+
+
 
 ### egg.js的特点
 
