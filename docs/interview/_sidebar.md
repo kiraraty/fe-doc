@@ -67,6 +67,7 @@
   * [Webpack5](interview/webpack5.md)
   * [Node.js](interview/node.js.md)
   * [Axios](interview/axios.md)
+  * [WebComponents](interview/webComponents.md)
   * [微前端](interview/微前端.md)
   * [微前端实践1](interview/微前端治理框架1.md)
   * [微前端实践2](interview/微前端治理框架2.md)
