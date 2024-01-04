@@ -804,7 +804,7 @@ https://cn.vuejs.org/api/sfc-css-features.html#scoped-css
 - 语法/deep/已弃用
 - 有新的:slotted和:global选择器
 
-对于每个版本/语法，<style>该组件的标签必须是scoped
+对于每个版本/语法，style该组件的标签必须是scoped
 
 vue3的sfc-compiler/会对/deep/语法进行检验，如果是vue2的写法则会提示：
 
