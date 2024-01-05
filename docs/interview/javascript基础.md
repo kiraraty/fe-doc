@@ -1813,7 +1813,27 @@ for(var s of students) {
 }
 //这个yield其实最后返回的就是iterator函数
 ```
+例如，转个弯去考察,怎么实现这样的效果 `const [a,b] = {a:1,b:2};` 
 
+```js
+Object.prototype[Symbol.iterator]= function(){
+    const obj = this;
+    const keys = Object.keys(obj);
+    let index = 0;
+    return {
+        next: function () {
+            if (index < keys.length) {
+                const key = keys[index++];
+                return { value: obj[key], done: false };
+            } else {
+                return { value: undefined, done: true };
+            }
+        }
+    };
+}
+const [a,b] = {a:1,b:2};
+console.log(a,b);
+```
 
 
 #### 总结
