@@ -250,7 +250,10 @@ a == 1 && a == 2 && a == 3       => true
 指定小数位数，进行四舍五入 toFixed
      const num = 1.1
      num.toFixed(2)                       //=>1.10
-会存在四舍五入异常问题，传入number和小数位数
+toFixed() 方法在处理浮点数时，实际上使用的是舍入到最近的偶数（银行家舍入）策略，而不是标准的四舍五入，如下实例：
+let num1 = 0.615;
+console.log(num1.toFixed(2)); // 输出 "0.61" 而非 "0.62"
+如果需要更精确的四舍五入，可以使用其他方法，例如将数字乘以某个倍数、调用 Math.round() 函数并手动处理小数位数等
 function roundToDecimalPlaces(number, decimalPlaces) {
     const multiplier = Math.pow(10, decimalPlaces);
     const roundedNumber = Math.round(number * multiplier) / multiplier;
