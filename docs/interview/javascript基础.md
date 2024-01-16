@@ -250,6 +250,12 @@ a == 1 && a == 2 && a == 3       => true
 指定小数位数，进行四舍五入 toFixed
      const num = 1.1
      num.toFixed(2)                       //=>1.10
+会存在四舍五入异常问题，传入number和小数位数
+function roundToDecimalPlaces(number, decimalPlaces) {
+    const multiplier = Math.pow(10, decimalPlaces);
+    const roundedNumber = Math.round(number * multiplier) / multiplier;
+    return roundedNumber.toFixed(decimalPlaces);
+}
 ```
 
 ##### 常用属性
