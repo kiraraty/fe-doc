@@ -116,3 +116,6 @@
   * [现代前端工程Monorepo](interview/前沿技术/现代前端工程Monorepo.md)
   * [pnpm对npm和yarn优势](interview/前沿技术/pnpm对npm和yarn优势.md)
   * [swc、esbuild和vite前端构建工具浅析](interview/前沿技术/swc、esbuild和vite前端构建工具浅析.md)
+* AI
+  *[Stable Diffusion](interview/AI/stable-diffusion.md)
+    
