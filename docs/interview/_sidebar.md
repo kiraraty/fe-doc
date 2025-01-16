@@ -74,6 +74,7 @@
   * [langchain](interview/langchian.md)
   * [错误分析](interview/错误分析.md)
   * [vue-demi实践](interview/vue-demi实践.md)
+  * [大模型知识库构建](interview/大模型知识库构建.md)
 
 * 原理
   * [浏览器原理](interview/浏览器.md)
