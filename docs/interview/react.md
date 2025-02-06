@@ -6577,6 +6577,7 @@ function Scope ({ children }){
 ##### useCallback
 
 ###### **useCallback 基础介绍：**
+useCallback 是 React 提供的一个 Hook，用于在函数组件中 缓存回调函数，避免因组件重复渲染而导致不必要的函数重新创建。它主要应用于性能优化场景，特别是在子组件使用 React.memo（或者其他浅比较）时，如果父组件传给子组件的是一个函数 prop，若该函数在每次父组件渲染时都重新定义，那么子组件的 React.memo 也会失效，导致子组件重复渲染。使用 useCallback 可以在依赖没有变化的情况下复用同一个回调函数引用，从而减少子组件不必要的重新渲染。
 
 useMemo 和 useCallback 接收的参数都是一样，都是在其依赖项发生变化后才执行，都是返回缓存的值，区别在于 useMemo 返回的是**函数运行的结果**，useCallback **返回的是函数**，这个回调函数是经过处理后的也就是说父组件传递一个函数给子组件的时候，由于是无状态组件每一次都会重新生成新的 props 函数，这样就使得每一次传递给子组件的函数都发生了变化，这时候就会触发子组件的更新，这些更新是没有必要的，此时我们就可以通过 usecallback 来处理此函数，然后作为 props 传递给子组件。
 
@@ -6607,7 +6608,195 @@ const DemoUseCallback=({ id })=>{
     </div>
 }
 ```
+### useCallback用法
 
+`useCallback` 是 React 提供的一个 Hook，用于在函数组件中 **缓存**回调函数，避免因组件重复渲染而导致不必要的函数重新创建。它主要应用于性能优化场景，特别是在子组件使用 `React.memo`（或者其他浅比较）时，如果父组件传给子组件的是一个函数 prop，若该函数在每次父组件渲染时都重新定义，那么子组件的 `React.memo` 也会失效，导致子组件重复渲染。使用 `useCallback` 可以在依赖没有变化的情况下复用同一个回调函数引用，从而减少子组件不必要的重新渲染。
+
+------
+
+#### 1. 基本用法
+
+```jsx
+import React, { useState, useCallback } from 'react';
+
+function Parent() {
+  const [count, setCount] = useState(0);
+  
+  // 普通写法：每次渲染 Parent 时，handleIncrement 都是一个新函数
+  const handleIncrement = () => setCount(count + 1);
+
+  // 使用 useCallback 缓存函数
+  const handleIncrementMemo = useCallback(() => {
+    setCount(prevCount => prevCount + 1);
+  }, []);
+
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <Child onIncrement={handleIncrementMemo} />
+    </div>
+  );
+}
+
+function Child({ onIncrement }) {
+  console.log('Child render');
+  return <button onClick={onIncrement}>+1</button>;
+}
+```
+
+- **没有依赖数组时**：`useCallback(fn)` 的效果相当于“仅在初次渲染时生成函数并缓存”，之后**永远不会**重新创建。
+- **返回值**：`useCallback` 会返回缓存后的函数引用，如果依赖没有变化，返回的引用地址不变。
+
+------
+
+#### 2. 带依赖项数组
+
+和 `useEffect` 类似，`useCallback` 接受第二个参数：一个 **依赖项数组**。只有当依赖项数组中的值发生变化时，`useCallback` 才会重新创建新的回调函数。
+
+```jsx
+const memoizedCallback = useCallback(
+  () => {
+    doSomething(a, b);
+  },
+  [a, b], // 依赖项数组
+);
+```
+
+##### 2.1 当依赖项是空数组
+
+```jsx
+const handleClick = useCallback(() => {
+  console.log('Clicked!');
+}, []);
+```
+
+- 表示回调函数只在组件首次渲染时定义一次，以后都不会重新创建；如果内部用到了来自 state 或 props 的值，这些值就**不会更新**，会导致闭包陷阱（Stale Closure）。
+- 如果确实只需要此回调在整个组件生命周期内保持不变（且不需要访问随时间变动的 state/props），可以这样做。否则需要使用函数式更新或正确填写依赖项。
+
+##### 2.2 当依赖项包含多个变量
+
+```jsx
+const handleSum = useCallback(() => {
+  setResult(num1 + num2);
+}, [num1, num2]);
+```
+
+- 只要 `num1` 或 `num2` 中任意一个发生变化，`useCallback` 就会返回一个**新的**回调函数引用。
+- 这样可以保证回调内部能获取到最新的 state 值。
+
+------
+
+#### 3. 适用场景与注意事项
+
+##### 3.1 与 `React.memo` 或深浅比较相关的优化
+
+- **核心价值**：如果一个组件（子组件）接收的 props 中含有函数类型的值，而该函数在父组件每次渲染时都重新创建，那么即使函数的内部逻辑没变、依赖也没变，React 在对函数 prop 做浅比较时也会认为 “不相等” → 触发子组件重复渲染。
+- 使用 `useCallback` 缓存函数引用，可以避免函数在 props 传递时总是被当作“新值”，从而配合 `React.memo` 达到性能优化的目的。
+
+##### 3.2 减少不必要的内存占用或渲染周期
+
+- 有时候我们不一定是为了子组件不渲染，而是为了确保某个回调不频繁变动（如依赖的值需要保证一定稳定性）。
+- 不过需要注意，盲目地给所有函数都套上 `useCallback` 并不一定能获得性能收益，因为每次渲染仍然需要对依赖数组进行比较，也会有额外的 Hook 开销。**要在真正需要的地方使用**。
+
+##### 3.3 闭包陷阱（Stale Closure）
+
+- 若回调函数内部使用了来自组件作用域的 state 或 props，但这些值未被正确写进依赖数组，那么回调会捕获旧值。
+
+- 解决方式
+
+  ：
+
+  1. 在依赖数组中补上要使用的变量；
+  2. 或者使用函数式更新 `setCount(prev => prev + 1)` 避免依赖对 `count` 的直接引用；
+  3. 视需求拆分逻辑，让不需要刷新回调的部分和需要随时刷新回调的部分分开。
+
+##### 3.4 useCallback vs. useMemo
+
+- **相似点**：两者都可以在依赖不变时缓存结果。
+
+- 区别
+
+  ：
+
+  - `useMemo` 返回的是一个值；
+  - `useCallback` 返回的是一个函数；
+  - 其实 `useCallback(fn, deps)` 相当于 `useMemo(() => fn, deps)`。
+
+------
+
+#### 4. 常见示例
+
+##### 4.1 子组件只有在回调函数变更时才更新
+
+```jsx
+function Parent() {
+  const [count, setCount] = useState(0);
+  const [otherState, setOtherState] = useState(false);
+
+  const increment = useCallback(() => {
+    setCount(prev => prev + 1);
+  }, []);
+
+  return (
+    <div>
+      <button onClick={() => setOtherState(prev => !prev)}>
+        切换 otherState: {otherState.toString()}
+      </button>
+      <Counter increment={increment} count={count} />
+    </div>
+  );
+}
+
+const Counter = React.memo(function Counter({ increment, count }) {
+  console.log('Counter render');
+  return (
+    <div>
+      <p>{count}</p>
+      <button onClick={increment}>+1</button>
+    </div>
+  );
+});
+```
+
+- `otherState` 改变时，`Parent` 重新渲染；但由于 `increment` 使用了 `useCallback([])`，不会改变引用，`Counter` 组件就不会触发重新渲染（除非 `count` 自身也更新了）。
+- 如果不用 `useCallback`，每次 `Parent` 渲染都会生成新的 `increment` 函数引用，导致 `Counter` 即使依赖 `React.memo` 也要重复渲染。
+
+##### 4.2 小心依赖带来的意外更新或不更新
+
+```jsx
+function Parent() {
+  const [count, setCount] = useState(0);
+  const [step, setStep] = useState(1);
+
+  const increment = useCallback(() => {
+    // 这里用了 count 和 step，应写在依赖数组里
+    setCount(count + step);
+  }, [count, step]);
+
+  ...
+}
+```
+
+- 只有当 `count` 或 `step` 改变时，`increment` 才会重新生成引用，否则它在回调里读取到的就是当时捕获的 `count` 与 `step` 值。
+
+------
+
+#### 5. 使用建议
+
+1. **针对性能瓶颈使用**：`useCallback` 并非所有函数都要加，只有当 `props` 中的函数引用会对子组件渲染造成实际性能影响时才考虑使用。
+2. **正确填写依赖数组**：避免闭包陷阱，如果回调中使用了外部变量，就把它们放进依赖里；或使用函数式更新替代。
+3. **与 `React.memo` 结合**：一般用来避免子组件不必要的渲染时，两者一起使用才有效果。
+4. **注意不要过度使用**：过度使用可能会增加维护成本和复杂度，也会让 Hook 的依赖判断带来额外的性能开销。
+
+------
+
+#### 总结
+
+- **`useCallback(fn, deps)`**：在 `deps` 未改变的情况下，返回缓存的回调函数引用；当依赖变更时，返回新的回调函数引用。
+- **解决的问题**：在依赖或父组件频繁渲染的场景中，防止函数引用每次都变，以配合 `React.memo` 等进行性能优化。
+- **常见陷阱**：若内部用到了外部变量却没写进依赖数组，可能导致闭包陷阱；若盲目将所有函数都用 `useCallback` 包裹，可能徒增复杂度且无实质性能提升。
+
+掌握这些要点，就能在需要的时候正确地使用 `useCallback` 来减少不必要的渲染开销。
 
 ### 闭包陷阱
 
