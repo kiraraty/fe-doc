@@ -7003,7 +7003,754 @@ function Example() {
 
 掌握了这些，就能更好地规避 React Hooks 中常见的闭包陷阱，让代码状态更新逻辑更加可控、可预测。
 
-### 1.对 React Hook 的理解，它的实现原理是什么
+### useState使用闭包陷阱分析
+
+ **为什么 `setState(count + 1)` 每次拿到的 `count` 都是 `0`？**
+
+当 `setState` 被多次调用时，每次 `count + 1` 计算出来的值都是 `0 + 1`，即 `1`，而不是我们期望的累加 `3`。这涉及到 **React 的批量更新机制** 和 **闭包捕获的旧 `state`**。我们从 **源码** 和 **执行流程** 两个角度详细分析这个问题。
+
+------
+
+#### **1️⃣ 代码示例**
+
+```
+function Counter() {
+  const [count, setCount] = useState(0);
+
+  const handleClick = () => {
+    setCount(count + 1);
+    setCount(count + 1);
+    setCount(count + 1);
+  };
+
+  return <button onClick={handleClick}>Count: {count}</button>;
+}
+```
+
+**预期结果：** `count` 增加 `3`
+**实际结果：** `count` 只增加 `1`
+
+------
+
+#### **2️⃣ 关键问题**
+
+##### **📌 为什么 `count` 每次都是 `0`？**
+
+- `setState(count + 1)` 直接使用了 **旧的 `count` 变量**
+- `count` 在 `handleClick` 触发时的值是 `0`
+- `setState` **不会立即更新 `state`**，而是**等到下一次 `render`** 统一处理
+- 因此，每次 `count + 1` 的计算**都基于旧的 `count = 0`**
+
+**示意图**
+
+```
+setState(count + 1)  // count = 0, 计算出 1
+setState(count + 1)  // count = 0, 计算出 1
+setState(count + 1)  // count = 0, 计算出 1
+```
+
+最终 `count` 只变成 `1`，而不是 `3`。
+
+------
+
+#### **3️⃣ React 内部的 `setState` 逻辑**
+
+##### **📌 `setState` 触发时，状态是如何存储的？**
+
+当 `setState(count + 1)` 被调用时，React 内部的 `dispatchSetState` 代码如下：
+
+```
+function dispatchSetState(fiber, queue, action) {
+  const update = {
+    action, // 保存 setState 传入的新值
+    next: null,
+  };
+
+  // 将 update 添加到 queue.pending
+  if (queue.pending === null) {
+    update.next = update;
+  } else {
+    update.next = queue.pending.next;
+    queue.pending.next = update;
+  }
+  queue.pending = update;
+
+  // 触发 React 的调度
+  scheduleUpdateOnFiber(fiber);
+}
+```
+
+**关键点**
+
+1. **setState 不会立即更新 `state`**，而是把 `update` 添加到 `queue.pending`
+
+2. `update.action` 直接存储 `count + 1`
+
+3. 由于 `count` **在 `handleClick` 触发时是 `0`**，所有 `update.action` **都会基于 `0` 计算**
+
+4. 在下一次 
+
+   ```
+   re-render
+   ```
+
+    时，React 处理 
+
+   ```
+   queue
+   ```
+
+    并执行 
+
+   ```
+   updateState
+   ```
+
+   ：
+
+   ```
+   function updateState() {
+     let baseState = hook.memoizedState; // baseState 还是 0
+     let update = queue.pending;
+     if (update !== null) {
+       queue.pending = null;
+       do {
+         baseState = typeof update.action === 'function'
+           ? update.action(baseState) // 计算新的 state
+           : update.action;
+         update = update.next;
+       } while (update !== null);
+     }
+     hook.memoizedState = baseState;
+     return [hook.memoizedState, queue.dispatch];
+   }
+   ```
+
+5. **因为 `update.action` 里存的都是 `count + 1`，所以最终 `state` 只更新到 `1`**。
+
+------
+
+#### **4️⃣ 解决方案**
+
+##### **✅ 方法 1：使用 `prevState`**
+
+**正确做法：**
+
+```
+jsx复制编辑setCount(prev => prev + 1);
+setCount(prev => prev + 1);
+setCount(prev => prev + 1);
+```
+
+**为什么有效？**
+
+```
+js复制编辑update1.action = prev => prev + 1
+update2.action = prev => prev + 1
+update3.action = prev => prev + 1
+```
+
+在 `updateState` 处理中：
+
+```
+ini复制编辑baseState = 0
+baseState = prevState(0) + 1 = 1
+baseState = prevState(1) + 1 = 2
+baseState = prevState(2) + 1 = 3
+```
+
+最终 `count = 3` ✅
+
+------
+
+##### **✅ 方法 2：使用 `useEffect` 触发更新**
+
+```
+jsx复制编辑useEffect(() => {
+  setCount(count + 1);
+}, [count]);
+```
+
+这样 `setCount` 只会在 `count` **更新后** 触发。
+
+------
+
+##### **✅ 方法 3：使用 `flushSync` 强制同步更新**
+
+```
+jsx复制编辑import { flushSync } from 'react-dom';
+
+const handleClick = () => {
+  flushSync(() => setCount(count + 1));
+  flushSync(() => setCount(count + 1));
+  flushSync(() => setCount(count + 1));
+};
+```
+
+这样 `count` 在 `setState` 立即生效，不会等到下一次 `render`。
+
+------
+
+#### **5️⃣ 总结**
+
+**🔴 为什么 `setState(count + 1)` 只会增加 1？**
+
+- `count` 在 `handleClick` 执行时**是 `0`，不会更新**
+- `setState` 只是**放入 `update queue`，不会立即执行**
+- 所有 `setState(count + 1)` 计算的 `state` **都是基于旧值 `0`**
+- React 在下一次 `re-render` 时统一处理 `queue`，最终 `count` 只更新到 `1`
+
+**✅ 解决方案**
+
+- **使用 `prevState`**：`setCount(prev => prev + 1);`
+- **使用 `useEffect`**：`useEffect(() => { setCount(count + 1); }, [count]);`
+- **使用 `flushSync`**：`flushSync(() => setCount(count + 1));`
+
+### useState源码分析
+
+`useState` 是 React Hooks 中的基础 Hook，本质上是 `useReducer` 的一个封装。它的实现涉及 React 内部的 Hook 机制、Fiber 机制和调度机制。
+
+------
+
+#### 1. `useState` 源码分析
+
+`useState` 的实现位于 `react` 包的 `ReactHooks.js` 文件中：
+
+```js
+export function useState(initialState) {
+  return useReducer(basicStateReducer, initialState);
+}
+
+function basicStateReducer(state, action) {
+  return typeof action === 'function' ? action(state) : action;
+}
+```
+
+##### 解析：
+
+- `useState(initialState)` 直接调用 `useReducer(basicStateReducer, initialState)`。
+
+- ```
+  basicStateReducer
+  ```
+
+   是一个简单的 reducer：
+
+  - 若 `action` 是函数，则执行 `action(state)` 计算新的 `state`。
+  - 若 `action` 是值，则直接返回该值。
+
+**结论**：
+ `useState` 只是 `useReducer` 的简化版，所有状态更新逻辑均依赖 `useReducer`。
+
+------
+
+#### 2. `useReducer` 内部实现
+
+`useReducer` 的核心代码位于 `react-reconciler/src/ReactFiberHooks.js`：
+
+```js
+function useReducer(reducer, initialArg, init) {
+  const hook = mountWorkInProgressHook();
+
+  let initialState;
+  if (typeof init !== 'undefined') {
+    initialState = init(initialArg);
+  } else {
+    initialState = initialArg;
+  }
+
+  hook.memoizedState = initialState;
+
+  const queue = {
+    pending: null,
+    dispatch: null,
+    lastRenderedReducer: reducer,
+    lastRenderedState: initialState
+  };
+
+  hook.queue = queue;
+  const dispatch = (queue.dispatch = dispatchAction.bind(
+    null,
+    currentlyRenderingFiber,
+    queue
+  ));
+
+  return [hook.memoizedState, dispatch];
+}
+```
+
+##### 解析：
+
+1. **创建 `hook` 并存储 `state`**
+   - `mountWorkInProgressHook()` 负责创建 Hook 并挂载到 `Fiber`。
+   - `hook.memoizedState` 存储当前 `state`。
+2. **创建 `queue`（更新队列）**
+   - `queue.pending`：待处理的 `update`（状态更新）。
+   - `queue.dispatch`：触发 `dispatchAction`，进行状态更新。
+3. **返回 `state` 和 `dispatch`**
+   - `dispatch` 绑定 `dispatchAction`，用于触发 `state` 变更。
+
+------
+
+#### 3. `dispatchAction`（状态更新机制）
+
+当调用 `setState(newState)` 时，`dispatchAction` 被触发：
+
+```js
+function dispatchAction(fiber, queue, action) {
+  const update = {
+    action,
+    next: null,
+  };
+
+  // 将 update 添加到 queue.pending（形成环形链表）
+  if (queue.pending === null) {
+    update.next = update;
+  } else {
+    update.next = queue.pending.next;
+    queue.pending.next = update;
+  }
+  queue.pending = update;
+
+  // 触发 React 的调度流程
+  scheduleUpdateOnFiber(fiber);
+}
+```
+
+##### 解析：
+
+1. **创建 `update`**
+   - `update.action` 存储 `setState` 传入的 `newState` 或 `updater function`。
+2. **更新 `queue.pending`（环形链表）**
+   - React 通过 **环形链表** 存储 `update`，便于批量更新 `state`。
+3. **调用 `scheduleUpdateOnFiber(fiber)`**
+   - 触发 Fiber 机制，调度组件重新渲染。
+
+------
+
+#### 4. `scheduleUpdateOnFiber`（触发 Fiber 调度）
+
+```js
+function scheduleUpdateOnFiber(fiber) {
+  const root = markUpdateLaneFromFiberToRoot(fiber);
+  if (root === null) return;
+  ensureRootIsScheduled(root);
+}
+```
+
+##### 解析：
+
+1. **找到 `FiberRoot`**
+   - `markUpdateLaneFromFiberToRoot(fiber)` 确保更新会影响整个组件树。
+2. **确保 `root` 处于调度状态**
+   - `ensureRootIsScheduled(root)` 启动 `React` 的调度机制（Scheduler）。
+
+------
+
+#### 5. 组件渲染流程
+
+当 `useState` 触发 `setState` 后，React 调用 `renderWithHooks` 进行渲染：
+
+```js
+function renderWithHooks(current, workInProgress, Component, props, nextRenderLanes) {
+  renderLanes = nextRenderLanes;
+  currentlyRenderingFiber = workInProgress;
+  workInProgress.memoizedState = null;
+  workInProgress.updateQueue = null;
+
+  ReactCurrentDispatcher.current = current !== null ? HooksDispatcherOnUpdate : HooksDispatcherOnMount;
+  
+  let children = Component(props);
+
+  ReactCurrentDispatcher.current = ContextOnlyDispatcher;
+  currentlyRenderingFiber = null;
+  workInProgressHook = null;
+  return children;
+}
+```
+
+##### 解析：
+
+1. **确定 `Dispatcher`**
+   - **首次渲染**：`HooksDispatcherOnMount` 负责初始化 `useState`。
+   - **更新时**：`HooksDispatcherOnUpdate` 负责读取 `queue.pending`，应用状态更新。
+2. **执行 `Component(props)`**
+   - 组件重新执行，获取新的 `state` 值，完成渲染。
+
+------
+
+#### 6. `updateReducer` 计算新 `state`
+
+在 `useState` 触发 `setState` 后，React 通过 `updateReducer` 计算新的 `state`：
+
+```js
+function updateReducer(reducer, initialArg, init) {
+  const hook = updateWorkInProgressHook();
+  const queue = hook.queue;
+  let newState = hook.memoizedState;
+
+  if (queue.pending !== null) {
+    let first = queue.pending.next;
+    let update = first;
+    do {
+      newState = reducer(newState, update.action);
+      update = update.next;
+    } while (update !== first);
+
+    queue.pending = null;
+  }
+
+  hook.memoizedState = newState;
+  return [hook.memoizedState, queue.dispatch];
+}
+```
+
+##### 解析：
+
+1. **遍历 `queue.pending`**
+   - React 取出所有 `update` 并依次计算 `newState`。
+2. **更新 `hook.memoizedState`**
+   - `hook.memoizedState` 存储最新的 `state`。
+3. **返回新的 `state` 和 `dispatch`**
+   - 组件在 `renderWithHooks` 过程中获取最新 `state` 并渲染。
+
+------
+
+#### 7. `useState` 核心机制总结
+
+| 步骤                                   | 作用                           |
+| -------------------------------------- | ------------------------------ |
+| `useState(initialState)`               | 初始化状态 `memoizedState`     |
+| `dispatchAction(fiber, queue, action)` | 触发 `setState`，添加 `update` |
+| `scheduleUpdateOnFiber(fiber)`         | 触发调度                       |
+| `renderWithHooks()`                    | 组件重新渲染                   |
+| `updateReducer()`                      | 计算新 `state`，应用 `update`  |
+
+------
+
+![img](https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/232fa16909db4636a3d4283816c3ccd4~tplv-k3u1fbpfcp-jj-mark:1890:0:0:0:q75.awebp)
+
+
+
+#### 8. 重要优化机制
+
+##### 8.1 `setState` 传入函数，避免不必要计算
+
+```js
+const [value, setValue] = useState(() => expensiveFunction());
+```
+
+- `useState(() => initialState)` 只执行一次，避免重复计算。
+
+##### 8.2 `React.memo` + `useState`
+
+```js
+const ExpensiveComponent = React.memo(({ count }) => {
+  console.log("Rendered");
+  return <div>{count}</div>;
+});
+```
+
+- `useState` 只有 `state` 真的变了，组件才会重新渲染。
+
+------
+
+#### 9. 总结
+
+- `useState` 是 `useReducer` 的封装，本质上是一个 `dispatch` 机制。
+- `useState` 通过 **环形链表** 组织 `update`，支持批量更新。
+- React 通过 `scheduleUpdateOnFiber` 触发 Fiber 任务调度，实现异步渲染。
+
+这样，React 保证了 `useState` 既高效，又不会阻塞主线程！
+
+### `useEffect` 源码分析
+
+#### **1. `useEffect` 是什么？**
+
+`useEffect` 是 React 提供的一个 Hook，用于在函数组件中执行副作用（side effects），如：
+
+- 数据获取（API 请求）
+- 订阅和取消订阅
+- 操作 DOM
+- 计时器和事件监听
+- 清理副作用
+
+`useEffect` 的行为受 **依赖数组 (`deps`)** 影响：
+
+- 没有依赖数组 → **每次渲染后都执行**
+- 依赖数组为空 (`[]`) → **只在挂载时执行**
+- 依赖数组不为空 (`[state]`) → **只有 `state` 变化时才执行**
+
+------
+
+#### **2. `useEffect` 的源码结构**
+
+`useEffect` 主要分为以下几个部分：
+
+1. **创建 `effect` 并存储**（`useEffectImpl`）
+2. **在 `commit` 阶段执行 `effect`**（`commitHookEffectList`）
+3. **组件更新时执行 `cleanup` 并重新运行 `effect`**（`updateEffectImpl`）
+4. **组件卸载时执行 `cleanup`**（`commitHookEffectListUnmount`）
+
+**`useEffect` 的源码位置**
+
+- `react`：定义 `useEffect`
+- `react-reconciler`：处理 `useEffect` 的调度与执行
+
+------
+
+#### **3. `useEffect` 的初始化**
+
+在 `react/src/ReactHooks.js`，`useEffect` 实际上调用了 `useEffectImpl`：
+
+```js
+export function useEffect(create, deps) {
+  return useEffectImpl(PassiveEffect, HookPassive, create, deps);
+}
+```
+
+##### **`useEffectImpl` 主要做了三件事**
+
+1. **获取当前正在执行的 Hook**
+2. **存储 `effect` 到当前 Fiber 节点**
+3. **返回 `effect`**
+
+```js
+function useEffectImpl(fiberFlags, hookFlags, create, deps) {
+  const hook = mountWorkInProgressHook();
+  const nextDeps = deps === undefined ? null : deps;
+  
+  // 创建并存储 effect
+  hook.memoizedState = pushEffect(hookFlags, create, undefined, nextDeps);
+}
+```
+
+##### **关键点**
+
+- `mountWorkInProgressHook()`：找到当前 Fiber 节点对应的 Hook
+- `pushEffect()`：创建 `effect` 并存储
+
+------
+
+#### **4. `pushEffect`：存储 `effect`**
+
+```js
+function pushEffect(tag, create, destroy, deps) {
+  const effect = {
+    tag,
+    create,
+    destroy,
+    deps,
+    next: null,
+  };
+
+  let componentUpdateQueue = currentlyRenderingFiber.updateQueue;
+  if (componentUpdateQueue === null) {
+    componentUpdateQueue = createFunctionComponentUpdateQueue();
+    currentlyRenderingFiber.updateQueue = componentUpdateQueue;
+    componentUpdateQueue.lastEffect = effect.next = effect;
+  } else {
+    const lastEffect = componentUpdateQueue.lastEffect;
+    if (lastEffect === null) {
+      componentUpdateQueue.lastEffect = effect.next = effect;
+    } else {
+      const firstEffect = lastEffect.next;
+      lastEffect.next = effect;
+      effect.next = firstEffect;
+      componentUpdateQueue.lastEffect = effect;
+    }
+  }
+
+  return effect;
+}
+```
+
+##### **解析**
+
+- `pushEffect` 负责将 `effect` 存储到 `Fiber.updateQueue`
+- 形成 **环形链表**，允许 React **批量处理 `effect`**
+
+------
+
+#### **5. `commitHookEffectList`：执行 `effect`**
+
+当 `useEffect` 进入 `commit` 阶段，React 会遍历 `Fiber.updateQueue`，执行 `effect.create()`：
+
+```js
+function commitHookEffectList(flags, finishedWork) {
+  const updateQueue = finishedWork.updateQueue;
+  let effect = updateQueue !== null ? updateQueue.lastEffect : null;
+
+  if (effect !== null) {
+    const firstEffect = effect.next;
+    do {
+      if ((effect.tag & flags) === flags) {
+        const destroy = effect.destroy;
+        if (destroy !== undefined) {
+          effect.destroy = undefined;
+          destroy();
+        }
+
+        const create = effect.create;
+        effect.destroy = create();
+      }
+      effect = effect.next;
+    } while (effect !== firstEffect);
+  }
+}
+```
+
+##### **关键步骤**
+
+1. **遍历 `effect`**
+2. 先执行 `cleanup`
+   - 释放上一次 `useEffect` 的资源
+3. 执行 `create`
+   - 运行 `useEffect` 的逻辑，返回新的 `cleanup` 函数
+
+------
+
+#### **6. `updateEffectImpl`（依赖更新机制）**
+
+当 `useEffect` 依赖 `[count]`，只有 `count` 变化时才重新执行：
+
+```js
+function updateEffectImpl(fiberFlags, hookFlags, create, deps) {
+  const hook = updateWorkInProgressHook();
+  const nextDeps = deps === undefined ? null : deps;
+  let destroy = undefined;
+
+  if (currentHook !== null) {
+    const prevEffect = currentHook.memoizedState;
+    destroy = prevEffect.destroy;
+
+    if (nextDeps !== null) {
+      const prevDeps = prevEffect.deps;
+      if (areHookInputsEqual(nextDeps, prevDeps)) {
+        hook.memoizedState = pushEffect(HookHasEffect | hookFlags, create, destroy, nextDeps);
+        return;
+      }
+    }
+  }
+
+  hook.memoizedState = pushEffect(HookHasEffect | hookFlags, create, destroy, nextDeps);
+}
+```
+
+##### **工作流程**
+
+1. 判断 `deps` 是否变化
+   - `areHookInputsEqual(nextDeps, prevDeps)`，如果相等，则跳过 `effect`
+2. 清理 `destroy`
+   - 如果 `deps` 变化，先执行 `destroy()`
+3. 重新执行 `effect.create()`
+   - 存储新 `effect`
+
+------
+
+#### **7. `useEffect` 生命周期**
+
+假设 `useEffect` 依赖 `count`：
+
+```jsx
+useEffect(() => {
+  console.log("Effect executed");
+  return () => console.log("Cleanup executed");
+}, [count]);
+```
+
+##### **(1) 组件首次渲染**
+
+1. `pushEffect()` 存储 `effect`
+
+2. ```
+   commitHookEffectList()
+   ```
+
+    执行：
+
+   ```
+   Effect executed
+   ```
+
+##### **(2) `count` 更新**
+
+1. `updateEffectImpl` 检查 `deps` 变化
+
+2. 执行 
+
+   ```
+   cleanup
+   ```
+
+   ：
+
+   ```
+   Cleanup executed
+   ```
+
+3. 执行 
+
+   ```
+   effect
+   ```
+
+   ：
+
+   ```
+   Effect executed
+   ```
+
+##### **(3) 组件卸载**
+
+1. ```
+   commitHookEffectListUnmount()
+   ```
+
+    执行 
+
+   ```
+   cleanup
+   ```
+
+   ```
+   Cleanup executed
+   ```
+
+------
+
+#### **8. `useEffect` vs `useLayoutEffect`**
+
+| Hook              | 触发时机                       | 适用场景               |
+| ----------------- | ------------------------------ | ---------------------- |
+| `useEffect`       | **commit 阶段后**（异步）      | 网络请求、订阅事件     |
+| `useLayoutEffect` | **DOM 更新后，绘制前**（同步） | 直接操作 DOM，避免闪烁 |
+
+`useLayoutEffect` 实现类似：
+
+```js
+export function useLayoutEffect(create, deps) {
+  return useEffectImpl(LayoutEffect, HookLayout, create, deps);
+}
+```
+
+------
+
+#### **9. 总结**
+
+- `useEffect` **存储副作用** 在 `Fiber.updateQueue`
+- `commit` 阶段执行 `effect.create()`
+- 组件更新时
+  - `cleanup()` 释放旧资源
+  - `create()` 执行新的副作用
+- 组件卸载时
+  - 执行 `cleanup()`
+- 优化机制
+  - 依赖数组 `deps` 避免不必要的 `effect`
+
+React 通过 **批量执行 `effect`**，提升性能，避免重复渲染。🚀
+
+###  1. React Hook 的理解，它的实现原理是什么
 
 React-Hooks 是 React 团队在 React 组件开发实践中，逐渐认知到的一个改进点，这背后其实涉及对**类组件**和**函数组件**两种组件形式的思考和侧重。
 
