@@ -7463,7 +7463,7 @@ const ExpensiveComponent = React.memo(({ count }) => {
 
 这样，React 保证了 `useState` 既高效，又不会阻塞主线程！
 
-### `useEffect` 源码分析
+### useEffect 源码分析
 
 #### **1. `useEffect` 是什么？**
 
