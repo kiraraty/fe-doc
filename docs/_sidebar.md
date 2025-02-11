@@ -1,4 +1,4 @@
-﻿* 基础
+* 基础
   * [Html](interview/html.md)
   * [Css](interview/css.md)
   * [JavaScript基础](interview/javascript基础.md)
@@ -26,9 +26,11 @@
     * [12.优化篇-渲染调优](interview/React进阶实践指南/12.优化篇-渲染调优.md) 
     * [13.优化篇-处理海量数据](interview/React进阶实践指南/13.优化篇-处理海量数据.md) 
     * [14.优化篇-细节处理（持续）](interview/React进阶实践指南/14.优化篇-细节处理（持续）.md) 
-    * [15.原理篇-事件原理](interview/React进阶实践指南/15.原理篇-事件原理.md) 
+    * [15.原理篇-事件原理](interview/React进阶实践指南/15.原理篇-事件原理.md)
+    * [15.原理篇-事件原理-v18新版本.md](interview/React进阶实践指南/15.原理篇-事件原理-v18新版本.md)
     * [16.原理篇-调度与时间片](interview/React进阶实践指南/16.原理篇-调度与时间片.md) 
-    * [17.原理篇-调和与fiber](interview/React进阶实践指南/17.原理篇-调和与fiber.md) 
+    * [17.原理篇-调和与fiber](interview/React进阶实践指南/17.原理篇-调和与fiber.md)
+    * [17.原理篇-更新流程：进入调度任务.md](interview/React进阶实践指南/17.原理篇-更新流程：进入调度任务.md)
     * [18.原理篇-Hooks原理](interview/React进阶实践指南/18.原理篇-Hooks原理.md) 
     * [19.生态篇-React-router](interview/React进阶实践指南/19.生态篇-React-router.md) 
     * [20.生态篇-React-redux](interview/React进阶实践指南/20.生态篇-React-redux.md) 
@@ -47,7 +49,8 @@
     * [33.原理篇-更新流程：进入调度任务](interview/React进阶实践指南/33.原理篇-更新流程：进入调度任务.md) 
     * [34.v18特性篇-concurrent下的state更新流程](interview/React进阶实践指南/34.v18特性篇-concurrent下的state更新流程.md) 
     * [35.v18特性篇-订阅外部数据源](interview/React进阶实践指南/35.v18特性篇-订阅外部数据源.md) 
-    * [36.原理篇-v18commit全流程](interview/React进阶实践指南/36.原理篇-v18commit全流程.md) 	
+    * [36.原理篇-v18commit全流程](interview/React进阶实践指南/36.原理篇-v18commit全流程.md)
+    * [37.v18特性篇-concurrent下的state更新流程.md](interview/React进阶实践指南/37.v18特性篇-concurrent下的state更新流程.md)
 * 实习
   * [前端文件处理](interview/前端文件处理.md)
   * [excel导出优化](interview/excel导出优化.md)
@@ -69,14 +72,14 @@
   * [Axios](interview/axios.md)
   * [WebComponents](interview/webComponents.md)
   * [微前端](interview/微前端.md)
-  * [微前端实践1](interview/微前端治理框架1.md)
-  * [微前端实践2](interview/微前端治理框架2.md)
   * [微前端实践](interview/微前端治理框架.md)
   * [vue-demi](interview/vue-demi.md)
   * [vue-demi实践](interview/vue-demi实践.md)
   * [langchain](interview/langchian.md)
   * [错误分析](interview/错误分析.md)
   * [vue-demi实践](interview/vue-demi实践.md)
+  * [大模型知识库构建](interview/大模型知识库构建.md)
+  * [flow](interview/workflow.md)
 
 * 原理
   * [浏览器原理](interview/浏览器.md)
@@ -117,6 +120,3 @@
   * [现代前端工程Monorepo](interview/前沿技术/现代前端工程Monorepo.md)
   * [pnpm对npm和yarn优势](interview/前沿技术/pnpm对npm和yarn优势.md)
   * [swc、esbuild和vite前端构建工具浅析](interview/前沿技术/swc、esbuild和vite前端构建工具浅析.md)
-* AI
-  * [Stable Diffusion](interview/AI/stable-diffusion.md)
-    
