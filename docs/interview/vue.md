@@ -14350,7 +14350,99 @@ react:
 
 > 虽然`Compositon API`看起来比`React Hook`好用，但是其设计思想也是借鉴`React Hook`的
 
+浏览器虽然是 **单进程**（默认情况下，Chrome 及多数现代浏览器使用多进程架构，但这里假设你指的是单进程模式，如某些嵌入式浏览器或特定环境），但它内部是 **多线程** 的，主要包括：
 
+- **主线程（UI 线程）**：处理 **JavaScript 执行**、**DOM 渲染**、**样式计算**、**事件处理** 等。
+- **渲染线程**（在部分多进程浏览器中独立于主线程）：负责 **页面布局和绘制**。
+- **合成线程（Compositor Thread）**：处理页面合成，使动画、过渡等更流畅。
+- **Worker 线程**（如 Web Worker）：可用于执行一些后台计算任务，不影响 UI 线程。
+
+------
+
+### 为什么 Vue、React 渲染不会卡顿？
+
+浏览器虽然是 **单进程**（默认情况下，Chrome 及多数现代浏览器使用多进程架构，但这里假设你指的是单进程模式，如某些嵌入式浏览器或特定环境），但它内部是 **多线程** 的，主要包括：
+
+- **主线程（UI 线程）**：处理 **JavaScript 执行**、**DOM 渲染**、**样式计算**、**事件处理** 等。
+- **渲染线程**（在部分多进程浏览器中独立于主线程）：负责 **页面布局和绘制**。
+- **合成线程（Compositor Thread）**：处理页面合成，使动画、过渡等更流畅。
+- **Worker 线程**（如 Web Worker）：可用于执行一些后台计算任务，不影响 UI 线程。
+
+React 和 Vue 通过 **优化渲染策略**，减少了对主线程的阻塞。主要原因包括：
+
+#### 1️⃣ **Virtual DOM（虚拟 DOM）优化**
+
+React 和 Vue（2.x）使用 **Virtual DOM**，这带来的好处是：
+
+- **批量更新**：收集多个 DOM 变更后 **一次性更新**，减少不必要的重绘（Repaint）和回流（Reflow）。
+- **Diff 算法**：只更新变化的部分，而不是整个页面，从而提高性能。
+
+**Vue 3 的优化**：
+
+- **Vue 3 采用 Proxy 监听数据变化，减少计算量**。
+- **模板编译优化（Static Tree Hoisting）**，不会重复计算静态部分。
+
+#### 2️⃣ **Fiber 架构（React 16+）**
+
+React 16 引入 **Fiber 架构**，它使 React 变成 **异步可中断渲染**，这样可以：
+
+- **分片更新（Time-Slicing）**：React 会将长时间任务拆分成多个小任务，在每一帧（16ms）内尽可能多地完成一些渲染，然后让出时间给浏览器以保持流畅度。
+- **优先级调度**（Concurrent Mode）：比如用户输入时，React 会优先处理输入，推迟不重要的渲染。
+
+#### 3️⃣ **异步渲染 & 任务调度**
+
+- **Vue 采用 `nextTick()`**：
+  - Vue 更新 DOM 时是异步的，修改 `data` 后，不会立即更新 DOM，而是**等所有数据修改完成后再批量更新**。
+  - 这样避免了 **重复的 DOM 操作**，提高性能。
+- **React 使用 `requestIdleCallback`、Scheduler**：
+  - React 使用 `requestIdleCallback` 和 `requestAnimationFrame` 让任务 **在空闲时间执行**，避免阻塞 UI 线程。
+
+#### 4️⃣ **避免不必要的 DOM 操作**
+
+- React 通过 `shouldComponentUpdate`、`useMemo`、`useCallback` 进行优化。
+- Vue 通过 `v-if` vs `v-show` 选择性渲染、computed 计算缓存等。
+
+#### 5️⃣ **CSS 线程 & 合成优化**
+
+- 现代浏览器使用**合成线程**处理 CSS 过渡、动画、`transform`，不会阻塞主线程。
+- **GPU 加速**（如 `will-change`、`transform: translate3d`）可减少 CPU 计算。
+
+------
+
+#### 🎯 **什么时候 Vue/React 还是会卡？**
+
+尽管 Vue 和 React 做了很多优化，但某些情况下依然可能出现 **卡顿**：
+
+1. **渲染列表过大**（如 `v-for` / `.map()` 渲染上千个元素）
+   - 解决方案：
+     - Vue：使用 `v-for` + `key` + `v-show` 控制可见性
+     - React：`React.memo`、`virtualized`（如 `react-window`）
+2. **组件更新频率过高**
+   - 解决方案：
+     - Vue：使用 `computed` 代替 `methods`，减少重复计算。
+     - React：使用 `useMemo`、`useCallback`，避免不必要的重渲染。
+3. **JavaScript 执行时间过长**
+   - 比如 `for` 循环、递归计算导致 UI 线程被占用。
+   - 解决方案：
+     - 使用 Web Worker **将计算任务放到后台线程**，不影响 UI 渲染。
+4. **未使用 `requestAnimationFrame` 进行动画**
+   - 比如 `setTimeout` 直接修改 `DOM`，可能导致掉帧。
+   - 解决方案：
+     - 用 `requestAnimationFrame` 让动画与浏览器节奏同步。
+
+------
+
+#### 🔥 **总结**
+
+即使浏览器是单进程，Vue 和 React 依靠 **虚拟 DOM**、**异步更新**、**任务调度**、**Fiber 架构**（React）等优化策略，避免了阻塞主线程，从而保持页面的流畅度。
+
+如果你遇到性能问题，可以：
+
+1. **检查不必要的组件更新**（Vue 的 `watchEffect`、React 的 `memo`）。
+2. **使用虚拟列表**（`vue-virtual-scroller` / `react-window`）。
+3. **将重计算任务放到 Web Worker**，避免主线程阻塞。
+
+你有没有遇到过 Vue 或 React 页面卡顿的具体案例？可以一起分析优化方案 😃
 
 ## 服务端渲染
 

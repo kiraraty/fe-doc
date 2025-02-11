@@ -1,3 +1,119 @@
+`vue-demi` 是一个用来让 Vue 2 和 Vue 3 兼容的库，它通过动态导入和 API 代理，让你能够编写一次代码，同时支持 Vue 2 和 Vue 3。接下来，我们会深入分析它的源码，理解其如何实现这一目标。
+
+### **1. `vue-demi` 项目结构**
+
+`vue-demi` 的源代码主要位于其 GitHub 仓库中的 `index.mjs` 和 `index.cjs` 文件，以及一些配套的辅助文件。它的结构大致如下：
+
+```sh
+vue-demi/
+├── dist/
+│   ├── index.cjs
+│   ├── index.mjs
+├── scripts/
+│   └── postinstall.js
+├── package.json
+└── README.md
+```
+
+### **2. `vue-demi` 的基本功能**
+
+#### **(1) 自动版本检测**
+
+`vue-demi` 通过一些小技巧来自动检测当前项目使用的是 Vue 2 还是 Vue 3。为了做到这一点，`vue-demi` 需要确保它加载到的是正确的 Vue 版本。
+
+例如，`vue-demi` 通过检查 `require.resolve('vue')` 或 `@vue/composition-api` 是否存在，来决定使用 Vue 2 还是 Vue 3：
+
+```js
+let vuePath
+try {
+  vuePath = require.resolve('vue')  // 尝试解析 Vue 3
+} catch (e) {
+  try {
+    vuePath = require.resolve('@vue/composition-api')  // 如果 Vue 3 不存在，尝试 Vue 2 的 Composition API
+  } catch (e) {
+    console.error('Vue is not installed')  // 如果都没有找到，说明没有安装 Vue
+  }
+}
+```
+
+这段代码确保了 `vue-demi` 会自动根据项目中存在的 Vue 版本加载适当的模块。
+
+#### **(2) API 代理**
+
+`vue-demi` 的核心思想是通过代理 Vue 2 和 Vue 3 的 API，使得开发者无需关心具体的版本，只需要通过 `vue-demi` 提供的统一接口来编写代码。比如：
+
+- `reactive`
+- `ref`
+- `defineComponent`
+- `watchEffect`
+
+`vue-demi` 会根据 Vue 的版本自动代理相应的 API：
+
+```js
+// 代理 reactive API
+export const reactive = isVue3 ? Vue3Reactive : Vue2Reactive
+
+// 代理 ref API
+export const ref = isVue3 ? Vue3Ref : Vue2Ref
+
+// 代理 watchEffect API
+export const watchEffect = isVue3 ? Vue3WatchEffect : Vue2WatchEffect
+```
+
+这样，无论是 Vue 2 还是 Vue 3，开发者都可以使用相同的接口来创建响应式数据，使用 Composition API。
+
+### **3. `vue-demi` 的版本切换机制**
+
+`vue-demi` 允许你切换 Vue 版本。它通过 `postinstall` 脚本来确保 `vue-demi` 与项目中的 Vue 版本兼容。`postinstall.js` 脚本会在安装过程中执行，自动根据当前项目使用的 Vue 版本来选择正确的 API 实现。
+
+```js
+const fs = require('fs')
+const path = require('path')
+
+const vuePath = require.resolve('vue')  // 自动检测 Vue 版本
+
+const isVue3 = fs.existsSync(path.resolve(vuePath, 'package.json'))
+
+if (isVue3) {
+  // 如果是 Vue 3，创建 Vue 3 版本的软链接
+} else {
+  // 否则，创建 Vue 2 版本的软链接
+}
+```
+
+通过这种方式，`vue-demi` 能够保证你总是使用正确的 Vue 版本，同时开发者不需要手动去安装和切换 Vue 版本。
+
+### **4. `vue-demi` 的 `dist/` 文件夹**
+
+`vue-demi` 会通过 `dist/` 文件夹提供已经编译好的代码，其中包含 `index.mjs` 和 `index.cjs` 两个版本。
+
+- **`index.mjs`**: 支持 ES 模块的版本，适用于现代 JavaScript 环境。
+- **`index.cjs`**: 支持 CommonJS 模块的版本，适用于 Node.js 等环境。
+
+这两个文件实际上是同一个功能，只是适配了不同的模块规范。
+
+### **5. `vue-demi` 的安装过程和软链接**
+
+`vue-demi` 在安装时，会根据项目使用的 Vue 版本自动创建软链接。通过运行以下命令，它会判断项目的 Vue 版本，并创建软链接：
+
+```bash
+npm install vue-demi
+```
+
+在安装过程中，`postinstall.js` 脚本会执行，自动进行 Vue 版本检查并创建软链接，确保你的项目能够正常使用 Vue 2 或 Vue 3。
+
+------
+
+### **总结**
+
+`vue-demi` 的核心功能是通过 **动态导入** 和 **API 代理** 来兼容 Vue 2 和 Vue 3，让开发者能够同时支持这两个版本的 Vue。它通过：
+
+1. **自动检测 Vue 版本**：在安装过程中，通过检查 `vue` 或 `@vue/composition-api` 是否存在，判断使用的 Vue 版本。
+2. **统一的 API 接口**：通过代理 Vue 2 和 Vue 3 的 API，使得开发者无需关心版本差异，只需要使用相同的 API。
+3. **安装时自动切换**：通过 `postinstall` 脚本和软链接的方式，确保项目始终与正确的 Vue 版本兼容。
+
+这种方式极大地简化了开发者在 Vue 2 和 Vue 3 之间切换时的复杂性，使得 **Vue 组件库和插件开发者**能够更容易地支持多版本 Vue。
+
 ## 方案
 
 背景：2023年年底 Vue 2 将不再继续支持，如果需要继续支持需要购买服务。这其实会存在很多未知的风险，比如浏览器的兼容问题；for instance == 曾经 Chrome 浏览器升级的时候，将 transform 的一个属性默认值改成了 ‘auto’，而在 Vue.js 基础组件中该值默认值均为 0，这个类型的改变导致了 Vue.js 组件中 transform 所有属性的失效。当时 Vue 就通过与 Chrome 进行协商，最终解决了这个问题。！！！但是，以后 Vue 2 将会停止支持，也就意味着这种风险并不会在第一时间高优去解决，因此这是一个风险。**所以建议升级 Vue 3，至少到 2.7。**

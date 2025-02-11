@@ -73,6 +73,7 @@
   * [微前端实践2](interview/微前端治理框架2.md)
   * [微前端实践](interview/微前端治理框架.md)
   * [vue-demi](interview/vue-demi.md)
+  * [vue-demi实践](interview/vue-demi实践.md)
   * [langchain](interview/langchian.md)
   * [错误分析](interview/错误分析.md)
   * [vue-demi实践](interview/vue-demi实践.md)
